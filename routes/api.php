@@ -9,6 +9,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('allPaymentTypes', [PaymentTypeController::class, 'index']);
+Route::get('paymentTypes', [PaymentTypeController::class, 'index']);
+Route::post('paymentType', [PaymentTypeController::class, 'store']);
 
 
