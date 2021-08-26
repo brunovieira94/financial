@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PaymentType;
+use Validator;
 
 class PaymentTypeController extends Controller
 {
@@ -15,45 +16,61 @@ class PaymentTypeController extends Controller
         return response()->json($paymentsTypes);
     }
 
-
-    public function create()
-    {
-
-    }
-
     public function store(Request $request)
     {
-        $paymentType = new PaymentType();
-        $paymentType->title = $request->input('title');
+        $rules=array(
+            'title' => 'required'
+        );
+        $validator=Validator::make($request->all(), $rules);
 
-        try {
-            error_log('try');
-            $paymentType->save();
-            return response()->json(PaymentType::where('title', '=', $paymentType->title)->first());
-        }catch(error){
-            return response()->json(['Error' => $error]);
+        if($validator->fails()){
+            return $validator->errors();
+        }else {
+            try {
+                $paymentType = PaymentType::firstOrCreate([
+                    'title' => $request->input('title')
+                ], $validatedData);
+                return response()->json($paymentType, 201);
+            }catch(\Exception $e){
+                return response(500);
+            }
+
         }
 
-        return $paymentType;
-    }
 
-    public function show($id)
-    {
-        //
-    }
-
-    public function edit($id)
-    {
-        //
     }
 
     public function update(Request $request, $id)
     {
-        //
-    }
+        $rules=array(
+            'title' => 'required'
+        );
+        $validator=Validator::make($request->all(), $rules);
 
+        if($validator->fails()){
+            return $validator->errors();
+        }else {
+           try {
+           $paymentType = paymentType::findOrFail($id);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+             return response('',404);
+
+        } catch(\Exception $e){
+             return response('',409);
+        }
+    }
+}
     public function destroy($id)
     {
-        //
+        try {
+            $paymentType = paymentType::findOrFail($id)->delete();
+            return response()->json($paymentType);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response('',404);
+
+        } catch(\Exception $e){
+            return response('',409);
+        }
     }
 }

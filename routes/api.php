@@ -11,5 +11,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::get('paymentTypes', [PaymentTypeController::class, 'index']);
 Route::post('paymentType', [PaymentTypeController::class, 'store']);
+Route::put('paymentType/{id}', [PaymentTypeController::class, 'update']);
+Route::delete('paymentType/{id}', [PaymentTypeController::class, 'destroy']);
 
 
