@@ -8,7 +8,6 @@ use Validator;
 
 class PaymentTypeController extends Controller
 {
-    private $objPaymentType;
 
     public function index()
     {
@@ -22,17 +21,16 @@ class PaymentTypeController extends Controller
             'title' => 'required'
         );
         $validator=Validator::make($request->all(), $rules);
-
         if($validator->fails()){
-            return $validator->errors();
+            return response($validator->errors(), 400);
         }else {
             try {
                 $paymentType = PaymentType::firstOrCreate([
                     'title' => $request->input('title')
-                ], $validatedData);
+                ]);
                 return response()->json($paymentType, 201);
             }catch(\Exception $e){
-                return response(500);
+                return response('', 500);
             }
 
         }
@@ -48,7 +46,7 @@ class PaymentTypeController extends Controller
         $validator=Validator::make($request->all(), $rules);
 
         if($validator->fails()){
-            return $validator->errors();
+            return response($validator->errors(), 400);
         }else {
            try {
            $paymentType = paymentType::findOrFail($id);
