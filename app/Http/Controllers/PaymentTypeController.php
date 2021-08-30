@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\StorePaymentTypeRequest;
 use App\Models\PaymentType;
 
 class PaymentTypeController extends Controller

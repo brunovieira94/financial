@@ -5,7 +5,7 @@ use Illuminate\Http\JsonResponse;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePostRequest extends FormRequest
+class StorePaymentTypeRequest extends FormRequest
 {
     public function authorize()
     {
