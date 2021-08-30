@@ -14,7 +14,7 @@ class PaymentTypeController extends Controller
         return response()->json($paymentsTypes);
     }
 
-    public function store(StorePostRequest $request)
+    public function store(StorePaymentTypeRequest $request)
     {
         try {
            $paymentType = PaymentType::firstOrCreate([
@@ -26,7 +26,7 @@ class PaymentTypeController extends Controller
         }
     }
 
-    public function update(StorePostRequest $request, $id)
+    public function update(StorePaymentTypeRequest $request, $id)
     {
      try {
         $paymentType = paymentType::findOrFail($id);
