@@ -3,39 +3,38 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\StorePaymentTypeRequest;
-use App\Models\PaymentType;
+use App\Http\Requests\StoreBankRequest;
+use App\Models\Bank;
 
-class PaymentTypeController extends Controller
+class BankController extends Controller
 {
     public function index()
     {
-        $paymentsTypes = PaymentType::get();
-        return response()->json($paymentsTypes);
+        $banks = Bank::get();
+        return response()->json($banks);
     }
 
-    public function store(StorePaymentTypeRequest $request)
+    public function store(StoreBankRequest $request)
     {
         try {
-           $paymentType = PaymentType::firstOrCreate([
+           $bank = Bank::firstOrCreate([
            'title' => $request->input('title')
            ]);
-           return response()->json($paymentType, 201);
+           return response()->json($bank, 201);
         }catch(\Exception $e){
              return response('', 500);
         }
     }
 
-    public function update(StorePaymentTypeRequest $request, $id)
+    public function update(StoreBankRequest $request, $id)
     {
      try {
-        $paymentType = paymentType::findOrFail($id);
-        $paymentType->title = $request->input('title');
-        $paymentType->save();
-        return response()->json($paymentType);
+        $bank = Bank::findOrFail($id);
+        $bank->title = $request->input('title');
+        $bank->save();
+        return response()->json($bank);
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
              return response('',404);
-
     } catch(\Exception $e){
              return response('',409);
     }
@@ -44,7 +43,7 @@ class PaymentTypeController extends Controller
     public function destroy($id)
     {
         try {
-            $paymentType = paymentType::findOrFail($id)->delete();
+            $bank = Bank::findOrFail($id)->delete();
             return response('',200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response('',404);
