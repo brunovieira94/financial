@@ -9,7 +9,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 //Restful route -> Payments Types
-Route::get('payment-types', [PaymentTypeController::class, 'index']);
+Route::get('payment-type', [PaymentTypeController::class, 'index']);
 Route::post('payment-type', [PaymentTypeController::class, 'store']);
 Route::put('payment-type/{id}', [PaymentTypeController::class, 'update']);
 Route::delete('payment-type/{id}', [PaymentTypeController::class, 'destroy']);

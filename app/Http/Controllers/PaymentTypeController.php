@@ -16,41 +16,23 @@ class PaymentTypeController extends Controller
 
     public function store(StorePaymentTypeRequest $request)
     {
-        try {
-           $paymentType = PaymentType::firstOrCreate([
-           'title' => $request->input('title')
-           ]);
-           return response()->json($paymentType, 201);
-        }catch(\Exception $e){
-             return response('', 500);
-        }
+        $paymentType = new PaymentType;
+        $paymentType->title = $request->input('title');
+        $paymentType->save();
+        return response($paymentType, 201);
     }
 
     public function update(StorePaymentTypeRequest $request, $id)
     {
-     try {
         $paymentType = paymentType::findOrFail($id);
         $paymentType->title = $request->input('title');
         $paymentType->save();
         return response()->json($paymentType);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-             return response('',404);
-
-    } catch(\Exception $e){
-             return response('',409);
     }
-}
 
     public function destroy($id)
     {
-        try {
-            $paymentType = paymentType::findOrFail($id)->delete();
-            return response()->json($paymentType);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response('',404);
-
-        } catch(\Exception $e){
-            return response('',500);
-        }
+        $paymentType = paymentType::findOrFail($id)->delete();
+        return response()->json($paymentType);
     }
 }
