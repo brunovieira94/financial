@@ -39,7 +39,7 @@ class PaymentTypeService
 
     public function deletePaymentType($id)
     {
-        $this->paymentType->findOrFail($id)->delete();
+      $this->paymentType->findOrFail($id)->delete();
       return true;
     }
 
