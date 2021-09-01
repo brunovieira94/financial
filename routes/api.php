@@ -22,9 +22,12 @@ Route::middleware([])->group(function () {
 });
 
 //Restful route -> Banks
-Route::get('bank', [BankController::class, 'index']);
-Route::get('bank/{id}', [BankController::class, 'show']);
-Route::post('bank', [BankController::class, 'store']);
-Route::put('bank/{id}', [BankController::class, 'update']);
-Route::delete('bank/{id}', [BankController::class, 'destroy']);
-
+Route::middleware([])->group(function () {
+    Route::prefix('bank')->group(function () {
+        Route::get('/', [BankController::class, 'index']);
+        Route::get('/{id}', [BankController::class, 'show']);
+        Route::post('/', [BankController::class, 'store']);
+        Route::put('/{id}', [BankController::class, 'update']);
+        Route::delete('/{id}', [BankController::class, 'destroy']);
+    });
+});
