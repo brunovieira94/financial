@@ -4,53 +4,45 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePaymentTypeRequest;
-use App\Models\PaymentType;
+use App\Services\PaymentTypeService as PaymentTypeService;
 
 class PaymentTypeController extends Controller
 {
+
+    private $paymentTypeService;
+    public function __construct(PaymentTypeService $paymentTypeService)
+    {
+        $this->paymentTypeService = $paymentTypeService;
+    }
+
     public function index()
     {
-        $paymentsTypes = PaymentType::get();
-        return response()->json($paymentsTypes);
+        $paymentType = $this->paymentTypeService->getAllPaymentType();
+        return response($paymentType, 200);
+    }
+
+    public function show($id)
+    {
+        $paymentType = $this->paymentTypeService->getPaymentType($id);
+        return response($paymentType, 200);
     }
 
     public function store(StorePaymentTypeRequest $request)
     {
-        try {
-           $paymentType = PaymentType::firstOrCreate([
-           'title' => $request->input('title')
-           ]);
-           return response()->json($paymentType, 201);
-        }catch(\Exception $e){
-             return response('', 500);
-        }
+        $paymentType = $this->paymentTypeService->postPaymentType($request->title);
+        return response($paymentType, 201);
     }
 
     public function update(StorePaymentTypeRequest $request, $id)
     {
-     try {
-        $paymentType = paymentType::findOrFail($id);
-        $paymentType->title = $request->input('title');
-        $paymentType->save();
-        return response()->json($paymentType);
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-             return response('',404);
-
-    } catch(\Exception $e){
-             return response('',409);
+        $paymentType = $this->paymentTypeService->putPaymentType($id, $request->title);
+        return response($paymentType, 200);
     }
-}
 
     public function destroy($id)
     {
-        try {
-            $paymentType = paymentType::findOrFail($id)->delete();
-            return response('',200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response('',404);
-
-        } catch(\Exception $e){
-            return response('',500);
-        }
+        $paymentType = $this->paymentTypeService->deletePaymentType($id);
+        return response('', 200);
     }
+
 }
