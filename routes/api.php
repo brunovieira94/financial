@@ -11,6 +11,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 //Restful route -> Payments Types
+Route::middleware([])->group(function () {
+    Route::prefix('payment-type')->group(function () {
+        Route::get('/', [PaymentTypeController::class, 'index']);
+        Route::get('/{id}', [PaymentTypeController::class, 'show']);
+        Route::post('/', [PaymentTypeController::class, 'store']);
+        Route::put('/{id}', [PaymentTypeController::class, 'update']);
+        Route::delete('/{id}', [PaymentTypeController::class, 'destroy']);
+    });
+});
+
+//Restful route -> Payments Types
 Route::get('payment-type', [PaymentTypeController::class, 'index']);
 Route::get('payment-type/{id}', [PaymentTypeController::class, 'show']);
 Route::post('payment-type', [PaymentTypeController::class, 'store']);
