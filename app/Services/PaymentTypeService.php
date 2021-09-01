@@ -5,17 +5,20 @@ use App\Models\PaymentType;
 
 class PaymentTypeService
 {
+    private $paymentType;
+    public function __construct(PaymentType $paymentType)
+    {
+        $this->paymentType = $paymentType;
+    }
 
     public function getAllPaymentType()
     {
-      $paymentTypes = PaymentType::get();
-      return $paymentTypes;
+        return $this->paymentType->get();
     }
 
     public function getPaymentType($id)
     {
-      $paymentType = PaymentType::findOrFail($id);
-      return $paymentType;
+      return $this->paymentType->findOrFail($id);
     }
 
     public function postPaymentType($titlePaymentType)
@@ -28,7 +31,7 @@ class PaymentTypeService
 
     public function putPaymentType($id, $titlePaymentType)
     {
-      $paymentType = PaymentType::findOrFail($id);
+      $paymentType = $this->paymentType->findOrFail($id);
       $paymentType->title = $titlePaymentType;
       $paymentType->save();
       return $paymentType;
@@ -36,7 +39,7 @@ class PaymentTypeService
 
     public function deletePaymentType($id)
     {
-      PaymentType::findOrFail($id)->delete();
+        $this->paymentType->findOrFail($id)->delete();
       return true;
     }
 

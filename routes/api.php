@@ -18,7 +18,8 @@ Route::put('payment-type/{id}', [PaymentTypeController::class, 'update']);
 Route::delete('payment-type/{id}', [PaymentTypeController::class, 'destroy']);
 
 //Restful route -> Banks
-Route::get('banks', [BankController::class, 'index']);
+Route::get('bank', [BankController::class, 'index']);
+Route::get('bank/{id}', [BankController::class, 'show']);
 Route::post('bank', [BankController::class, 'store']);
 Route::put('bank/{id}', [BankController::class, 'update']);
 Route::delete('bank/{id}', [BankController::class, 'destroy']);

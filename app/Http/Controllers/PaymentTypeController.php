@@ -10,6 +10,7 @@ class PaymentTypeController extends Controller
 {
 
     private $paymentTypeService;
+
     public function __construct(PaymentTypeService $paymentTypeService)
     {
         $this->paymentTypeService = $paymentTypeService;
@@ -18,13 +19,13 @@ class PaymentTypeController extends Controller
     public function index()
     {
         $paymentType = $this->paymentTypeService->getAllPaymentType();
-        return response($paymentType, 200);
+        return response($paymentType);
     }
 
     public function show($id)
     {
         $paymentType = $this->paymentTypeService->getPaymentType($id);
-        return response($paymentType, 200);
+        return response($paymentType);
     }
 
     public function store(StorePaymentTypeRequest $request)
@@ -36,13 +37,13 @@ class PaymentTypeController extends Controller
     public function update(StorePaymentTypeRequest $request, $id)
     {
         $paymentType = $this->paymentTypeService->putPaymentType($id, $request->title);
-        return response($paymentType, 200);
+        return response($paymentType);
     }
 
     public function destroy($id)
     {
         $paymentType = $this->paymentTypeService->deletePaymentType($id);
-        return response('', 200);
+        return response('');
     }
 
 }
