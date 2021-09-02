@@ -10,4 +10,5 @@ class BankAccount extends Model
 {
     use SoftDeletes;
     protected $table='bank_accounts';
+    protected $fillable = ['agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id'];
 }
