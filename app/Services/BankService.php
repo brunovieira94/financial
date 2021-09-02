@@ -5,16 +5,20 @@ use App\Models\Bank;
 
 class BankService
 {
+    private $bank;
+
+    public function __construct(Bank $bank){
+        $this->bank = $bank;
+    }
+
     public function getAllBank()
     {
-      $bank = Bank::get();
-      return $bank;
+      return $this->bank->get();
     }
 
     public function getBank($id)
     {
-      $bank = Bank::findOrFail($id);
-      return $bank;
+      return $this->bank->findOrFail($id);
     }
 
     public function postBank($titleBank)
@@ -27,7 +31,7 @@ class BankService
 
     public function putBank($id, $titleBank)
     {
-      $bank = Bank::findOrFail($id);
+      $bank = $this->bank->findOrFail($id);
       $bank->title = $titlePaymentType;
       $bank->save();
       return $bank;
@@ -35,7 +39,7 @@ class BankService
 
     public function deleteBank($id)
     {
-      Bank::findOrFail($id)->delete();
+      $this->bank->findOrFail($id)->delete();
       return true;
     }
 

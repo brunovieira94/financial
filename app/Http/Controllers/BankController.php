@@ -35,12 +35,12 @@ class BankController extends Controller
     public function update(StoreBankRequest $request, $id)
     {
        $bank = $this->bankService->putBank($id, $request->title);
-       return response($bank, 200);
+       return response($bank);
     }
 
     public function destroy($id)
     {
        $bank = $this->bankService->deleteBank($id);
-       return response('',200);
+       return response('');
     }
 }
