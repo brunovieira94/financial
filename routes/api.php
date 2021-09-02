@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\BankAccountController;
+
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -29,5 +31,16 @@ Route::middleware([])->group(function () {
         Route::post('/', [BankController::class, 'store']);
         Route::put('/{id}', [BankController::class, 'update']);
         Route::delete('/{id}', [BankController::class, 'destroy']);
+    });
+});
+
+//Restful route -> Bank Accounts
+Route::middleware([])->group(function () {
+    Route::prefix('bank-account')->group(function () {
+        Route::get('/', [BankAccountController::class, 'index']);
+        Route::get('/{id}', [BankAccountController::class, 'show']);
+        Route::post('/', [BankAccountController::class, 'store']);
+        Route::put('/{id}', [BankAccountController::class, 'update']);
+        Route::delete('/{id}', [BankAccountController::class, 'destroy']);
     });
 });

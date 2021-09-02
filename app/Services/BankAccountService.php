@@ -13,7 +13,7 @@ class BankService
 
     public function getAllBankAccount()
     {
-
+        return $this->bankAccount->get();
     }
 
     public function getBankAccount($id)
