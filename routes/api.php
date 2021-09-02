@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\BankAccountController;
+use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\PaymentMethodController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
