@@ -10,38 +10,36 @@ use App\Http\Requests\PutBankAccountRequest;
 class BankAccountController extends Controller
 {
 
-    private $bankAccount;
+    private $bankAccountService;
 
-    public function __construct(BankAccountService $bankAccount)
+    public function __construct(BankAccountService $bankAccountService)
     {
-        $this->bankAccount = $bankAccount;
+        $this->bankAccountService = $bankAccountService;
     }
 
     public function index()
     {
-        return $this->bankAccount->getAllBankAccount();
+        return $this->bankAccountService->getAllBankAccount();
     }
 
     public function show($id)
     {
-        return $this->bankAccount->getBankAccount($id);
+        return $this->bankAccountService->getBankAccount($id);
     }
 
     public function store(StoreBankAccountRequest $request)
     {
-        $bankAccount = $this->bankAccount->postBankAccount($request->all());
-        return response($bankAccount);
+        return  $this->bankAccountService->postBankAccount($request->all());
     }
 
     public function update(PutBankAccountRequest $request, $id)
     {
-        $bankAccount = $this->bankAccount->putBankAccount($id, $request->all());
-        return response($bankAccount);
+        return $this->bankAccountService->putBankAccount($id, $request->all());
     }
 
     public function destroy($id)
     {
-        $this->bankAccount->deleteBankAccount($id);
+        $this->bankAccountService->deleteBankAccount($id);
         return response('');
     }
 }

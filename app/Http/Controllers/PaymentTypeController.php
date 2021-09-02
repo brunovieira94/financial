@@ -18,26 +18,22 @@ class PaymentTypeController extends Controller
 
     public function index()
     {
-        $paymentType = $this->paymentTypeService->getAllPaymentType();
-        return response($paymentType);
+        return $this->paymentTypeService->getAllPaymentType();
     }
 
     public function show($id)
     {
-        $paymentType = $this->paymentTypeService->getPaymentType($id);
-        return response($paymentType);
+        return $this->paymentTypeService->getPaymentType($id);
     }
 
     public function store(StorePaymentTypeRequest $request)
     {
-        $paymentType = $this->paymentTypeService->postPaymentType($request->title);
-        return response($paymentType, 201);
+        return $this->paymentTypeService->postPaymentType($request->all());
     }
 
     public function update(StorePaymentTypeRequest $request, $id)
     {
-        $paymentType = $this->paymentTypeService->putPaymentType($id, $request->title);
-        return response($paymentType);
+        return $this->paymentTypeService->putPaymentType($id, $request->all());
     }
 
     public function destroy($id)

@@ -16,26 +16,22 @@ class BankController extends Controller
 
     public function index()
     {
-        $banks = $this->bankService->getAllBank();
-        return response($banks);
+        return $this->bankService->getAllBank();
     }
 
     public function show($id)
     {
-        $bank = $this->bankService->getBank($id);
-        return response($bank);
+        return $this->bankService->getBank($id);
     }
 
     public function store(StoreBankRequest $request)
     {
-        $bank = $this->bankService->postBank($request->title);
-        return response($bank, 201);
+        return $this->bankService->postBank($request->all());
     }
 
     public function update(StoreBankRequest $request, $id)
     {
-       $bank = $this->bankService->putBank($id, $request->title);
-       return response($bank);
+        return $this->bankService->putBank($id, $request->all());
     }
 
     public function destroy($id)
