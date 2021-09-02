@@ -6,10 +6,6 @@ use App\Models\Bank;
 class BankService
 {
     private $bank;
-<<<<<<< HEAD
-=======
-
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
     public function __construct(Bank $bank){
         $this->bank = $bank;
     }
