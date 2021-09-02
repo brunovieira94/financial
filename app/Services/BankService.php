@@ -24,7 +24,6 @@ class BankService
       return $this->bank->findOrFail($id);
     }
 
-<<<<<<< HEAD
     public function postBank($bankInfo)
     {
        $bank = new Bank;
@@ -36,22 +35,6 @@ class BankService
         $bank = $this->bank->findOrFail($id);
         $bank->fill($bankInfo)->save();
         return $bank;
-=======
-    public function postBank($titleBank)
-    {
-      $bank = new Bank;
-      $bank->title = $titleBank;
-      $bank->save();
-      return $bank;
-    }
-
-    public function putBank($id, $titleBank)
-    {
-      $bank = $this->bank->findOrFail($id);
-      $bank->title = $titlePaymentType;
-      $bank->save();
-      return $bank;
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
     }
 
     public function deleteBank($id)
