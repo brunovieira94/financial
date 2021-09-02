@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\BankAccountService;
+use App\Services\BankAccountService as BankAccountService;
 
 class BankAccountController extends Controller
 {
 
     private $bankAccount;
 
-    public function __construct(PaymentTypeService $bankAccount)
+    public function __construct(BankAccountService $bankAccount)
     {
         $this->bankAccount = $bankAccount;
     }

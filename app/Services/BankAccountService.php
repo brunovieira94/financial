@@ -3,7 +3,7 @@
 namespace App\Services;
 use App\Models\BankAccount;
 
-class BankService
+class BankAccountService
 {
     private $bankAccount;
 
