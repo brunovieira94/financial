@@ -2,24 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-<<<<<<< HEAD
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\BankAccountController;
-=======
-use App\Http\Controllers\CurrencyController;
-use App\Http\Controllers\PaymentMethodController;
-use App\Http\Controllers\PaymentTypeController;
-use App\Http\Controllers\BankController;
-
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-<<<<<<< HEAD
-=======
 Route::middleware([])->group(function () {
     Route::prefix('currency')->group(function () {
         Route::get('/', [CurrencyController::class, 'index']);
@@ -39,7 +29,6 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [PaymentMethodController::class, 'destroy']);
     });
 });
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
 //Restful route -> Payments Types
 Route::middleware([])->group(function () {
     Route::prefix('payment-type')->group(function () {
@@ -61,7 +50,7 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [BankController::class, 'destroy']);
     });
 });
-<<<<<<< HEAD
+
 
 //Restful route -> Bank Accounts
 Route::middleware([])->group(function () {
@@ -73,5 +62,3 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [BankAccountController::class, 'destroy']);
     });
 });
-=======
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
