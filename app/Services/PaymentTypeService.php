@@ -21,6 +21,7 @@ class PaymentTypeService
       return $this->paymentType->findOrFail($id);
     }
 
+<<<<<<< HEAD
     public function postPaymentType($paymentTypeInfo)
     {
         $paymentType = new PaymentType;
@@ -32,6 +33,22 @@ class PaymentTypeService
         $paymentType = $this->paymentType->findOrFail($id);
         $paymentType->fill($paymentTypeInfo)->save();
         return $paymentType;
+=======
+    public function postPaymentType($titlePaymentType)
+    {
+      $paymentType = new PaymentType;
+      $paymentType->title = $titlePaymentType;
+      $paymentType->save();
+      return $paymentType;
+    }
+
+    public function putPaymentType($id, $titlePaymentType)
+    {
+      $paymentType = $this->paymentType->findOrFail($id);
+      $paymentType->title = $titlePaymentType;
+      $paymentType->save();
+      return $paymentType;
+>>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
     }
 
     public function deletePaymentType($id)
