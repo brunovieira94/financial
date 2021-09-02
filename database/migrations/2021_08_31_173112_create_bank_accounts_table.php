@@ -14,12 +14,20 @@ class CreateBankAccountsTable extends Migration
     public function up()
     {
         Schema::create('bank_accounts', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
+            $table->integer('agency_number');
+            $table->integer('agency_check_number');
+            $table->integer('account_number');
+            $table->integer('account_check_number');
+            $table->integer('bank_id')->unsigned();
+            $table->foreign('bank_id')->references('id')->on('banks');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
     /**
+     *
      * Reverse the migrations.
      *
      * @return void
