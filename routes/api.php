@@ -7,6 +7,8 @@ use App\Http\Controllers\BankController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\ProviderCategoryController;
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -68,10 +70,10 @@ Route::middleware([])->group(function () {
 //Restful route -> Provider Categories
 Route::middleware([])->group(function () {
     Route::prefix('provider-category')->group(function () {
-        Route::get('/', [BankAccountController::class, 'index']);
-        Route::get('/{id}', [BankAccountController::class, 'show']);
-        Route::post('/', [BankAccountController::class, 'store']);
-        Route::put('/{id}', [BankAccountController::class, 'update']);
-        Route::delete('/{id}', [BankAccountController::class, 'destroy']);
+        Route::get('/', [ProviderCategoryController::class, 'index']);
+        Route::get('/{id}', [ProviderCategoryController::class, 'show']);
+        Route::post('/', [ProviderCategoryController::class, 'store']);
+        Route::put('/{id}', [ProviderCategoryController::class, 'update']);
+        Route::delete('/{id}', [ProviderCategoryController::class, 'destroy']);
     });
 });

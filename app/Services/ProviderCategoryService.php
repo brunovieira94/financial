@@ -1,42 +1,42 @@
 <?php
 
 namespace App\Services;
-use App\Models\ProviderCategorie;
+use App\Models\ProviderCategory;
 
-class ProviderCategorieService
+class ProviderCategoryService
 {
-    private $providerCategorie;
-    public function __construct(ProviderCategorie $providerCategorie)
+    private $providerCategory;
+    public function __construct(ProviderCategory $providerCategory)
     {
-        $this->providerCategorie = $providerCategorie;
+        $this->providerCategory = $providerCategory;
     }
 
-    public function getAllProviderCategorie()
+    public function getAllProviderCategory()
     {
-        return $this->providerCategorie->get();
+        return $this->providerCategory->get();
     }
 
-    public function getProviderCategorie($id)
+    public function getProviderCategory($id)
     {
-      return $this->providerCategorie->findOrFail($id);
+      return $this->providerCategory->findOrFail($id);
     }
 
-    public function postProviderCategorie($providerCategorieInfo)
+    public function postProviderCategory($providerCategoryInfo)
     {
-        $providerCategorie = new ProviderCategorie;
-        return $providerCategorie->create($providerCategorieInfo);
+        $providerCategory = new ProviderCategory;
+        return $providerCategory->create($providerCategoryInfo);
     }
 
-    public function putProviderCategorie($id, $providerCategorieInfo)
+    public function putProviderCategory($id, $providerCategoryInfo)
     {
-        $providerCategorie = $this->providerCategorie->findOrFail($id);
-        $providerCategorie->fill($providerCategorieInfo)->save();
-        return $providerCategorie;
+        $providerCategory = $this->providerCategory->findOrFail($id);
+        $providerCategory->fill($providerCategoryInfo)->save();
+        return $providerCategory;
     }
 
-    public function deleteProviderCategorie($id)
+    public function deleteProviderCategory($id)
     {
-      $this->providerCategorie->findOrFail($id)->delete();
+      $this->providerCategory->findOrFail($id)->delete();
       return true;
     }
 

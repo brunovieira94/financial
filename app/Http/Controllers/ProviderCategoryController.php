@@ -10,7 +10,7 @@ class ProviderCategoryController extends Controller
 {
     private $providerCategoryService;
 
-    public function __construct(PaymentTypeService $providerCategoryService)
+    public function __construct(ProviderCategoryService $providerCategoryService)
     {
         $this->providerCategoryService = $providerCategoryService;
     }
