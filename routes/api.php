@@ -2,12 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CostCenterController;
-use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CurrencyController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\ProviderCategoryController;
+use App\Http\Controllers\CostCenterController;
+
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -73,5 +75,16 @@ Route::middleware([])->group(function () {
         Route::post('/', [BankAccountController::class, 'store']);
         Route::put('/{id}', [BankAccountController::class, 'update']);
         Route::delete('/{id}', [BankAccountController::class, 'destroy']);
+    });
+});
+
+//Restful route -> Provider Categories
+Route::middleware([])->group(function () {
+    Route::prefix('provider-category')->group(function () {
+        Route::get('/', [ProviderCategoryController::class, 'index']);
+        Route::get('/{id}', [ProviderCategoryController::class, 'show']);
+        Route::post('/', [ProviderCategoryController::class, 'store']);
+        Route::put('/{id}', [ProviderCategoryController::class, 'update']);
+        Route::delete('/{id}', [ProviderCategoryController::class, 'destroy']);
     });
 });
