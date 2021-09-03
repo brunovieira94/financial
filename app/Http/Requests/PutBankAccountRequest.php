@@ -6,27 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class PutBankAccountRequest extends FormRequest
 {
-<<<<<<< HEAD
-=======
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
->>>>>>> develop
     public function authorize()
     {
         return true;
     }
 
-<<<<<<< HEAD
-=======
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
->>>>>>> develop
     public function rules()
     {
         return [
