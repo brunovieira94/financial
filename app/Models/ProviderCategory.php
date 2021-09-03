@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class ProviderCategorie extends Model
+class ProviderCategory extends Model
 {
-    use HasFactory;
     use softDeletes;
     protected $fillable = ['title'];
+    protected $table='provider_categories';
 }

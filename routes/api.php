@@ -64,3 +64,14 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [BankAccountController::class, 'destroy']);
     });
 });
+
+//Restful route -> Provider Categories
+Route::middleware([])->group(function () {
+    Route::prefix('provider-category')->group(function () {
+        Route::get('/', [BankAccountController::class, 'index']);
+        Route::get('/{id}', [BankAccountController::class, 'show']);
+        Route::post('/', [BankAccountController::class, 'store']);
+        Route::put('/{id}', [BankAccountController::class, 'update']);
+        Route::delete('/{id}', [BankAccountController::class, 'destroy']);
+    });
+});
