@@ -14,10 +14,6 @@ class CreateBankAccountsTable extends Migration
     public function up()
     {
         Schema::create('bank_accounts', function (Blueprint $table) {
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> develop
             $table->increments('id');
             $table->integer('agency_number');
             $table->integer('agency_check_number');
@@ -25,33 +21,11 @@ class CreateBankAccountsTable extends Migration
             $table->integer('account_check_number');
             $table->integer('bank_id')->unsigned();
             $table->foreign('bank_id')->references('id')->on('banks');
-<<<<<<< HEAD
             $table->timestamps();
             $table->softDeletes();
-=======
-            $table->timestamps();
-            $table->softDeletes();
-=======
-            $table->id();
-            $table->timestamps();
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
->>>>>>> develop
         });
     }
 
-    /**
-<<<<<<< HEAD
-     *
-=======
-<<<<<<< HEAD
-     *
-=======
->>>>>>> b63e0ebf4354fa82953f2598b3c6263b11850d84
->>>>>>> develop
-     * Reverse the migrations.
-     *
-     * @return void
-     */
     public function down()
     {
         Schema::dropIfExists('bank_accounts');
