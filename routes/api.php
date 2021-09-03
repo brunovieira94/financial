@@ -8,6 +8,7 @@ use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProviderCategoryController;
+use App\Http\Controllers\CostCenterController;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
