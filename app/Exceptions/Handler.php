@@ -46,7 +46,6 @@ class Handler extends ExceptionHandler
         } elseif ($exception instanceof \Exception){
             return response('', 500);
         }
-
         return parent::render($request, $exception);
     }
 
