@@ -2,16 +2,34 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+<<<<<<< HEAD
+=======
+use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\PaymentMethodController;
+>>>>>>> develop
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CurrencyController;
+<<<<<<< HEAD
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProviderCategoryController;
 
+=======
+>>>>>>> develop
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::middleware([])->group(function () {
+    Route::prefix('cost-center')->group(function () {
+        Route::get('/', [CostCenterController::class, 'index']);
+        Route::get('/{id}', [CostCenterController::class, 'show']);
+        Route::post('/', [CostCenterController::class, 'store']);
+        Route::put('/{id}', [CostCenterController::class, 'update']);
+        Route::delete('/{id}', [CostCenterController::class, 'destroy']);
+    });
 });
 
 Route::middleware([])->group(function () {
@@ -66,6 +84,7 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [BankAccountController::class, 'destroy']);
     });
 });
+<<<<<<< HEAD
 
 //Restful route -> Provider Categories
 Route::middleware([])->group(function () {
@@ -77,3 +96,5 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [ProviderCategoryController::class, 'destroy']);
     });
 });
+=======
+>>>>>>> develop
