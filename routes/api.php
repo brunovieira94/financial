@@ -15,6 +15,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 Route::middleware([])->group(function () {
+    Route::prefix('cost-center')->group(function () {
+        Route::get('/', [CostCenterController::class, 'index']);
+        Route::get('/{id}', [CostCenterController::class, 'show']);
+        Route::post('/', [CostCenterController::class, 'store']);
+        Route::put('/{id}', [CostCenterController::class, 'update']);
+        Route::delete('/{id}', [CostCenterController::class, 'destroy']);
+    });
+});
+
+Route::middleware([])->group(function () {
     Route::prefix('currency')->group(function () {
         Route::get('/', [CurrencyController::class, 'index']);
         Route::get('/{id}', [CurrencyController::class, 'show']);
