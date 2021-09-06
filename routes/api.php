@@ -10,6 +10,7 @@ use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProviderCategoryController;
 use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\StateController;
+use App\Http\Controllers\CityController;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -98,5 +99,16 @@ Route::middleware([])->group(function () {
         Route::post('/', [StateController::class, 'store']);
         Route::put('/{id}', [StateController::class, 'update']);
         Route::delete('/{id}', [StateController::class, 'destroy']);
+    });
+});
+
+//Restful route -> City
+Route::middleware([])->group(function () {
+    Route::prefix('city')->group(function () {
+        Route::get('/', [CityController::class, 'index']);
+        Route::get('/{id}', [CityController::class, 'show']);
+        Route::post('/', [CityController::class, 'store']);
+        Route::put('/{id}', [CityController::class, 'update']);
+        Route::delete('/{id}', [CityController::class, 'destroy']);
     });
 });
