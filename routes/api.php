@@ -9,6 +9,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProviderCategoryController;
 use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\StateController;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -86,5 +87,16 @@ Route::middleware([])->group(function () {
         Route::post('/', [ProviderCategoryController::class, 'store']);
         Route::put('/{id}', [ProviderCategoryController::class, 'update']);
         Route::delete('/{id}', [ProviderCategoryController::class, 'destroy']);
+    });
+});
+
+//Restful route -> States
+Route::middleware([])->group(function () {
+    Route::prefix('state')->group(function () {
+        Route::get('/', [StateController::class, 'index']);
+        Route::get('/{id}', [StateController::class, 'show']);
+        Route::post('/', [StateController::class, 'store']);
+        Route::put('/{id}', [StateController::class, 'update']);
+        Route::delete('/{id}', [StateController::class, 'destroy']);
     });
 });
