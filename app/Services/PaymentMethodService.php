@@ -21,19 +21,16 @@ class PaymentMethodService
         return $this->paymentMethod->findOrFail($id);
     }
 
-    public function postPaymentMethod($titlePaymentMethod)
+    public function postPaymentMethod($paymentMethodInfo)
     {
         $paymentMethod = new PaymentMethod;
-        $paymentMethod->title = $titlePaymentMethod;
-        $paymentMethod->save();
-        return $paymentMethod;
+        return $paymentMethod->create($paymentMethodInfo);
     }
 
-    public function putPaymentMethod($id, $titlePaymentMethod)
+    public function putPaymentMethod($id, $paymentMethodInfo)
     {
         $paymentMethod = $this->paymentMethod->findOrFail($id);
-        $paymentMethod->title = $titlePaymentMethod;
-        $paymentMethod->save();
+        $paymentMethod->fill($paymentMethodInfo)->save();
         return $paymentMethod;
     }
 

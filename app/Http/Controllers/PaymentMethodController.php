@@ -18,26 +18,23 @@ class PaymentMethodController extends Controller
 
     public function index()
     {
-        $paymentMethod = $this->paymentMethodService->getAllPaymentMethod();
-        return response($paymentMethod);
+        return $this->paymentMethodService->getAllPaymentMethod();
     }
 
     public function show($id)
     {
-        $paymentMethod = $this->paymentMethodService->getPaymentMethod($id);
-        return response($paymentMethod);
+        return $this->paymentMethodService->getPaymentMethod($id);
     }
 
     public function store(StorePaymentMethodRequest $request)
     {
-        $paymentMethod = $this->paymentMethodService->postPaymentMethod($request->title);
+        $paymentMethod = $this->paymentMethodService->postPaymentMethod($request->all());
         return response($paymentMethod, 201);
     }
 
     public function update(StorePaymentMethodRequest $request, $id)
     {
-        $paymentMethod = $this->paymentMethodService->putPaymentMethod($id, $request->title);
-        return response($paymentMethod);
+        return $this->paymentMethodService->putPaymentMethod($id, $request->all());
     }
 
     public function destroy($id)
