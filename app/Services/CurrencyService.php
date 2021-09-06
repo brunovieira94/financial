@@ -22,19 +22,16 @@ class CurrencyService
         return $this->currency->findOrFail($id);
     }
 
-    public function postCurrency($titleCurrency)
+    public function postCurrency($currencyInfo)
     {
         $currency = new Currency;
-        $currency->title = $titleCurrency;
-        $currency->save();
-        return $currency;
+        return $currency->create($currencyInfo);
     }
 
-    public function putCurrency($id, $titleCurrency)
+    public function putCurrency($id, $currencyInfo)
     {
         $currency = $this->currency->findOrFail($id);
-        $currency->title = $titleCurrency;
-        $currency->save();
+        $currency->fill($currencyInfo)->save();
         return $currency;
     }
 

@@ -18,26 +18,23 @@ class CurrencyController extends Controller
 
     public function index()
     {
-        $currency = $this->currencyService->getAllCurrency();
-        return response($currency);
+        return $this->currencyService->getAllCurrency();
     }
 
     public function show($id)
     {
-        $currency = $this->currencyService->getCurrency($id);
-        return response($currency);
+        return $this->currencyService->getCurrency($id);
     }
 
     public function store(StoreCurrencyRequest $request)
     {
-        $currency = $this->currencyService->postCurrency($request->title);
+        $currency = $this->currencyService->postCurrency($request->all());
         return response($currency, 201);
     }
 
     public function update(StoreCurrencyRequest $request, $id)
     {
-        $currency = $this->currencyService->putCurrency($id, $request->title);
-        return response($currency);
+        return $this->currencyService->putCurrency($id, $request->all());
     }
 
     public function destroy($id)

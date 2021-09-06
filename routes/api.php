@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PaymentTypeController;
 use App\Http\Controllers\BankController;
+use App\Http\Controllers\ChartOfAccountsController;
 use App\Http\Controllers\BankAccountController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentMethodController;
@@ -66,6 +67,15 @@ Route::middleware([])->group(function () {
     });
 });
 
+Route::middleware([])->group(function () {
+    Route::prefix('chart-of-accounts')->group(function () {
+        Route::get('/', [ChartOfAccountsController::class, 'index']);
+        Route::get('/{id}', [ChartOfAccountsController::class, 'show']);
+        Route::post('/', [ChartOfAccountsController::class, 'store']);
+        Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
+        Route::delete('/{id}', [ChartOfAccountsController::class, 'destroy']);
+    });
+});
 
 //Restful route -> Bank Accounts
 Route::middleware([])->group(function () {
