@@ -44,7 +44,7 @@ class Handler extends ExceptionHandler
         if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
             return response('', 404);
         } elseif ($exception instanceof \Exception){
-            return response($exception, 500);
+            return response('', 500);
         }
         return parent::render($request, $exception);
     }
