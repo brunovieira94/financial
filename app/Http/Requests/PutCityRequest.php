@@ -14,8 +14,8 @@ class PutCityRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'max:250',
-            'states_id' => 'integer',
+            'title' => 'required_without:states_id|max:250',
+            'states_id' => 'required_without:title|integer',
         ];
     }
 }
