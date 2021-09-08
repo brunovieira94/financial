@@ -12,7 +12,7 @@ class CreateCitiesTable extends Migration
             $table->increments('id');
             $table->string('title');
             $table->integer('states_id')->unsigned();
-            $table->foreign('states_id')->references('id')->on('states');
+            $table->foreign('states_id')->references('id')->on('states')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
