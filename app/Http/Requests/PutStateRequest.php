@@ -14,8 +14,8 @@ class PutStateRequest extends FormRequest
     public function rules()
     {
         return [
-            'country' => 'max:2',
-            'title' => 'max:150',
+            'country' => 'required_without:title|max:2',
+            'title' => 'required_without:country|max:150',
         ];
     }
 }
