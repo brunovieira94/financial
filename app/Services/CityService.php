@@ -18,12 +18,12 @@ class CityService
 
     public function getCity($id)
     {
-      return $this->city->findOrFail($id);
+        return $this->city->with('state')->findOrFail($id);
     }
 
     public function postCity($cityInfo)
     {
-        $city = new State;
+        $city = new City;
         return $city->create($cityInfo);
     }
 
