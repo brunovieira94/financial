@@ -13,7 +13,7 @@ class CityService
 
     public function getAllCity()
     {
-        return $this->city->get();
+        return $this->city->with('state')->get();
     }
 
     public function getCity($id)
