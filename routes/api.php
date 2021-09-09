@@ -10,6 +10,8 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\ProviderCategoryController;
 use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\CityController;
 
@@ -101,6 +103,25 @@ Route::middleware([])->group(function () {
     });
 });
 
+Route::middleware([])->group(function () {
+    Route::prefix('module')->group(function () {
+        Route::get('/', [ModuleController::class, 'index']);
+        Route::get('/{id}', [ModuleController::class, 'show']);
+        Route::post('/', [ModuleController::class, 'store']);
+        Route::put('/{id}', [ModuleController::class, 'update']);
+        Route::delete('/{id}', [ModuleController::class, 'destroy']);
+    });
+});
+
+Route::middleware([])->group(function () {
+    Route::prefix('role')->group(function () {
+        Route::get('/', [RoleController::class, 'index']);
+        Route::get('/{id}', [RoleController::class, 'show']);
+        Route::post('/', [RoleController::class, 'store']);
+        Route::put('/{id}', [RoleController::class, 'update']);
+        Route::delete('/{id}', [RoleController::class, 'destroy']);
+    });
+});
 //Restful route -> States
 Route::middleware([])->group(function () {
     Route::prefix('state')->group(function () {
