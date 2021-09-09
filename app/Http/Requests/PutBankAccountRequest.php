@@ -14,11 +14,11 @@ class PutBankAccountRequest extends FormRequest
     public function rules()
     {
         return [
-            'agency_number' => 'integer',
-            'agency_check_number' => 'integer',
-            'account_number' => 'integer',
-            'account_check_number' => 'integer',
-            'bank_id' => 'integer',
+            'agency_number' => 'required_without_all:agency_check_number,account_number,account_check_number,bank_id|integer',
+            'agency_check_number' => 'integer|required_without_all:agency_number,account_number,account_check_number,bank_id',
+            'account_number' => 'integer|required_without_all:agency_number,agency_check_number,account_check_number,bank_id',
+            'account_check_number' => 'integer|required_without_all:agency_number,agency_check_number,account_number,bank_id',
+            'bank_id' => 'integer|required_without_all:agency_number,agency_check_number,account_number,account_check_number',
        ];
     }
 }
