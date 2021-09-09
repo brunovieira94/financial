@@ -14,7 +14,7 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\CityController;
-
+use App\Http\Controllers\ApprovalFlowController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -141,5 +141,15 @@ Route::middleware([])->group(function () {
         Route::post('/', [CityController::class, 'store']);
         Route::put('/{id}', [CityController::class, 'update']);
         Route::delete('/{id}', [CityController::class, 'destroy']);
+    });
+});
+
+Route::middleware([])->group(function () {
+    Route::prefix('approval-flow')->group(function () {
+        Route::get('/', [ApprovalFlowController::class, 'index']);
+        Route::get('/{id}', [ApprovalFlowController::class, 'show']);
+        Route::post('/', [ApprovalFlowController::class, 'store']);
+        Route::put('/{id}', [ApprovalFlowController::class, 'update']);
+        Route::delete('/{id}', [ApprovalFlowController::class, 'destroy']);
     });
 });
