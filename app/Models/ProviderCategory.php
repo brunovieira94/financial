@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProviderCategory extends Model
 {
-    use softDeletes;
+    use SoftDeletes;
     protected $fillable = ['title'];
     protected $table='provider_categories';
 }
