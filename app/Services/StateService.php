@@ -2,13 +2,16 @@
 
 namespace App\Services;
 use App\Models\State;
+use App\Models\City;
 
 class StateService
 {
     private $state;
-    public function __construct(State $state)
+    private $city;
+    public function __construct(State $state, City $city)
     {
         $this->state = $state;
+        $this->city = $city;
     }
 
     public function getAllState()
@@ -36,6 +39,8 @@ class StateService
 
     public function deleteState($id)
     {
+      $collection = $this->city->where('states_id', $id)->get(['id']);
+      $this->city->destroy($collection->toArray());
       $this->state->findOrFail($id)->delete();
       return true;
     }
