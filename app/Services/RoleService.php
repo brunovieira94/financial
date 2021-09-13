@@ -26,7 +26,7 @@ class RoleService
     {
         $role = new Role;
         $role = $role->create($roleInfo);
-        self::syncModules($role, $roleInfo);        
+        $this->syncModules($role, $roleInfo);
         return $this->role->with('modules')->findOrFail($role->id);
     }
 
@@ -34,7 +34,7 @@ class RoleService
     {
         $role = $this->role->with('modules')->findOrFail($id);
         $role->fill($roleInfo)->save();
-        self::syncModules($role, $roleInfo);
+        $this->syncModules($role, $roleInfo);
         return $this->role->with('modules')->findOrFail($id);
     }
 
@@ -49,16 +49,16 @@ class RoleService
         $crudArray = ['create','read','update','delete','import','export'];
         if(array_key_exists('modules', $roleInfo)){
             foreach($roleInfo['modules'] as $module){
-                $syncArray[$module['id']] = [];                
+                $syncArray[$module['id']] = [];
                 foreach($crudArray as $value){
                     $syncArray[$module['id']][$value] = 0;
                     if(array_key_exists($value, $module)){
-                        $syncArray[$module['id']][$value] = $module[$value]; 
-                    }                   
-                }            
+                        $syncArray[$module['id']][$value] = $module[$value];
+                    }
+                }
             }
             $role->modules()->sync($syncArray);
-        }   
+        }
     }
 
 }
