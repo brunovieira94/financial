@@ -25,7 +25,6 @@ class PutCostCenterRequest extends FormRequest
     {
         return [
             'title' => 'max:255',
-            'parent' => 'integer',
         ];
     }
 }

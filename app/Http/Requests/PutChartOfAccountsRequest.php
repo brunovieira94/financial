@@ -25,7 +25,6 @@ class PutChartOfAccountsRequest extends FormRequest
     {
         return [
             'title' => 'max:255',
-            'parent' => 'integer',
             'cost_center_id' => 'integer',
         ];
     }
