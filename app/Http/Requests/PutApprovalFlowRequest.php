@@ -24,7 +24,7 @@ class PutApprovalFlowRequest extends FormRequest
     public function rules()
     {
         return [
-            'parent_role_id' => 'integer',
+            'order' => 'integer',
             'role_id' => 'integer',
         ];
     }

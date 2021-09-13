@@ -24,7 +24,7 @@ class StoreApprovalFlowRequest extends FormRequest
     public function rules()
     {
         return [
-            'parent_role_id' => 'required|integer',
+            'order' => 'required|integer',
             'role_id' => 'required|integer',
         ];
     }
