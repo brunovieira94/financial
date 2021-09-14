@@ -2,12 +2,16 @@
 
 namespace App\Services;
 use App\Models\Bank;
+use App\Models\BankAccount;
 
 class BankService
 {
     private $bank;
-    public function __construct(Bank $bank){
+    private $bankAccount;
+
+    public function __construct(Bank $bank, BankAccount $bankAccount){
         $this->bank = $bank;
+        $this->bankAccount = $bankAccount;
     }
 
     public function getAllBank()
@@ -35,6 +39,8 @@ class BankService
 
     public function deleteBank($id)
     {
+      $collection = $this->bankAccount->where('bank_id', $id)->get(['id']);
+      $this->bankAccount->destroy($collection->toArray());
       $this->bank->findOrFail($id)->delete();
       return true;
     }

@@ -20,7 +20,7 @@ class CreateBankAccountsTable extends Migration
             $table->integer('account_number');
             $table->integer('account_check_number');
             $table->integer('bank_id')->unsigned();
-            $table->foreign('bank_id')->references('id')->on('banks');
+            $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
             $table->softDeletes();
         });
