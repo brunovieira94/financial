@@ -14,6 +14,7 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\ProviderController;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -141,5 +142,16 @@ Route::middleware([])->group(function () {
         Route::post('/', [CityController::class, 'store']);
         Route::put('/{id}', [CityController::class, 'update']);
         Route::delete('/{id}', [CityController::class, 'destroy']);
+    });
+});
+
+//Restful route -> Provider
+Route::middleware([])->group(function () {
+    Route::prefix('provider')->group(function () {
+        Route::get('/', [ProviderController::class, 'index']);
+        Route::get('/{id}', [ProviderController::class, 'show']);
+        Route::post('/', [ProviderController::class, 'store']);
+        Route::put('/{id}', [ProviderController::class, 'update']);
+        Route::delete('/{id}', [ProviderController::class, 'destroy']);
     });
 });
