@@ -149,7 +149,5 @@ Route::middleware([])->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
         Route::get('/{id}', [ApprovalFlowController::class, 'show']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
-        Route::put('/{id}', [ApprovalFlowController::class, 'update']);
-        Route::delete('/{id}', [ApprovalFlowController::class, 'destroy']);
     });
 });

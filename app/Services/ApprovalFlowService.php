@@ -24,19 +24,14 @@ class ApprovalFlowService
     public function postApprovalFlow($approvalFlowInfo)
     {
         $approvalFlow = new ApprovalFlow;
-        return $approvalFlow->create($approvalFlowInfo);
-    }
-
-    public function putApprovalFlow($id, $approvalFlowInfo)
-    {
-        $approvalFlow = $this->approvalFlow->findOrFail($id);
-        $approvalFlow->fill($approvalFlowInfo)->save();
-        return $approvalFlow;
-    }
-
-    public function deleteApprovalFlow($id)
-    {
-        $this->approvalFlow->findOrFail($id)->delete();
+        $info = [];
+        foreach($approvalFlowInfo['order'] as $key=>$roles){
+            $info['order'] = $key;
+            foreach($roles as $role){
+                $info['role_id'] = $role;
+                $approvalFlow->create($info);
+            }
+        }
         return true;
     }
 

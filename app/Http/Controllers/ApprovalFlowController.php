@@ -30,17 +30,7 @@ class ApprovalFlowController extends Controller
     public function store(StoreApprovalFlowRequest $request)
     {
         $approvalFlow = $this->approvalFlowService->postApprovalFlow($request->all());
-        return response($approvalFlow, 201);
+        return response('', 201);
     }
 
-    public function update(PutApprovalFlowRequest $request, $id)
-    {
-        return $this->approvalFlowService->putApprovalFlow($id, $request->all());
-    }
-
-    public function destroy($id)
-    {
-        $approvalFlow = $this->approvalFlowService->deleteApprovalFlow($id);
-        return response('');
-    }
 }
