@@ -15,6 +15,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\CityController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\CompanyController;
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
@@ -153,5 +154,16 @@ Route::middleware([])->group(function () {
         Route::post('/', [ProviderController::class, 'store']);
         Route::put('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
+    });
+});
+
+//Restful route -> Company
+Route::middleware([])->group(function () {
+    Route::prefix('company')->group(function () {
+        Route::get('/', [CompanyController::class, 'index']);
+        Route::get('/{id}', [CompanyController::class, 'show']);
+        Route::post('/', [CompanyController::class, 'store']);
+        Route::put('/{id}', [CompanyController::class, 'update']);
+        Route::delete('/{id}', [CompanyController::class, 'destroy']);
     });
 });
