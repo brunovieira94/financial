@@ -149,7 +149,6 @@ Route::middleware([])->group(function () {
 Route::middleware([])->group(function () {
     Route::prefix('approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
-        Route::get('/{id}', [ApprovalFlowController::class, 'show']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
     });
 });

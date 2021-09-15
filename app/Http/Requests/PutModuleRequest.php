@@ -24,7 +24,8 @@ class PutModuleRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'max:255'
+            'title' => 'required|max:255',
+            'parent' => 'nullable|integer',
         ];
     }
 }
