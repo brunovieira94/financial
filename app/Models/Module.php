@@ -17,4 +17,29 @@ class Module extends Model
     {
         return $this->belongsToMany(Role::class, 'role_has_modules', 'module_id', 'role_id')->withPivot('create', 'read', 'update', 'delete', 'import', 'export')->as('permissions');
     }
+
+    protected $appends = ['linked_modules'];
+
+    public function getLinkedModulesAttribute()
+    {
+        return $this->hasMany(Module::class, 'parent', 'id')->count();
+    }
+
+    public function parent() {
+        return $this->belongsTo(self::class, 'parent');
+    }
+
+    public function children() {
+        return $this->hasMany(self::class, 'parent');
+    }
+
+    public static function nestable($modules) {
+       foreach ($modules as $module) {
+           if (!$module->children->isEmpty()) {
+               $module->children = self::nestable($module->children);
+            }
+        }
+
+        return $modules;
+    }
 }

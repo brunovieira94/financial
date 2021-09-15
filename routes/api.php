@@ -14,6 +14,7 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\StateController;
 use App\Http\Controllers\CityController;
+use App\Http\Controllers\ApprovalFlowController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\CompanyController;
 
@@ -143,6 +144,13 @@ Route::middleware([])->group(function () {
         Route::post('/', [CityController::class, 'store']);
         Route::put('/{id}', [CityController::class, 'update']);
         Route::delete('/{id}', [CityController::class, 'destroy']);
+    });
+});
+
+Route::middleware([])->group(function () {
+    Route::prefix('approval-flow')->group(function () {
+        Route::get('/', [ApprovalFlowController::class, 'index']);
+        Route::post('/', [ApprovalFlowController::class, 'store']);
     });
 });
 

@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PutChartOfAccountsRequest extends FormRequest
+class StoreApprovalFlowRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,9 +24,7 @@ class PutChartOfAccountsRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255',
-            'parent' => 'nullable|integer',
-            'cost_center_id' => 'integer',
+            'order' => 'required|array',
         ];
     }
 }

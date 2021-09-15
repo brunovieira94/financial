@@ -25,7 +25,7 @@ class StoreChartOfAccountsRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255',
-            'parent' => 'integer',
+            'parent' => 'nullable|integer',
             'cost_center_id' => 'required|integer',
         ];
     }
