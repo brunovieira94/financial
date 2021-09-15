@@ -22,11 +22,6 @@ class ApprovalFlowController extends Controller
         return $this->approvalFlowService->getAllApprovalFlow();
     }
 
-    public function show($id)
-    {
-        return $this->approvalFlowService->getApprovalFlow($id);
-    }
-
     public function store(StoreApprovalFlowRequest $request)
     {
         $approvalFlow = $this->approvalFlowService->postApprovalFlow($request->all());

@@ -16,11 +16,6 @@ class ApprovalFlowService
         return $this->approvalFlow->get();
     }
 
-    public function getApprovalFlow($id)
-    {
-        return $this->approvalFlow->findOrFail($id);
-    }
-
     public function postApprovalFlow($approvalFlowInfo)
     {
         $approvalFlow = new ApprovalFlow;
