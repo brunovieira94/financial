@@ -8,7 +8,7 @@ class ProviderService
 {
     private $provider;
     private $bankAccount;
-    public function __construct(Provider $provider, BankAccount $bankAccount)
+    public function __construct(Provider $provider, BankAccount $bankAccount, ProviderHasBankAccounts $providerHasBankAccounts)
     {
         $this->provider = $provider;
         $this->bankAccount = $bankAccount;
@@ -46,26 +46,34 @@ class ProviderService
     public function deleteProvider($id)
     {
         $providers = $this->provider->with('bankAccount')->findOrFail($id)->delete();
+        $collection = $this->providerHasBankAccounts->where('provider_id', $id)->get(['bank_account_id']);
+        $this->bankAccount->destroy($collection->toArray());
         return true;
     }
 
     public function putBankAccounts($id, $providerInfo){
+
+        $updateBankAccounts = [];
+        $createdBankAccounts = [];
 
         if(array_key_exists('bank_accounts', $providerInfo)){
             foreach($providerInfo['bank_accounts'] as $bank){
                 if (array_key_exists('id', $bank)){
                     $bankAccount = $this->bankAccount->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
-                    $updatedOrCreatedBankAccounts[] = $bank['id'];
+                    $updateBankAccounts[] = $bank['id'];
                 } else {
                     $bankAccount = new BankAccount;
                     $bankAccount = $bankAccount->create($bank);
-                    $updatedOrCreatedBankAccounts[] = $bankAccount->id;
+                    $createdBankAccounts[] = $bankAccount->id;
                 }
             }
 
+            $collection = $this->providerHasBankAccounts->where('provider_id', $id)->whereNotIn('bank_account_id', $updateBankAccounts)->whereNotIn('bank_account_id', $createdBankAccounts)->get(['bank_account_id']);
+            $this->bankAccount->destroy($collection->toArray());
+
             $provider = $this->provider->findOrFail($id);
-            $provider->bankAccount()->sync($updatedOrCreatedBankAccounts);
+            $provider->bankAccount()->attach($createdBankAccounts);
         }
     }
 
