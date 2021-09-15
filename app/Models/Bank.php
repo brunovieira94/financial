@@ -11,7 +11,7 @@ class Bank extends Model
 {
     use SoftDeletes;
     protected $table='banks';
-    protected $fillable = ['title'];
+    protected $fillable = ['title','cnab400','cnab240'];
     protected $appends = ['linked_accounts'];
 
     public function getLinkedAccountsAttribute()

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreBankRequest;
 use App\Services\BankService as BankService;
+use App\Http\Requests\PutBankRequest;
 
 class BankController extends Controller
 {
@@ -29,7 +30,7 @@ class BankController extends Controller
         return $this->bankService->postBank($request->all());
     }
 
-    public function update(StoreBankRequest $request, $id)
+    public function update(PutBankRequest $request, $id)
     {
         return $this->bankService->putBank($id, $request->all());
     }
