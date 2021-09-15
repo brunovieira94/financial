@@ -16,6 +16,8 @@ class CreateBanksTable extends Migration
         Schema::create('banks', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
+            $table->boolean('cnab400');
+            $table->boolean('cnab240');
             $table->timestamps();
             $table->softDeletes();
         });
