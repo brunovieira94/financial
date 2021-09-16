@@ -10,8 +10,8 @@ class CreateProviderHasBankAccountsTable extends Migration
     {
         Schema::create('provider_has_bank_accounts', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('provider_id')->unsigned()->nullable(false);
-            $table->integer('bank_account_id')->unsigned()->nullable(false);
+            $table->integer('provider_id')->unsigned();
+            $table->integer('bank_account_id')->unsigned();
             $table->foreign('provider_id')->references('id')->on('providers')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('bank_account_id')->references('id')->on('bank_accounts')->constrained()->onUpdate('cascade')->onDelete('cascade');
         });
