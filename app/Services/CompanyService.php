@@ -47,8 +47,8 @@ class CompanyService
 
     public function deleteCompany($id)
     {
-        $companies = $this->provider->with('bankAccount')->findOrFail($id)->delete();
-        $collection = $this->companyHasBankAccount->where('provider_id', $id)->get(['bank_account_id']);
+        $companies = $this->company->with('bankAccount')->findOrFail($id)->delete();
+        $collection = $this->companyHasBankAccount->where('company_id', $id)->get(['bank_account_id']);
         $this->bankAccount->destroy($collection->toArray());
         return true;
     }
