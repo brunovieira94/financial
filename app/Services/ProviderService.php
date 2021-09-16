@@ -3,15 +3,18 @@
 namespace App\Services;
 use App\Models\Provider;
 use App\Models\BankAccount;
+use App\Models\ProviderHasBankAccounts;
 
 class ProviderService
 {
     private $provider;
     private $bankAccount;
+    private $providerHasBankAccounts;
     public function __construct(Provider $provider, BankAccount $bankAccount, ProviderHasBankAccounts $providerHasBankAccounts)
     {
         $this->provider = $provider;
         $this->bankAccount = $bankAccount;
+        $this->providerHasBankAccounts = $providerHasBankAccounts;
     }
 
     public function getAllProvider()
