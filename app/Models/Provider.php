@@ -6,9 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Activity;
 
 class Provider extends Model
 {
+    // Logs
+    use LogsActivity;
+    protected static $logAttributes = ['company_name', 'trade_name', 'cpnj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email'];
+    protected static $logName = 'providers';
+    public function tapActivity(Activity $activity, string $eventName)
+    {
+        $activity->causer_id = 1;
+    }
+
     use SoftDeletes;
     protected $table='providers';
     protected $casts = [
