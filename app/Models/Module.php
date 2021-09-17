@@ -5,10 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Activity;
 
 
 class Module extends Model
 {
+    // Logs
+    use LogsActivity;
+    protected static $logAttributes = ['title','parent'];
+    protected static $logName = 'module';
+    public function tapActivity(Activity $activity, string $eventName)
+    {
+        $activity->causer_id = 1;
+    }
+
     use SoftDeletes;
     protected $fillable = ['title','parent'];
     protected $table='module';

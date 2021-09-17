@@ -17,7 +17,7 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\ApprovalFlowController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\CompanyController;
-
+use App\Http\Controllers\LogsController;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -173,5 +173,12 @@ Route::middleware([])->group(function () {
         Route::post('/', [CompanyController::class, 'store']);
         Route::put('/{id}', [CompanyController::class, 'update']);
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
+    });
+});
+
+Route::middleware([])->group(function () {
+    Route::prefix('logs')->group(function () {
+        Route::get('/', [LogsController::class, 'index']);
+        Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 });
