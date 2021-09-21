@@ -16,9 +16,9 @@ class PaymentTypeController extends Controller
         $this->paymentTypeService = $paymentTypeService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->paymentTypeService->getAllPaymentType();
+        return $this->paymentTypeService->getAllPaymentType($request->all());
     }
 
     public function show($id)

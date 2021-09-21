@@ -12,9 +12,12 @@ class RoleService
         $this->role = $role;
     }
 
-    public function getAllRole()
+    public function getAllRole($requestInfo)
     {
-        return $this->role->with('modules')->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->role->with('modules')->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getRole($id)

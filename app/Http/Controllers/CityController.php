@@ -16,9 +16,9 @@ class CityController extends Controller
         $this->cityService = $cityService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->cityService->getAllCity();
+        return $this->cityService->getAllCity($request->all());
     }
 
     public function show($id)

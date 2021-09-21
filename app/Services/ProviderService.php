@@ -17,9 +17,12 @@ class ProviderService
         $this->providerHasBankAccounts = $providerHasBankAccounts;
     }
 
-    public function getAllProvider()
+    public function getAllProvider($requestInfo)
     {
-        return $this->provider->with('bankAccount')->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->provider->with('bankAccount')->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getProvider($id)

@@ -17,9 +17,9 @@ class ApprovalFlowController extends Controller
         $this->approvalFlowService = $approvalFlowService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->approvalFlowService->getAllApprovalFlow();
+        return $this->approvalFlowService->getAllApprovalFlow($request->all());
     }
 
     public function store(StoreApprovalFlowRequest $request)

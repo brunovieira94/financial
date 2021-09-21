@@ -16,9 +16,9 @@ class StateController extends Controller
         $this->stateService = $stateService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->stateService->getAllState();
+        return $this->stateService->getAllState($request->all());
     }
 
     public function show($id)

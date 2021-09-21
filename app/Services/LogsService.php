@@ -6,19 +6,19 @@ use Spatie\Activitylog\Models\Activity;
 class LogsService
 {
 
-    public function getAllLogs($logsInfo)
+    public function getAllLogs($requestInfo)
     {
-        $orderBy = $logsInfo['orderBy'] ?? 'created_at';
-        $order = $logsInfo['order'] ?? 'desc';
-        $perPage = $logsInfo['perPage'] ?? 20;
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
         return Activity::orderBy($orderBy, $order)->paginate($perPage);;
     }
 
-    public function getLogs($log_name, $subject_id, $logsInfo)
+    public function getLogs($log_name, $subject_id, $requestInfo)
     {
-        $orderBy = $logsInfo['orderBy'] ?? 'created_at';
-        $order = $logsInfo['order'] ?? 'desc';
-        $perPage = $logsInfo['perPage'] ?? 20;
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
         return Activity::where([
             ['log_name', $log_name],
             ['subject_id', $subject_id]

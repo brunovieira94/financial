@@ -14,9 +14,12 @@ class CostCenterService
         $this->chartOfAccounts = $chartOfAccounts;
     }
 
-    public function getAllCostCenter()
+    public function getAllCostCenter($requestInfo)
     {
-        $costCenters = $this->costCenter->where('parent', null)->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        $costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
         return $nestable;
     }

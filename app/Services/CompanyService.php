@@ -17,9 +17,12 @@ class CompanyService
         $this->companyHasBankAccount = $companyHasBankAccount;
     }
 
-    public function getAllCompany()
+    public function getAllCompany($requestInfo)
     {
-        return $this->company->with('bankAccount')->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->company->with('bankAccount')->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getCompany($id)

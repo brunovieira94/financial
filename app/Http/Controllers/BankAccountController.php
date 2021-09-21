@@ -17,9 +17,9 @@ class BankAccountController extends Controller
         $this->bankAccountService = $bankAccountService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->bankAccountService->getAllBankAccount();
+        return $this->bankAccountService->getAllBankAccount($request->all());
     }
 
     public function show($id)

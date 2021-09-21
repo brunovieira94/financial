@@ -16,9 +16,9 @@ class PaymentMethodController extends Controller
         $this->paymentMethodService = $paymentMethodService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->paymentMethodService->getAllPaymentMethod();
+        return $this->paymentMethodService->getAllPaymentMethod($request->all());
     }
 
     public function show($id)

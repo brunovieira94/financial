@@ -15,9 +15,9 @@ class BankController extends Controller
         $this->bankService = $bankService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->bankService->getAllBank();
+        return $this->bankService->getAllBank($request->all());
     }
 
     public function show($id)

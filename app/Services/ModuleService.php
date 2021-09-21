@@ -12,9 +12,12 @@ class ModuleService
         $this->module = $module;
     }
 
-    public function getAllModule()
+    public function getAllModule($requestInfo)
     {
-        $modules = $this->module->where('parent', null)->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        $modules = $this->module->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->module->nestable($modules);
         return $nestable;
     }
