@@ -22,8 +22,8 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LogsController;
 
-Route::middleware(['auth:api'])->group(function () {
-Route::middleware([])->group(function () {
+Route::middleware(['auth:api', 'check.permission'])->group(function () {
+
     Route::prefix('cost-center')->group(function () {
         Route::get('/', [CostCenterController::class, 'index']);
         Route::get('/{id}', [CostCenterController::class, 'show']);
@@ -31,9 +31,7 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [CostCenterController::class, 'update']);
         Route::delete('/{id}', [CostCenterController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('currency')->group(function () {
         Route::get('/', [CurrencyController::class, 'index']);
         Route::get('/{id}', [CurrencyController::class, 'show']);
@@ -41,9 +39,7 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [CurrencyController::class, 'update']);
         Route::delete('/{id}', [CurrencyController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('payment-method')->group(function () {
         Route::get('/', [PaymentMethodController::class, 'index']);
         Route::get('/{id}', [PaymentMethodController::class, 'show']);
@@ -51,9 +47,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [PaymentMethodController::class, 'update']);
         Route::delete('/{id}', [PaymentMethodController::class, 'destroy']);
     });
-});
+
 //Restful route -> Payments Types
-Route::middleware([])->group(function () {
     Route::prefix('payment-type')->group(function () {
         Route::get('/', [PaymentTypeController::class, 'index']);
         Route::get('/{id}', [PaymentTypeController::class, 'show']);
@@ -61,10 +56,9 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [PaymentTypeController::class, 'update']);
         Route::delete('/{id}', [PaymentTypeController::class, 'destroy']);
     });
-});
+
 
 //Restful route -> Banks
-Route::middleware([])->group(function () {
     Route::prefix('bank')->group(function () {
         Route::get('/', [BankController::class, 'index']);
         Route::get('/{id}', [BankController::class, 'show']);
@@ -72,9 +66,7 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [BankController::class, 'update']);
         Route::delete('/{id}', [BankController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('chart-of-accounts')->group(function () {
         Route::get('/', [ChartOfAccountsController::class, 'index']);
         Route::get('/{id}', [ChartOfAccountsController::class, 'show']);
@@ -82,10 +74,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
         Route::delete('/{id}', [ChartOfAccountsController::class, 'destroy']);
     });
-});
 
 //Restful route -> Bank Accounts
-Route::middleware([])->group(function () {
     Route::prefix('bank-account')->group(function () {
         Route::get('/', [BankAccountController::class, 'index']);
         Route::get('/{id}', [BankAccountController::class, 'show']);
@@ -93,10 +83,9 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [BankAccountController::class, 'update']);
         Route::delete('/{id}', [BankAccountController::class, 'destroy']);
     });
-});
 
 //Restful route -> Provider Categories
-Route::middleware([])->group(function () {
+
     Route::prefix('provider-category')->group(function () {
         Route::get('/', [ProviderCategoryController::class, 'index']);
         Route::get('/{id}', [ProviderCategoryController::class, 'show']);
@@ -104,9 +93,7 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [ProviderCategoryController::class, 'update']);
         Route::delete('/{id}', [ProviderCategoryController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('module')->group(function () {
         Route::get('/', [ModuleController::class, 'index']);
         Route::get('/{id}', [ModuleController::class, 'show']);
@@ -114,9 +101,7 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [ModuleController::class, 'update']);
         Route::delete('/{id}', [ModuleController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('role')->group(function () {
         Route::get('/', [RoleController::class, 'index']);
         Route::get('/{id}', [RoleController::class, 'show']);
@@ -124,9 +109,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [RoleController::class, 'update']);
         Route::delete('/{id}', [RoleController::class, 'destroy']);
     });
-});
 //Restful route -> States
-Route::middleware([])->group(function () {
+
     Route::prefix('state')->group(function () {
         Route::get('/', [StateController::class, 'index']);
         Route::get('/{id}', [StateController::class, 'show']);
@@ -134,10 +118,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [StateController::class, 'update']);
         Route::delete('/{id}', [StateController::class, 'destroy']);
     });
-});
 
 //Restful route -> City
-Route::middleware(['check.permission'])->group(function () {
     Route::prefix('city')->group(function () {
         Route::get('/', [CityController::class, 'index']);
         Route::get('/{id}', [CityController::class, 'show']);
@@ -145,17 +127,13 @@ Route::middleware(['check.permission'])->group(function () {
         Route::put('/{id}', [CityController::class, 'update']);
         Route::delete('/{id}', [CityController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
     });
-});
 
 //Restful route -> Provider
-Route::middleware([])->group(function () {
     Route::prefix('provider')->group(function () {
         Route::get('/', [ProviderController::class, 'index']);
         Route::get('/{id}', [ProviderController::class, 'show']);
@@ -163,10 +141,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
     });
-});
 
 //Restful route -> Company
-Route::middleware([])->group(function () {
     Route::prefix('company')->group(function () {
         Route::get('/', [CompanyController::class, 'index']);
         Route::get('/{id}', [CompanyController::class, 'show']);
@@ -174,12 +150,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [CompanyController::class, 'update']);
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
     });
-});
-
-
 
 //Restful route -> Business
-Route::middleware([])->group(function () {
     Route::prefix('business')->group(function () {
         Route::get('/', [BusinessController::class, 'index']);
         Route::get('/{id}', [BusinessController::class, 'show']);
@@ -187,10 +159,8 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [BusinessController::class, 'update']);
         Route::delete('/{id}', [BusinessController::class, 'destroy']);
     });
-});
 
 //Restful route -> User
-Route::middleware([])->group(function () {
     Route::prefix('user')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{id}', [UserController::class, 'show']);
@@ -198,22 +168,17 @@ Route::middleware([])->group(function () {
         Route::put('/{id}', [UserController::class, 'update']);
         Route::delete('/{id}', [UserController::class, 'destroy']);
     });
-});
 
-Route::middleware([])->group(function () {
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
-});
 
 });
 
 //Restful route -> Login
-Route::middleware([])->group(function () {
     Route::prefix('/auth')->group(function () {
         Route::post('/', [AuthController::class, 'login']);
     });
-});
 
 
