@@ -20,6 +20,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\LogsController;
 
 Route::middleware(['auth:api'])->group(function () {
 Route::middleware([])->group(function () {
@@ -199,6 +200,13 @@ Route::middleware([])->group(function () {
     });
 });
 
+Route::middleware([])->group(function () {
+    Route::prefix('logs')->group(function () {
+        Route::get('/', [LogsController::class, 'index']);
+        Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
+    });
+});
+
 });
 
 //Restful route -> Login
@@ -207,4 +215,5 @@ Route::middleware([])->group(function () {
         Route::post('/', [AuthController::class, 'login']);
     });
 });
+
 
