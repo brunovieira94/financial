@@ -11,9 +11,12 @@ class ProviderCategoryService
         $this->providerCategory = $providerCategory;
     }
 
-    public function getAllProviderCategory()
+    public function getAllProviderCategory($requestInfo)
     {
-        return $this->providerCategory->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->providerCategory->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getProviderCategory($id)

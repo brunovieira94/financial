@@ -17,9 +17,9 @@ class ModuleController extends Controller
         $this->moduleService = $moduleService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->moduleService->getAllModule();
+        return $this->moduleService->getAllModule($request->all());
     }
 
     public function show($id)

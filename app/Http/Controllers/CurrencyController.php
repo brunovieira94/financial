@@ -16,9 +16,9 @@ class CurrencyController extends Controller
         $this->currencyService = $currencyService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->currencyService->getAllCurrency();
+        return $this->currencyService->getAllCurrency($request->all());
     }
 
     public function show($id)

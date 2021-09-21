@@ -14,9 +14,12 @@ class StateService
         $this->city = $city;
     }
 
-    public function getAllState()
+    public function getAllState($requestInfo)
     {
-        return $this->state->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->state->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getState($id)

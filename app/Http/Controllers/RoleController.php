@@ -17,9 +17,9 @@ class RoleController extends Controller
         $this->roleService = $roleService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->roleService->getAllRole();
+        return $this->roleService->getAllRole($request->all());
     }
 
     public function show($id)

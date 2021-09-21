@@ -17,9 +17,9 @@ class ChartOfAccountsController extends Controller
         $this->chartOfAccountsService = $chartOfAccountsService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->chartOfAccountsService->getAllChartOfAccounts();
+        return $this->chartOfAccountsService->getAllChartOfAccounts($request->all());
     }
 
     public function show($id)
@@ -36,7 +36,6 @@ class ChartOfAccountsController extends Controller
     public function update(PutChartOfAccountsRequest $request, $id)
     {
         return $this->chartOfAccountsService->putChartOfAccounts($id, $request->all());
-        return response($chartOfAccounts);
     }
 
     public function destroy($id)

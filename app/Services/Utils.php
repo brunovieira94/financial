@@ -17,4 +17,8 @@ class Utils
         }
         return $arrayIds;
     }
+
+    const defaultPerPage = 20;
+    const defaultOrderBy = 'created_at';
+    const defaultOrder = 'desc';
 }

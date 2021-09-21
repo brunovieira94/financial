@@ -15,9 +15,9 @@ class ProviderCategoryController extends Controller
         $this->providerCategoryService = $providerCategoryService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->providerCategoryService->getAllProviderCategory();
+        return $this->providerCategoryService->getAllProviderCategory($request->all());
     }
 
     public function show($id)

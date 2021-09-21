@@ -12,9 +12,12 @@ class ChartOfAccountsService
         $this->chartOfAccounts = $chartOfAccounts;
     }
 
-    public function getAllChartOfAccounts()
+    public function getAllChartOfAccounts($requestInfo)
     {
-        $charts = $this->chartOfAccounts->where('parent', null)->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        $charts = $this->chartOfAccounts->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->chartOfAccounts->nestable($charts);
         return $nestable;
     }

@@ -16,9 +16,9 @@ class ProviderController extends Controller
         $this->providerService = $providerService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->providerService->getAllProvider();
+        return $this->providerService->getAllProvider($request->all());
     }
 
     public function show($id)

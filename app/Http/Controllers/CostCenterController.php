@@ -17,9 +17,9 @@ class CostCenterController extends Controller
         $this->costCenterService = $costCenterService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->costCenterService->getAllCostCenter();
+        return $this->costCenterService->getAllCostCenter($request->all());
     }
 
     public function show($id)

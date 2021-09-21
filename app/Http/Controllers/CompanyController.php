@@ -16,9 +16,9 @@ class CompanyController extends Controller
         $this->companyService = $companyService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->companyService->getAllCompany();
+        return $this->companyService->getAllCompany($request->all());
     }
 
     public function show($id)

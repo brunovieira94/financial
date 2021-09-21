@@ -12,9 +12,12 @@ class CurrencyService
         $this->currency = $currency;
     }
 
-    public function getAllCurrency()
+    public function getAllCurrency($requestInfo)
     {
-        return $this->currency->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->currency->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getCurrency($id)
