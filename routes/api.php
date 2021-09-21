@@ -17,12 +17,11 @@ use App\Http\Controllers\CityController;
 use App\Http\Controllers\ApprovalFlowController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\AuthController;
 
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
+Route::middleware(['auth:api'])->group(function () {
 Route::middleware([])->group(function () {
     Route::prefix('cost-center')->group(function () {
         Route::get('/', [CostCenterController::class, 'index']);
@@ -137,7 +136,7 @@ Route::middleware([])->group(function () {
 });
 
 //Restful route -> City
-Route::middleware([])->group(function () {
+Route::middleware(['check.permission'])->group(function () {
     Route::prefix('city')->group(function () {
         Route::get('/', [CityController::class, 'index']);
         Route::get('/{id}', [CityController::class, 'show']);
@@ -175,3 +174,37 @@ Route::middleware([])->group(function () {
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
     });
 });
+
+
+
+//Restful route -> Business
+Route::middleware([])->group(function () {
+    Route::prefix('business')->group(function () {
+        Route::get('/', [BusinessController::class, 'index']);
+        Route::get('/{id}', [BusinessController::class, 'show']);
+        Route::post('/', [BusinessController::class, 'store']);
+        Route::put('/{id}', [BusinessController::class, 'update']);
+        Route::delete('/{id}', [BusinessController::class, 'destroy']);
+    });
+});
+
+//Restful route -> User
+Route::middleware([])->group(function () {
+    Route::prefix('user')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::get('/{id}', [UserController::class, 'show']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::put('/{id}', [UserController::class, 'update']);
+        Route::delete('/{id}', [UserController::class, 'destroy']);
+    });
+});
+
+});
+
+//Restful route -> Login
+Route::middleware([])->group(function () {
+    Route::prefix('/auth')->group(function () {
+        Route::post('/', [AuthController::class, 'login']);
+    });
+});
+
