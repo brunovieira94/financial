@@ -26,21 +26,4 @@ class ModuleController extends Controller
     {
         return $this->moduleService->getModule($id);
     }
-
-    public function store(StoreModuleRequest $request)
-    {
-        $module = $this->moduleService->postModule($request->all());
-        return response($module, 201);
-    }
-
-    public function update(PutModuleRequest $request, $id)
-    {
-        return $this->moduleService->putModule($id, $request->all());
-    }
-
-    public function destroy($id)
-    {
-        $module = $this->moduleService->deleteModule($id);
-        return response('');
-    }
 }
