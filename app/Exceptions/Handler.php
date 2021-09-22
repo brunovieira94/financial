@@ -42,10 +42,13 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
-            return response('', 404);
-        } elseif ($exception instanceof \Exception && !($exception instanceof \Illuminate\Validation\ValidationException)){
+            return response($exception, 404);
+        } elseif ($exception instanceof \Illuminate\Auth\AuthenticationException){
+            return response($exception, 401);
+        }elseif ($exception instanceof \Exception && !($exception instanceof \Illuminate\Validation\ValidationException)){
             return response($exception, 500);
         }
+
         return parent::render($request, $exception);
     }
 }

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\BankAccount;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\LogOptions;
 
 class Bank extends Model
 {
@@ -30,6 +31,3 @@ class Bank extends Model
         return $this->hasMany(BankAccount::class, 'bank_id', 'id')->count();
     }
 }
-
-
-

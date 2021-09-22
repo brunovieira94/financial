@@ -22,6 +22,7 @@ class CostCenter extends Model
     use SoftDeletes;
     protected $table='cost_center';
     protected $fillable = ['title','parent'];
+    protected $hidden = ['pivot'];
 
 
     protected $appends = ['linked_costCenters', 'linked_chartOfAccounts'];
