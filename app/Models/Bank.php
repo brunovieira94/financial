@@ -14,7 +14,7 @@ class Bank extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title','cnab400','cnab240'];
+    protected static $logAttributes = ['title', 'cnpj', 'bank_code', 'cnab400','cnab240'];
     protected static $logName = 'banks';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -23,7 +23,7 @@ class Bank extends Model
 
     use SoftDeletes;
     protected $table='banks';
-    protected $fillable = ['title','cnab400','cnab240'];
+    protected $fillable = ['title','cnab400','cnab240', 'cnpj', 'bank_code'];
     protected $appends = ['linked_accounts'];
 
     public function getLinkedAccountsAttribute()
