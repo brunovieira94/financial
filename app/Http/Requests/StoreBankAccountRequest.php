@@ -16,7 +16,7 @@ class StoreBankAccountRequest extends FormRequest
     public function rules()
     {
         return [
-                'agency_number' => 'required|integer',
+                'agency_number' => 'required|numeric',
                 'agency_check_number' => 'required|integer',
                 'account_number' => 'required|integer',
                 'account_check_number' => 'required|integer',
