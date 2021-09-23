@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreStateRequest extends FormRequest
+class StoreCountryRequest extends FormRequest
 {
     public function authorize()
     {
@@ -14,7 +14,6 @@ class StoreStateRequest extends FormRequest
     public function rules()
     {
         return [
-            'country_id' => 'required|integer',
             'title' => 'required|max:150',
         ];
     }

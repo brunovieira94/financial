@@ -12,7 +12,7 @@ class State extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'country'];
+    protected static $logAttributes = ['title', 'country_id'];
     protected static $logName = 'states';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -20,7 +20,7 @@ class State extends Model
     }
 
     use softDeletes;
-    protected $fillable = ['title', 'country'];
+    protected $fillable = ['title', 'country_id'];
     protected $table='states';
     protected $appends = ['linked_cities'];
 

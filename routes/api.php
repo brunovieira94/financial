@@ -21,6 +21,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LogsController;
+use App\Http\Controllers\CountryController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -171,7 +172,18 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
+    Route::prefix('country')->group(function () {
+        Route::get('/', [CountryController::class, 'index']);
+        Route::get('/{id}', [CountryController::class, 'show']);
+        Route::post('/', [CountryController::class, 'store']);
+        Route::put('/{id}', [CountryController::class, 'update']);
+        Route::delete('/{id}', [CountryController::class, 'destroy']);
+    });
+
+
 });
+
+
 
 //Restful route -> Login
     Route::prefix('/auth')->group(function () {
