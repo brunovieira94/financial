@@ -97,9 +97,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('module')->group(function () {
         Route::get('/', [ModuleController::class, 'index']);
         Route::get('/{id}', [ModuleController::class, 'show']);
-        Route::post('/', [ModuleController::class, 'store']);
-        Route::put('/{id}', [ModuleController::class, 'update']);
-        Route::delete('/{id}', [ModuleController::class, 'destroy']);
     });
 
     Route::prefix('role')->group(function () {

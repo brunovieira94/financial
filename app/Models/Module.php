@@ -13,7 +13,7 @@ class Module extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title','parent'];
+    protected static $logAttributes = ['title','parent','route'];
     protected static $logName = 'module';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -21,7 +21,7 @@ class Module extends Model
     }
 
     use SoftDeletes;
-    protected $fillable = ['title','parent'];
+    protected $fillable = ['title','parent','route'];
     protected $table='module';
 
     public function roles()
