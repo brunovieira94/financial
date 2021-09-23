@@ -16,7 +16,7 @@ class CreateProvidersTable extends Migration
             $table->string('responsible')->nullable();
             $table->integer('provider_categories_id')->unsigned();
             $table->foreign('provider_categories_id')->references('id')->on('provider_categories')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('cost_center_id')->nullable();
+            $table->integer('cost_center_id')->unsigned()->nullable();
             $table->foreign('cost_center_id')->references('id')->on('cost_center')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->string('cep')->nullable();
             $table->integer('cities_id')->unsigned()->nullable();
