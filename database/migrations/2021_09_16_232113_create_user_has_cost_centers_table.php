@@ -17,7 +17,7 @@ class CreateUserHasCostCentersTable extends Migration
             $table->increments('id');
             $table->integer('user_id')->unsigned();
             $table->foreign('user_id')->references('id')->on('users')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('cost_center_id');
+            $table->integer('cost_center_id')->unsigned();
             $table->foreign('cost_center_id')->references('id')->on('cost_center')->constrained()->onUpdate('cascade')->onDelete('cascade');
         });
     }
