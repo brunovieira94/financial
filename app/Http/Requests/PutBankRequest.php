@@ -18,7 +18,7 @@ class PutBankRequest extends FormRequest
             'cnpj' => 'max:45',
             'cnab400' => 'boolean',
             'cnab240' => 'boolean',
-            'bank_code' => 'integer',
+            'bank_code' => 'numeric',
         ];
     }
 }
