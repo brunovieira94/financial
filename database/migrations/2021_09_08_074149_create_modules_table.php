@@ -16,6 +16,7 @@ class CreateModulesTable extends Migration
         Schema::create('module', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
+            $table->string('route');
             $table->integer('parent')->unsigned()->nullable();
             $table->foreign('parent')->references('id')->on('module')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();
