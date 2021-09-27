@@ -19,7 +19,7 @@ class CreateBanksTable extends Migration
             $table->string('cnpj');
             $table->boolean('cnab400');
             $table->boolean('cnab240');
-            $table->integer('bank_code')->nullable();
+            $table->string('bank_code')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

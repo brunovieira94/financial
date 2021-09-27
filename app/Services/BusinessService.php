@@ -23,12 +23,12 @@ class BusinessService
 
     public function getAllBusiness()
     {
-        return $this->business->get();
+        return $this->business->with('user')->with('costCenter')->get();
     }
 
     public function getBusiness($id)
     {
-      return $this->business->findOrFail($id);
+      return $this->business->with('user')->with('costCenter')->findOrFail($id);
     }
 
     public function postBusiness($businessInfo)
