@@ -12,7 +12,7 @@ class CreateProvidersTable extends Migration
             $table->increments('id');
             $table->string('company_name');
             $table->string('trade_name')->nullable();
-            $table->string('cpnj')->nullable();
+            $table->string('cnpj')->nullable();
             $table->string('responsible')->nullable();
             $table->integer('provider_categories_id')->unsigned();
             $table->foreign('provider_categories_id')->references('id')->on('provider_categories')->constrained()->onUpdate('cascade')->onDelete('cascade');
