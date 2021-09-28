@@ -7,6 +7,12 @@ use App\Http\Requests\StoreLoginRequest;
 
 class AuthController extends Controller
 {
+    private $authService;
+
+    public function __construct(AuthService $authService){
+        $this->authService = $authService;
+    }
+
     public function login(StoreLoginRequest $request)
     {
         $loginData = $request->all();
@@ -16,7 +22,8 @@ class AuthController extends Controller
         }
 
         $accessToken = auth()->user()->createToken('Token User')->accessToken;
-        return response(['user' => auth()->user(), 'access_token' => $accessToken]);
+
+        return $this->authService->getUser(auth()->user(), $accessToken);
     }
 }
 
