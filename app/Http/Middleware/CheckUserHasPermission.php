@@ -24,7 +24,7 @@ class CheckUserHasPermission
         $route = explode('/' ,$uri);
 
         // check if it is a super admin
-        if($user->id == 9999)
+        if($user->id >= 9900)
             return $next($request);
 
         //array de objetos com module id
