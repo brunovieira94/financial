@@ -11,12 +11,9 @@ class ApprovalFlowService
         $this->approvalFlow = $approvalFlow;
     }
 
-    public function getAllApprovalFlow($requestInfo)
+    public function getAllApprovalFlow()
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->approvalFlow->orderBy($orderBy, $order)->paginate($perPage);
+        return $this->approvalFlow->all();
     }
 
     public function postApprovalFlow($approvalFlowInfo)

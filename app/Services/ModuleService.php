@@ -14,10 +14,7 @@ class ModuleService
 
     public function getAllModule($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        $modules = $this->module->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
+        $modules = $this->module->where('parent', null)->get();
         $nestable = $this->module->nestable($modules);
         return $nestable;
     }
