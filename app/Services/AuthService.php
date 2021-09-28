@@ -1,20 +1,23 @@
 <?php
 
 namespace App\Services;
-use App\Models\User;
+
 use App\Models\Module;
 use App\Models\RoleHasModule;
+use App\Models\Role;
 
 class AuthService
 {
-    private $user;
+
     private $module;
+    private $role;
     private $roleHasModule;
 
-    public function __construct(User $user, Module $module, RoleHasModule $roleHasModule){
-        $this->user = $user;
+
+    public function __construct(Module $module, RoleHasModule $roleHasModule, Role $role){
         $this->module = $module;
         $this->roleHasModule = $roleHasModule;
+        $this->role = $role;
     }
 
     public function getUser($user, $accessToken)
@@ -28,9 +31,12 @@ class AuthService
             $permission->route = $module->route;
         }
 
+        $user->role = $this->role->where('id', $user->role_id)->get(['id', 'title'])->first();
+
+        unset( $user->role_id);
         $user->permissions = $permissions;
-        $user->access_token = $accessToken;
-        return $user;
+
+        return response(['user' => $user, 'access_token' => $accessToken]);
     }
 
 }
