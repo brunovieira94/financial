@@ -15,13 +15,13 @@ class CreateBankAccountsTable extends Migration
     {
         Schema::create('bank_accounts', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('agency_number');
-            $table->integer('agency_check_number');
-            $table->integer('account_number');
-            $table->integer('account_check_number');
-            $table->string('pix_key');
-            $table->integer('account_type');
-            $table->integer('bank_id')->unsigned();
+            $table->string('agency_number')->nullable();
+            $table->integer('agency_check_number')->nullable();
+            $table->integer('account_number')->nullable();
+            $table->integer('account_check_number')->nullable();
+            $table->string('pix_key')->nullable();
+            $table->integer('account_type')->nullable();
+            $table->integer('bank_id')->unsigned()->nullable();
             $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();
             $table->softDeletes();
