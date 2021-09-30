@@ -7,11 +7,11 @@ use App\Models\ChartOfAccounts;
 class CostCenterService
 {
     private $costCenter;
-    private $chartOfAccounts;
-    public function __construct(CostCenter $costCenter, ChartOfAccounts $chartOfAccounts)
+    // private $chartOfAccounts;
+    public function __construct(CostCenter $costCenter)
     {
         $this->costCenter = $costCenter;
-        $this->chartOfAccounts = $chartOfAccounts;
+        // $this->chartOfAccounts = $chartOfAccounts;
     }
 
     public function getAllCostCenter($requestInfo)
@@ -58,11 +58,11 @@ class CostCenterService
     public function deleteCostCenter($id)
     {
         $costCenter = $this->costCenter->findOrFail($id)->where('id', $id)->get();
-        $collection = $this->chartOfAccounts->where('cost_center_id', $id)->get(['id']);
+        // $collection = $this->chartOfAccounts->where('cost_center_id', $id)->get(['id']);
         $nestable = $this->costCenter->nestable($costCenter)->toArray();
         $arrayIds = Utils::getDeleteKeys($nestable);
         $this->costCenter->destroy($arrayIds);
-        $this->chartOfAccounts->destroy($collection->toArray());
+        // $this->chartOfAccounts->destroy($collection->toArray());
         return true;
     }
 }

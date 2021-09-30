@@ -16,7 +16,8 @@ class ApprovalFlow extends Model
     protected static $logName = 'approval_flow';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;

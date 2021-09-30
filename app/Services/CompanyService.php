@@ -22,35 +22,39 @@ class CompanyService
         $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
         $order = $requestInfo['order'] ?? Utils::defaultOrder;
         $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->company->with('bankAccount')->orderBy($orderBy, $order)->paginate($perPage);
+        return $this->company->with(['bankAccount','managers'])->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getCompany($id)
     {
-      return $this->company->with('bankAccount')->findOrFail($id);
+      return $this->company->with(['bankAccount','managers'])->findOrFail($id);
     }
 
     public function postCompany($companyInfo)
     {
         $company = new Company;
         $company = $company->create($companyInfo);
-
+        if(array_key_exists('managers', $companyInfo)){
+            $company->managers()->sync($companyInfo['managers']);
+        }
         self::syncBankAccounts($company, $companyInfo);
-        return $this->company->with('bankAccount')->findOrFail($company->id);
+        return $this->company->with(['bankAccount','managers'])->findOrFail($company->id);
     }
 
     public function putCompany($id, $companyInfo)
     {
         $company = $this->company->findOrFail($id);
         $company->fill($companyInfo)->save();
-
+        if(array_key_exists('managers', $companyInfo)){
+            $company->managers()->sync($companyInfo['managers']);
+        }
         self::putBankAccounts($id, $companyInfo);
-        return $this->company->with('bankAccount')->findOrFail($company->id);
+        return $this->company->with(['bankAccount','managers'])->findOrFail($company->id);
     }
 
     public function deleteCompany($id)
     {
-        $companies = $this->company->with('bankAccount')->findOrFail($id)->delete();
+        $companies = $this->company->with(['bankAccount','managers'])->findOrFail($id)->delete();
         $collection = $this->companyHasBankAccount->where('company_id', $id)->get(['bank_account_id']);
         $this->bankAccount->destroy($collection->toArray());
         return true;
@@ -93,5 +97,4 @@ class CompanyService
             $company->bankAccount()->attach($createdBankAccounts);
         }
     }
-
 }

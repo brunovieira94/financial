@@ -16,7 +16,8 @@ class PaymentType extends Model
     protected static $logName = 'payment_types';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;

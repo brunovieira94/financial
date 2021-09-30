@@ -13,11 +13,12 @@ class Provider extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['company_name', 'trade_name', 'cpnj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email'];
+    protected static $logAttributes = ['company_name', 'trade_name', 'cpnj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email', 'user_id', 'responsible_phone', 'responsible_email', 'state_subscription', 'chart_of_accounts_id'];
     protected static $logName = 'providers';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;
@@ -25,7 +26,7 @@ class Provider extends Model
     protected $casts = [
         'phones' => 'array',
     ];
-    protected $fillable = ['company_name', 'trade_name', 'cpnj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email'];
+    protected $fillable = ['company_name', 'trade_name', 'cpnj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email', 'user_id', 'responsible_phone', 'responsible_email', 'state_subscription', 'chart_of_accounts_id'];
 
     public function bankAccount()
     {

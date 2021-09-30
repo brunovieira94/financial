@@ -12,16 +12,17 @@ class ChartOfAccounts extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'parent', 'cost_center_id'];
+    protected static $logAttributes = ['title', 'parent', 'code'];
     protected static $logName = 'chart_of_accounts';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;
     protected $table='chart_of_accounts';
-    protected $fillable = ['title', 'parent', 'cost_center_id'];
+    protected $fillable = ['title', 'parent', 'code'];
 
     protected $appends = ['linked_chartOfAccounts'];
 

@@ -15,7 +15,6 @@ class CreateRoleHasModulesTable extends Migration
     {
         Schema::create('role_has_modules', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('title');
             $table->integer('role_id')->unsigned();
             $table->foreign('role_id')->references('id')->on('role')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('module_id')->unsigned();

@@ -16,8 +16,7 @@ class CreateChartOfAccountsTable extends Migration
         Schema::create('chart_of_accounts', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
-            $table->integer('cost_center_id')->unsigned();
-            $table->foreign('cost_center_id')->references('id')->on('cost_center')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->string('code');
             $table->integer('parent')->unsigned()->nullable();
             $table->foreign('parent')->references('id')->on('chart_of_accounts')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();

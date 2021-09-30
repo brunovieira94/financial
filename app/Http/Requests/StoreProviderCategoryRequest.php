@@ -15,6 +15,7 @@ class StoreProviderCategoryRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255',
+            'payment_before_weekends' => 'required|boolean',
         ];
     }
 }

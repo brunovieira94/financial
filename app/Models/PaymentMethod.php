@@ -12,14 +12,15 @@ class PaymentMethod extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title'];
+    protected static $logAttributes = ['title', 'initials'];
     protected static $logName = 'payment_method';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;
     protected $table='payment_method';
-    protected $fillable = ['title'];
+    protected $fillable = ['title', 'initials'];
 }

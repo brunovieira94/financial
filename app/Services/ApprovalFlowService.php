@@ -18,6 +18,7 @@ class ApprovalFlowService
 
     public function postApprovalFlow($approvalFlowInfo)
     {
+        ApprovalFlow::truncate();
         $approvalFlow = new ApprovalFlow;
         $info = [];
         foreach($approvalFlowInfo['order'] as $key=>$roles){

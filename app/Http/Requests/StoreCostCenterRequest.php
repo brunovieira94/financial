@@ -26,6 +26,7 @@ class StoreCostCenterRequest extends FormRequest
         return [
             'title' => 'required|max:255',
             'parent' => 'nullable|integer',
+            'code' => 'required|string',
         ];
     }
 }

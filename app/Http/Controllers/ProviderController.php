@@ -28,7 +28,8 @@ class ProviderController extends Controller
 
     public function store(StoreProviderRequest $request)
     {
-        return $this->providerService->postProvider($request->all());
+        $user = auth()->user();
+        return $this->providerService->postProvider($user->id, $request->all());
     }
 
     public function update(PutProviderRequest $request, $id)

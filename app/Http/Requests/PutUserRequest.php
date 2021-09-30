@@ -16,6 +16,8 @@ class PutUserRequest extends FormRequest
         return [
             'name' => 'max:150',
             'role_id' => 'integer',
+            'phone' => 'string',
+            'extension' => 'string',
             'email' => 'email|max:150',
             'password' => 'max:250|min:8',
         ];

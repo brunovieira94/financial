@@ -21,6 +21,8 @@ class StoreBankAccountRequest extends FormRequest
                 'account_number' => 'required|integer',
                 'account_check_number' => 'required|integer',
                 'bank_id' => 'required|integer',
+                'pix_key' => 'required|string',
+                'account_type' => 'required|integer|min:0|max:2',
        ];
     }
 }
