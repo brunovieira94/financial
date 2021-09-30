@@ -12,14 +12,15 @@ class ProviderCategory extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title'];
+    protected static $logAttributes = ['title','payment_before_weekends'];
     protected static $logName = 'provider_categories';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;
-    protected $fillable = ['title'];
+    protected $fillable = ['title','payment_before_weekends'];
     protected $table='provider_categories';
 }

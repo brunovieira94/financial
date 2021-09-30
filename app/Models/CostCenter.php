@@ -12,29 +12,25 @@ class CostCenter extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title','parent'];
+    protected static $logAttributes = ['title','parent','code'];
     protected static $logName = 'cost_center';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     use SoftDeletes;
     protected $table='cost_center';
-    protected $fillable = ['title','parent'];
+    protected $fillable = ['title','parent','code'];
     protected $hidden = ['pivot'];
 
 
-    protected $appends = ['linked_costCenters', 'linked_chartOfAccounts'];
+    protected $appends = ['linked_costCenters'];
 
     public function getLinkedCostCentersAttribute()
     {
         return $this->hasMany(CostCenter::class, 'parent', 'id')->count();
-    }
-
-    public function getLinkedChartOfAccountsAttribute()
-    {
-        return $this->hasMany(ChartOfAccounts::class, 'cost_center_id', 'id')->count();
     }
 
     public function parent() {

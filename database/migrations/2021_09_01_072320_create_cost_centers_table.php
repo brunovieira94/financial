@@ -16,6 +16,7 @@ class CreateCostCentersTable extends Migration
         Schema::create('cost_center', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
+            $table->string('code');
             $table->integer('parent')->unsigned()->nullable();
             $table->foreign('parent')->references('id')->on('cost_center')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->timestamps();

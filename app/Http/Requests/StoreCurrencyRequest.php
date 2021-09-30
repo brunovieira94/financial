@@ -15,6 +15,7 @@ class StoreCurrencyRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255',
+            'initials' => 'required|max:255',
         ];
     }
 }

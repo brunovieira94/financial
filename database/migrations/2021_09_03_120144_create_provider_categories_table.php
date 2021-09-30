@@ -16,6 +16,7 @@ class CreateProviderCategoriesTable extends Migration
         Schema::create('provider_categories', function (Blueprint $table) {
             $table->increments('id');
             $table->string('title');
+            $table->boolean('payment_before_weekends');
             $table->timestamps();
             $table->softDeletes();
         });

@@ -12,15 +12,16 @@ class Currency extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title'];
+    protected static $logAttributes = ['title', 'initials'];
     protected static $logName = 'currency';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = 1;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
     }
 
     // Model attributes
     use SoftDeletes;
     protected $table='currency';
-    protected $fillable = ['title'];
+    protected $fillable = ['title', 'initials'];
 }

@@ -19,6 +19,8 @@ class CreateBankAccountsTable extends Migration
             $table->integer('agency_check_number');
             $table->integer('account_number');
             $table->integer('account_check_number');
+            $table->string('pix_key');
+            $table->integer('account_type');
             $table->integer('bank_id')->unsigned();
             $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade')->onUpdate('cascade');
             $table->timestamps();

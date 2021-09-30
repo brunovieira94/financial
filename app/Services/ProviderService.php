@@ -30,9 +30,10 @@ class ProviderService
       return $this->provider->with('bankAccount')->findOrFail($id);
     }
 
-    public function postProvider($providerInfo)
+    public function postProvider($userId, $providerInfo)
     {
         $provider = new Provider;
+        $providerInfo['user_id'] = $userId;
         $provider = $provider->create($providerInfo);
 
 
