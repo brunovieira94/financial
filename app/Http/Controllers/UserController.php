@@ -16,9 +16,9 @@ class UserController extends Controller
         $this->userService = $userService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->userService->getAllUser();
+        return $this->userService->getAllUser($request->all());
     }
 
     public function show($id)
