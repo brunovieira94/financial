@@ -18,9 +18,12 @@ class UserService
         $this->business = $business;
     }
 
-    public function getAllUser()
+    public function getAllUser($requestInfo)
     {
-        return $this->user->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->user->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getUser($id)
