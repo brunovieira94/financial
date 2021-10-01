@@ -16,7 +16,7 @@ class PutCompanyRequest extends FormRequest
         return [
             'company_name' => 'max:250',
             'trade_name' => 'max:150',
-            'cpnj' => 'max:45',
+            'cnpj' => 'max:45',
             'cep' => 'max:10',
             'cities_id' => 'integer',
             'address' => 'max:250',
