@@ -23,7 +23,10 @@ class BusinessService
 
     public function getAllBusiness()
     {
-        return $this->business->with('user')->with('costCenter')->get();
+        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        return $this->business->with('user')->with('costCenter')->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getBusiness($id)
@@ -79,7 +82,7 @@ class BusinessService
                     $businessHasCostCenters->fill($cost_user)->save();
                     $updateCostUser[] = $cost_user['id'];
                 } else {
-                    $businessHasCostCenters = $businessHasCostCenters->create([
+                    $businessHasCostCenters = $this->businessHasCostCenters->create([
                         'cost_center_id' => $cost_user['cost_center_id'],
                         'user_id' => $cost_user['user_id'],
                         'business_id' => $id,
