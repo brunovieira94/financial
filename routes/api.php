@@ -22,6 +22,8 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\CountryController;
+use App\Http\Controllers\BillToPayController;
+use App\Http\Controllers\AccountsPayableApprovalFlowController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -180,10 +182,24 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [CountryController::class, 'destroy']);
     });
 
+    //Restful route -> Bill-to-pay
+    Route::prefix('bill-to-pay')->group(function () {
+        Route::get('/', [BillToPayController::class, 'index']);
+        Route::get('/{id}', [BillToPayController::class, 'show']);
+        Route::post('/', [BillToPayController::class, 'store'])->middleware('check.installments');
+        Route::post('/{id}', [BillToPayController::class, 'update'])->middleware('check.installments');
+        Route::delete('/{id}', [BillToPayController::class, 'destroy']);
+        Route::put('/installment/pay/{id}', [BillToPayController::class, 'payInstallment']);
+    });
+
+    Route::prefix('account-payable-approval-flow')->group(function () {
+        Route::get('/', [AccountsPayableApprovalFlowController::class, 'accountsApproveUser']);
+        Route::put('/approve/{id}', [AccountsPayableApprovalFlowController::class, 'approveAccount']);
+        Route::put('/reprove/{id}', [AccountsPayableApprovalFlowController::class, 'reproveAccount']);
+        Route::put('/cancel/{id}', [AccountsPayableApprovalFlowController::class, 'cancelAccount']);
+    });
 
 });
-
-
 
 //Restful route -> Login
     Route::prefix('/auth')->group(function () {
