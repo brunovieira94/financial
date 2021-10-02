@@ -31,10 +31,13 @@ class PutProviderRequest extends FormRequest
             'responsible_email' => 'max:250',
             'state_subscription' => 'max:250',
             'chart_of_accounts_id' => 'integer',
-            'bank_accounts.*.agency_number' => 'required_without_all:agency_check_number,account_number,account_check_number,bank_id,bank_accounts.*.id|integer',
-            'bank_accounts.*.account_number' => 'integer|required_without_all:agency_number,agency_check_number,account_check_number,bank_id,bank_accounts.*.id',
-            'bank_accounts.*.account_check_number' => 'integer|required_without_all:agency_number,agency_check_number,account_number,bank_id,bank_accounts.*.id',
-            'bank_accounts.*.bank_id' => 'integer|required_without_all:agency_number,agency_check_number,account_number,account_check_number,bank_accounts.*.id',
+            'bank_accounts.*.agency_number' => 'required_without_all:bank_accounts.*.pix_key|numeric',
+            'bank_accounts.*.agency_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
+            'bank_accounts.*.account_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
+            'bank_accounts.*.account_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
+            'bank_accounts.*.bank_id' => 'integer|required_without_all:bank_accounts.*.pix_key',
+            'bank_accounts.*.pix_key' => 'string|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id',
+            'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
         ];
     }
 }
