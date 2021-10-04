@@ -19,6 +19,7 @@ class BillToPay extends Model
     }
     use SoftDeletes;
     protected $table='bills_to_pay';
+    protected $hidden = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
 
     protected $fillable = [
                             'id_provider',
@@ -50,5 +51,43 @@ class BillToPay extends Model
         return $this->hasMany(BillToPayHasInstallments::class, 'bill_to_pay', 'id');
     }
 
+    public function provider()
+    {
+        return $this->hasOne(Provider::class, 'id', 'id_provider');
+    }
 
+    public function bankAccountProvider()
+    {
+        return $this->hasOne(BankAccount::class, 'id', 'id_bank_account_provider');
+    }
+
+    public function bankAccountCompany()
+    {
+        return $this->hasOne(BankAccount::class, 'id', 'id_bank_account_company');
+    }
+
+    public function business()
+    {
+        return $this->hasOne(Business::class, 'id', 'id_business');
+    }
+
+    public function costCenter()
+    {
+        return $this->hasOne(CostCenter::class, 'id', 'id_cost_center');
+    }
+
+    public function chartOfAccounts()
+    {
+        return $this->hasOne(ChartOfAccounts::class, 'id', 'id_chart_of_account');
+    }
+
+    public function currency()
+    {
+        return $this->hasOne(Currency::class, 'id', 'id_currency');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'id_user');
+    }
 }

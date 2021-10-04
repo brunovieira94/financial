@@ -16,7 +16,7 @@ class PutBankAccountRequest extends FormRequest
         return [
             'agency_number' => 'required_without_all:pix_key|numeric',
             'agency_check_number' => 'integer|required_without_all:pix_key',
-            'account_number' => 'integer|required_without_all:pix_key',
+            'account_number' => 'numeric|required_without_all:pix_key',
             'account_check_number' => 'integer|required_without_all:pix_key',
             'bank_id' => 'integer|required_without_all:pix_key',
             'pix_key' => 'string|required_without_all:agency_number,agency_check_number,account_number,account_check_number,account_type,bank_id',
