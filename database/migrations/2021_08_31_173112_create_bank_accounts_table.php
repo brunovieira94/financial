@@ -17,7 +17,7 @@ class CreateBankAccountsTable extends Migration
             $table->increments('id');
             $table->string('agency_number')->nullable();
             $table->integer('agency_check_number')->nullable();
-            $table->integer('account_number')->nullable();
+            $table->string('account_number')->nullable();
             $table->integer('account_check_number')->nullable();
             $table->string('pix_key')->nullable();
             $table->integer('account_type')->nullable();

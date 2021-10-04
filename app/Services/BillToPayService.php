@@ -20,12 +20,12 @@ class BillToPayService
 
     public function getAllBillToPay()
     {
-        return $this->billToPay->with('installments')->get();
+        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->get();
     }
 
     public function getBillToPay($id)
     {
-      return $this->billToPay->with('installments')->findOrFail($id);
+        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->findOrFail($id);
     }
 
     public function postBillToPay(Request $request)

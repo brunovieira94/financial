@@ -33,7 +33,7 @@ class StoreProviderRequest extends FormRequest
             'chart_of_accounts_id' => 'integer',
             'bank_accounts.*.agency_number' => 'required_without_all:bank_accounts.*.pix_key|numeric',
             'bank_accounts.*.agency_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
-            'bank_accounts.*.account_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
+            'bank_accounts.*.account_number' => 'numeric|required_without_all:bank_accounts.*.pix_key',
             'bank_accounts.*.account_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
             'bank_accounts.*.bank_id' => 'integer|required_without_all:bank_accounts.*.pix_key',
             'bank_accounts.*.pix_key' => 'string|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id',
