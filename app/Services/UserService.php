@@ -23,12 +23,12 @@ class UserService
         $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
         $order = $requestInfo['order'] ?? Utils::defaultOrder;
         $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->user->orderBy($orderBy, $order)->paginate($perPage);
+        return $this->user->with(['costCenter', 'business'])->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getUser($id)
     {
-      return $this->user->findOrFail($id);
+      return $this->user->with(['costCenter', 'business'])->findOrFail($id);
     }
 
     public function postUser($userInfo)
@@ -39,7 +39,7 @@ class UserService
 
         self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
-        return $this->user->with('costCenter')->with('business')->findOrFail($user->id);
+        return $this->user->with(['costCenter', 'business'])->findOrFail($user->id);
 
     }
 
@@ -55,7 +55,7 @@ class UserService
         self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
 
-        return $this->user->with('costCenter')->with('business')->findOrFail($id);
+        return $this->user->with(['costCenter', 'business'])->findOrFail($id);
     }
 
     public function deleteUser($id)
