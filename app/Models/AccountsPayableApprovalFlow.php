@@ -22,5 +22,13 @@ class AccountsPayableApprovalFlow extends Model
     protected $table='accounts_payable_approval_flows';
     protected $fillable = ['id_bill_to_pay','order', 'status', 'reason'];
     public $timestamps = false;
+    protected $hidden = ['id_bill_to_pay'];
 
+    public function billToPay()
+    {
+        $class = BillToPay::class;
+        $class::$staticMakeVisible = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
+
+        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay');
+    }
 }
