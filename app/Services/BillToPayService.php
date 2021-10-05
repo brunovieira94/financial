@@ -47,7 +47,7 @@ class BillToPayService
 
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
             'id_bill_to_pay' => $billToPay->id,
-            'order' => 1,
+            'order' => 0,
             'status' => 0,
         ]);
 
