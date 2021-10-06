@@ -33,8 +33,13 @@ class BillToPayService
         $billToPayInfo = $request->all();
 
         $billToPayInfo['id_user'] = auth()->user()->id;
-        $billToPayInfo['invoice_file'] = self::storeInvoice($request);
-        $billToPayInfo['billet_file'] = self::storeBillet($request);
+
+        if (array_key_exists('invoice_file', $billToPayInfo)){
+            $billToPayInfo['invoice_file'] = self::storeInvoice($request);
+        }
+        if (array_key_exists('billet_file', $billToPayInfo)){
+            $billToPayInfo['billet_file'] = self::storeBillet($request);
+        }
 
         $billToPay = new BillToPay;
         $billToPay = $billToPay->create($billToPayInfo);
@@ -42,7 +47,7 @@ class BillToPayService
 
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
             'id_bill_to_pay' => $billToPay->id,
-            'order' => 1,
+            'order' => 0,
             'status' => 0,
         ]);
 

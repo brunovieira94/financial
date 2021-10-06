@@ -19,9 +19,9 @@ class CreateBillToPaysTable extends Migration
             $table->foreign('id_provider')->references('id')->on('providers')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->date('emission_date');
             $table->date('pay_date');
-            $table->integer('id_bank_account_provider')->unsigned();
+            $table->integer('id_bank_account_provider')->unsigned()->nullable();
             $table->foreign('id_bank_account_provider')->references('id')->on('bank_accounts')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('id_bank_account_company')->unsigned();
+            $table->integer('id_bank_account_company')->unsigned()->nullable();
             $table->foreign('id_bank_account_company')->references('id')->on('bank_accounts')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->double('amount');
             $table->integer('id_business')->unsigned();
@@ -32,7 +32,7 @@ class CreateBillToPaysTable extends Migration
             $table->foreign('id_chart_of_account')->references('id')->on('chart_of_accounts')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('id_currency')->references('id')->on('currency')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('id_currency')->unsigned();
-            $table->double('exchange_rate');
+            $table->double('exchange_rate')->nullable();
             $table->integer('frequency_of_installments');
             $table->integer('id_user')->unsigned();
             $table->foreign('id_user')->references('id')->on('users')->constrained()->onUpdate('cascade')->onDelete('cascade');
