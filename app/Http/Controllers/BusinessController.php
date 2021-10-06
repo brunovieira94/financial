@@ -16,9 +16,9 @@ class BusinessController extends Controller
         $this->businessService = $businessService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return $this->businessService->getAllBusiness();
+        return $this->businessService->getAllBusiness($request->all());
     }
 
     public function show($id)

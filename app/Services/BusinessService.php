@@ -21,17 +21,18 @@ class BusinessService
         $this->businessHasCostCenters = $businessHasCostCenters;
     }
 
-    public function getAllBusiness()
+    public function getAllBusiness($requestInfo)
     {
         $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
         $order = $requestInfo['order'] ?? Utils::defaultOrder;
         $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->business->with('user')->with('costCenter')->orderBy($orderBy, $order)->paginate($perPage);
+
+        return $this->business->with('costUser')->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getBusiness($id)
     {
-      return $this->business->with('user')->with('costCenter')->findOrFail($id);
+      return $this->business->with('costUser')->findOrFail($id);
     }
 
     public function postBusiness($businessInfo)
@@ -40,7 +41,7 @@ class BusinessService
         $business = $business->create($businessInfo);
 
         self::syncCostUser($business, $businessInfo);
-        return $this->business->with('user')->with('costCenter')->findOrFail($business->id);
+        return $this->business->with('costUser')->findOrFail($business->id);
     }
 
     public function putBusiness($id, $businessInfo)
@@ -48,7 +49,7 @@ class BusinessService
         $business = $this->business->findOrFail($id);
         $business->fill($businessInfo)->save();
         self::putCostUser($id, $businessInfo);
-        return $this->business->with('user')->with('costCenter')->findOrFail($business->id);
+        return $this->business->with('costUser')->findOrFail($business->id);
     }
 
     public function deleteBusiness($id)

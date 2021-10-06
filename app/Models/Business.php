@@ -21,21 +21,16 @@ class Business extends Model
         $activity->causer_id = $user->id;
     }
 
-
     use SoftDeletes;
     protected $table='business';
     protected $hidden = ['pivot'];
     protected $fillable = ['company_id', 'name'];
 
-    public function user()
+    public function costUser()
     {
-        return $this->belongsToMany(User::class, 'business_has_cost_centers', 'business_id', 'user_id');
+        return $this->hasMany(BusinessHasCostCenters::class, 'business_id', 'id')->with(['user', 'costCenter']);
     }
 
-    public function costCenter()
-    {
-        return $this->belongsToMany(CostCenter::class, 'business_has_cost_centers', 'business_id', 'cost_center_id');
-    }
 }
 
 
