@@ -26,9 +26,6 @@ class AccountsPayableApprovalFlow extends Model
 
     public function billToPay()
     {
-        $class = BillToPay::class;
-        $class::$staticMakeVisible = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
-
-        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay');
+        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay')->with(['provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user']);
     }
 }
