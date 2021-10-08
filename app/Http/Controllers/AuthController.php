@@ -25,7 +25,6 @@ class AuthController extends Controller
         $response = app()->handle($proxy);
 
         $tokenResponse = json_decode($response->content());
-        var_dump($tokenResponse);
 
         $tokenParts = explode(".", $tokenResponse->access_token);
         $tokenHeader = base64_decode($tokenParts[0]);
