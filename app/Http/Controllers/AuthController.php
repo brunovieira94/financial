@@ -13,17 +13,24 @@ class AuthController extends Controller
         $this->authService = $authService;
     }
 
-    public function login(StoreLoginRequest $request)
+    public function login(Request $request)
     {
-        $loginData = $request->all();
+        $request->request->add([
+        'client_id' => env('TOKEN_CLIENT_ID'),
+        'client_secret' => env('TOKEN_CLIENT_SECRET')
+        ]);
+        $proxy = Request::create('oauth/token', 'POST', $request->input());
+        $response = app()->handle($proxy);
 
-        if(!auth()->attempt($loginData)) {
-            return response(['message'=>'Invalid credentials'], 422);
-        }
+        $tokenResponse = json_decode($response->content());
 
-        $accessToken = auth()->user()->createToken('Token User')->accessToken;
+        $tokenParts = explode(".", $tokenResponse->access_token);
+        $tokenHeader = base64_decode($tokenParts[0]);
+        $tokenPayload = base64_decode($tokenParts[1]);
+        $jwtHeader = json_decode($tokenHeader);
+        $jwtPayload = json_decode($tokenPayload);
 
-        return $this->authService->getUser(auth()->user(), $accessToken);
+        return $this->authService->getUser($jwtPayload->sub, $tokenResponse);
     }
 }
 
