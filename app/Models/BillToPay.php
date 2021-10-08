@@ -21,20 +21,6 @@ class BillToPay extends Model
     protected $table='bills_to_pay';
     protected $hidden = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
 
-    //controller hidden
-    public static $staticMakeVisible;
-    public function __construct($attributes = array())
-    {
-      parent::__construct($attributes);
-      if (isset(self::$staticMakeVisible)){
-          $this->makeVisible(self::$staticMakeVisible);
-      }
-    }
-    public function __destruct()
-    {
-      self::$staticMakeVisible = null;
-    }
-
     protected $fillable = [
                             'id_provider',
                             'emission_date',
