@@ -16,6 +16,7 @@ class StoreProviderRequest extends FormRequest
         return [
             'company_name' => 'required|max:250',
             'trade_name' => 'max:150',
+            'alias' => 'max:150',
             'cnpj' => 'max:17',
             'responsible' => 'max:250',
             'provider_categories_id' => 'required|max:17|integer',
