@@ -17,6 +17,13 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        $loginData['email'] = $request->username;
+        $loginData['password'] = $request->password;
+
+        if(!auth()->attempt($loginData)) {
+            return response(['message'=>'Invalid credentials'], 422);
+        }
+
         $request->request->add([
             'client_id' => env('TOKEN_CLIENT_ID'),
             'client_secret' => env('TOKEN_CLIENT_SECRET')
