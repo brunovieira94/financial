@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\DuplicateRoleCostCenter;
 
 class StoreCostCenterRequest extends FormRequest
 {
@@ -24,9 +25,9 @@ class StoreCostCenterRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255',
+            'title' => 'required|max:255' ,
             'parent' => 'nullable|integer',
-            'code' => 'required|string',
+            'code' => new DuplicateRoleCostCenter(request()->input('parent')),
         ];
     }
 }
