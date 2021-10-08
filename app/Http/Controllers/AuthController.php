@@ -23,7 +23,6 @@ class AuthController extends Controller
         ]);
         $proxy = Request::create('oauth/token', 'POST', $request->input());
         $response = app()->handle($proxy);
-        return $response;
 
         $tokenResponse = json_decode($response->content());
 
