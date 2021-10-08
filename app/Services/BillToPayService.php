@@ -52,7 +52,7 @@ class BillToPayService
         ]);
 
         self::syncInstallments($billToPay, $billToPayInfo);
-        return $this->billToPay->with('installments')->findOrFail($billToPay->id);
+        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->findOrFail($billToPay->id);
     }
 
     public function putBillToPay($id, Request $request)
@@ -70,7 +70,7 @@ class BillToPayService
 
         $billToPay->fill($billToPayInfo)->save();
         self::syncInstallments($billToPay, $billToPayInfo);
-        return $this->billToPay->with('installments')->findOrFail($billToPay->id);
+        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->findOrFail($billToPay->id);
     }
 
     public function deleteBillToPay($id)
