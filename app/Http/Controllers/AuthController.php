@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Services\AuthService as AuthService;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreLoginRequest;
@@ -9,18 +10,20 @@ class AuthController extends Controller
 {
     private $authService;
 
-    public function __construct(AuthService $authService){
+    public function __construct(AuthService $authService)
+    {
         $this->authService = $authService;
     }
 
     public function login(Request $request)
     {
         $request->request->add([
-        'client_id' => env('TOKEN_CLIENT_ID'),
-        'client_secret' => env('TOKEN_CLIENT_SECRET')
+            'client_id' => env('TOKEN_CLIENT_ID'),
+            'client_secret' => env('TOKEN_CLIENT_SECRET')
         ]);
         $proxy = Request::create('oauth/token', 'POST', $request->input());
         $response = app()->handle($proxy);
+        return $response;
 
         $tokenResponse = json_decode($response->content());
 
@@ -33,5 +36,3 @@ class AuthController extends Controller
         return $this->authService->getUser($jwtPayload->sub, $tokenResponse);
     }
 }
-
-
