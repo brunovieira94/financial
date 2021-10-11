@@ -35,6 +35,11 @@ class StoreBillToPayRequest extends FormRequest
             //Boleto
             'bar_code' => 'max:150|required_with_all:billet_file',
             'billet_file' => 'file|required_with_all:bar_code',
+            //installments
+            'installments.*.portion_amount' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
+            'installments.*.due_date' => 'required_with:installments.*.portion_amount,installments.*.note,installments.*.pay|date',
+            'installments.*.pay' => 'boolean',
+            'installments.*.note' => 'max:255',
         ];
     }
 }
