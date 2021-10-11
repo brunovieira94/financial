@@ -65,14 +65,22 @@ class UserService
     }
 
     public function syncCostCenter($user, $userInfo){
-        if(array_key_exists('cost_center_id', $userInfo)){
-            $user->costCenter()->sync($userInfo['cost_center_id']);
+        $costCenter = [];
+        if(array_key_exists('cost_centers', $userInfo)){
+            foreach($userInfo['cost_centers'] as $costCenterID){
+                $costCenter[] = $costCenterID['cost_center_id'];
+            }
+            $user->costCenter()->sync($costCenter);
         }
     }
 
     public function syncBusiness($user, $userInfo){
-        if(array_key_exists('business_ids', $userInfo)){
-            $user->business()->sync($userInfo['business_ids']);
+        $business = [];
+        if(array_key_exists('business', $userInfo)){
+            foreach($userInfo['business'] as $businessID){
+                $business[] = $businessID['business_id'];
+            }
+            $user->costCenter()->sync($business);
         }
     }
 }
