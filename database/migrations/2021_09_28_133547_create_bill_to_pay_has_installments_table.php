@@ -21,7 +21,7 @@ class CreateBillToPayHasInstallmentsTable extends Migration
             $table->double('portion_amount');
             $table->date('due_date');
             $table->longText('note')->nullable();
-            $table->boolean('pay');
+            $table->boolean('pay')->default(false);
         });
     }
 

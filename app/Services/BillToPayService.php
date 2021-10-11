@@ -118,7 +118,7 @@ class BillToPayService
             $uploadBillet = $request->billet_file->storeAs('billet', $nameFileBillet);
 
             if ( !$uploadBillet )
-                return error_log('Falha ao realizar o upload do arquivo.');
+                return response('Falha ao realizar o upload do arquivo.', 500)->send();
           return $nameFileBillet;
         }
     }
@@ -129,10 +129,18 @@ class BillToPayService
 
             self::destroyInstallments($billToPay);
 
-            foreach($billToPayInfo['installments'] as $installments){
+            foreach($billToPayInfo['installments'] as $key=>$installments){
                 $billToPayHasInstallments = new BillToPayHasInstallments;
                 $installments['bill_to_pay'] = $billToPay['id'];
-                $billToPayHasInstallments = $billToPayHasInstallments->create($installments);
+                $installments['parcel_number'] = $key + 1;
+                try {
+                    $billToPayHasInstallments = $billToPayHasInstallments->create($installments);
+                } catch (\Exception $e) {
+                    self::destroyInstallments($billToPay);
+                    $this->billToPay->findOrFail($billToPay->id)->delete();
+                    return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
+                }
+
             }
         }
     }
