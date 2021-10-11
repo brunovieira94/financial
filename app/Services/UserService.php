@@ -80,7 +80,7 @@ class UserService
             foreach($userInfo['business'] as $businessID){
                 $business[] = $businessID['business_id'];
             }
-            $user->costCenter()->sync($business);
+            $user->business()->sync($business);
         }
     }
 }
