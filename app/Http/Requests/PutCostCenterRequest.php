@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Rules\DuplicateRoleCostCenter;
+use App\Rules\PutDuplicateRoleCostCenter;
 
 class PutCostCenterRequest extends FormRequest
 {
@@ -27,7 +27,7 @@ class PutCostCenterRequest extends FormRequest
         return [
             'title' => 'required|max:255',
             'parent' => 'nullable|integer',
-            'code' => new DuplicateRoleCostCenter(request()->input('parent')),
+            'code' => new PutDuplicateRoleCostCenter(request()->input('parent'), \Request::instance()->id),
         ];
     }
 }
