@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use App\Rules\DuplicateRoleChartOfAccounts;
+use App\Rules\PutDuplicateRoleChartOfAccounts;
 
 class PutChartOfAccountsRequest extends FormRequest
 {
@@ -27,7 +27,7 @@ class PutChartOfAccountsRequest extends FormRequest
         return [
             'title' => 'required|max:255',
             'parent' => 'nullable|integer',
-            'code' => new DuplicateRoleChartOfAccounts(request()->input('parent')),
+            'code' => new PutDuplicateRoleChartOfAccounts(request()->input('parent'), \Request::instance()->id),
         ];
     }
 }
