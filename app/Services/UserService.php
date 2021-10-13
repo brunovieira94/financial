@@ -37,8 +37,8 @@ class UserService
         $userInfo['password'] = Hash::make($userInfo['password']);
         $user = $user->create($userInfo);
 
-        self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
+        self::syncCostCenter($user, $userInfo);
         return $this->user->with(['costCenter', 'business'])->findOrFail($user->id);
 
     }
@@ -65,22 +65,14 @@ class UserService
     }
 
     public function syncCostCenter($user, $userInfo){
-        $costCenter = [];
         if(array_key_exists('cost_centers', $userInfo)){
-            foreach($userInfo['cost_centers'] as $costCenterID){
-                $costCenter[] = $costCenterID['cost_center_id'];
-            }
-            $user->costCenter()->sync($costCenter);
+            $user->costCenter()->sync($userInfo['cost_centers']);
         }
     }
 
     public function syncBusiness($user, $userInfo){
-        $business = [];
         if(array_key_exists('business', $userInfo)){
-            foreach($userInfo['business'] as $businessID){
-                $business[] = $businessID['business_id'];
-            }
-            $user->business()->sync($business);
+            $user->business()->sync($userInfo['business']);
         }
     }
 }
