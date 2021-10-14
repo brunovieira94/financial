@@ -2,13 +2,20 @@
 
 namespace App\Services;
 use App\Models\Country;
+use App\Models\City;
+use App\Models\State;
 
 class CountryService
 {
     private $country;
-    public function __construct(Country $country)
+    private $city;
+    private $state;
+
+    public function __construct(Country $country, City $city, State $state)
     {
         $this->country = $country;
+        $this->city = $city;
+        $this->state = $state;
     }
 
     public function getAllCountry($requestInfo)
@@ -39,8 +46,24 @@ class CountryService
 
     public function deleteCountry($id)
     {
-      $this->country->findOrFail($id)->delete();
-      return true;
+        $state = [];
+        $city = [];
+
+        $this->country->findOrFail($id)->delete();
+
+        $collectionStates = $this->state->where('country_id', $id)->get(['id']);
+        foreach ($collectionStates as $stateID) {
+            $state[] = $stateID->id;
+        }
+
+        $collectionCities = $this->city->whereIn('states_id', $state)->get(['id']);
+        foreach ($collectionCities as $cityID) {
+            $city[] = $cityID->id;
+        }
+
+        $this->state->destroy($state);
+        $this->city->destroy($city);
+        return true;
     }
 
 }
