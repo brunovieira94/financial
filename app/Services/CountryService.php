@@ -44,24 +44,9 @@ class CountryService
 
     public function deleteCountry($id)
     {
-        $state = [];
-        $city = [];
-
         $this->country->findOrFail($id)->delete();
-
-        $collectionStates = $this->state->where('country_id', $id)->get(['id']);
-        foreach ($collectionStates as $stateID) {
-            $state[] = $stateID->id;
-        }
-
-        $collectionCities = $this->city->whereIn('states_id', $state)->get(['id']);
-        foreach ($collectionCities as $cityID) {
-            $city[] = $cityID->id;
-        }
-
-        $this->state->destroy($state);
-        $this->city->destroy($city);
         return true;
     }
+
 
 }
