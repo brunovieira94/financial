@@ -31,4 +31,16 @@ class Bank extends Model
     {
         return $this->hasMany(BankAccount::class, 'bank_id', 'id')->count();
     }
+
+    public function bankAccount(){
+        return $this->hasMany(BankAccount::class, 'bank_id', 'id');
+    }
+
+    //delete relationship
+    public static function boot() {
+        parent::boot();
+        self::deleting(function($bankAccount) {
+            $bankAccount->bankAccount()->delete();
+        });
+    }
 }

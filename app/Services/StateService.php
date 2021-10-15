@@ -40,8 +40,6 @@ class StateService
 
     public function deleteState($id)
     {
-      $collection = $this->city->where('states_id', $id)->get(['id']);
-      $this->city->destroy($collection->toArray());
       $this->state->findOrFail($id)->delete();
       return true;
     }

@@ -40,10 +40,7 @@ class BankService
 
     public function deleteBank($id)
     {
-      $collection = $this->bankAccount->where('bank_id', $id)->get(['id']);
-      $this->bankAccount->destroy($collection->toArray());
       $this->bank->findOrFail($id)->delete();
       return true;
     }
-
 }

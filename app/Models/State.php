@@ -29,4 +29,16 @@ class State extends Model
     {
         return $this->hasMany(City::class, 'states_id', 'id')->count();
     }
+
+    public function cities(){
+        return $this->hasMany(City::class, 'states_id', 'id');
+    }
+
+    //delete relationship
+    public static function boot() {
+        parent::boot();
+        self::deleting(function($state) {
+            $state->cities()->delete();
+        });
+    }
 }
