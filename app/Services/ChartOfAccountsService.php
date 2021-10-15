@@ -14,10 +14,13 @@ class ChartOfAccountsService
 
     public function getAllChartOfAccounts($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        $charts = $this->chartOfAccounts->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
+        // $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        // $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        // $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        $chartOfAccounts = Utils::search($this->chartOfAccounts,$requestInfo);
+        $charts = Utils::pagination($chartOfAccounts->where('parent', null),$requestInfo);
+        //$charts =  $chartOfAccounts->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
+        //$charts = $this->chartOfAccounts->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->chartOfAccounts->nestable($charts);
         return $nestable;
     }

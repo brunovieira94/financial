@@ -13,11 +13,8 @@ class PaymentTypeService
 
     public function getAllPaymentType($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->paymentType->orderBy($orderBy, $order)->paginate($perPage);
-        return $this->paymentType->get();
+        $paymentType = Utils::search($this->paymentType,$requestInfo);
+        return Utils::pagination($paymentType,$requestInfo);
     }
 
     public function getPaymentType($id)

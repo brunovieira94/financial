@@ -13,10 +13,8 @@ class CityService
 
     public function getAllCity($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->city->with('state')->orderBy($orderBy, $order)->paginate($perPage);
+        $city = Utils::search($this->city,$requestInfo);
+        return Utils::pagination($city->with('state'),$requestInfo);
     }
 
     public function getCity($id)

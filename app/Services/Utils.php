@@ -4,6 +4,17 @@ namespace App\Services;
 
 class Utils
 {
+    const defaultPerPage = 20;
+    const defaultOrderBy = 'created_at';
+    const defaultOrder = 'desc';
+
+    public static function pagination($model,$requestInfo){
+        $orderBy = $requestInfo['orderBy'] ?? self::defaultOrderBy;
+        $order = $requestInfo['order'] ?? self::defaultOrder;
+        $perPage = $requestInfo['perPage'] ?? self::defaultPerPage;
+        return $model->orderBy($orderBy, $order)->paginate($perPage);
+    }
+
     public static function getDeleteKeys($nestable){
         $arrayIds = [];
         foreach($nestable as $key=>$value){
@@ -18,7 +29,20 @@ class Utils
         return $arrayIds;
     }
 
-    const defaultPerPage = 20;
-    const defaultOrderBy = 'created_at';
-    const defaultOrder = 'desc';
+    public static function search($model,$requestInfo){
+        $query = $model->query();
+        if(array_key_exists('search', $requestInfo)){
+            if(array_key_exists('searchFields', $requestInfo)){
+                foreach($requestInfo['searchFields'] as $searchField){
+                    $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
+                }
+            }
+            else{
+                foreach($model->getFillable() as $searchField){
+                    $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
+                }
+            }
+        }
+        return $query;
+    }
 }

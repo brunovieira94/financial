@@ -14,10 +14,13 @@ class CurrencyService
 
     public function getAllCurrency($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->currency->orderBy($orderBy, $order)->paginate($perPage);
+        // $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        // $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        // $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        $currency = Utils::search($this->currency,$requestInfo);
+        return Utils::pagination($currency,$requestInfo);
+        //return $currency->orderBy($orderBy, $order)->paginate($perPage);
+        //return $this->currency->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getCurrency($id)

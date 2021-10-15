@@ -16,10 +16,8 @@ class BankService
 
     public function getAllBank($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->bank->orderBy($orderBy, $order)->paginate($perPage);
+        $bank = Utils::search($this->bank,$requestInfo);
+        return Utils::pagination($bank,$requestInfo);
     }
 
     public function getBank($id)

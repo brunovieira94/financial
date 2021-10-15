@@ -23,11 +23,8 @@ class BusinessService
 
     public function getAllBusiness($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-
-        return $this->business->with('costUser')->orderBy($orderBy, $order)->paginate($perPage);
+        $business = Utils::search($this->business,$requestInfo);
+        return Utils::pagination($business->with('costUser'),$requestInfo);
     }
 
     public function getBusiness($id)

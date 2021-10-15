@@ -13,10 +13,8 @@ class BankAccountService
 
     public function getAllBankAccount($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->bankAccount->orderBy($orderBy, $order)->paginate($perPage);
+        $bankAccount = Utils::search($this->bankAccount,$requestInfo);
+        return Utils::pagination($bankAccount,$requestInfo);
     }
 
     public function getBankAccount($id)
