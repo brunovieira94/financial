@@ -16,10 +16,8 @@ class StateService
 
     public function getAllState($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->state->orderBy($orderBy, $order)->paginate($perPage);
+        $state = Utils::search($this->state,$requestInfo);
+        return Utils::pagination($state,$requestInfo);
     }
 
     public function getState($id)

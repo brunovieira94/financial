@@ -19,10 +19,8 @@ class CompanyService
 
     public function getAllCompany($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->company->with(['bankAccount','managers'])->orderBy($orderBy, $order)->paginate($perPage);
+        $company = Utils::search($this->company,$requestInfo);
+        return Utils::pagination($company->with(['bankAccount','managers']),$requestInfo);
     }
 
     public function getCompany($id)

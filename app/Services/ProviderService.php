@@ -19,10 +19,8 @@ class ProviderService
 
     public function getAllProvider($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->provider->with('bankAccount')->orderBy($orderBy, $order)->paginate($perPage);
+        $provider = Utils::search($this->provider,$requestInfo);
+        return Utils::pagination($provider->with('bankAccount'),$requestInfo);
     }
 
     public function getProvider($id)

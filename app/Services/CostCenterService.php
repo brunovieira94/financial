@@ -16,10 +16,9 @@ class CostCenterService
 
     public function getAllCostCenter($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        $costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
+        $costCenter = Utils::search($this->costCenter,$requestInfo);
+        $costCenters = Utils::pagination($costCenter->where('parent', null),$requestInfo);
+        //$costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
         return $nestable;
     }

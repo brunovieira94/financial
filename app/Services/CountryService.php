@@ -20,10 +20,8 @@ class CountryService
 
     public function getAllCountry($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->country->orderBy($orderBy, $order)->paginate($perPage);
+        $country = Utils::search($this->country,$requestInfo);
+        return Utils::pagination($country,$requestInfo);
     }
 
     public function getCountry($id)

@@ -14,10 +14,13 @@ class RoleService
 
     public function getAllRole($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->role->with('modules')->orderBy($orderBy, $order)->paginate($perPage);
+        // $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
+        // $order = $requestInfo['order'] ?? Utils::defaultOrder;
+        // $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
+        $role = Utils::search($this->role,$requestInfo);
+        return Utils::pagination($role->with('modules'),$requestInfo);
+        //return $role->with('modules')->orderBy($orderBy, $order)->paginate($perPage);
+        //return $this->role->with('modules')->orderBy($orderBy, $order)->paginate($perPage);
     }
 
     public function getRole($id)

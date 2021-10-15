@@ -20,10 +20,8 @@ class UserService
 
     public function getAllUser($requestInfo)
     {
-        $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
-        $order = $requestInfo['order'] ?? Utils::defaultOrder;
-        $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return $this->user->with(['costCenter', 'business'])->orderBy($orderBy, $order)->paginate($perPage);
+        $user = Utils::search($this->user,$requestInfo);
+        return Utils::pagination($user->with(['costCenter', 'business']),$requestInfo);
     }
 
     public function getUser($id)
