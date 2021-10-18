@@ -12,7 +12,7 @@ class BankAccount extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type'];
+    protected static $logAttributes = ['agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
     protected static $logName = 'bank_accounts';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -23,5 +23,5 @@ class BankAccount extends Model
     use SoftDeletes;
     protected $hidden = ['pivot'];
     protected $table='bank_accounts';
-    protected $fillable = ['agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type'];
+    protected $fillable = ['agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
 }

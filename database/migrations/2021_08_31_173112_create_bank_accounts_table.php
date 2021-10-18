@@ -20,6 +20,7 @@ class CreateBankAccountsTable extends Migration
             $table->string('account_number')->nullable();
             $table->integer('account_check_number')->nullable();
             $table->string('pix_key')->nullable();
+            $table->integer('pix_key_type')->nullable();
             $table->integer('account_type')->nullable();
             $table->integer('bank_id')->unsigned()->nullable();
             $table->foreign('bank_id')->references('id')->on('banks')->onDelete('cascade')->onUpdate('cascade');

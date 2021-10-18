@@ -29,6 +29,7 @@ class PutCompanyRequest extends FormRequest
             'bank_accounts.*.account_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
             'bank_accounts.*.bank_id' => 'integer|required_without_all:bank_accounts.*.pix_key',
             'bank_accounts.*.pix_key' => 'string|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id',
+            'bank_accounts.*.pix_key_type' => 'integer|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id|min:0|max:4',
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
             'managers' => 'array',
         ];
