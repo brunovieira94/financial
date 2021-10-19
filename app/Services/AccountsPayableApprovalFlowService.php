@@ -19,6 +19,10 @@ class AccountsPayableApprovalFlowService
     public function getAllAccountsForApproval()
     {
         $approvalFlowUser = $this->approvalFlow->where('role_id', auth()->user()->role_id)->first();
+
+        if(!$approvalFlowUser)
+          return response([]);
+
         return $this->accountsPayableApprovalFlow->with('billToPay')->where('order', $approvalFlowUser->order)->WhereIn('status', [0,2])->get();
     }
 
