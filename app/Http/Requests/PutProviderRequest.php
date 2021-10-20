@@ -14,6 +14,7 @@ class PutProviderRequest extends FormRequest
     public function rules()
     {
         return [
+            'provider_type' => 'max:1|in:F,J',
             'company_name' => 'max:250',
             'trade_name' => 'max:150',
             'alias' => 'max:150',
@@ -40,6 +41,11 @@ class PutProviderRequest extends FormRequest
             'bank_accounts.*.pix_key' => 'string|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id',
             'bank_accounts.*.pix_key_type' => 'integer|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id|min:0|max:4',
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
+            //validation physical person
+            'cpf' => 'numeric|digits:11|prohibited_if:provider_type,==,J',
+            'rg' => 'string|prohibited_if:provider_type,==,J',
+            'full_name' => 'string|max:255|prohibited_if:provider_type,==,J',
+            'birth_date' => 'date|max:255|prohibited_if:provider_type,==,J',
         ];
     }
 }

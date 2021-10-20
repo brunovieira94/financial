@@ -10,7 +10,7 @@ class CreateProvidersTable extends Migration
     {
         Schema::create('providers', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('company_name');
+            $table->string('company_name')->nullable();
             $table->string('trade_name')->nullable();
             $table->string('alias')->nullable();
             $table->string('cnpj')->nullable();
@@ -35,6 +35,11 @@ class CreateProvidersTable extends Migration
             $table->string('district')->nullable();
             $table->json('phones')->nullable();
             $table->string('email')->nullable();
+            $table->string('cpf')->nullable();
+            $table->string('rg')->nullable();
+            $table->string('full_name')->nullable();
+            $table->date('birth_date')->nullable();
+            $table->char('provider_type', 1);
             $table->timestamps();
             $table->softDeletes();
         });
