@@ -20,12 +20,12 @@ class ProviderService
     public function getAllProvider($requestInfo)
     {
         $provider = Utils::search($this->provider,$requestInfo);
-        return Utils::pagination($provider->with('bankAccount'),$requestInfo);
+        return Utils::pagination($provider->with(['bankAccount', 'providerCategory', 'user', 'chartOfAccount', 'costCenter', 'city']),$requestInfo);
     }
 
     public function getProvider($id)
     {
-      return $this->provider->with('bankAccount')->findOrFail($id);
+      return $this->provider->with(['bankAccount', 'providerCategory', 'user', 'chartOfAccount', 'costCenter', 'city'])->findOrFail($id);
     }
 
     public function postProvider($userId, $providerInfo)
@@ -33,7 +33,6 @@ class ProviderService
         $provider = new Provider;
         $providerInfo['user_id'] = $userId;
         $provider = $provider->create($providerInfo);
-
 
         self::syncBankAccounts($provider, $providerInfo);
         return $this->provider->with('bankAccount')->findOrFail($provider->id);

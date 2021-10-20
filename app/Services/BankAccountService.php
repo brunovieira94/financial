@@ -14,12 +14,12 @@ class BankAccountService
     public function getAllBankAccount($requestInfo)
     {
         $bankAccount = Utils::search($this->bankAccount,$requestInfo);
-        return Utils::pagination($bankAccount,$requestInfo);
+        return Utils::pagination($bankAccount->with('bank'), $requestInfo);
     }
 
     public function getBankAccount($id)
     {
-        return $this->bankAccount->findOrFail($id);
+        return $this->bankAccount->with('bank')->findOrFail($id);
     }
 
     public function postBankAccount($bankAccountInfo)
