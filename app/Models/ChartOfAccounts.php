@@ -12,7 +12,7 @@ class ChartOfAccounts extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'parent', 'code'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'chart_of_accounts';
     public function tapActivity(Activity $activity, string $eventName)
     {

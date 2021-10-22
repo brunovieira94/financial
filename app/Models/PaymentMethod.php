@@ -12,7 +12,7 @@ class PaymentMethod extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'initials'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'payment_method';
     public function tapActivity(Activity $activity, string $eventName)
     {

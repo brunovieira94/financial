@@ -12,8 +12,9 @@ class State extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'country_id'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'states';
+    protected $hidden = ['country_id'];
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
@@ -32,6 +33,11 @@ class State extends Model
 
     public function cities(){
         return $this->hasMany(City::class, 'states_id', 'id');
+    }
+
+    public function country()
+    {
+        return $this->hasOne(Country::class, 'id', 'country_id');
     }
 
     //delete relationship

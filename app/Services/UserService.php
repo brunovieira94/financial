@@ -21,12 +21,12 @@ class UserService
     public function getAllUser($requestInfo)
     {
         $user = Utils::search($this->user,$requestInfo);
-        return Utils::pagination($user->with(['costCenter', 'business']),$requestInfo);
+        return Utils::pagination($user->with(['costCenter', 'business', 'role']),$requestInfo);
     }
 
     public function getUser($id)
     {
-      return $this->user->with(['costCenter', 'business'])->findOrFail($id);
+      return $this->user->with(['costCenter', 'business', 'role'])->findOrFail($id);
     }
 
     public function postUser($userInfo)
@@ -37,7 +37,7 @@ class UserService
 
         self::syncBusiness($user, $userInfo);
         self::syncCostCenter($user, $userInfo);
-        return $this->user->with(['costCenter', 'business'])->findOrFail($user->id);
+        return $this->user->with(['costCenter', 'business', 'role'])->findOrFail($user->id);
 
     }
 
@@ -53,7 +53,7 @@ class UserService
         self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
 
-        return $this->user->with(['costCenter', 'business'])->findOrFail($id);
+        return $this->user->with(['costCenter', 'business', 'role'])->findOrFail($id);
     }
 
     public function deleteUser($id)

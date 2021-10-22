@@ -11,7 +11,7 @@ class Company extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['company_name', 'trade_name', 'cnpj', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'managers'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'companies';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -25,7 +25,7 @@ class Company extends Model
 
     public function bankAccount()
     {
-        return $this->belongsToMany(BankAccount::class, 'company_has_bank_accounts', 'company_id', 'bank_account_id');
+        return $this->belongsToMany(BankAccount::class, 'company_has_bank_accounts', 'company_id', 'bank_account_id')->with('bank');
     }
 
     public function managers()

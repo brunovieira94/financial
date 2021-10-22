@@ -11,7 +11,7 @@ class Country extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'country';
     public function tapActivity(Activity $activity, string $eventName)
     {

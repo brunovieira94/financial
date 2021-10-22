@@ -11,7 +11,7 @@ class AccountsPayableApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['id_bill_to_pay', 'order', 'status', 'reason'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'accounts_payable_approval_flows';
     public function tapActivity(Activity $activity, string $eventName)
     {

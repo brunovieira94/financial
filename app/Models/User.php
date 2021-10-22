@@ -23,7 +23,7 @@ class User extends Authenticatable
     ];
 
     protected $hidden = [
-        'password','pivot'
+        'password','pivot', 'role_id'
     ];
 
     public function costCenter()
@@ -34,6 +34,11 @@ class User extends Authenticatable
     public function business()
     {
         return $this->belongsToMany(Business::class, 'user_has_business', 'user_id', 'business_id');
+    }
+
+    public function role()
+    {
+        return $this->hasOne(Role::class, 'id', 'role_id');
     }
 
 }

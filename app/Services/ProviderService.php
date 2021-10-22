@@ -35,7 +35,7 @@ class ProviderService
         $provider = $provider->create($providerInfo);
 
         self::syncBankAccounts($provider, $providerInfo);
-        return $this->provider->with('bankAccount')->findOrFail($provider->id);
+        return $this->provider->with(['bankAccount', 'providerCategory', 'user', 'chartOfAccount', 'costCenter', 'city'])->findOrFail($provider->id);
     }
 
     public function putProvider($id, $providerInfo)
@@ -44,12 +44,12 @@ class ProviderService
         $provider->fill($providerInfo)->save();
 
         self::putBankAccounts($id, $providerInfo);
-        return $this->provider->with('bankAccount')->findOrFail($provider->id);
+        return $this->provider->with(['bankAccount', 'providerCategory', 'user', 'chartOfAccount', 'costCenter', 'city'])->findOrFail($provider->id);
     }
 
     public function deleteProvider($id)
     {
-        $providers = $this->provider->with('bankAccount')->findOrFail($id)->delete();
+        $providers = $this->provider->findOrFail($id)->delete();
         $collection = $this->providerHasBankAccounts->where('provider_id', $id)->get(['bank_account_id']);
         $this->bankAccount->destroy($collection->toArray());
         return true;

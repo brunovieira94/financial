@@ -12,7 +12,7 @@ class CostCenter extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title','parent','code'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'cost_center';
     public function tapActivity(Activity $activity, string $eventName)
     {

@@ -24,12 +24,12 @@ class BusinessService
     public function getAllBusiness($requestInfo)
     {
         $business = Utils::search($this->business,$requestInfo);
-        return Utils::pagination($business->with('costUser'),$requestInfo);
+        return Utils::pagination($business->with(['costUser', 'company']),$requestInfo);
     }
 
     public function getBusiness($id)
     {
-      return $this->business->with('costUser')->findOrFail($id);
+      return $this->business->with(['costUser', 'company'])->findOrFail($id);
     }
 
     public function postBusiness($businessInfo)
@@ -38,7 +38,7 @@ class BusinessService
         $business = $business->create($businessInfo);
 
         self::syncCostUser($business, $businessInfo);
-        return $this->business->with('costUser')->findOrFail($business->id);
+        return $this->business->with(['costUser', 'company'])->findOrFail($business->id);
     }
 
     public function putBusiness($id, $businessInfo)
@@ -46,7 +46,7 @@ class BusinessService
         $business = $this->business->findOrFail($id);
         $business->fill($businessInfo)->save();
         self::putCostUser($id, $businessInfo);
-        return $this->business->with('costUser')->findOrFail($business->id);
+        return $this->business->with(['costUser', 'company'])->findOrFail($business->id);
     }
 
     public function deleteBusiness($id)

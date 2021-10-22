@@ -12,7 +12,7 @@ class ApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['order','role_id'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'approval_flow';
     public function tapActivity(Activity $activity, string $eventName)
     {

@@ -12,7 +12,7 @@ class Currency extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'initials'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'currency';
     public function tapActivity(Activity $activity, string $eventName)
     {
