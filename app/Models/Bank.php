@@ -14,7 +14,7 @@ class Bank extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'bank_code', 'cnab400','cnab240'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'banks';
     public function tapActivity(Activity $activity, string $eventName)
     {

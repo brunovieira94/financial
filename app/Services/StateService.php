@@ -17,25 +17,26 @@ class StateService
     public function getAllState($requestInfo)
     {
         $state = Utils::search($this->state,$requestInfo);
-        return Utils::pagination($state,$requestInfo);
+        return Utils::pagination($state->with('country'),$requestInfo);
     }
 
     public function getState($id)
     {
-      return $this->state->findOrFail($id);
+      return $this->state->with('country')->findOrFail($id);
     }
 
     public function postState($stateInfo)
     {
         $state = new State;
-        return $state->create($stateInfo);
+        $state = $state->create($stateInfo);
+        return $this->state->with('country')->findOrFail($state->id);
     }
 
     public function putState($id, $stateInfo)
     {
         $state = $this->state->findOrFail($id);
         $state->fill($stateInfo)->save();
-        return $state;
+        return $this->state->with('country')->findOrFail($state->id);
     }
 
     public function deleteState($id)

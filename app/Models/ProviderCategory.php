@@ -12,7 +12,7 @@ class ProviderCategory extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title','payment_before_weekends'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'provider_categories';
     public function tapActivity(Activity $activity, string $eventName)
     {

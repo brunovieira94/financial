@@ -12,7 +12,7 @@ class Module extends Model
 {
 
     use SoftDeletes;
-    protected $fillable = ['title','parent','route'];
+    protected static $logAttributes = ['*'];
     protected $table='module';
 
     public function roles()

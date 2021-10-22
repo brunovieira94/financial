@@ -13,7 +13,7 @@ class Business extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['company_id', 'name'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'business';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -23,12 +23,17 @@ class Business extends Model
 
     use SoftDeletes;
     protected $table='business';
-    protected $hidden = ['pivot'];
+    protected $hidden = ['pivot', 'company_id'];
     protected $fillable = ['company_id', 'name'];
 
     public function costUser()
     {
         return $this->hasMany(BusinessHasCostCenters::class, 'business_id', 'id')->with(['user', 'costCenter']);
+    }
+
+    public function company()
+    {
+        return $this->hasOne(Company::class, 'id', 'company_id')->with(['bankAccount','managers']);
     }
 
 }

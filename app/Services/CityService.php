@@ -25,14 +25,15 @@ class CityService
     public function postCity($cityInfo)
     {
         $city = new City;
-        return $city->create($cityInfo);
+        $city = $city->create($cityInfo);
+        return $this->city->with('state')->findOrFail($city->id);
     }
 
     public function putCity($id, $cityInfo)
     {
         $city = $this->city->findOrFail($id);
         $city->fill($cityInfo)->save();
-        return $city;
+        return $this->city->with('state')->findOrFail($city->id);
     }
 
     public function deleteCity($id)

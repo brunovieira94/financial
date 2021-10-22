@@ -13,7 +13,7 @@ class Role extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title','modules'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'role';
     public function tapActivity(Activity $activity, string $eventName)
     {

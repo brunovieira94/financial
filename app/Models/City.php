@@ -12,7 +12,7 @@ class City extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['title', 'states_id'];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'cities';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -26,6 +26,6 @@ class City extends Model
     protected $hidden = ['states_id'];
 
     public function state(){
-        return $this->belongsTo(State::class, 'states_id', 'id');
+        return $this->belongsTo(State::class, 'states_id', 'id')->with('country');
     }
 }

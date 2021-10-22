@@ -11,7 +11,7 @@ class BillToPay extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = [];
+    protected static $logAttributes = ['*'];
     protected static $logName = 'bill_tp_pay';
     public function tapActivity(Activity $activity, string $eventName)
     {
