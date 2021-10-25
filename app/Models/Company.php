@@ -20,7 +20,7 @@ class Company extends Model
     }
 
     use SoftDeletes;
-    protected $table='companies';
+    protected $table = 'companies';
     protected $fillable = ['company_name', 'trade_name', 'cnpj', 'cep', 'cities_id', 'address', 'number', 'complement', 'district'];
 
     public function bankAccount()
@@ -31,5 +31,10 @@ class Company extends Model
     public function managers()
     {
         return $this->belongsToMany(User::class, 'company_has_managers', 'company_id', 'manager');
+    }
+
+    public function city()
+    {
+        return $this->hasOne(City::class, 'id', 'cities_id')->with('state');
     }
 }
