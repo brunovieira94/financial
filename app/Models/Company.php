@@ -22,6 +22,7 @@ class Company extends Model
     use SoftDeletes;
     protected $table = 'companies';
     protected $fillable = ['company_name', 'trade_name', 'cnpj', 'cep', 'cities_id', 'address', 'number', 'complement', 'district'];
+    protected $hidden = ['cities_id'];
 
     public function bankAccount()
     {
