@@ -23,5 +23,5 @@ class Currency extends Model
     // Model attributes
     use SoftDeletes;
     protected $table='currency';
-    protected $fillable = ['title', 'initials'];
+    protected $fillable = ['title', 'initials', 'default', 'currency_symbol'];
 }

@@ -17,6 +17,8 @@ class CreateCurrenciesTable extends Migration
             $table->increments('id');
             $table->string('title');
             $table->string('initials');
+            $table->string('currency_symbol');
+            $table->boolean('default')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });
