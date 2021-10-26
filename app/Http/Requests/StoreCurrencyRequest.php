@@ -16,6 +16,8 @@ class StoreCurrencyRequest extends FormRequest
         return [
             'title' => 'required|max:255',
             'initials' => 'required|max:255',
+            'default' => 'boolean',
+            'currency_symbol' => 'required|max:255',
         ];
     }
 }
