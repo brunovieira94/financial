@@ -15,6 +15,8 @@ class ModuleTableSeeder extends Seeder
      */
     public function run()
     {
+        DB::table('module')->delete();
+
         $cadastros = Module::create([
             'title' => 'Cadastros',
             'route' => 'cadastros',
