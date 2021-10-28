@@ -31,12 +31,24 @@ class CurrencyService
     public function postCurrency($currencyInfo)
     {
         $currency = new Currency;
+        if(array_key_exists('default', $currencyInfo)){
+            if($currencyInfo['default'] == true)
+            {
+                Currency::query()->update(['default' => false]);
+            }
+        }
         return $currency->create($currencyInfo);
     }
 
     public function putCurrency($id, $currencyInfo)
     {
         $currency = $this->currency->findOrFail($id);
+        if(array_key_exists('default', $currencyInfo)){
+            if($currencyInfo['default'] == true)
+            {
+                Currency::query()->update(['default' => false]);
+            }
+        }
         $currency->fill($currencyInfo)->save();
         return $currency;
     }
