@@ -12,6 +12,7 @@ class BillToPayService
 {
     private $billToPay;
     private $installments;
+    private $with = ['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'];
 
     public function __construct(BillToPay $billToPay, BillToPayHasInstallments $installments)
     {
@@ -19,14 +20,15 @@ class BillToPayService
         $this->installments = $installments;
     }
 
-    public function getAllBillToPay()
+    public function getAllBillToPay($requestInfo)
     {
-        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->get();
+        $billToPay = Utils::search($this->billToPay, $requestInfo);
+        return Utils::pagination($billToPay->with($this->with), $requestInfo);
     }
 
     public function getBillToPay($id)
     {
-        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->findOrFail($id);
+        return $this->billToPay->with($this->with)->findOrFail($id);
     }
 
     public function postBillToPay(Request $request)
@@ -53,7 +55,7 @@ class BillToPayService
         ]);
 
         self::syncInstallments($billToPay, $billToPayInfo);
-        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->findOrFail($billToPay->id);
+        return $this->billToPay->with($this->with)->findOrFail($billToPay->id);
     }
 
     public function putBillToPay($id, Request $request)
@@ -71,7 +73,7 @@ class BillToPayService
 
         $billToPay->fill($billToPayInfo)->save();
         self::syncInstallments($billToPay, $billToPayInfo);
-        return $this->billToPay->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'])->findOrFail($billToPay->id);
+        return $this->billToPay->with($this->with)->findOrFail($billToPay->id);
     }
 
     public function deleteBillToPay($id)
