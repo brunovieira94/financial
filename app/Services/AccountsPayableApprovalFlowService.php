@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
 use Illuminate\Http\Request;
@@ -20,10 +21,10 @@ class AccountsPayableApprovalFlowService
     {
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
 
-        if(!$approvalFlowUser)
-          return response([]);
+        if (!$approvalFlowUserOrder)
+            return response([]);
 
-        return $this->accountsPayableApprovalFlow->with('billToPay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0,2])->get();
+        return $this->accountsPayableApprovalFlow->with('billToPay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->get();
     }
 
     public function approveAccount($id)
@@ -31,9 +32,9 @@ class AccountsPayableApprovalFlowService
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
 
-        if ($accountApproval->order == $maxOrder){
+        if ($accountApproval->order == $maxOrder) {
             $accountApproval->status = 1;
-        }else {
+        } else {
             $accountApproval->order += 1;
         }
 
@@ -41,17 +42,18 @@ class AccountsPayableApprovalFlowService
         return $accountApproval->save();
     }
 
-    public function reproveAccount($id, Request $request){
+    public function reproveAccount($id, Request $request)
+    {
 
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
 
-        if ($accountApproval->order == 0){
+        if ($accountApproval->order == 0) {
             return response('Não foi possível reprovar a conta.', 422);
         }
-        if ($accountApproval->order >= $maxOrder){
+        if ($accountApproval->order >= $maxOrder) {
             $accountApproval->order -= $maxOrder;
-        }else{
+        } else {
             $accountApproval->order -= $accountApproval->order;
         }
 
@@ -60,7 +62,8 @@ class AccountsPayableApprovalFlowService
         return true;
     }
 
-    public function cancelAccount($id, Request $request){
+    public function cancelAccount($id, Request $request)
+    {
 
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $accountApproval->status = 3;
@@ -69,4 +72,3 @@ class AccountsPayableApprovalFlowService
         return $accountApproval->save();
     }
 }
-
