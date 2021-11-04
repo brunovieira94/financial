@@ -6,6 +6,7 @@ use App\Models\BillToPayHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BillToPayService
 {
@@ -97,6 +98,7 @@ class BillToPayService
         $extensionInvoice = $request->invoice_file->extension();
 
         $nameFileInvoice = "{$originalNameInvoice[0]}_{$data}.{$extensionInvoice}";
+
         $uploadInvoice = $request->invoice_file->storeAs('invoice', $nameFileInvoice);
 
         if ( !$uploadInvoice )
