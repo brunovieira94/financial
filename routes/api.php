@@ -24,6 +24,7 @@ use App\Http\Controllers\LogsController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\AccountsPayableApprovalFlowController;
+use App\Http\Controllers\ReportController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -197,6 +198,11 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/approve/{id}', [AccountsPayableApprovalFlowController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [AccountsPayableApprovalFlowController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [AccountsPayableApprovalFlowController::class, 'cancelAccount']);
+    });
+
+    Route::prefix('reports')->group(function () {
+        Route::get('/due-bills', [ReportController::class, 'dueBills']);
+        Route::get('/approved-bills', [ReportController::class, 'approvedBills']);
     });
 
 });

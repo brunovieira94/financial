@@ -5,7 +5,7 @@ namespace App\Services;
 class Utils
 {
     const defaultPerPage = 20;
-    const defaultOrderBy = 'created_at';
+    const defaultOrderBy = 'id';
     const defaultOrder = 'desc';
 
     public static function pagination($model,$requestInfo){
