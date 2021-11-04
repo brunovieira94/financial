@@ -6,13 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
+use Illuminate\Support\Facades\Storage;
 
 class BillToPay extends Model
 {
     // Logs
     use LogsActivity;
     protected static $logAttributes = ['*'];
-    protected static $logName = 'bill_tp_pay';
+    protected static $logName = 'bill_to_pay';
     public function tapActivity(Activity $activity, string $eventName)
     {
         $activity->causer_id = auth()->user()->id;
@@ -20,6 +21,7 @@ class BillToPay extends Model
     use SoftDeletes;
     protected $table='bills_to_pay';
     protected $hidden = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
+    protected $appends = ['billet_link', 'invoice_link'];
 
     protected $fillable = [
                             'id_provider',
@@ -45,6 +47,21 @@ class BillToPay extends Model
                             'billet_file',
                             'id_user',
                         ];
+
+    public function getBilletLinkAttribute()
+    {
+        if (!is_null($this->attributes['billet_file'])) {
+            $billet = $this->attributes['billet_file'];
+            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(5));
+        }
+    }
+    public function getInvoiceLinkAttribute()
+    {
+        if(!is_null($this->attributes['invoice_file'])){
+           $invoice = $this->attributes['invoice_file'];
+           return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(5));
+        }
+    }
 
     public function installments()
     {
