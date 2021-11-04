@@ -18,12 +18,12 @@ class AccountsPayableApprovalFlowService
 
     public function getAllAccountsForApproval()
     {
-        $approvalFlowUser = $this->approvalFlow->where('role_id', auth()->user()->role_id)->first();
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
 
         if(!$approvalFlowUser)
           return response([]);
 
-        return $this->accountsPayableApprovalFlow->with('billToPay')->where('order', $approvalFlowUser->order)->WhereIn('status', [0,2])->get();
+        return $this->accountsPayableApprovalFlow->with('billToPay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0,2])->get();
     }
 
     public function approveAccount($id)
