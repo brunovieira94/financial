@@ -26,6 +26,6 @@ class AccountsPayableApprovalFlow extends Model
 
     public function billToPay()
     {
-        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay')->with(['provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user']);
+        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay')->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user']);
     }
 }
