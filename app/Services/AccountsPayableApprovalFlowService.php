@@ -24,9 +24,7 @@ class AccountsPayableApprovalFlowService
         if (!$approvalFlowUserOrder)
             return response([]);
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
-        return Utils::pagination($accountsPayableApprovalFlow->with('billToPay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->orderBy('order', 'asc')->join('bills_to_pay', 'accounts_payable_approval_flows.id_bill_to_pay', '=', 'bills_to_pay.id')->orderBy('bills_to_pay.pay_date', 'asc')->select('accounts_payable_approval_flows.*'),$requestInfo);
-        //return $this->accountsPayableApprovalFlow->with('billToPay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->get();
+        return $this->accountsPayableApprovalFlow->with('billToPay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->orderBy('order', 'asc')->join('bills_to_pay', 'accounts_payable_approval_flows.id_bill_to_pay', '=', 'bills_to_pay.id')->orderBy('bills_to_pay.pay_date', 'asc')->select('accounts_payable_approval_flows.*')->get();
     }
 
     public function approveAccount($id)
