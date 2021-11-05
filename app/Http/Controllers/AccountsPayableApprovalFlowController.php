@@ -18,7 +18,7 @@ class AccountsPayableApprovalFlowController extends Controller
 
     public function accountsApproveUser(Request $request)
     {
-        return $this->accountsPayableApprovalFlowService->getAllAccountsForApproval();
+        return $this->accountsPayableApprovalFlowService->getAllAccountsForApproval($request->all());
     }
 
     public function approveAccount($id)
