@@ -44,19 +44,17 @@ class AccountsPayableApprovalFlowService
 
     public function reproveAccount($id, Request $request)
     {
-
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
 
-        if ($accountApproval->order == 0) {
+        if ($accountApproval->order == 0){
             return response('Não foi possível reprovar a conta.', 422);
         }
-        if ($accountApproval->order >= $maxOrder) {
-            $accountApproval->order -= $maxOrder;
-        } else {
-            $accountApproval->order -= $accountApproval->order;
+        if ($accountApproval->order > $maxOrder){
+            $accountApproval->order = 0;
+        }else{
+            $accountApproval->order -= 1;
         }
-
         $accountApproval->reason = $request->reason;
         $accountApproval->save();
         return true;
