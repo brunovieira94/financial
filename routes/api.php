@@ -25,6 +25,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\AccountsPayableApprovalFlowController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\CNABController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -208,8 +209,12 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 });
 
 //Restful route -> Login
-    Route::prefix('/auth')->group(function () {
-        Route::post('/', [AuthController::class, 'login']);
-    });
+Route::prefix('/auth')->group(function () {
+    Route::post('/', [AuthController::class, 'login']);
+});
+
+Route::prefix('/cnab')->group(function () {
+    Route::post('/', [CNABController::class, 'index']);
+});
 
 
