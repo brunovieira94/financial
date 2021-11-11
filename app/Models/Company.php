@@ -11,7 +11,7 @@ class Company extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['bank_account', 'managers', 'city', '*'];
     protected static $logName = 'companies';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -24,7 +24,7 @@ class Company extends Model
     protected $fillable = ['company_name', 'trade_name', 'cnpj', 'cep', 'cities_id', 'address', 'number', 'complement', 'district'];
     protected $hidden = ['cities_id'];
 
-    public function bankAccount()
+    public function bank_account()
     {
         return $this->belongsToMany(BankAccount::class, 'company_has_bank_accounts', 'company_id', 'bank_account_id')->with('bank');
     }

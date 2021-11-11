@@ -12,7 +12,7 @@ class BillToPay extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', '*'];
     protected static $logName = 'bill_to_pay';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -63,6 +63,11 @@ class BillToPay extends Model
         }
     }
 
+    public function approval()
+    {
+        return $this->hasOne(AccountsPayableApprovalFlow::class, 'bill_to_pay', 'id');
+    }
+
     public function installments()
     {
         return $this->hasMany(BillToPayHasInstallments::class, 'bill_to_pay', 'id');
@@ -73,12 +78,12 @@ class BillToPay extends Model
         return $this->hasOne(Provider::class, 'id', 'id_provider');
     }
 
-    public function bankAccountProvider()
+    public function bank_account_provider()
     {
         return $this->hasOne(BankAccount::class, 'id', 'id_bank_account_provider');
     }
 
-    public function bankAccountCompany()
+    public function bank_account_company()
     {
         return $this->hasOne(BankAccount::class, 'id', 'id_bank_account_company');
     }
@@ -88,12 +93,12 @@ class BillToPay extends Model
         return $this->hasOne(Business::class, 'id', 'id_business');
     }
 
-    public function costCenter()
+    public function cost_center()
     {
         return $this->hasOne(CostCenter::class, 'id', 'id_cost_center');
     }
 
-    public function chartOfAccounts()
+    public function chart_of_accounts()
     {
         return $this->hasOne(ChartOfAccounts::class, 'id', 'id_chart_of_account');
     }

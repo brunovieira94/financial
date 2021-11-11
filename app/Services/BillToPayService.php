@@ -12,12 +12,14 @@ class BillToPayService
 {
     private $billToPay;
     private $installments;
-    private $with = ['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'];
+    private $approval;
+    private $with = ['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(BillToPay $billToPay, BillToPayHasInstallments $installments)
+    public function __construct(BillToPay $billToPay, BillToPayHasInstallments $installments, AccountsPayableApprovalFlow $approval)
     {
         $this->billToPay = $billToPay;
         $this->installments = $installments;
+        $this->approval = $approval;
     }
 
     public function getAllBillToPay($requestInfo)
@@ -63,6 +65,14 @@ class BillToPayService
         $billToPayInfo = $request->all();
         $billToPay = $this->billToPay->findOrFail($id);
 
+        $approval = $this->approval->where('id_bill_to_pay', $billToPay->id)->first();
+
+        if($approval->order != 0)
+           return response('Só é permitido atualizar a conta na ordem 0', 422)->send();
+
+        $approval->status = 0;
+        $approval->save();
+
         if (array_key_exists('invoice_file', $billToPayInfo)){
             $billToPayInfo['invoice_file'] = self::storeInvoice($request);
         }
@@ -79,6 +89,11 @@ class BillToPayService
     public function deleteBillToPay($id)
     {
         $billToPay = $this->billToPay->findOrFail($id);
+        $approval = $this->approval->where('id_bill_to_pay', $billToPay->id)->first();
+
+        if($approval->order != 0)
+           return response('Só é permitido deletar conta na ordem 0', 422)->send();
+
         self::destroyInstallments($billToPay);
         $this->billToPay->findOrFail($id)->delete();
         return true;

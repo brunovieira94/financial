@@ -13,7 +13,7 @@ class Provider extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['bank_account', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city', '*'];
     protected static $logName = 'providers';
     protected $hidden = ['provider_categories_id', 'user_id', 'chart_of_accounts_id', 'cost_center_id', 'cities_id'];
     public function tapActivity(Activity $activity, string $eventName)
@@ -29,12 +29,12 @@ class Provider extends Model
     ];
     protected $fillable = ['company_name', 'trade_name', 'alias', 'cnpj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email', 'user_id', 'responsible_phone', 'responsible_email', 'state_subscription', 'chart_of_accounts_id', 'cpf', 'rg', 'full_name', 'birth_date', 'provider_type'];
 
-    public function bankAccount()
+    public function bank_account()
     {
         return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with('bank');
     }
 
-    public function providerCategory()
+    public function provider_category()
     {
         return $this->hasOne(ProviderCategory::class, 'id', 'provider_categories_id');
     }
@@ -44,12 +44,12 @@ class Provider extends Model
         return $this->hasOne(User::class, 'id', 'user_id');
     }
 
-    public function chartOfAccount()
+    public function chart_of_account()
     {
         return $this->hasOne(ChartOfAccounts::class, 'id', 'chart_of_accounts_id');
     }
 
-    public function costCenter()
+    public function cost_center()
     {
         return $this->hasOne(CostCenter::class, 'id', 'cost_center_id');
     }

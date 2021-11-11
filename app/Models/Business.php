@@ -13,7 +13,7 @@ class Business extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['company', 'cost_user' , '*'];
     protected static $logName = 'business';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -26,14 +26,14 @@ class Business extends Model
     protected $hidden = ['pivot', 'company_id'];
     protected $fillable = ['company_id', 'name'];
 
-    public function costUser()
+    public function cost_user()
     {
         return $this->hasMany(BusinessHasCostCenters::class, 'business_id', 'id')->with(['user', 'costCenter']);
     }
 
     public function company()
     {
-        return $this->hasOne(Company::class, 'id', 'company_id')->with(['bankAccount','managers']);
+        return $this->hasOne(Company::class, 'id', 'company_id')->with(['bank_account','managers']);
     }
 
 }

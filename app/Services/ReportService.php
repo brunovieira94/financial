@@ -19,7 +19,7 @@ class ReportService
 
     public function getAllDueBills($requestInfo)
     {
-        $result = $this->billToPay;
+        $result = $this->billToPay->with(['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('from', $requestInfo)){
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
@@ -35,7 +35,7 @@ class ReportService
     public function getAllApprovedBills($requestInfo)
     {
         $approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
-        return Utils::pagination($this->accountsPayableApprovalFlow->with('billToPay')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
+        return Utils::pagination($this->accountsPayableApprovalFlow->with('bill_to_pay')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
     }
 }
 
