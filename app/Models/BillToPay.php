@@ -65,7 +65,7 @@ class BillToPay extends Model
 
     public function approval()
     {
-        return $this->hasOne(AccountsPayableApprovalFlow::class, 'bill_to_pay', 'id');
+        return $this->hasOne(AccountsPayableApprovalFlow::class, 'id_bill_to_pay', 'id');
     }
 
     public function installments()
