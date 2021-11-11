@@ -12,7 +12,7 @@ class City extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['state', '*'];
     protected static $logName = 'cities';
     public function tapActivity(Activity $activity, string $eventName)
     {

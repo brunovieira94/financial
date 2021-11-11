@@ -35,7 +35,7 @@ class ReportService
     public function getAllApprovedBills($requestInfo)
     {
         $approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
-        return Utils::pagination($this->accountsPayableApprovalFlow->with('billToPay')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
+        return Utils::pagination($this->accountsPayableApprovalFlow->with('bill_to_pay')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
     }
 }
 

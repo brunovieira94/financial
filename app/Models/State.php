@@ -12,7 +12,7 @@ class State extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['country', '*'];
     protected static $logName = 'states';
     protected $hidden = ['country_id'];
     public function tapActivity(Activity $activity, string $eventName)

@@ -11,6 +11,8 @@ class UserService
     private $user;
     private $costCenter;
     private $business;
+    private $with = ['cost_center', 'business', 'role'];
+
     public function __construct(User $user, CostCenter $costCenter, Business $business)
     {
         $this->user = $user;
@@ -21,12 +23,12 @@ class UserService
     public function getAllUser($requestInfo)
     {
         $user = Utils::search($this->user,$requestInfo);
-        return Utils::pagination($user->with(['costCenter', 'business', 'role']),$requestInfo);
+        return Utils::pagination($user->with($this->with),$requestInfo);
     }
 
     public function getUser($id)
     {
-      return $this->user->with(['costCenter', 'business', 'role'])->findOrFail($id);
+      return $this->user->with($this->with)->findOrFail($id);
     }
 
     public function postUser($userInfo)
@@ -37,7 +39,7 @@ class UserService
 
         self::syncBusiness($user, $userInfo);
         self::syncCostCenter($user, $userInfo);
-        return $this->user->with(['costCenter', 'business', 'role'])->findOrFail($user->id);
+        return $this->user->with($this->with)->findOrFail($user->id);
 
     }
 
@@ -53,7 +55,7 @@ class UserService
         self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
 
-        return $this->user->with(['costCenter', 'business', 'role'])->findOrFail($id);
+        return $this->user->with($this->with)->findOrFail($id);
     }
 
     public function deleteUser($id)
@@ -64,7 +66,7 @@ class UserService
 
     public function syncCostCenter($user, $userInfo){
         if(array_key_exists('cost_centers', $userInfo)){
-            $user->costCenter()->sync($userInfo['cost_centers']);
+            $user->cost_center()->sync($userInfo['cost_centers']);
         }
     }
 
