@@ -12,7 +12,7 @@ class BillToPayService
 {
     private $billToPay;
     private $installments;
-    private $with = ['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user'];
+    private $with = ['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(BillToPay $billToPay, BillToPayHasInstallments $installments)
     {

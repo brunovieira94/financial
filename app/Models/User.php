@@ -26,7 +26,7 @@ class User extends Authenticatable
         'password','pivot', 'role_id'
     ];
 
-    public function costCenter()
+    public function cost_center()
     {
         return $this->belongsToMany(CostCenter::class, 'user_has_cost_centers', 'user_id', 'cost_center_id');
     }

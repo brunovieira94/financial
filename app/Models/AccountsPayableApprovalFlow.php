@@ -11,7 +11,7 @@ class AccountsPayableApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['bill_to_pay', '*'];
     protected static $logName = 'accounts_payable_approval_flows';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -24,8 +24,8 @@ class AccountsPayableApprovalFlow extends Model
     public $timestamps = false;
     protected $hidden = ['id_bill_to_pay'];
 
-    public function billToPay()
+    public function bill_to_pay()
     {
-        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay')->with(['installments', 'provider', 'bankAccountProvider', 'bankAccountCompany', 'business', 'costCenter', 'chartOfAccounts', 'currency', 'user']);
+        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay')->with(['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
     }
 }

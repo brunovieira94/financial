@@ -11,7 +11,7 @@ class CompanyService
     private $company;
     private $bankAccount;
     private $companyHasBankAccount;
-    private $with = ['bankAccount', 'managers', 'city'];
+    private $with = ['bank_account', 'managers', 'city'];
 
     public function __construct(Company $company, BankAccount $bankAccount, CompanyHasBankAccount $companyHasBankAccount)
     {
@@ -70,7 +70,7 @@ class CompanyService
                 $bankAccount = $bankAccount->create($bank);
                 $syncArray[] = $bankAccount->id;
             }
-            $company->bankAccount()->sync($syncArray);
+            $company->bank_account()->sync($syncArray);
         }
     }
 
@@ -100,7 +100,7 @@ class CompanyService
             $this->bankAccount->destroy($collection->toArray());
 
             $company = $this->company->findOrFail($id);
-            $company->bankAccount()->attach($createdBankAccounts);
+            $company->bank_account()->attach($createdBankAccounts);
         }
     }
 }
