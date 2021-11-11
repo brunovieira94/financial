@@ -19,7 +19,7 @@ class ReportService
 
     public function getAllDueBills($requestInfo)
     {
-        $result = $this->billToPay;
+        $result = $this->billToPay->with(['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('from', $requestInfo)){
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
