@@ -31,6 +31,7 @@ class AccountsPayableApprovalFlowService
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
+        $accountApproval->status = 0;
 
         if ($accountApproval->order == $maxOrder) {
             $accountApproval->status = 1;
@@ -46,6 +47,7 @@ class AccountsPayableApprovalFlowService
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
+        $accountApproval->status = 2;
 
         if ($accountApproval->order == 0){
             return response('Não foi possível reprovar a conta.', 422);
