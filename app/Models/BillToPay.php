@@ -112,4 +112,11 @@ class BillToPay extends Model
     {
         return $this->hasOne(User::class, 'id', 'id_user');
     }
+    //delete relationship
+    public static function boot() {
+        parent::boot();
+        self::deleting(function($approval) {
+            $approval->approval()->delete();
+        });
+    }
 }
