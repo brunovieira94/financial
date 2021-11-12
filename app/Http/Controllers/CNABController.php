@@ -23,24 +23,12 @@ class CNABController extends Controller
         $pagador = new \Eduardokum\LaravelBoleto\Pessoa(
             [
                 'nome'      => 'Alisson de S. Santos',
-                'endereco'  => 'Av. Brasilia, 5850',
-                'bairro'    => 'Duquesa I ',
-                'cep'       => '33170-000',
-                'uf'        => 'MG',
-                'cidade'    => 'Santa Luzia',
-                'documento' => '80.968.312/0001-22',
             ]
         );
 
         $pagador2 = new \Eduardokum\LaravelBoleto\Pessoa(
             [
                 'nome'      => 'Bruno',
-                'endereco'  => 'Av. Brasilia, 5850',
-                'bairro'    => 'Duquesa I ',
-                'cep'       => '33170-000',
-                'uf'        => 'MG',
-                'cidade'    => 'Santa Luzia',
-                'documento' => '80.968.312/0001-22',
             ]
         );
 
@@ -97,9 +85,9 @@ class CNABController extends Controller
                 'beneficiario' => $beneficiario,
             ]
         );
-        $pdf = new \Eduardokum\LaravelBoleto\Boleto\Render\Pdf();
-        $pdf->addBoleto($boleto);
-        return $pdf->gerarBoleto();
+        //$pdf = new \Eduardokum\LaravelBoleto\Boleto\Render\Pdf();
+        ///$pdf->addBoleto($boleto);
+        //return $pdf->gerarBoleto();
         $boletos = [];
         $boletos[] = $boleto;
         $boletos[] = $boleto2;

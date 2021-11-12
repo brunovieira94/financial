@@ -64,7 +64,6 @@ class AccountsPayableApprovalFlowService
 
     public function cancelAccount($id, Request $request)
     {
-
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $accountApproval->status = 3;
 
