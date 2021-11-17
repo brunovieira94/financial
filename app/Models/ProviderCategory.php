@@ -18,6 +18,7 @@ class ProviderCategory extends Model
     {
         $user = auth()->user();
         $activity->causer_id = $user->id;
+        $activity->causer_object = $user;
     }
 
     use SoftDeletes;
