@@ -23,12 +23,11 @@ class CNABController extends Controller
         $pagador = new \Eduardokum\LaravelBoleto\Pessoa(
             [
                 'nome'      => 'Alisson de S. Santos',
-            ]
-        );
-
-        $pagador2 = new \Eduardokum\LaravelBoleto\Pessoa(
-            [
-                'nome'      => 'Bruno',
+                'endereco'  => 'Av. Brasília',
+                'cep'       => '331700-000',
+                'uf'        => 'MG',
+                'cidade'    => 'Santa Luzia',
+                'documento' => '136.129.866-94',
             ]
         );
 
@@ -54,28 +53,6 @@ class CNABController extends Controller
             ]
         );
 
-        $boleto2 = new Eduardokum\LaravelBoleto\Boleto\Banco\Itau(
-            [
-                //'logo'                   => realpath(__DIR__ . '/../logos/') . DIRECTORY_SEPARATOR . '341.png',
-                'dataVencimento'         => new \Carbon\Carbon(),
-                'valor'                  => 100,
-                'multa'                  => false,
-                'juros'                  => false,
-                'numero'                 => 1,
-                'numeroDocumento'        => 1,
-                'pagador'                => $pagador2,
-                'beneficiario'           => $beneficiario,
-                'diasBaixaAutomatica'    => 2,
-                'carteira'               => 112,
-                'agencia'                => 1111,
-                'conta'                  => 99999,
-                'descricaoDemonstrativo' => ['demonstrativo 1', 'demonstrativo 2', 'demonstrativo 3'],
-                'instrucoes'             => ['instrucao 1', 'instrucao 2', 'instrucao 3'],
-                'aceite'                 => 'S',
-                'especieDoc'             => 'DM',
-            ]
-        );
-
         $remessa = new \Eduardokum\LaravelBoleto\Cnab\Remessa\Cnab240\Banco\Itau(
             [
                 'agencia'      => 1234,
@@ -85,13 +62,7 @@ class CNABController extends Controller
                 'beneficiario' => $beneficiario,
             ]
         );
-        //$pdf = new \Eduardokum\LaravelBoleto\Boleto\Render\Pdf();
-        ///$pdf->addBoleto($boleto);
-        //return $pdf->gerarBoleto();
-        $boletos = [];
-        $boletos[] = $boleto;
-        $boletos[] = $boleto2;
-        $remessa->addBoletos($boletos);
+        $remessa->addBoleto($boleto);
         return $remessa->save('/var/www/html/storage' . DIRECTORY_SEPARATOR . 'itau.txt');
     }
 }
