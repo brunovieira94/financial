@@ -17,6 +17,7 @@ class AccountsPayableApprovalFlow extends Model
     {
         $user = auth()->user();
         $activity->causer_id = $user->id;
+        $activity->causer_object = $user;
     }
 
     protected $table='accounts_payable_approval_flows';
