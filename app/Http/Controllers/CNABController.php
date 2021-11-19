@@ -14,9 +14,11 @@ class CNABController extends Controller
                 'nome'      => 'ART VIAGENS E TURISMO LTDA',
                 'endereco'  => 'RUA DOS AIMORES',
                 'cep'       => '30140-071',
-                'uf'        => 'MG',
+                'uf'        => 'mg',
                 'cidade'    => 'BELO HORIZONTE',
                 'documento' => '11.442.110/0001-20',
+                'numero' => '0100114',
+                'complemento' => 'ANDAR',
             ]
         );
 
@@ -28,6 +30,8 @@ class CNABController extends Controller
                 'uf'        => 'MG',
                 'cidade'    => 'Santa Luzia',
                 'documento' => '136.129.866-94',
+                'numero' => '5850',
+                'complemento' => 'Ao lado da mercearia',
             ]
         );
 
@@ -55,9 +59,9 @@ class CNABController extends Controller
 
         $remessa = new \Eduardokum\LaravelBoleto\Cnab\Remessa\Cnab240\Banco\Itau(
             [
-                'agencia'      => 1234,
-                'conta'        => 12345,
-                'contaDv'      => 9,
+                'agencia'      => 1403,
+                'conta'        => 970,
+                'contaDv'      => 5,
                 'carteira'     => 112,
                 'beneficiario' => $beneficiario,
             ]
