@@ -25,6 +25,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\AccountsPayableApprovalFlowController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\AttributeTypeController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
@@ -206,6 +207,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/approved-bills', [ReportController::class, 'approvedBills']);
     });
 
+    Route::prefix('measurement-unit')->group(function () {
+        Route::get('/', [MeasurementUnitController::class, 'index']);
+        Route::get('/{id}', [MeasurementUnitController::class, 'show']);
+        Route::post('/', [MeasurementUnitController::class, 'store']);
+        Route::put('/{id}', [MeasurementUnitController::class, 'update']);
+        Route::delete('/{id}', [MeasurementUnitController::class, 'destroy']);
+    });
+    
     Route::prefix('attribute-type')->group(function () {
         Route::get('/', [AttributeTypeController::class, 'index']);
         Route::get('/{id}', [AttributeTypeController::class, 'show']);
