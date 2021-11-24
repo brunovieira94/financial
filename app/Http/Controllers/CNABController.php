@@ -7,14 +7,14 @@ use Eduardokum;
 
 class CNABController extends Controller
 {
-    public function index(Request $request)
+    public function shipping(Request $request)
     {
         $beneficiario = new \Eduardokum\LaravelBoleto\Pessoa(
             [
                 'nome'      => 'ART VIAGENS E TURISMO LTDA',
                 'endereco'  => 'RUA DOS AIMORES',
                 'cep'       => '30140-071',
-                'uf'        => 'mg',
+                'uf'        => 'MG',
                 'cidade'    => 'BELO HORIZONTE',
                 'documento' => '11.442.110/0001-20',
                 'numero' => '0100114',
@@ -39,7 +39,7 @@ class CNABController extends Controller
             [
                 //'logo'                   => realpath(__DIR__ . '/../logos/') . DIRECTORY_SEPARATOR . '341.png',
                 'dataVencimento'         => new \Carbon\Carbon(),
-                'valor'                  => 100,
+                'valor'                  => 100.50,
                 'multa'                  => false,
                 'juros'                  => false,
                 'numero'                 => 1,
@@ -50,6 +50,7 @@ class CNABController extends Controller
                 'carteira'               => 112,
                 'agencia'                => 1111,
                 'conta'                  => 99999,
+                'contaDv'                  => 5,
                 'descricaoDemonstrativo' => ['demonstrativo 1', 'demonstrativo 2', 'demonstrativo 3'],
                 'instrucoes'             => ['instrucao 1', 'instrucao 2', 'instrucao 3'],
                 'aceite'                 => 'S',
@@ -69,4 +70,14 @@ class CNABController extends Controller
         $remessa->addBoleto($boleto);
         return $remessa->save('/var/www/html/storage' . DIRECTORY_SEPARATOR . 'itau.txt');
     }
+
+    public function return(Request $request) {
+
+        $returnFile = $request->file('return-file');
+
+        $processArchive = new \Eduardokum\LaravelBoleto\Cnab\Retorno\Cnab240\Banco\Itau($returnFile);
+        $processArchive->processar();
+        return 'teste';
+    }
+
 }

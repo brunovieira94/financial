@@ -213,8 +213,9 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
-Route::prefix('/cnab')->group(function () {
-    Route::post('/', [CNABController::class, 'index']);
+Route::prefix('/cnab-240')->group(function () {
+    Route::post('/shipping', [CNABController::class, 'shipping']);
+    Route::post('/return', [CNABController::class, 'return']);
 });
 
 
