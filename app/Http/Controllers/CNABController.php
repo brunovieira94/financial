@@ -77,6 +77,10 @@ class CNABController extends Controller
 
         $processArchive = new \Eduardokum\LaravelBoleto\Cnab\Retorno\Cnab240\Banco\Itau($returnFile);
         $processArchive->processar();
+
+
+        $teste = $processArchive->getDetalhes();
+        dd($teste[1]);
         return 'teste';
     }
 
