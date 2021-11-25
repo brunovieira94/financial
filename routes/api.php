@@ -25,6 +25,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\AccountsPayableApprovalFlowController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\AttributeTypeController;
@@ -208,6 +209,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/approved-bills', [ReportController::class, 'approvedBills']);
     });
 
+    Route::prefix('product')->group(function () {
+        Route::get('/', [ProductController::class, 'index']);
+        Route::get('/{id}', [ProductController::class, 'show']);
+        Route::post('/', [ProductController::class, 'store']);
+        Route::put('/{id}', [ProductController::class, 'update']);
+        Route::delete('/{id}', [ProductController::class, 'destroy']);
+    });
+    
     Route::prefix('service')->group(function () {
         Route::get('/', [ServiceController::class, 'index']);
         Route::get('/{id}', [ServiceController::class, 'show']);
@@ -215,7 +224,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ServiceController::class, 'update']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
     });
-    
+
     Route::prefix('measurement-unit')->group(function () {
         Route::get('/', [MeasurementUnitController::class, 'index']);
         Route::get('/{id}', [MeasurementUnitController::class, 'show']);

@@ -23,7 +23,8 @@ class Service extends Model
 
     use SoftDeletes;
     protected $table='services';
-    protected $fillable = ['title', 'chart_of_accounts_id', 'description'];
+    protected $fillable = ['title', 'description', 'chart_of_accounts_id'];
+    protected $hidden = ['chart_of_accounts_id'];
 
     public function chart_of_account()
     {
