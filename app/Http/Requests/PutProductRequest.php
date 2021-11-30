@@ -18,6 +18,7 @@ class PutProductRequest extends FormRequest
             'title' => 'max:255',
             'measurement_units_id' => 'integer',
             'chart_of_accounts_id' => 'integer',
+            'attributes' => 'array',
         ];
     }
 
