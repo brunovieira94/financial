@@ -70,7 +70,7 @@ class BillToPay extends Model
 
     public function installments()
     {
-        return $this->hasMany(BillToPayHasInstallments::class, 'bill_to_pay', 'id');
+        return $this->hasMany(BillToPayHasInstallments::class, 'id_bill_to_pay', 'id');
     }
 
     public function provider()
@@ -112,7 +112,12 @@ class BillToPay extends Model
     {
         return $this->hasOne(User::class, 'id', 'id_user');
     }
-    //delete relationship
+
+    public function tax()
+    {
+        return $this->hasMany(BillToPayHasTax::class, 'id_bill_to_pay', 'id')->with('typeOfTax');
+    }
+
     public static function boot() {
         parent::boot();
         self::deleting(function($approval) {
