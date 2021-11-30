@@ -75,7 +75,7 @@ class BillToPay extends Model
 
     public function provider()
     {
-        return $this->hasOne(Provider::class, 'id', 'id_provider');
+        return $this->hasOne(Provider::class, 'id', 'id_provider')->with(['city']);
     }
 
     public function bank_account_provider()

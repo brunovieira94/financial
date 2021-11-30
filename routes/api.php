@@ -249,7 +249,7 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
-Route::prefix('/cnab-240')->group(function () {
+Route::prefix('itau/cnab-240')->group(function () {
     Route::post('/shipping', [CNABController::class, 'shipping']);
     Route::post('/return', [CNABController::class, 'return']);
 });
