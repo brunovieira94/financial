@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 
-class Currency extends Model
+class MeasurementUnit extends Model
 {
     // Logs
     use LogsActivity;
     protected static $logAttributes = ['*'];
-    protected static $logName = 'currency';
+    protected static $logName = 'measurement_units';
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
@@ -21,8 +21,7 @@ class Currency extends Model
         $activity->causer_object = $user;
     }
 
-    // Model attributes
     use SoftDeletes;
-    protected $table='currency';
-    protected $fillable = ['title', 'initials', 'default', 'currency_symbol'];
+    protected $table='measurement_units';
+    protected $fillable = ['title', 'unit'];
 }

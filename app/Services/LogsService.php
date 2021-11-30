@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Services;
-use Spatie\Activitylog\Models\Activity;
+
+use App\Models\LogActivity;
 
 class LogsService
 {
@@ -11,16 +12,14 @@ class LogsService
         $orderBy = $requestInfo['orderBy'] ?? Utils::defaultOrderBy;
         $order = $requestInfo['order'] ?? Utils::defaultOrder;
         $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
-        return Activity::orderBy($orderBy, $order)->paginate($perPage);;
+        return LogActivity::orderBy($orderBy, $order)->paginate($perPage);;
     }
 
     public function getLogs($log_name, $subject_id, $requestInfo)
     {
-        return Activity::where([
+        return LogActivity::where([
             ['log_name', $log_name],
             ['subject_id', $subject_id]
         ])->get();
     }
-
 }
-
