@@ -2,11 +2,12 @@
 
 namespace App\Services;
 use App\Models\Product;
+use App\Models\ProductsHasAttributes;
 
 class ProductService
 {
     private $product;
-    private $with = ['chart_of_account', 'measurement_unit'];
+    private $with = ['chart_of_account', 'measurement_unit', 'attributes'];
     public function __construct(Product $product)
     {
         $this->product = $product;
@@ -27,6 +28,7 @@ class ProductService
     {
         $product = new Product;
         $product = $product->create($productInfo);
+        $this->syncAttributes($product, $productInfo);
         return $this->product->with($this->with)->findOrFail($product->id);
     }
 
@@ -34,6 +36,7 @@ class ProductService
     {
         $product = $this->product->findOrFail($id);
         $product->fill($productInfo)->save();
+        $this->syncAttributes($product, $productInfo);
         return $this->product->with($this->with)->findOrFail($product->id);
     }
 
@@ -41,6 +44,22 @@ class ProductService
     {
       $this->product->findOrFail($id)->delete();
       return true;
+    }
+
+    public function syncAttributes($product, $productInfo){
+        $syncArray = [];
+        if(array_key_exists('attributes', $productInfo)){
+            foreach($productInfo['attributes'] as $attribute){
+                // $syncArray[$attribute['id']] = [];
+                // $syncArray[$attribute['id']]['value'] = $attribute['value'];
+                $productsHasAttributes = new ProductsHasAttributes;
+                $productsHasAttributes = $productsHasAttributes->create([
+                    'product_id' => $product->id,
+                    'attribute_id' => $attribute['id'],
+                    'value' => $attribute['value'],
+                ]);
+            }
+        }
     }
 
 }

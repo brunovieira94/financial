@@ -19,6 +19,7 @@ class StoreProductRequest extends FormRequest
             'measurement_units_id' => 'required|integer',
             'chart_of_accounts_id' => 'required|integer',
             'description' => 'required',
+            'attributes' => 'array',
         ];
     }
 
