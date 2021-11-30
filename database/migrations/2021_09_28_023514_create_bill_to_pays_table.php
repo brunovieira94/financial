@@ -36,13 +36,12 @@ class CreateBillToPaysTable extends Migration
             $table->integer('frequency_of_installments');
             $table->integer('id_user')->unsigned();
             $table->foreign('id_user')->references('id')->on('users')->constrained()->onUpdate('cascade')->onDelete('cascade');
+            $table->double('net_value')->nullable();
             //NF
             $table->string('invoice_file')->nullable();
             $table->string('invoice_number')->nullable();
             $table->string('type_of_tax')->nullable();
             $table->double('tax_amount')->nullable();
-            $table->double('net_value')->nullable();
-
             //Boleto
             $table->string('billet_file')->nullable();
             $table->string('bar_code')->nullable();

@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\BillToPay;
 use App\Models\BillToPayHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\BillToPayHasTax;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,14 +13,16 @@ class BillToPayService
 {
     private $billToPay;
     private $installments;
-    private $approval;
-    private $with = ['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $tax;
 
-    public function __construct(BillToPay $billToPay, BillToPayHasInstallments $installments, AccountsPayableApprovalFlow $approval)
+    private $with = ['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+
+    public function __construct(BillToPay $billToPay, BillToPayHasInstallments $installments, AccountsPayableApprovalFlow $approval, BillToPayHasTax $tax)
     {
         $this->billToPay = $billToPay;
         $this->installments = $installments;
         $this->approval = $approval;
+        $this->tax = $tax;
     }
 
     public function getAllBillToPay($requestInfo)
@@ -56,6 +59,7 @@ class BillToPayService
             'status' => 0,
         ]);
 
+        self::syncTax($billToPay, $billToPayInfo);
         self::syncInstallments($billToPay, $billToPayInfo);
         return $this->billToPay->with($this->with)->findOrFail($billToPay->id);
     }
@@ -82,6 +86,7 @@ class BillToPayService
         }
 
         $billToPay->fill($billToPayInfo)->save();
+        self::syncTax($billToPay, $billToPayInfo);
         self::syncInstallments($billToPay, $billToPayInfo);
         return $this->billToPay->with($this->with)->findOrFail($billToPay->id);
     }
@@ -145,12 +150,10 @@ class BillToPayService
     public function syncInstallments($billToPay, $billToPayInfo)
     {
         if(array_key_exists('installments', $billToPayInfo)){
-
             self::destroyInstallments($billToPay);
-
             foreach($billToPayInfo['installments'] as $key=>$installments){
                 $billToPayHasInstallments = new BillToPayHasInstallments;
-                $installments['bill_to_pay'] = $billToPay['id'];
+                $installments['id_bill_to_pay'] = $billToPay['id'];
                 $installments['parcel_number'] = $key + 1;
                 try {
                     $billToPayHasInstallments = $billToPayHasInstallments->create($installments);
@@ -159,15 +162,32 @@ class BillToPayService
                     $this->billToPay->findOrFail($billToPay->id)->delete();
                     return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
                 }
-
             }
         }
     }
 
     public function destroyInstallments($billToPay)
     {
-        $collection = $this->installments->where('bill_to_pay', $billToPay['id'])->get(['id']);
+        $collection = $this->installments->where('id_bill_to_pay', $billToPay['id'])->get(['id']);
         $this->installments->destroy($collection->toArray());
+    }
+
+    public function syncTax($billToPay, $billToPayInfo){
+        if(array_key_exists('tax', $billToPayInfo)){
+            self::destroyTax($billToPay);
+            foreach($billToPayInfo['tax'] as $key=>$tax){
+                $billToPayHasTax = new BillToPayHasTax;
+                $tax['id_bill_to_pay'] = $billToPay['id'];
+                $billToPayHasTax = $billToPayHasTax->create($tax);
+            }
+        }
+
+    }
+
+    public function destroyTax($billToPay)
+    {
+        $collection = $this->tax->where('id_bill_to_pay', $billToPay['id'])->get(['id']);
+        $this->tax->destroy($collection->toArray());
     }
 
 }

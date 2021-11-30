@@ -24,6 +24,7 @@ use App\Http\Controllers\LogsController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\AccountsPayableApprovalFlowController;
+use App\Http\Controllers\TypeOfTaxController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
@@ -191,8 +192,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('bill-to-pay')->group(function () {
         Route::get('/', [BillToPayController::class, 'index']);
         Route::get('/{id}', [BillToPayController::class, 'show']);
-        Route::post('/', [BillToPayController::class, 'store'])->middleware('check.installments');
-        Route::post('/{id}', [BillToPayController::class, 'update'])->middleware('check.installments');
+        Route::post('/', [BillToPayController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
+        Route::post('/{id}', [BillToPayController::class, 'update'])->middleware(['check.installments', 'check.values.invoice']);
         Route::delete('/{id}', [BillToPayController::class, 'destroy']);
         Route::put('/installment/pay/{id}', [BillToPayController::class, 'payInstallment']);
     });
@@ -202,6 +203,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/approve/{id}', [AccountsPayableApprovalFlowController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [AccountsPayableApprovalFlowController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [AccountsPayableApprovalFlowController::class, 'cancelAccount']);
+    });
+
+    Route::prefix('type-of-tax')->group(function () {
+        Route::get('/', [TypeOfTaxController::class, 'index']);
+        Route::get('/{id}', [TypeOfTaxController::class, 'show']);
+        Route::post('/', [TypeOfTaxController::class, 'store']);
+        Route::put('/{id}', [TypeOfTaxController::class, 'update']);
+        Route::delete('/{id}', [TypeOfTaxController::class, 'destroy']);
     });
 
     Route::prefix('reports')->group(function () {
@@ -216,7 +225,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
     });
-    
+
     Route::prefix('service')->group(function () {
         Route::get('/', [ServiceController::class, 'index']);
         Route::get('/{id}', [ServiceController::class, 'show']);
