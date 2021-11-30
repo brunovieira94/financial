@@ -16,37 +16,39 @@ class BillToPay extends Model
     protected static $logName = 'bill_to_pay';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $activity->causer_id = auth()->user()->id;
+        $user = auth()->user();
+        $activity->causer_id = $user->id;
+        $activity->causer_object = $user;
     }
     use SoftDeletes;
-    protected $table='bills_to_pay';
+    protected $table = 'bills_to_pay';
     protected $hidden = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
     protected $appends = ['billet_link', 'invoice_link'];
 
     protected $fillable = [
-                            'id_provider',
-                            'emission_date',
-                            'emission_date',
-                            'emission_date',
-                            'pay_date',
-                            'id_bank_account_provider',
-                            'id_bank_account_company',
-                            'amount',
-                            'id_business',
-                            'id_cost_center',
-                            'id_chart_of_account',
-                            'id_currency',
-                            'exchange_rate',
-                            'frequency_of_installments',
-                            'invoice_number',
-                            'type_of_tax',
-                            'tax_amount',
-                            'net_value',
-                            'bar_code',
-                            'invoice_file',
-                            'billet_file',
-                            'id_user',
-                        ];
+        'id_provider',
+        'emission_date',
+        'emission_date',
+        'emission_date',
+        'pay_date',
+        'id_bank_account_provider',
+        'id_bank_account_company',
+        'amount',
+        'id_business',
+        'id_cost_center',
+        'id_chart_of_account',
+        'id_currency',
+        'exchange_rate',
+        'frequency_of_installments',
+        'invoice_number',
+        'type_of_tax',
+        'tax_amount',
+        'net_value',
+        'bar_code',
+        'invoice_file',
+        'billet_file',
+        'id_user',
+    ];
 
     public function getBilletLinkAttribute()
     {
@@ -57,9 +59,9 @@ class BillToPay extends Model
     }
     public function getInvoiceLinkAttribute()
     {
-        if(!is_null($this->attributes['invoice_file'])){
-           $invoice = $this->attributes['invoice_file'];
-           return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(5));
+        if (!is_null($this->attributes['invoice_file'])) {
+            $invoice = $this->attributes['invoice_file'];
+            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(5));
         }
     }
 
@@ -118,9 +120,10 @@ class BillToPay extends Model
         return $this->hasMany(BillToPayHasTax::class, 'id_bill_to_pay', 'id')->with('typeOfTax');
     }
 
-    public static function boot() {
+    public static function boot()
+    {
         parent::boot();
-        self::deleting(function($approval) {
+        self::deleting(function ($approval) {
             $approval->approval()->delete();
         });
     }
