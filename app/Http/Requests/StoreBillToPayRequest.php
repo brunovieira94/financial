@@ -26,7 +26,7 @@ class StoreBillToPayRequest extends FormRequest
             'id_currency' => 'required|integer',
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
-            'net_value' => 'numeric|required',
+            'net_value' => 'numeric',
             //NF
             'invoice_file' => 'file|required_with_all:invoice_number,type_of_tax,net_value,tax_amount',
             'invoice_number' => 'max:150|required_with_all:invoice_file,type_of_tax,net_value,tax_amount',
