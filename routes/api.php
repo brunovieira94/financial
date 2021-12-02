@@ -25,7 +25,7 @@ use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\AccountsPayableApprovalFlowController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\CNABController;
+use App\Http\Controllers\ItauCNABController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
@@ -248,10 +248,13 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
-
-Route::prefix('itau/cnab-240')->group(function () {
-    Route::post('/shipping', [CNABController::class, 'shipping']);
-    Route::post('/return', [CNABController::class, 'return']);
+Route::prefix('cnab')->group(function () {
+    Route::prefix('/itau')->group(function () {
+        Route::prefix('/240')->group(function () {
+            Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
+            Route::post('/return', [ItauCNABController::class, 'return240']);
+        });
+    });
 });
 
 
