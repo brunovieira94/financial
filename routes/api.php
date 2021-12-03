@@ -254,6 +254,10 @@ Route::prefix('cnab')->group(function () {
             Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
             Route::post('/return', [ItauCNABController::class, 'return240']);
         });
+        Route::prefix('/400')->group(function () {
+            Route::post('/shipping', [ItauCNABController::class, 'shipping400']);
+            Route::post('/return', [ItauCNABController::class, 'return400']);
+        });
     });
 });
 

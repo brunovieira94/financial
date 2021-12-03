@@ -70,7 +70,7 @@ class BillToPay extends Model
 
     public function installments()
     {
-        return $this->hasMany(BillToPayHasInstallments::class, 'bill_to_pay', 'id');
+        return $this->hasMany(BillToPayHasInstallments::class, 'id_bill_to_pay', 'id');
     }
 
     public function provider()

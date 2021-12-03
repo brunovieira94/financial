@@ -25,4 +25,14 @@ class ItauCNABController extends Controller
         return $this->cnabService->receiveCNAB240($request);
     }
 
+    public function shipping400(StoreShippingRequest $request)
+    {
+        return $this->cnabService->generateCNAB400Shipping($request->all());
+    }
+
+    public function return400(Request $request)
+    {
+        return $this->cnabService->receiveCNAB400($request);
+    }
+
 }

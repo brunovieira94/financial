@@ -100,5 +100,15 @@ class ItauCNABService
         return 'teste';
     }
 
+    public function generateCNAB400Shipping($requestInfo)
+    {
+
+    }
+
+    public function receiveCNAB400($requestInfo)
+    {
+
+    }
+
 
 }
