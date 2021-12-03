@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductsHasAttributes extends Model
+class ProductHasAttributes extends Model
 {
     protected $table='product_has_attributes';
     public $timestamps = false;

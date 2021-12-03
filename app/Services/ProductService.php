@@ -2,15 +2,17 @@
 
 namespace App\Services;
 use App\Models\Product;
-use App\Models\ProductsHasAttributes;
+use App\Models\ProductHasAttributes;
 
 class ProductService
 {
     private $product;
+    private $productHasAttributes;
     private $with = ['chart_of_account', 'measurement_unit', 'attributes'];
-    public function __construct(Product $product)
+    public function __construct(Product $product, ProductHasAttributes $productHasAttributes)
     {
         $this->product = $product;
+        $this->productHasAttributes = $productHasAttributes;
     }
 
     public function getAllProduct($requestInfo)
@@ -36,7 +38,7 @@ class ProductService
     {
         $product = $this->product->findOrFail($id);
         $product->fill($productInfo)->save();
-        $this->syncAttributes($product, $productInfo);
+        $this->putAttributes($id, $productInfo);
         return $this->product->with($this->with)->findOrFail($product->id);
     }
 
@@ -47,18 +49,41 @@ class ProductService
     }
 
     public function syncAttributes($product, $productInfo){
-        $syncArray = [];
         if(array_key_exists('attributes', $productInfo)){
             foreach($productInfo['attributes'] as $attribute){
-                // $syncArray[$attribute['id']] = [];
-                // $syncArray[$attribute['id']]['value'] = $attribute['value'];
-                $productsHasAttributes = new ProductsHasAttributes;
-                $productsHasAttributes = $productsHasAttributes->create([
+                $productHasAttributes = new ProductHasAttributes;
+                $productHasAttributes = $productHasAttributes->create([
                     'product_id' => $product->id,
-                    'attribute_id' => $attribute['id'],
+                    'attribute_id' => $attribute['attribute_id'],
                     'value' => $attribute['value'],
                 ]);
             }
+        }
+    }
+
+    public function putAttributes($id, $productInfo){
+
+        $updateAttributes = [];
+        $createdAttributes = [];
+
+        if(array_key_exists('attributes', $productInfo)){
+            foreach($productInfo['attributes'] as $attribute){
+                if (array_key_exists('id', $attribute)){
+                    $productHasAttributes = $this->productHasAttributes->findOrFail($attribute['id']);
+                    $productHasAttributes->fill($attribute)->save();
+                    $updateAttributes[] = $attribute['id'];
+                } else {
+                    $productHasAttributes = $this->productHasAttributes->create([
+                        'product_id' => $id,
+                        'attribute_id' => $attribute['attribute_id'],
+                        'value' => $attribute['value'],
+                    ]);
+                    $createdAttributes[] = $productHasAttributes->id;
+                }
+            }
+
+            $collection = $this->productHasAttributes->where('product_id', $id)->whereNotIn('id', $updateAttributes)->whereNotIn('id', $createdAttributes)->get(['id']);
+            $this->productHasAttributes->destroy($collection->toArray());
         }
     }
 
