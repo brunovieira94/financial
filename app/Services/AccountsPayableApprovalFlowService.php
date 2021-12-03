@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
+use App\Models\BillToPay;
 use Illuminate\Http\Request;
 
 class AccountsPayableApprovalFlowService
@@ -11,10 +12,11 @@ class AccountsPayableApprovalFlowService
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
+    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, BillToPay $billToPay)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
+        $this->billToPay = $billToPay;
     }
 
     public function getAllAccountsForApproval($requestInfo)
@@ -24,7 +26,24 @@ class AccountsPayableApprovalFlowService
         if (!$approvalFlowUserOrder)
             return response([]);
 
-        return $this->accountsPayableApprovalFlow->with('bill_to_pay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->orderBy('order', 'asc')->join('bills_to_pay', 'accounts_payable_approval_flows.id_bill_to_pay', '=', 'bills_to_pay.id')->orderBy('bills_to_pay.pay_date', 'asc')->select('accounts_payable_approval_flows.*')->get();
+
+        return $this->accountsPayableApprovalFlow->where(function ($query) use ($requestInfo) {
+            if(array_key_exists('search', $requestInfo)){
+                if(array_key_exists('searchFields', $requestInfo)){
+                    foreach($requestInfo['searchFields'] as $searchField){
+                        $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
+                    }
+                }
+                else{
+                    foreach($this->accountsPayableApprovalFlow->getFillable() as $searchField){
+                        $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
+                    }
+                    foreach($this->billToPay->getFillable() as $searchField){
+                        $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
+                    }
+                }
+            }
+        })->with('bill_to_pay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->orderBy('order', 'asc')->join('bills_to_pay', 'accounts_payable_approval_flows.id_bill_to_pay', '=', 'bills_to_pay.id')->orderBy('bills_to_pay.pay_date', 'asc')->select('accounts_payable_approval_flows.*')->get();
     }
 
     public function approveAccount($id)
