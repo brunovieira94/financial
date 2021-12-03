@@ -65,5 +65,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.permission' => \App\Http\Middleware\CheckUserHasPermission::class,
         'check.installments' => \App\Http\Middleware\CheckPortionAmounts::class,
+        'check.values.invoice' => \App\Http\Middleware\CheckValuesWhenSendingInvoice::class,
     ];
 }

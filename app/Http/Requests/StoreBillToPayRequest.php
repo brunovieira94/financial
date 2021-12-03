@@ -26,12 +26,12 @@ class StoreBillToPayRequest extends FormRequest
             'id_currency' => 'required|integer',
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
+            'net_value' => 'numeric',
             //NF
             'invoice_file' => 'file|required_with_all:invoice_number,type_of_tax,net_value,tax_amount',
             'invoice_number' => 'max:150|required_with_all:invoice_file,type_of_tax,net_value,tax_amount',
-            'type_of_tax' => 'max:150|required_with_all:invoice_file,invoice_number,net_value,tax_amount',
-            'net_value' => 'numeric|required_with_all:invoice_file,invoice_number,type_of_tax,tax_amount',
-            'tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,type_of_tax,net_value',
+            'tax.*.id_type_of_tax' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount',
+            'tax.*.tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,tax.*.id_type_of_tax,net_value',
             //Boleto
             'bar_code' => 'max:150|required_with_all:billet_file',
             'billet_file' => 'file|required_with_all:bar_code',

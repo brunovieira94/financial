@@ -31,6 +31,8 @@ class PutBillToPayRequest extends FormRequest
             'tax_amount' => 'numeric',
             'net_value' => 'numeric',
             'bar_code' => 'max:150',
+            'tax.*.id_type_of_tax' => 'integer',
+            'tax.*.tax_amount' => 'numeric',
         ];
     }
 }
