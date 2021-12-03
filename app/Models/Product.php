@@ -12,7 +12,7 @@ class Product extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['chart_of_account', 'measurement_unit', '*'];
+    protected static $logAttributes = ['attributes', 'chart_of_account', 'measurement_unit', '*'];
     protected static $logName = 'products';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -38,6 +38,6 @@ class Product extends Model
 
     public function attributes()
     {
-        return $this->hasMany(ProductsHasAttributes::class, 'product_id', 'id')->with('attribute');
+        return $this->hasMany(ProductHasAttributes::class, 'product_id', 'id')->with('attribute');
     }
 }
