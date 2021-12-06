@@ -85,7 +85,8 @@ class ItauCNABService
         }
 
         $shipping->addBoletos($billets);
-        return $shipping->save('/var/www/html/storage' . DIRECTORY_SEPARATOR . 'itau.txt');
+        $shipping->save(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
+        return response()->download('/var/www/html/storage/itau.txt');
     }
 
     public function receiveCNAB240($requestInfo) {
@@ -99,16 +100,4 @@ class ItauCNABService
         dd($teste[1]);
         return 'teste';
     }
-
-    public function generateCNAB400Shipping($requestInfo)
-    {
-
-    }
-
-    public function receiveCNAB400($requestInfo)
-    {
-
-    }
-
-
 }

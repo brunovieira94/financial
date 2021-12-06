@@ -251,23 +251,20 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [AttributeTypeController::class, 'destroy']);
     });
 
+    Route::prefix('cnab')->group(function () {
+        Route::prefix('/itau')->group(function () {
+            Route::prefix('/240')->group(function () {
+                Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
+                Route::post('/return', [ItauCNABController::class, 'return240']);
+            });
+        });
+    });
 });
 
 //Restful route -> Login
 Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
-Route::prefix('cnab')->group(function () {
-    Route::prefix('/itau')->group(function () {
-        Route::prefix('/240')->group(function () {
-            Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
-            Route::post('/return', [ItauCNABController::class, 'return240']);
-        });
-        Route::prefix('/400')->group(function () {
-            Route::post('/shipping', [ItauCNABController::class, 'shipping400']);
-            Route::post('/return', [ItauCNABController::class, 'return400']);
-        });
-    });
-});
+
 
 
