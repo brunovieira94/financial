@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreApprovalFlowRequest;
-use App\Http\Requests\PutApprovalFlowRequest;
 use App\Services\ApprovalFlowService as ApprovalFlowService;
 
 class ApprovalFlowController extends Controller
