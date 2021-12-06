@@ -30,6 +30,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\AttributeTypeController;
+use App\Http\Controllers\ApprovalFlowSupplyController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -250,6 +251,10 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [AttributeTypeController::class, 'destroy']);
     });
 
+    Route::prefix('approval-flow-supply')->group(function () {
+        Route::get('/', [ApprovalFlowSupplyController::class, 'index']);
+        Route::post('/', [ApprovalFlowSupplyController::class, 'store']);
+    });
 });
 
 //Restful route -> Login
