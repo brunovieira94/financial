@@ -28,22 +28,28 @@ class AccountsPayableApprovalFlowService
 
 
         return $this->accountsPayableApprovalFlow->where(function ($query) use ($requestInfo) {
-            if(array_key_exists('search', $requestInfo)){
-                if(array_key_exists('searchFields', $requestInfo)){
-                    foreach($requestInfo['searchFields'] as $searchField){
+            if (array_key_exists('search', $requestInfo)) {
+                if (array_key_exists('searchFields', $requestInfo)) {
+                    foreach ($requestInfo['searchFields'] as $searchField) {
                         $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
                     }
-                }
-                else{
-                    foreach($this->accountsPayableApprovalFlow->getFillable() as $searchField){
+                } else {
+                    foreach ($this->accountsPayableApprovalFlow->getFillable() as $searchField) {
                         $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
                     }
-                    foreach($this->billToPay->getFillable() as $searchField){
+                    foreach ($this->billToPay->getFillable() as $searchField) {
                         $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
                     }
                 }
             }
-        })->with('bill_to_pay')->whereIn('order', $approvalFlowUserOrder->toArray())->WhereIn('status', [0, 2])->orderBy('order', 'asc')->join('bills_to_pay', 'accounts_payable_approval_flows.id_bill_to_pay', '=', 'bills_to_pay.id')->orderBy('bills_to_pay.pay_date', 'asc')->select('accounts_payable_approval_flows.*')->get();
+        })->with('bill_to_pay')
+            ->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->WhereIn('status', [0, 2])
+            ->orderBy('order', 'asc')
+            ->join('bills_to_pay', 'accounts_payable_approval_flows.id_bill_to_pay', '=', 'bills_to_pay.id')
+            ->orderBy('bills_to_pay.pay_date', 'asc')
+            ->select('accounts_payable_approval_flows.*')
+            ->get();
     }
 
     public function approveAccount($id)
@@ -68,12 +74,12 @@ class AccountsPayableApprovalFlowService
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 2;
 
-        if ($accountApproval->order == 0){
+        if ($accountApproval->order == 0) {
             return response('Não foi possível reprovar a conta.', 422);
         }
-        if ($accountApproval->order > $maxOrder){
+        if ($accountApproval->order > $maxOrder) {
             $accountApproval->order = 0;
-        }else{
+        } else {
             $accountApproval->order -= 1;
         }
         $accountApproval->reason = $request->reason;

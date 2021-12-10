@@ -41,8 +41,6 @@ class BillToPay extends Model
         'exchange_rate',
         'frequency_of_installments',
         'invoice_number',
-        'type_of_tax',
-        'tax_amount',
         'net_value',
         'bar_code',
         'invoice_file',
