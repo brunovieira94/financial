@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Services;
-
 class Utils
 {
     const defaultPerPage = 20;
@@ -33,16 +32,13 @@ class Utils
         $query = $model->query();
         if(array_key_exists('search', $requestInfo)){
             if(array_key_exists('searchFields', $requestInfo)){
-                foreach($requestInfo['searchFields'] as $searchField){
-                    $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
-                }
+                $query->whereLike($requestInfo['searchFields'], "%{$requestInfo['search']}%");
             }
             else{
-                foreach($model->getFillable() as $searchField){
-                    $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
-                }
+                $query->whereLike($model->getFillable(), "%{$requestInfo['search']}%");
             }
         }
+        //dd($query);
         return $query;
     }
 }
