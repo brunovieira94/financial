@@ -45,6 +45,16 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderHasProducts::class, 'purchase_order_id', 'id')->with('product');
     }
 
+    public function currency()
+    {
+        return $this->hasOne(Currency::class, 'id', 'currency_id');
+    }
+
+    public function provider()
+    {
+        return $this->hasOne(Provider::class, 'id', 'provider_id');
+    }
+
     public static function boot() {
         parent::boot();
         self::deleting(function($attachments) {

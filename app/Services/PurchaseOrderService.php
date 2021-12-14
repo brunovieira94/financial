@@ -15,7 +15,7 @@ class PurchaseOrderService
     private $purchaseOrderHasServices;
     private $purchaseOrderHasCostCenters;
     private $attachments;
-    private $with = ['cost_centers', 'attachments', 'services', 'products'];
+    private $with = ['cost_centers', 'attachments', 'services', 'products', 'currency', 'provider'];
     public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments)
     {
         $this->purchaseOrder = $purchaseOrder;
