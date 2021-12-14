@@ -38,7 +38,6 @@ class Utils
                 $query->whereLike($model->getFillable(), "%{$requestInfo['search']}%");
             }
         }
-        //dd($query);
         return $query;
     }
 }
