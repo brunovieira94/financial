@@ -29,18 +29,33 @@ class Utils
         return $arrayIds;
     }
 
+    public static function validateDate($date, $format = 'd/m/Y')
+    {
+        $d = \DateTime::createFromFormat($format, $date);
+        return $d && $d->format($format) == $date;
+    }
+
+    public static function formatDate($date)
+    {
+        $date = explode('/', $date);
+        $year = $date[2];
+        $date[2] = $date[0];
+        $date[0] = $year;
+        return $date = implode('-', $date);
+    }
+
     public static function search($model,$requestInfo){
         $query = $model->query();
         if(array_key_exists('search', $requestInfo)){
+
+            if (self::validateDate($requestInfo['search'], 'd/m/Y')) {
+                $requestInfo['search'] = self::formatDate($requestInfo['search']);
+            }
             if(array_key_exists('searchFields', $requestInfo)){
-                foreach($requestInfo['searchFields'] as $searchField){
-                    $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
-                }
+                $query->whereLike($requestInfo['searchFields'], "%{$requestInfo['search']}%");
             }
             else{
-                foreach($model->getFillable() as $searchField){
-                    $query->orWhere($searchField, "LIKE", "%{$requestInfo['search']}%");
-                }
+                $query->whereLike($model->getFillable(), "%{$requestInfo['search']}%");
             }
         }
         return $query;

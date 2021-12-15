@@ -41,8 +41,6 @@ class BillToPay extends Model
         'exchange_rate',
         'frequency_of_installments',
         'invoice_number',
-        'type_of_tax',
-        'tax_amount',
         'net_value',
         'bar_code',
         'invoice_file',
@@ -77,7 +75,11 @@ class BillToPay extends Model
 
     public function provider()
     {
+<<<<<<< HEAD
         return $this->hasOne(Provider::class, 'id', 'id_provider')->with(['city']);
+=======
+        return $this->hasOne(Provider::class, 'id', 'id_provider')->with(['user']);
+>>>>>>> develop
     }
 
     public function bank_account_provider()
