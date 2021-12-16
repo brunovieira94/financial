@@ -29,10 +29,6 @@ class ItauCNABService
                 $bankAccount = $bank;
         }
 
-        if($bankAccount->wallet == null)
-            response('A carteira ou banco não informado', 422)->send();
-
-
         $recipient = new \Eduardokum\LaravelBoleto\Pessoa(
             [
                 'nome'      => $company->company_name,
@@ -58,7 +54,9 @@ class ItauCNABService
 
         $allBillToPay = $this->billToPay->with($this->withBillToPay)->whereIn('id', $requestInfo['bill_to_pay_ids'])->get();
         $billets = [];
+
         foreach($allBillToPay as $billToPay) {
+
             $payer = new \Eduardokum\LaravelBoleto\Pessoa(
                 [
                     'nome'      => $billToPay->provider->company_name,
@@ -71,17 +69,23 @@ class ItauCNABService
                     'complemento' => $billToPay->provider->complement,
                 ]
             );
-            $billet = new Eduardokum\LaravelBoleto\Boleto\Banco\Itau(
-                [
-                    'dataVencimento'         => new Carbon($billToPay->installments[0]->due_date), //exemplo isso aqui mudará
-                    'valor'                  => $billToPay->amount,
-                    //'numero'                 => 1,
-                    'numeroDocumento'        => 1883914, //número do documento atribuído pela empresa
-                    'pagador'                => $payer,
-                    'beneficiario'           => $recipient,
-                ]
-            );
-            array_push($billets, $billet);
+
+            foreach($billToPay->installments as $installment) {
+                $billet = new Eduardokum\LaravelBoleto\Boleto\Banco\Itau(
+                    [
+                        'dataVencimento'         => new Carbon($installment->due_date),
+                        'valor'                  => $installment->portion_amount,
+                        'transferTypeIdentification' => $billToPay->bank_account_provider->account_type,
+                        'numeroDocumento'        => $installment->id,
+                        'pagador'                => $payer,
+                        'beneficiario'           => $recipient,
+                        'agencia'                => $billToPay->bank_account_provider->agency_number,
+                        'conta'                  => $billToPay->bank_account_provider->account_number,
+                        'contaDv'                => $billToPay->bank_account_provider->account_check_number,
+                    ]
+                );
+                array_push($billets, $billet);
+            }
         }
 
         $shipping->addBoletos($billets);
