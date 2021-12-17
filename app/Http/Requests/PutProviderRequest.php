@@ -20,7 +20,7 @@ class PutProviderRequest extends FormRequest
             'alias' => 'max:150',
             'cnpj' => 'max:17',
             'responsible' => 'max:250',
-            'provider_categories_id' => 'max:17|integer',
+            'provider_categories_id' => 'integer',
             'cost_center_id' => 'integer',
             'cep' => 'max:10',
             'cities_id' => 'integer',
