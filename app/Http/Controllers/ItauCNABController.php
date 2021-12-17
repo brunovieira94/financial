@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreShippingRequest;
+use App\Http\Requests\ShippingItauCNAB240Request;
 use App\Services\ItauCNABService as ItauCNABService;
 
 class ItauCNABController extends Controller
@@ -15,7 +15,7 @@ class ItauCNABController extends Controller
         $this->cnabService = $cnabService;
     }
 
-    public function shipping240(StoreShippingRequest $request)
+    public function shipping240(ShippingItauCNAB240Request $request)
     {
         return $this->cnabService->generateCNAB240Shipping($request->all());
     }
@@ -24,15 +24,4 @@ class ItauCNABController extends Controller
     {
         return $this->cnabService->receiveCNAB240($request);
     }
-
-    public function shipping400(StoreShippingRequest $request)
-    {
-        return $this->cnabService->generateCNAB400Shipping($request->all());
-    }
-
-    public function return400(Request $request)
-    {
-        return $this->cnabService->receiveCNAB400($request);
-    }
-
 }

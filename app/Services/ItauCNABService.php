@@ -5,6 +5,7 @@ use App\Models\BillToPay;
 use App\Models\Company;
 use Eduardokum;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class ItauCNABService
 {
@@ -21,6 +22,7 @@ class ItauCNABService
 
     public function generateCNAB240Shipping($requestInfo)
     {
+        return Storage::disk('s3')->temporaryUrl("attachment/cnh_1532322021121361b791c011676.pdf", now()->addMinutes(5));
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = null;
 
@@ -90,7 +92,7 @@ class ItauCNABService
 
         $shipping->addBoletos($billets);
         $shipping->save(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
-        return response()->download('/var/www/html/storage/itau.txt');
+        return response()->download(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
     }
 
     public function receiveCNAB240($requestInfo) {
