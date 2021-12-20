@@ -18,7 +18,7 @@ class PutPurchaseOrderRequest extends FormRequest
             'order_type' => 'required|boolean',
             'provider_id' => 'required|integer',
             'currency_id' => 'required|integer',
-            'exchange_rate' => 'required|numeric',
+            'exchange_rate' => 'numeric',
             'initial_total_value' => 'required|numeric',
             'negotiated_total_value' => 'required|numeric',
             'billing_date' => 'required|Date',

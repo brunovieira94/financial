@@ -54,7 +54,7 @@ class PurchaseOrderService
         $this->putProducts($id, $purchaseOrderInfo);
         $this->putServices($id, $purchaseOrderInfo);
         $this->putCostCenters($id, $purchaseOrderInfo);
-        $this->syncAttachments($purchaseOrder, $purchaseOrderInfo, $request);
+        $this->putAttachments($id, $purchaseOrderInfo, $request);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
@@ -202,6 +202,40 @@ class PurchaseOrderService
                 ]);
             }
         }
+    }
+
+    public function putAttachments($id, $purchaseOrderInfo, Request $request){
+
+        $updateAttachments = [];
+        $createdAttachments = [];
+        $destroyCollection = [];
+
+        if(array_key_exists('attachments_ids', $purchaseOrderInfo)){
+            foreach($purchaseOrderInfo['attachments_ids'] as $attachmentId){
+                $purchaseOrderHasAttachments = $this->attachments->findOrFail($attachmentId);
+                $purchaseOrderHasAttachments->fill([$attachmentId])->save();
+                $updateAttachments[] = $attachmentId;
+            }
+        }
+        if(array_key_exists('attachments', $purchaseOrderInfo)){
+            foreach($purchaseOrderInfo['attachments'] as $key=>$attachment){
+                $purchaseOrderHasAttachments = new PurchaseOrderHasAttachments;
+                $attachment['attachment'] = $this->storeAttachment($request, $key);
+                $purchaseOrderHasAttachments = $purchaseOrderHasAttachments->create([
+                    'purchase_order_id' => $id,
+                    'attachment' => $attachment['attachment'],
+                ]);
+                $createdAttachments[] = $purchaseOrderHasAttachments->id;
+            }
+        }
+
+        $collection = $this->attachments->where('purchase_order_id', $id)->whereNotIn('id', $updateAttachments)->whereNotIn('id', $createdAttachments)->get();
+        foreach ($collection as $value) {
+            $pushObject = [];
+            $pushObject['id'] = $value['id'];
+            array_push($destroyCollection, $pushObject);
+        }
+        $this->attachments->destroy($destroyCollection);
     }
 
     public function storeAttachment(Request $request, $key){
