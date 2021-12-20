@@ -20,7 +20,7 @@ class StoreProviderRequest extends FormRequest
             'alias' => 'max:150',
             'cnpj' => 'required_if:provider_type,==,J|max:17|prohibited_if:provider_type,==,F',
             'responsible' => 'max:250',
-            'provider_categories_id' => 'required|max:17|integer',
+            'provider_categories_id' => 'required|integer',
             'cost_center_id' => 'integer',
             'cep' => 'max:10',
             'cities_id' => 'integer',
