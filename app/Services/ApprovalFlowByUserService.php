@@ -7,7 +7,7 @@ use App\Models\ApprovalFlow;
 use App\Models\BillToPay;
 use Illuminate\Http\Request;
 
-class AccountsPayableApprovalFlowService
+class ApprovalFlowByUserService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
@@ -55,11 +55,10 @@ class AccountsPayableApprovalFlowService
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 2;
 
-        if ($accountApproval->order == 0) {
-            return response('Não foi possível reprovar a conta.', 422);
-        }
         if ($accountApproval->order > $maxOrder) {
             $accountApproval->order = 0;
+        } else if ($accountApproval->order == 0) {
+            $accountApproval->reason = $request->reason;
         } else {
             $accountApproval->order -= 1;
         }

@@ -23,7 +23,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\CountryController;
 use App\Http\Controllers\BillToPayController;
-use App\Http\Controllers\AccountsPayableApprovalFlowController;
+use App\Http\Controllers\ApprovalFlowByUserController;
 use App\Http\Controllers\TypeOfTaxController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProductController;
@@ -32,6 +32,7 @@ use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\AttributeTypeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
+use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -201,10 +202,10 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('account-payable-approval-flow')->group(function () {
-        Route::get('/', [AccountsPayableApprovalFlowController::class, 'accountsApproveUser']);
-        Route::put('/approve/{id}', [AccountsPayableApprovalFlowController::class, 'approveAccount']);
-        Route::put('/reprove/{id}', [AccountsPayableApprovalFlowController::class, 'reproveAccount']);
-        Route::put('/cancel/{id}', [AccountsPayableApprovalFlowController::class, 'cancelAccount']);
+        Route::get('/', [ApprovalFlowByUserController::class, 'accountsApproveUser']);
+        Route::put('/approve/{id}', [ApprovalFlowByUserController::class, 'approveAccount']);
+        Route::put('/reprove/{id}', [ApprovalFlowByUserController::class, 'reproveAccount']);
+        Route::put('/cancel/{id}', [ApprovalFlowByUserController::class, 'cancelAccount']);
     });
 
     Route::prefix('type-of-tax')->group(function () {
@@ -263,6 +264,13 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow-supply')->group(function () {
         Route::get('/', [ApprovalFlowSupplyController::class, 'index']);
         Route::post('/', [ApprovalFlowSupplyController::class, 'store']);
+    });
+
+    Route::prefix('supply-approval-flow')->group(function () {
+        Route::get('/', [ApprovalFlowSupplyByUserController::class, 'accountsApproveUser']);
+        Route::put('/approve/{id}', [ApprovalFlowSupplyByUserController::class, 'approveAccount']);
+        Route::put('/reprove/{id}', [ApprovalFlowSupplyByUserController::class, 'reproveAccount']);
+        Route::put('/cancel/{id}', [ApprovalFlowSupplyByUserController::class, 'cancelAccount']);
     });
 });
 
