@@ -2,27 +2,28 @@
 
 namespace App\Services;
 use App\Models\BillToPay;
+use App\Models\BillToPayHasInstallments;
 use App\Models\Company;
-use Eduardokum;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
+
 
 class ItauCNABService
 {
     private $billToPay;
+    private $installments;
     private $company;
     private $withCompany = ['bank_account', 'managers', 'city'];
     private $withBillToPay = ['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(BillToPay $billToPay, Company $company)
+    public function __construct(BillToPay $billToPay, Company $company, BillToPayHasInstallments $installments)
     {
         $this->billToPay = $billToPay;
         $this->company = $company;
+        $this->installments = $installments;
     }
 
     public function generateCNAB240Shipping($requestInfo)
     {
-        return Storage::disk('s3')->temporaryUrl("attachment/cnh_1532322021121361b791c011676.pdf", now()->addMinutes(5));
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = null;
 
@@ -31,7 +32,7 @@ class ItauCNABService
                 $bankAccount = $bank;
         }
 
-        $recipient = new \Eduardokum\LaravelBoleto\Pessoa(
+        $recipient = new \App\Helpers\Pessoa(
             [
                 'nome'      => $company->company_name,
                 'endereco'  => $company->address,
@@ -44,7 +45,7 @@ class ItauCNABService
             ]
         );
 
-        $shipping = new \Eduardokum\LaravelBoleto\Cnab\Remessa\Cnab240\Banco\Itau(
+        $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau(
             [
                 'agencia'      => $bankAccount->agency_number,
                 'conta'        => $bankAccount->account_number,
@@ -59,7 +60,7 @@ class ItauCNABService
 
         foreach($allBillToPay as $billToPay) {
 
-            $payer = new \Eduardokum\LaravelBoleto\Pessoa(
+            $payer = new \App\Helpers\Pessoa(
                 [
                     'nome'      => $billToPay->provider->company_name,
                     'endereco'  => $billToPay->provider->address,
@@ -73,7 +74,7 @@ class ItauCNABService
             );
 
             foreach($billToPay->installments as $installment) {
-                $billet = new Eduardokum\LaravelBoleto\Boleto\Banco\Itau(
+                $billet = new \App\Helpers\Boleto\Banco\Itau(
                     [
                         'dataVencimento'         => new Carbon($installment->due_date),
                         'valor'                  => $installment->portion_amount,
@@ -99,11 +100,19 @@ class ItauCNABService
 
         $returnFile = $requestInfo->file('return-file');
 
-        $processArchive = new \Eduardokum\LaravelBoleto\Cnab\Retorno\Cnab240\Banco\Itau($returnFile);
+        $processArchive = new \App\Helpers\Cnab\Retorno\Cnab240\Banco\Itau($returnFile);
         $processArchive->processar();
 
-        $teste = $processArchive->getDetalhes();
-        dd($teste[1]);
-        return 'teste';
+        $returnArray = $processArchive->getDetalhes();
+
+        foreach($returnArray as $batch){
+            $installments =  $this->installments->findOrFail($batch->numeroDocumento);
+            $installments->status = $batch->ocorrencia;
+            $installments->codBank = $batch->nossoNumero;
+            $installments->amount_received = $batch->valorRecebido;
+            $installments->save();
+        }
+
+        return response('Processo finalizado.')->send();
     }
 }
