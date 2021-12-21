@@ -211,11 +211,7 @@ class PurchaseOrderService
         $destroyCollection = [];
 
         if(array_key_exists('attachments_ids', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['attachments_ids'] as $attachmentId){
-                $purchaseOrderHasAttachments = $this->attachments->findOrFail($attachmentId);
-                $purchaseOrderHasAttachments->fill([$attachmentId])->save();
-                $updateAttachments[] = $attachmentId;
-            }
+            $updateAttachments[] = $purchaseOrderInfo['attachments_ids'];
         }
         if(array_key_exists('attachments', $purchaseOrderInfo)){
             foreach($purchaseOrderInfo['attachments'] as $key=>$attachment){
