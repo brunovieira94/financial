@@ -6,6 +6,8 @@ use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasServices;
 use App\Models\PurchaseOrderHasCostCenters;
 use App\Models\PurchaseOrderHasAttachments;
+use App\Models\SupplyApprovalFlow;
+
 use Illuminate\Http\Request;
 
 class PurchaseOrderService
@@ -15,7 +17,9 @@ class PurchaseOrderService
     private $purchaseOrderHasServices;
     private $purchaseOrderHasCostCenters;
     private $attachments;
+
     private $with = ['cost_centers', 'attachments', 'services', 'products', 'currency', 'provider'];
+
     public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments)
     {
         $this->purchaseOrder = $purchaseOrder;
@@ -44,6 +48,13 @@ class PurchaseOrderService
         $this->syncServices($purchaseOrder, $purchaseOrderInfo);
         $this->syncCostCenters($purchaseOrder, $purchaseOrderInfo);
         $this->syncAttachments($purchaseOrder, $purchaseOrderInfo, $request);
+
+        $supplyApprovalFlow = new SupplyApprovalFlow;
+        $supplyApprovalFlow = $supplyApprovalFlow->create([
+            'id_purchase_order' => $purchaseOrder->id,
+            'order' => 0,
+            'status' => 0,
+        ]);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 

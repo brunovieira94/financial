@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\AccountsPayableApprovalFlowService;
+use App\Services\ApprovalFlowByUserService;
 use App\Http\Requests\PutAccountsPayableApprovalFlowRequest;
 
-class AccountsPayableApprovalFlowController extends Controller
+class ApprovalFlowByUserController extends Controller
 {
 
     private $accountsPayableApprovalFlowService;
 
-    public function __construct(AccountsPayableApprovalFlowService $accountsPayableApprovalFlowService)
+    public function __construct(ApprovalFlowByUserService $accountsPayableApprovalFlowService)
     {
         $this->accountsPayableApprovalFlowService = $accountsPayableApprovalFlowService;
     }
