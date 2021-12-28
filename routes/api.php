@@ -26,6 +26,7 @@ use App\Http\Controllers\BillToPayController;
 use App\Http\Controllers\ApprovalFlowByUserController;
 use App\Http\Controllers\TypeOfTaxController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ItauCNABController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
@@ -253,6 +254,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [AttributeTypeController::class, 'destroy']);
     });
 
+    Route::prefix('cnab')->group(function () {
+        Route::prefix('/itau')->group(function () {
+            Route::prefix('/240')->group(function () {
+                Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
+                Route::post('/return', [ItauCNABController::class, 'return240']);
+            });
+        });
+    });
+
     Route::prefix('purchase-order')->group(function () {
         Route::get('/', [PurchaseOrderController::class, 'index']);
         Route::get('/{id}', [PurchaseOrderController::class, 'show']);
@@ -275,8 +285,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 });
 
 //Restful route -> Login
-    Route::prefix('/auth')->group(function () {
-        Route::post('/', [AuthController::class, 'login']);
-    });
-
-
+Route::prefix('/auth')->group(function () {
+    Route::post('/', [AuthController::class, 'login']);
+});

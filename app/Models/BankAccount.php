@@ -24,7 +24,7 @@ class BankAccount extends Model
     use SoftDeletes;
     protected $hidden = ['pivot', 'bank_id'];
     protected $table='bank_accounts';
-    protected $fillable = ['agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
+    protected $fillable = ['wallet', 'agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
 
     public function bank()
     {

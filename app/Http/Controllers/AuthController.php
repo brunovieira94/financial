@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\AuthService as AuthService;
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreLoginRequest;
 
 class AuthController extends Controller
 {
