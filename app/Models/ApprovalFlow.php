@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
+use App\Models\Role;
 
 class ApprovalFlow extends Model
 {
@@ -24,5 +25,11 @@ class ApprovalFlow extends Model
     use SoftDeletes;
     protected $table='approval_flow';
     protected $fillable = ['order','role_id'];
+    protected $hidden = ['role_id'];
     //public $timestamps = false;
+
+    public function role()
+    {
+        return $this->hasOne(Role::class, 'id', 'role_id');
+    }
 }
