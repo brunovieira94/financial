@@ -30,8 +30,7 @@ class AuthServiceProvider extends ServiceProvider
             Passport::routes();
         }
         Passport::tokensExpireIn(now()->addMinutes(env('TOKEN_DURATION_MINUTES')));
-        Passport::refreshTokensExpireIn(now()->addMinutes(env('TOKEN_DURATION_MINUTES')));
+        Passport::refreshTokensExpireIn(now()->addMinutes(env('REFRESH_TOKEN_DURATION_MINUTES')));
         Passport::personalAccessTokensExpireIn(now()->addMinutes(env('TOKEN_DURATION_MINUTES')));
-        //
     }
 }
