@@ -68,7 +68,7 @@ class ApprovalFlowSupplyByUserService
 
     public function cancelAccount($id, Request $request)
     {
-        $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
+        $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
         $accountApproval->status = 3;
         $accountApproval->reason = $request->reason;
         return $accountApproval->save();
