@@ -23,7 +23,7 @@ class PurchaseOrder extends Model
 
     use SoftDeletes;
     protected $table='purchase_orders';
-    protected $fillable = ['order_type', 'provider_id', 'currency_id', 'exchange_rate', 'initial_total_value', 'negotiated_total_value', 'billing_date', 'payment_condition', 'observations'];
+    protected $fillable = ['order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance'];
     protected $hidden = ['currency_id', 'provider_id'];
 
     public function attachments(){
@@ -37,7 +37,7 @@ class PurchaseOrder extends Model
 
     public function services()
     {
-        return $this->hasMany(PurchaseOrderHasServices::class, 'purchase_order_id', 'id')->with('service');
+        return $this->hasMany(PurchaseOrderHasServices::class, 'purchase_order_id', 'id')->with(['service', 'installments']);
     }
 
     public function products()

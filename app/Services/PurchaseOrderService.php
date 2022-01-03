@@ -6,6 +6,7 @@ use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasServices;
 use App\Models\PurchaseOrderHasCostCenters;
 use App\Models\PurchaseOrderHasAttachments;
+use App\Models\PurchaseOrderServicesHasInstallments;
 use App\Models\SupplyApprovalFlow;
 
 use Illuminate\Http\Request;
@@ -16,17 +17,19 @@ class PurchaseOrderService
     private $purchaseOrderHasProducts;
     private $purchaseOrderHasServices;
     private $purchaseOrderHasCostCenters;
+    private $purchaseOrderServicesHasInstallments;
     private $attachments;
 
     private $with = ['cost_centers', 'attachments', 'services', 'products', 'currency', 'provider'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments)
+    public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments)
     {
         $this->purchaseOrder = $purchaseOrder;
         $this->purchaseOrderHasProducts = $purchaseOrderHasProducts;
         $this->purchaseOrderHasServices = $purchaseOrderHasServices;
         $this->purchaseOrderHasCostCenters = $purchaseOrderHasCostCenters;
         $this->attachments = $attachments;
+        $this->purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments;
     }
 
     public function getAllPurchaseOrder($requestInfo)
@@ -129,6 +132,7 @@ class PurchaseOrderService
                     'automatic_renovation' => $service['automatic_renovation'],
                     'notice_time_to_renew' => $service['notice_time_to_renew'],
                 ]);
+                $this->syncInstallments($purchaseOrderHasServices, $service);
             }
         }
     }
@@ -156,10 +160,36 @@ class PurchaseOrderService
                     ]);
                     $createdServices[] = $purchaseOrderHasServices->id;
                 }
+                $this->syncInstallments($purchaseOrderHasServices, $service);
             }
 
             $collection = $this->purchaseOrderHasServices->where('purchase_order_id', $id)->whereNotIn('id', $updateServices)->whereNotIn('id', $createdServices)->get(['id']);
             $this->purchaseOrderHasServices->destroy($collection->toArray());
+        }
+    }
+
+    public function destroyInstallments($purchaseOrderHasServices)
+    {
+        $collection = $this->purchaseOrderServicesHasInstallments->where('po_services_id', $purchaseOrderHasServices['id'])->get(['id']);
+        $this->purchaseOrderServicesHasInstallments->destroy($collection->toArray());
+    }
+
+    public function syncInstallments($purchaseOrderHasServices, $service)
+    {
+        if(array_key_exists('installments', $service)){
+            $this->destroyInstallments($purchaseOrderHasServices);
+            foreach($service['installments'] as $key=>$installments){
+                $purchaseOrderServicesHasInstallments = new PurchaseOrderServicesHasInstallments;
+                $installments['po_services_id'] = $purchaseOrderHasServices['id'];
+                $installments['parcel_number'] = $key + 1;
+                try {
+                    $purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments->create($installments);
+                } catch (\Exception $e) {
+                    $this->destroyInstallments($purchaseOrderHasServices);
+                    $this->purchaseOrderHasServices->findOrFail($purchaseOrderHasServices->id)->delete();
+                    return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
+                }
+            }
         }
     }
 
