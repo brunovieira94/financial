@@ -15,7 +15,7 @@ class CreatePurchaseOrdersTable extends Migration
     {
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->increments('id');
-            $table->boolean('order_type');
+            $table->integer('order_type');
             $table->integer('provider_id')->unsigned();
             $table->foreign('provider_id')->references('id')->on('providers')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('currency_id')->unsigned();
@@ -23,11 +23,12 @@ class CreatePurchaseOrdersTable extends Migration
             $table->double('exchange_rate');
             $table->double('initial_total_value');
             $table->double('negotiated_total_value');
-            $table->date('billing_date');
-            $table->integer('payment_condition');
+            $table->date('billing_date')->nullable();
+            $table->integer('payment_condition')->nullable();
             $table->text('observations');
             $table->timestamps();
             $table->softDeletes();
+            $table->double('increase_tolerance')->nullable();
         });
     }
 

@@ -15,18 +15,21 @@ class StorePurchaseOrderRequest extends FormRequest
     public function rules()
     {
         return [
-            'order_type' => 'required|boolean',
+            'order_type' => 'required|integer|min:0|max:2',
             'provider_id' => 'required|integer',
             'currency_id' => 'required|integer',
             'exchange_rate' => 'numeric',
-            'initial_total_value' => 'required|numeric',
-            'negotiated_total_value' => 'required|numeric',
-            'billing_date' => 'required|Date',
-            'payment_condition' => 'required|integer',
+            'billing_date' => 'required_without:payment_condition|Date',
+            'payment_condition' => 'required_without:billing_date|integer',
             'cost_centers' => 'array',
             'attachments' => 'array',
             'services' => 'array',
             'products' => 'array',
+            'percentage_discount_services' => 'numeric',
+            'money_discount_services' => 'numeric',
+            'percentage_discount_products' => 'numeric',
+            'money_discount_products' => 'numeric',
+            'increase_tolerance' => 'numeric',
         ];
     }
 
