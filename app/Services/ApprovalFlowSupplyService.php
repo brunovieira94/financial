@@ -5,6 +5,7 @@ use App\Models\ApprovalFlowSupply;
 
 class ApprovalFlowSupplyService
 {
+    private $with = ['role'];
     private $approvalFlowSupply;
     public function __construct(ApprovalFlowSupply $approvalFlowSupply)
     {
@@ -13,7 +14,7 @@ class ApprovalFlowSupplyService
 
     public function getAllApprovalFlowSupply()
     {
-        return $this->approvalFlowSupply->all();
+        return $this->approvalFlowSupply->with($this->with)->get();
     }
 
     public function postApprovalFlowSupply($approvalFlowSupplyInfo)
