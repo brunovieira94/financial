@@ -118,11 +118,4 @@ class BillToPay extends Model
         return $this->hasMany(BillToPayHasTax::class, 'id_bill_to_pay', 'id')->with('typeOfTax');
     }
 
-    public static function boot()
-    {
-        parent::boot();
-        self::deleting(function ($approval) {
-            $approval->approval()->delete();
-        });
-    }
 }
