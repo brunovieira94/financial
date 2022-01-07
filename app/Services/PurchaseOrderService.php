@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasServices;
@@ -34,13 +35,13 @@ class PurchaseOrderService
 
     public function getAllPurchaseOrder($requestInfo)
     {
-        $purchaseOrder = Utils::search($this->purchaseOrder,$requestInfo);
-        return Utils::pagination($purchaseOrder->with($this->with),$requestInfo);
+        $purchaseOrder = Utils::search($this->purchaseOrder, $requestInfo);
+        return Utils::pagination($purchaseOrder->with($this->with), $requestInfo);
     }
 
     public function getPurchaseOrder($id)
     {
-      return $this->purchaseOrder->with($this->with)->findOrFail($id);
+        return $this->purchaseOrder->with($this->with)->findOrFail($id);
     }
 
     public function postPurchaseOrder($purchaseOrderInfo, Request $request)
@@ -74,32 +75,36 @@ class PurchaseOrderService
 
     public function deletePurchaseOrder($id)
     {
-      $this->purchaseOrder->findOrFail($id)->delete();
-      return true;
+        $this->purchaseOrder->findOrFail($id)->delete();
+        return true;
     }
 
-    public function syncProducts($purchaseOrder, $purchaseOrderInfo){
-        if(array_key_exists('products', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['products'] as $product){
+    public function syncProducts($purchaseOrder, $purchaseOrderInfo)
+    {
+        if (array_key_exists('products', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['products'] as $product) {
                 $purchaseOrderHasProducts = new PurchaseOrderHasProducts;
                 $purchaseOrderHasProducts = $purchaseOrderHasProducts->create([
                     'purchase_order_id' => $purchaseOrder->id,
                     'product_id' => $product['product_id'],
                     'unitary_value' => $product['unitary_value'],
                     'quantity' => $product['quantity'],
+                    'percentage_discount' => $product['percentage_discount'],
+                    'money_discount' => $product['money_discount'],
                 ]);
             }
         }
     }
 
-    public function putProducts($id, $purchaseOrderInfo){
+    public function putProducts($id, $purchaseOrderInfo)
+    {
 
         $updateProducts = [];
         $createdProducts = [];
 
-        if(array_key_exists('products', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['products'] as $product){
-                if (array_key_exists('id', $product)){
+        if (array_key_exists('products', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['products'] as $product) {
+                if (array_key_exists('id', $product)) {
                     $purchaseOrderHasProducts = $this->purchaseOrderHasProducts->findOrFail($product['id']);
                     $purchaseOrderHasProducts->fill($product)->save();
                     $updateProducts[] = $product['id'];
@@ -109,19 +114,22 @@ class PurchaseOrderService
                         'product_id' => $product['product_id'],
                         'unitary_value' => $product['unitary_value'],
                         'quantity' => $product['quantity'],
+                        'percentage_discount' => $product['percentage_discount'],
+                        'money_discount' => $product['money_discount'],
                     ]);
                     $createdProducts[] = $purchaseOrderHasProducts->id;
                 }
             }
-
-            $collection = $this->purchaseOrderHasProducts->where('purchase_order_id', $id)->whereNotIn('id', $updateProducts)->whereNotIn('id', $createdProducts)->get(['id']);
-            $this->purchaseOrderHasProducts->destroy($collection->toArray());
         }
+
+        $collection = $this->purchaseOrderHasProducts->where('purchase_order_id', $id)->whereNotIn('id', $updateProducts)->whereNotIn('id', $createdProducts)->get(['id']);
+        $this->purchaseOrderHasProducts->destroy($collection->toArray());
     }
 
-    public function syncServices($purchaseOrder, $purchaseOrderInfo){
-        if(array_key_exists('services', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['services'] as $service){
+    public function syncServices($purchaseOrder, $purchaseOrderInfo)
+    {
+        if (array_key_exists('services', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['services'] as $service) {
                 $purchaseOrderHasServices = new PurchaseOrderHasServices;
                 $purchaseOrderHasServices = $purchaseOrderHasServices->create([
                     'purchase_order_id' => $purchaseOrder->id,
@@ -131,20 +139,23 @@ class PurchaseOrderService
                     'end_date' => $service['end_date'],
                     'automatic_renovation' => $service['automatic_renovation'],
                     'notice_time_to_renew' => $service['notice_time_to_renew'],
+                    'percentage_discount' => $service['percentage_discount'],
+                    'money_discount' => $service['money_discount'],
                 ]);
                 $this->syncInstallments($purchaseOrderHasServices, $service);
             }
         }
     }
 
-    public function putServices($id, $purchaseOrderInfo){
+    public function putServices($id, $purchaseOrderInfo)
+    {
 
         $updateServices = [];
         $createdServices = [];
 
-        if(array_key_exists('services', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['services'] as $service){
-                if (array_key_exists('id', $service)){
+        if (array_key_exists('services', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['services'] as $service) {
+                if (array_key_exists('id', $service)) {
                     $purchaseOrderHasServices = $this->purchaseOrderHasServices->findOrFail($service['id']);
                     $purchaseOrderHasServices->fill($service)->save();
                     $updateServices[] = $service['id'];
@@ -157,15 +168,17 @@ class PurchaseOrderService
                         'end_date' => $service['end_date'],
                         'automatic_renovation' => $service['automatic_renovation'],
                         'notice_time_to_renew' => $service['notice_time_to_renew'],
+                        'percentage_discount' => $service['percentage_discount'],
+                        'money_discount' => $service['money_discount'],
                     ]);
                     $createdServices[] = $purchaseOrderHasServices->id;
                 }
                 $this->syncInstallments($purchaseOrderHasServices, $service);
             }
-
-            $collection = $this->purchaseOrderHasServices->where('purchase_order_id', $id)->whereNotIn('id', $updateServices)->whereNotIn('id', $createdServices)->get(['id']);
-            $this->purchaseOrderHasServices->destroy($collection->toArray());
         }
+
+        $collection = $this->purchaseOrderHasServices->where('purchase_order_id', $id)->whereNotIn('id', $updateServices)->whereNotIn('id', $createdServices)->get(['id']);
+        $this->purchaseOrderHasServices->destroy($collection->toArray());
     }
 
     public function destroyInstallments($purchaseOrderHasServices)
@@ -176,9 +189,9 @@ class PurchaseOrderService
 
     public function syncInstallments($purchaseOrderHasServices, $service)
     {
-        if(array_key_exists('installments', $service)){
+        if (array_key_exists('installments', $service)) {
             $this->destroyInstallments($purchaseOrderHasServices);
-            foreach($service['installments'] as $key=>$installments){
+            foreach ($service['installments'] as $key => $installments) {
                 $purchaseOrderServicesHasInstallments = new PurchaseOrderServicesHasInstallments;
                 $installments['po_services_id'] = $purchaseOrderHasServices['id'];
                 $installments['parcel_number'] = $key + 1;
@@ -193,9 +206,10 @@ class PurchaseOrderService
         }
     }
 
-    public function syncCostCenters($purchaseOrder, $purchaseOrderInfo){
-        if(array_key_exists('cost_centers', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['cost_centers'] as $costCenter){
+    public function syncCostCenters($purchaseOrder, $purchaseOrderInfo)
+    {
+        if (array_key_exists('cost_centers', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['cost_centers'] as $costCenter) {
                 $purchaseOrderHasCostCenters = new PurchaseOrderHasCostCenters;
                 $purchaseOrderHasCostCenters = $purchaseOrderHasCostCenters->create([
                     'purchase_order_id' => $purchaseOrder->id,
@@ -206,14 +220,15 @@ class PurchaseOrderService
         }
     }
 
-    public function putCostCenters($id, $purchaseOrderInfo){
+    public function putCostCenters($id, $purchaseOrderInfo)
+    {
 
         $updateCostCenters = [];
         $createdCostCenters = [];
 
-        if(array_key_exists('cost_centers', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['cost_centers'] as $costCenter){
-                if (array_key_exists('id', $costCenter)){
+        if (array_key_exists('cost_centers', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['cost_centers'] as $costCenter) {
+                if (array_key_exists('id', $costCenter)) {
                     $purchaseOrderHasCostCenters = $this->purchaseOrderHasCostCenters->findOrFail($costCenter['id']);
                     $purchaseOrderHasCostCenters->fill($costCenter)->save();
                     $updateCostCenters[] = $costCenter['id'];
@@ -226,15 +241,16 @@ class PurchaseOrderService
                     $createdCostCenters[] = $purchaseOrderHasCostCenters->id;
                 }
             }
-
-            $collection = $this->purchaseOrderHasCostCenters->where('purchase_order_id', $id)->whereNotIn('id', $updateCostCenters)->whereNotIn('id', $createdCostCenters)->get(['id']);
-            $this->purchaseOrderHasCostCenters->destroy($collection->toArray());
         }
+
+        $collection = $this->purchaseOrderHasCostCenters->where('purchase_order_id', $id)->whereNotIn('id', $updateCostCenters)->whereNotIn('id', $createdCostCenters)->get(['id']);
+        $this->purchaseOrderHasCostCenters->destroy($collection->toArray());
     }
 
-    public function syncAttachments($purchaseOrder, $purchaseOrderInfo, Request $request){
-        if(array_key_exists('attachments', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['attachments'] as $key=>$attachment){
+    public function syncAttachments($purchaseOrder, $purchaseOrderInfo, Request $request)
+    {
+        if (array_key_exists('attachments', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['attachments'] as $key => $attachment) {
                 $purchaseOrderHasAttachments = new PurchaseOrderHasAttachments;
                 $attachment['attachment'] = $this->storeAttachment($request, $key);
                 $purchaseOrderHasAttachments = $purchaseOrderHasAttachments->create([
@@ -245,17 +261,18 @@ class PurchaseOrderService
         }
     }
 
-    public function putAttachments($id, $purchaseOrderInfo, Request $request){
+    public function putAttachments($id, $purchaseOrderInfo, Request $request)
+    {
 
         $updateAttachments = [];
         $createdAttachments = [];
         $destroyCollection = [];
 
-        if(array_key_exists('attachments_ids', $purchaseOrderInfo)){
+        if (array_key_exists('attachments_ids', $purchaseOrderInfo)) {
             $updateAttachments[] = $purchaseOrderInfo['attachments_ids'];
         }
-        if(array_key_exists('attachments', $purchaseOrderInfo)){
-            foreach($purchaseOrderInfo['attachments'] as $key=>$attachment){
+        if (array_key_exists('attachments', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['attachments'] as $key => $attachment) {
                 $purchaseOrderHasAttachments = new PurchaseOrderHasAttachments;
                 $attachment['attachment'] = $this->storeAttachment($request, $key);
                 $purchaseOrderHasAttachments = $purchaseOrderHasAttachments->create([
@@ -275,20 +292,20 @@ class PurchaseOrderService
         $this->attachments->destroy($destroyCollection);
     }
 
-    public function storeAttachment(Request $request, $key){
+    public function storeAttachment(Request $request, $key)
+    {
         $data = uniqid(date('HisYmd'));
 
-        if ($request->hasFile('attachments.'.$key.'.attachment') && $request->file('attachments.'.$key.'.attachment')->isValid()) {
-            $extensionAttachment = $request['attachments.'.$key.'.attachment']->extension();
-            $originalNameAttachment  = explode('.' , $request['attachments.'.$key.'.attachment']->getClientOriginalName());
+        if ($request->hasFile('attachments.' . $key . '.attachment') && $request->file('attachments.' . $key . '.attachment')->isValid()) {
+            $extensionAttachment = $request['attachments.' . $key . '.attachment']->extension();
+            $originalNameAttachment  = explode('.', $request['attachments.' . $key . '.attachment']->getClientOriginalName());
             $nameFileAttachment = "{$originalNameAttachment[0]}_{$data}.{$extensionAttachment}";
-            $uploadAttachment = $request['attachments.'.$key.'.attachment']->storeAs('attachment', $nameFileAttachment);
+            $uploadAttachment = $request['attachments.' . $key . '.attachment']->storeAs('attachment', $nameFileAttachment);
 
-            if ( !$uploadAttachment ){
+            if (!$uploadAttachment) {
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
             }
-          return $nameFileAttachment;
+            return $nameFileAttachment;
         }
     }
-
 }
