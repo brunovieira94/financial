@@ -141,6 +141,8 @@ class PurchaseOrderService
                     'notice_time_to_renew' => $service['notice_time_to_renew'],
                     'percentage_discount' => $service['percentage_discount'],
                     'money_discount' => $service['money_discount'],
+                    'frequency_of_installments' => $service['frequency_of_installments'],
+                    'contract_duration' => $service['contract_duration'],
                 ]);
                 $this->syncInstallments($purchaseOrderHasServices, $service);
             }
