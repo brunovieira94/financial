@@ -15,7 +15,7 @@ class StoreStateRequest extends FormRequest
     {
         return [
             'country_id' => 'required|integer',
-            'title' => 'required|max:150',
+            'title' => 'required|max:150|unique:states,title,NULL,id,deleted_at,NULL',
         ];
     }
 }

@@ -15,7 +15,7 @@ class PutStateRequest extends FormRequest
     {
         return [
             'country_id' => 'required_without:title|integer',
-            'title' => 'required_without:country|max:150',
+            'title' => 'required_without:country|max:150|unique:states,title,NULL,id,deleted_at,NULL',
         ];
     }
 }
