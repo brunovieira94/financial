@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\CurrenciesImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreCurrencyRequest;
 use App\Services\CurrencyService as CurrencyService;
@@ -40,6 +41,12 @@ class CurrencyController extends Controller
     public function destroy($id)
     {
         $currency = $this->currencyService->deleteCurrency($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new CurrenciesImport)->import(request()->file('import_file'));
         return response('');
     }
 }

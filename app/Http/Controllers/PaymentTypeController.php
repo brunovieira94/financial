@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\PaymentTypesImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePaymentTypeRequest;
 use App\Services\PaymentTypeService as PaymentTypeService;
@@ -39,6 +40,12 @@ class PaymentTypeController extends Controller
     public function destroy($id)
     {
         $paymentType = $this->paymentTypeService->deletePaymentType($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new PaymentTypesImport)->import(request()->file('import_file'));
         return response('');
     }
 

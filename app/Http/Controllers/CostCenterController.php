@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\CostCentersImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreCostCenterRequest;
 use App\Http\Requests\PutCostCenterRequest;
@@ -41,6 +42,12 @@ class CostCenterController extends Controller
     public function destroy($id)
     {
         $costCenter = $this->costCenterService->deleteCostCenter($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new CostCentersImport)->import(request()->file('import_file'));
         return response('');
     }
 }

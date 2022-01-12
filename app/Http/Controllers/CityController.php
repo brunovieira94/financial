@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Imports\CitiesImport;
 use App\Services\CityService as CityService;
 use App\Http\Requests\StoreCityRequest;
 use App\Http\Requests\PutCityRequest;
@@ -39,6 +40,12 @@ class CityController extends Controller
     public function destroy($id)
     {
         $state = $this->cityService->deleteCity($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new CitiesImport)->import(request()->file('import_file'));
         return response('');
     }
 

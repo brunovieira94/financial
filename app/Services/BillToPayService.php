@@ -39,7 +39,6 @@ class BillToPayService
     public function postBillToPay(Request $request)
     {
         $billToPayInfo = $request->all();
-
         $billToPayInfo['id_user'] = auth()->user()->id;
 
         if (array_key_exists('invoice_file', $billToPayInfo)){

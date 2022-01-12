@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ProductsImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\PutProductRequest;
@@ -40,6 +41,12 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = $this->productService->deleteProduct($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new ProductsImport)->import(request()->file('import_file'));
         return response('');
     }
 

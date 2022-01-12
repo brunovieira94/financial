@@ -43,6 +43,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [CostCenterController::class, 'store']);
         Route::put('/{id}', [CostCenterController::class, 'update']);
         Route::delete('/{id}', [CostCenterController::class, 'destroy']);
+        Route::post('/import', [CostCenterController::class, 'import']);
     });
 
     Route::prefix('currency')->group(function () {
@@ -51,6 +52,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [CurrencyController::class, 'store']);
         Route::put('/{id}', [CurrencyController::class, 'update']);
         Route::delete('/{id}', [CurrencyController::class, 'destroy']);
+        Route::post('/import', [CurrencyController::class, 'import']);
     });
 
     Route::prefix('payment-method')->group(function () {
@@ -59,6 +61,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PaymentMethodController::class, 'store']);
         Route::put('/{id}', [PaymentMethodController::class, 'update']);
         Route::delete('/{id}', [PaymentMethodController::class, 'destroy']);
+        Route::post('/import', [PaymentMethodController::class, 'import']);
     });
 
 //Restful route -> Payments Types
@@ -68,6 +71,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PaymentTypeController::class, 'store']);
         Route::put('/{id}', [PaymentTypeController::class, 'update']);
         Route::delete('/{id}', [PaymentTypeController::class, 'destroy']);
+        Route::post('/import', [PaymentTypeController::class, 'import']);
     });
 
 
@@ -78,6 +82,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [BankController::class, 'store']);
         Route::put('/{id}', [BankController::class, 'update']);
         Route::delete('/{id}', [BankController::class, 'destroy']);
+        Route::post('/import', [BankController::class, 'import']);
     });
 
     Route::prefix('chart-of-accounts')->group(function () {
@@ -86,6 +91,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ChartOfAccountsController::class, 'store']);
         Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
         Route::delete('/{id}', [ChartOfAccountsController::class, 'destroy']);
+        Route::post('/import', [ChartOfAccountsController::class, 'import']);
     });
 
 //Restful route -> Bank Accounts
@@ -105,6 +111,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ProviderCategoryController::class, 'store']);
         Route::put('/{id}', [ProviderCategoryController::class, 'update']);
         Route::delete('/{id}', [ProviderCategoryController::class, 'destroy']);
+        Route::post('/import', [ProviderCategoryController::class, 'import']);
     });
 
     Route::prefix('module')->group(function () {
@@ -127,6 +134,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [StateController::class, 'store']);
         Route::put('/{id}', [StateController::class, 'update']);
         Route::delete('/{id}', [StateController::class, 'destroy']);
+        Route::post('/import', [StateController::class, 'import']);
     });
 
 //Restful route -> City
@@ -136,6 +144,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [CityController::class, 'store']);
         Route::put('/{id}', [CityController::class, 'update']);
         Route::delete('/{id}', [CityController::class, 'destroy']);
+        Route::post('/import', [CityController::class, 'import']);
     });
 
     Route::prefix('approval-flow')->group(function () {
@@ -150,6 +159,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ProviderController::class, 'store']);
         Route::put('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
+        Route::post('/import', [ProviderController::class, 'import']);
     });
 
 //Restful route -> Company
@@ -159,6 +169,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [CompanyController::class, 'store']);
         Route::put('/{id}', [CompanyController::class, 'update']);
         Route::delete('/{id}', [CompanyController::class, 'destroy']);
+        Route::post('/import', [CompanyController::class, 'import']);
     });
 
 //Restful route -> Business
@@ -168,6 +179,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [BusinessController::class, 'store']);
         Route::put('/{id}', [BusinessController::class, 'update']);
         Route::delete('/{id}', [BusinessController::class, 'destroy']);
+        Route::post('/import', [BusinessController::class, 'import']);
     });
 
 //Restful route -> User
@@ -177,6 +189,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [UserController::class, 'store']);
         Route::put('/{id}', [UserController::class, 'update']);
         Route::delete('/{id}', [UserController::class, 'destroy']);
+        Route::post('/import', [UserController::class, '']);
     });
 
     Route::prefix('logs')->group(function () {
@@ -190,10 +203,12 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [CountryController::class, 'store']);
         Route::put('/{id}', [CountryController::class, 'update']);
         Route::delete('/{id}', [CountryController::class, 'destroy']);
+        Route::post('/import', [CountryController::class, 'import']);
     });
 
     //Restful route -> Bill-to-pay
     Route::prefix('bill-to-pay')->group(function () {
+        Route::post('/import', [BillToPayController::class, 'import']);
         Route::get('/', [BillToPayController::class, 'index']);
         Route::get('/{id}', [BillToPayController::class, 'show']);
         Route::post('/', [BillToPayController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
@@ -228,6 +243,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ProductController::class, 'store']);
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
+        Route::post('/import', [ProductController::class, 'import']);
     });
 
     Route::prefix('service')->group(function () {
@@ -236,6 +252,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ServiceController::class, 'store']);
         Route::put('/{id}', [ServiceController::class, 'update']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
+        Route::post('/import', [ServiceController::class, 'import']);
     });
 
     Route::prefix('measurement-unit')->group(function () {
@@ -244,6 +261,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [MeasurementUnitController::class, 'store']);
         Route::put('/{id}', [MeasurementUnitController::class, 'update']);
         Route::delete('/{id}', [MeasurementUnitController::class, 'destroy']);
+        Route::post('/import', [MeasurementUnitController::class, 'import']);
     });
 
     Route::prefix('attribute-type')->group(function () {
@@ -252,6 +270,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [AttributeTypeController::class, 'store']);
         Route::put('/{id}', [AttributeTypeController::class, 'update']);
         Route::delete('/{id}', [AttributeTypeController::class, 'destroy']);
+        Route::post('/import', [AttributeTypeController::class, 'import']);
     });
 
     Route::prefix('cnab')->group(function () {

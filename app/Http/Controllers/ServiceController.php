@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ServicesImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreServiceRequest;
 use App\Services\ServiceService as ServiceService;
@@ -42,4 +43,9 @@ class ServiceController extends Controller
         return response('');
     }
 
+    public function import()
+    {
+        (new ServicesImport)->import(request()->file('import_file'));
+        return response('');
+    }
 }

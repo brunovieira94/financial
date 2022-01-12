@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\BusinessImport;
 use Illuminate\Http\Request;
 use App\Services\BusinessService as BusinessService;
 use App\Http\Requests\StoreBusinessRequest;
@@ -42,4 +43,9 @@ class BusinessController extends Controller
         return response('');
     }
 
+    public function import()
+    {
+        (new BusinessImport)->import(request()->file('import_file'));
+        return response('');
+    }
 }
