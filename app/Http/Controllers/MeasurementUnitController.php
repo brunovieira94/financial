@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\MeasurementUnitsImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreMeasurementUnitRequest;
 use App\Services\MeasurementUnitService as MeasurementUnitService;
@@ -42,4 +43,9 @@ class MeasurementUnitController extends Controller
         return response('');
     }
 
+    public function import()
+    {
+        (new MeasurementUnitsImport)->import(request()->file('import_file'));
+        return response('');
+    }
 }

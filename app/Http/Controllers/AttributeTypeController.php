@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\AttributeTypesImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreAttributeTypeRequest;
 use App\Services\AttributeTypeService as AttributeTypeService;
@@ -40,6 +41,12 @@ class AttributeTypeController extends Controller
     public function destroy($id)
     {
         $attributeType = $this->attributeTypeService->deleteAttributeType($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new AttributeTypesImport)->import(request()->file('import_file'));
         return response('');
     }
 }

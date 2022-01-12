@@ -28,8 +28,6 @@ class BillToPay extends Model
     protected $fillable = [
         'id_provider',
         'emission_date',
-        'emission_date',
-        'emission_date',
         'pay_date',
         'id_bank_account_provider',
         'id_bank_account_company',

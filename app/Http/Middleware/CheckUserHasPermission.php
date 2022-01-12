@@ -52,6 +52,18 @@ class CheckUserHasPermission
                     }
                 }
                 if ($request->isMethod('POST')) {
+                    if(count($route) > 2){
+                        if($route[2] == 'import'){
+                            if ($role->import == true) {
+                                return $next($request);
+                            }
+                        }
+                        if($route[2] == 'export'){
+                            if ($role->export == true) {
+                                return $next($request);
+                            }
+                        }
+                    }
                     if ($role->create == true) {
                         return $next($request);
                     }
@@ -60,15 +72,6 @@ class CheckUserHasPermission
 
 
         }
-
-
-
-
-
-
-      //$modules = $this->module->find($roles['module_id']);
-
-
         return response('', 401);
     }
 }

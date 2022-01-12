@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\CompanyService as CompanyService;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\PutCompanyRequest;
+use App\Imports\CompaniesImport;
 
 class CompanyController extends Controller
 {
@@ -39,6 +40,12 @@ class CompanyController extends Controller
     public function destroy($id)
     {
         $company = $this->companyService->deleteCompany($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new CompaniesImport)->import(request()->file('import_file'));
         return response('');
     }
 }

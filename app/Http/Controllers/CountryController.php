@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Imports\CountriesImport;
 use App\Services\CountryService as CountryService;
 use App\Http\Requests\StoreCountryRequest;
 
@@ -41,4 +42,9 @@ class CountryController extends Controller
         return response('');
     }
 
+    public function import()
+    {
+        (new CountriesImport)->import(request()->file('import_file'));
+        return response('');
+    }
 }

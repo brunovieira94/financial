@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\StateService as StateService;
 use App\Http\Requests\StoreStateRequest;
 use App\Http\Requests\PutStateRequest;
+use App\Imports\StatesImport;
 
 class StateController extends Controller
 {
@@ -42,4 +43,9 @@ class StateController extends Controller
         return response('');
     }
 
+    public function import()
+    {
+        (new StatesImport)->import(request()->file('import_file'));
+        return response('');
+    }
 }

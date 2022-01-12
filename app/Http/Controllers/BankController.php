@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\BanksImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreBankRequest;
 use App\Services\BankService as BankService;
@@ -39,5 +40,11 @@ class BankController extends Controller
     {
        $bank = $this->bankService->deleteBank($id);
        return response('');
+    }
+
+    public function import()
+    {
+        (new BanksImport)->import(request()->file('import_file'));
+        return response('');
     }
 }

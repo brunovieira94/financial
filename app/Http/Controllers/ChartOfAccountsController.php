@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ChartOfAccountsImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreChartOfAccountsRequest;
 use App\Http\Requests\PutChartOfAccountsRequest;
@@ -41,6 +42,12 @@ class ChartOfAccountsController extends Controller
     public function destroy($id)
     {
         $chartOfAccounts = $this->chartOfAccountsService->deleteChartOfAccounts($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new ChartOfAccountsImport)->import(request()->file('import_file'));
         return response('');
     }
 }

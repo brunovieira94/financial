@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\ProviderCategoryService as ProviderCategoryService;
 use App\Http\Requests\StoreProviderCategoryRequest;
-
+use App\Imports\ProviderCategoryImport;
 
 class ProviderCategoryController extends Controller
 {
@@ -38,6 +38,12 @@ class ProviderCategoryController extends Controller
     public function destroy($id)
     {
         $paymentType = $this->providerCategoryService->deleteProviderCategory($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        (new ProviderCategoryImport)->import(request()->file('import_file'));
         return response('');
     }
 

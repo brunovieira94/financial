@@ -6,14 +6,17 @@ use Illuminate\Http\Request;
 use App\Services\ProviderService as ProviderService;
 use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\PutProviderRequest;
+use App\Imports\ProvidersImport;
 
 class ProviderController extends Controller
 {
     private $providerService;
+    private $providerImport;
 
-    public function __construct(ProviderService $providerService)
+    public function __construct(ProviderService $providerService, ProvidersImport $providerImport)
     {
         $this->providerService = $providerService;
+        $this->providerImport = $providerImport;
     }
 
     public function index(Request $request)
@@ -40,6 +43,12 @@ class ProviderController extends Controller
     public function destroy($id)
     {
         $provider = $this->providerService->deleteProvider($id);
+        return response('');
+    }
+
+    public function import()
+    {
+        $this->providerImport->import(request()->file('import_file'));
         return response('');
     }
 }
