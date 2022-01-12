@@ -8,12 +8,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Storage;
 
-class BillToPay extends Model
+class PaymentRequest extends Model
 {
     // Logs
     use LogsActivity;
     protected static $logAttributes = ['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', '*'];
-    protected static $logName = 'bill_to_pay';
+    protected static $logName = 'payment_request';
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
@@ -21,21 +21,21 @@ class BillToPay extends Model
         $activity->causer_object = $user;
     }
     use SoftDeletes;
-    protected $table = 'bills_to_pay';
-    protected $hidden = ['id_provider', 'id_bank_account_provider', 'id_bank_account_company', 'id_bank_account_company', 'id_business', 'id_cost_center', 'id_chart_of_account', 'id_currency', 'id_user'];
+    protected $table = 'payment_requests';
+    protected $hidden = ['provider_id', 'bank_account_provider_id', 'bank_account_company_id', 'bank_account_company_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
     protected $appends = ['billet_link', 'invoice_link'];
 
     protected $fillable = [
-        'id_provider',
+        'provider_id',
         'emission_date',
         'pay_date',
-        'id_bank_account_provider',
-        'id_bank_account_company',
+        'bank_account_provider_id',
+        'bank_account_company_id',
         'amount',
-        'id_business',
-        'id_cost_center',
-        'id_chart_of_account',
-        'id_currency',
+        'business_id',
+        'cost_center_id',
+        'chart_of_account_id',
+        'currency_id',
         'exchange_rate',
         'frequency_of_installments',
         'invoice_number',
@@ -43,7 +43,7 @@ class BillToPay extends Model
         'bar_code',
         'invoice_file',
         'billet_file',
-        'id_user',
+        'user_id',
     ];
 
     public function getBilletLinkAttribute()
@@ -63,57 +63,57 @@ class BillToPay extends Model
 
     public function approval()
     {
-        return $this->hasOne(AccountsPayableApprovalFlow::class, 'id_bill_to_pay', 'id');
+        return $this->hasOne(AccountsPayableApprovalFlow::class, 'payment_request_id', 'id')->with('approval_flow');
     }
 
     public function installments()
     {
-        return $this->hasMany(BillToPayHasInstallments::class, 'id_bill_to_pay', 'id');
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id');
     }
 
     public function provider()
     {
-        return $this->hasOne(Provider::class, 'id', 'id_provider')->with(['city']);
+        return $this->hasOne(Provider::class, 'id', 'provider_id')->with(['city']);
     }
 
     public function bank_account_provider()
     {
-        return $this->hasOne(BankAccount::class, 'id', 'id_bank_account_provider');
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_provider_id');
     }
 
     public function bank_account_company()
     {
-        return $this->hasOne(BankAccount::class, 'id', 'id_bank_account_company');
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_company_id');
     }
 
     public function business()
     {
-        return $this->hasOne(Business::class, 'id', 'id_business');
+        return $this->hasOne(Business::class, 'id', 'business_id');
     }
 
     public function cost_center()
     {
-        return $this->hasOne(CostCenter::class, 'id', 'id_cost_center');
+        return $this->hasOne(CostCenter::class, 'id', 'cost_center_id');
     }
 
     public function chart_of_accounts()
     {
-        return $this->hasOne(ChartOfAccounts::class, 'id', 'id_chart_of_account');
+        return $this->hasOne(ChartOfAccounts::class, 'id', 'chart_of_account_id');
     }
 
     public function currency()
     {
-        return $this->hasOne(Currency::class, 'id', 'id_currency');
+        return $this->hasOne(Currency::class, 'id', 'currency_id');
     }
 
     public function user()
     {
-        return $this->hasOne(User::class, 'id', 'id_user');
+        return $this->hasOne(User::class, 'id', 'user_id');
     }
 
     public function tax()
     {
-        return $this->hasMany(BillToPayHasTax::class, 'id_bill_to_pay', 'id')->with('typeOfTax');
+        return $this->hasMany(PaymentRequestHasTax::class, 'payment_request_id', 'id')->with('typeOfTax');
     }
 
 }

@@ -4,15 +4,15 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use App\Models\BillToPay;
+use App\Models\PaymentRequest;
 
 class CheckPortionAmounts
 {
-    private $billToPay;
+    private $paymentRequest;
 
-    public function __construct(BillToPay $billToPay)
+    public function __construct(PaymentRequest $paymentRequest)
     {
-        $this->billToPay = $billToPay;
+        $this->paymentRequest = $paymentRequest;
     }
 
 
@@ -26,8 +26,8 @@ class CheckPortionAmounts
             $amount = $request->amount;
         } else {
             $id = (int)$request->route()->parameters()['id'];
-            $billToPay = $this->billToPay->findOrFail($id);
-            $amount = $billToPay->amount;
+            $paymentRequest = $this->paymentRequest->findOrFail($id);
+            $amount = $paymentRequest->amount;
         }
 
         if(array_key_exists('installments', $installments)){

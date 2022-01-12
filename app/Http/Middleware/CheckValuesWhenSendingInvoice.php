@@ -1,18 +1,17 @@
 <?php
 
 namespace App\Http\Middleware;
-use App\Models\BillToPay;
-
+use App\Models\PaymentRequest;
 use Closure;
 use Illuminate\Http\Request;
 
 class CheckValuesWhenSendingInvoice
 {
-    private $billToPay;
+    private $paymentRequest;
 
-    public function __construct(BillToPay $billToPay)
+    public function __construct(PaymentRequest $paymentRequest)
     {
-        $this->billToPay = $billToPay;
+        $this->paymentRequest = $paymentRequest;
     }
 
     public function handle(Request $request, Closure $next)
@@ -31,9 +30,9 @@ class CheckValuesWhenSendingInvoice
                 $netValue = $tax['net_value'];
             } else {
                 $id = (int)$request->route()->parameters()['id'];
-                $billToPay = $this->billToPay->findOrFail($id);
-                $netValue = $billToPay->net_value;
-                $amount = $billToPay->amount;
+                $paymentRequest = $this->paymentRequest->findOrFail($id);
+                $netValue = $paymentRequest->net_value;
+                $amount = $paymentRequest->amount;
             }
             if(array_key_exists('amount', $tax)){
                 $amount = $request->amount;

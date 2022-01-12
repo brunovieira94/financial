@@ -1,0 +1,186 @@
+<?php
+
+namespace App\Services;
+use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasInstallments;
+use App\Models\AccountsPayableApprovalFlow;
+use App\Models\PaymentRequestHasTax;
+use Illuminate\Http\Response;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
+class PaymentRequestService
+{
+    private $paymentRequest;
+    private $installments;
+    private $tax;
+
+    private $with = ['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+
+    public function __construct(PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax)
+    {
+        $this->paymentRequest = $paymentRequest;
+        $this->installments = $installments;
+        $this->approval = $approval;
+        $this->tax = $tax;
+    }
+
+    public function getAllPaymentRequest($requestInfo)
+    {
+        $paymentRequest = Utils::search($this->paymentRequest, $requestInfo);
+        return Utils::pagination($paymentRequest->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
+    }
+
+    public function getPaymentRequest($id)
+    {
+        return $this->paymentRequest->with($this->with)->findOrFail($id);
+    }
+
+    public function postPaymentRequest(Request $request)
+    {
+        $paymentRequestInfo = $request->all();
+
+        $paymentRequestInfo['user_id'] = auth()->user()->id;
+
+        if (array_key_exists('invoice_file', $paymentRequestInfo)){
+            $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
+        }
+        if (array_key_exists('billet_file', $paymentRequestInfo)){
+            $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
+        }
+
+        $paymentRequest = new PaymentRequest;
+        $paymentRequest = $paymentRequest->create($paymentRequestInfo);
+        $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
+
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
+            'payment_request_id' => $paymentRequest->id,
+            'order' => 0,
+            'status' => 0,
+        ]);
+
+        $this->syncTax($paymentRequest, $paymentRequestInfo);
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo);
+        return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
+    }
+
+    public function putPaymentRequest($id, Request $request)
+    {
+        $paymentRequestInfo = $request->all();
+        $paymentRequest = $this->paymentRequest->findOrFail($id);
+
+        $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
+
+        if($approval->order != 0)
+           return response('Só é permitido atualizar a conta na ordem 0', 422)->send();
+
+        $approval->status = 0;
+        $approval->save();
+
+        if (array_key_exists('invoice_file', $paymentRequestInfo)){
+            $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
+        }
+
+        if (array_key_exists('billet_file', $paymentRequestInfo)){
+            $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
+        }
+
+        $paymentRequest->fill($paymentRequestInfo)->save();
+        $this->syncTax($paymentRequest, $paymentRequestInfo);
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo);
+        return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
+    }
+
+    public function deletePaymentRequest($id)
+    {
+        $paymentRequest = $this->paymentRequest->findOrFail($id);
+        $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
+
+        if($approval->order != 0)
+           return response('Só é permitido deletar conta na ordem 0', 422)->send();
+
+        $this->destroyInstallments($paymentRequest);
+        $this->paymentRequest->findOrFail($id)->delete();
+        return true;
+    }
+
+    public function storeInvoice(Request $request){
+
+        $nameFile = null;
+        $data = uniqid(date('HisYmd'));
+
+        $originalNameInvoice  = explode('.', $request->invoice_file->getClientOriginalName());
+        $extensionInvoice = $request->invoice_file->extension();
+
+        $nameFileInvoice = "{$originalNameInvoice[0]}_{$data}.{$extensionInvoice}";
+
+        $uploadInvoice = $request->invoice_file->storeAs('invoice', $nameFileInvoice);
+
+        if ( !$uploadInvoice )
+                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+
+        return $nameFile;
+    }
+
+    public function storeBillet(Request $request){
+
+        $nameFile = null;
+        $data = uniqid(date('HisYmd'));
+
+        if ($request->hasFile('billet_file') && $request->file('billet_file')->isValid()) {
+
+            $extensionBillet = $request->billet_file->extension();
+            $originalNameBillet  = explode('.' , $request->billet_file->getClientOriginalName());
+            $nameFileBillet = "{$originalNameBillet[0]}_{$data}.{$extensionBillet}";
+            $uploadBillet = $request->billet_file->storeAs('billet', $nameFileBillet);
+
+            if ( !$uploadBillet )
+                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+          return $nameFileBillet;
+        }
+    }
+
+    public function syncInstallments($paymentRequest, $paymentRequestInfo)
+    {
+        if(array_key_exists('installments', $paymentRequestInfo)){
+            $this->destroyInstallments($paymentRequest);
+            foreach($paymentRequestInfo['installments'] as $key=>$installments){
+                $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
+                $installments['payment_request_id'] = $paymentRequest['id'];
+                $installments['parcel_number'] = $key + 1;
+                try {
+                    $paymentRequestHasInstallments = $paymentRequestHasInstallments->create($installments);
+                } catch (\Exception $e) {
+                    $this->destroyInstallments($paymentRequest);
+                    $this->paymentRequest->findOrFail($paymentRequest->id)->delete();
+                    return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
+                }
+            }
+        }
+    }
+
+    public function destroyInstallments($paymentRequest)
+    {
+        $collection = $this->installments->where('payment_request_id', $paymentRequest['id'])->get(['id']);
+        $this->installments->destroy($collection->toArray());
+    }
+
+    public function syncTax($paymentRequest, $paymentRequestInfo){
+        if(array_key_exists('tax', $paymentRequestInfo)){
+            $this->destroyTax($paymentRequest);
+            foreach($paymentRequestInfo['tax'] as $key=>$tax){
+                $paymentRequestHasTax = new PaymentRequestHasTax;
+                $tax['payment_request_id'] = $paymentRequest['id'];
+                $paymentRequestHasTax = $paymentRequestHasTax->create($tax);
+            }
+        }
+
+    }
+
+    public function destroyTax($paymentRequest)
+    {
+        $collection = $this->tax->where('payment_request_id', $paymentRequest['id'])->get(['id']);
+        $this->tax->destroy($collection->toArray());
+    }
+
+}

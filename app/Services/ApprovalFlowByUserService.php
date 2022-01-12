@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
-use App\Models\BillToPay;
+use App\Models\PaymentRequest;
 use Illuminate\Http\Request;
 
 class ApprovalFlowByUserService
@@ -12,11 +12,10 @@ class ApprovalFlowByUserService
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, BillToPay $billToPay)
+    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
-        $this->billToPay = $billToPay;
     }
 
     public function getAllAccountsForApproval($requestInfo)
@@ -30,8 +29,8 @@ class ApprovalFlowByUserService
         return Utils::pagination($accountsPayableApprovalFlow
         ->whereIn('order', $approvalFlowUserOrder->toArray())
         ->WhereIn('status', [0, 2])
-        ->whereRelation('bill_to_pay', 'deleted_at', '=', null)
-        ->with(['bill_to_pay']),$requestInfo);
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->with(['payment_request']),$requestInfo);
     }
 
     public function approveAccount($id)

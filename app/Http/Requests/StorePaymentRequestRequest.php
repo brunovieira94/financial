@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreBillToPayRequest extends FormRequest
+class StorePaymentRequestRequest extends FormRequest
 {
     public function authorize()
     {
@@ -14,23 +14,23 @@ class StoreBillToPayRequest extends FormRequest
     public function rules()
     {
         return [
-            'id_provider' => 'required|integer',
+            'provider_id' => 'required|integer',
             'emission_date' => 'required|Date',
             'pay_date'  => 'required|Date',
-            'id_bank_account_provider' => 'integer',
-            'id_bank_account_company' => 'integer',
+            'bank_account_provider_id' => 'integer',
+            'bank_account_company_id' => 'integer',
             'amount' => 'required|numeric',
-            'id_business' => 'required|integer',
-            'id_cost_center' => 'required|integer',
-            'id_chart_of_account' => 'required|integer',
-            'id_currency' => 'required|integer',
+            'business_id' => 'required|integer',
+            'cost_center_id' => 'required|integer',
+            'chart_of_account_id' => 'required|integer',
+            'currency_id' => 'required|integer',
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
             'net_value' => 'numeric',
             //NF
             'invoice_file' => 'file|required_with_all:invoice_number,type_of_tax,net_value,tax_amount',
             'invoice_number' => 'max:150|required_with_all:invoice_file,type_of_tax,net_value,tax_amount',
-            'tax.*.id_type_of_tax' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount',
+            'tax.*.type_of_tax_id' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount',
             'tax.*.tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,tax.*.id_type_of_tax,net_value',
             //Boleto
             'bar_code' => 'max:150|required_with_all:billet_file',
