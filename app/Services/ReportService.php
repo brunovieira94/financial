@@ -3,24 +3,24 @@
 namespace App\Services;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
-use App\Models\BillToPay;
+use App\Models\PaymentRequest;
 
 class ReportService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, BillToPay $billToPay)
+    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
-        $this->billToPay = $billToPay;
+        $this->paymentRequest = $paymentRequest;
     }
 
     public function getAllDueBills($requestInfo)
     {
-        $result = Utils::search($this->billToPay,$requestInfo);
-        $result = $result->with(['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = Utils::search($this->paymentRequest,$requestInfo);
+        $result = $result->with(['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('from', $requestInfo)){
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
@@ -37,7 +37,7 @@ class ReportService
     {
         $approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
-        return Utils::pagination($accountsPayableApprovalFlow->with('bill_to_pay')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow->with('payment_request')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
     }
 }
 

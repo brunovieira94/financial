@@ -11,7 +11,7 @@ class AccountsPayableApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['bill_to_pay', '*'];
+    protected static $logAttributes = ['payment_request', '*'];
     protected static $logName = 'accounts_payable_approval_flows';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -21,12 +21,17 @@ class AccountsPayableApprovalFlow extends Model
     }
 
     protected $table='accounts_payable_approval_flows';
-    protected $fillable = ['id_bill_to_pay','order', 'status', 'reason'];
+    protected $fillable = ['payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
-    protected $hidden = ['id_bill_to_pay'];
+    protected $hidden = ['payment_request_id'];
 
-    public function bill_to_pay()
+    public function payment_request()
     {
-        return $this->hasOne(BillToPay::class, 'id', 'id_bill_to_pay')->with(['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+    }
+
+    public function approval_flow()
+    {
+        return $this->hasOne(ApprovalFlow::class, 'order', 'order')->with('role')->latest();
     }
 }

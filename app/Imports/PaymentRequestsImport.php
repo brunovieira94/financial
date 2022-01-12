@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\BillToPay;
+use App\Models\PaymentRequest;
 use App\Models\Business;
 use App\Models\Provider;
 use App\Models\ChartOfAccounts;
@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use App\Services\Utils;
 
-class BillsToPayImport implements ToModel, WithValidation, WithHeadingRow
+class PaymentRequestsImport implements ToModel, WithValidation, WithHeadingRow
 {
 
     use Importable;
@@ -33,15 +33,15 @@ class BillsToPayImport implements ToModel, WithValidation, WithHeadingRow
 
     public function model(array $row)
     {
-        return new BillToPay([
-            'id_provider'     => $this->provider->id,
+        return new PaymentRequest([
+            'provider_id'     => $this->provider->id,
             'emission_date' => Utils::formatDate($row['data_de_emissao']),
             'pay_date' => Utils::formatDate($row['data_de_pagamento']),
             'amount' => $row['valor'],
-            'id_chart_of_accounts' => $this->chartOfAccountsID,
-            'id_cost_center' => $this->costCenterID,
-            'id_business' => $this->business->id,
-            'id_currency' => $this->currency->id,
+            'chart_of_accounts_id' => $this->chartOfAccountsID,
+            'cost_center_id' => $this->costCenterID,
+            'business_id' => $this->business->id,
+            'currency_id' => $this->currency->id,
             'exchange_rate' => $row['taxa_de_cambio'],
             'frequency_of_installments' =>  $row['frequencia_de_parcelas'],
         ]);
@@ -55,6 +55,7 @@ class BillsToPayImport implements ToModel, WithValidation, WithHeadingRow
                     $onFailure('Fornecedor: Nao foi encontrado');
                 }
             }],
+
             'plano_de_contas' => ['required', function($attribute, $value, $onFailure) {
                 $this->chartOfAccountsID = UtilsImport::getLastedID($value, $this->chartOfAccounts);
                 if ($this->chartOfAccountsID == null){
@@ -71,11 +72,13 @@ class BillsToPayImport implements ToModel, WithValidation, WithHeadingRow
 
             'data_de_emissao' => 'required|date_format:d/m/Y',
             'data_de_pagamento' => 'required|date_format:d/m/Y',
+
             'negocio' => ['required',function($attribute, $value, $onFailure) {
                 if ($this->business == null) {
                     $onFailure('Negocio: Nao foi encontrado');
                 }
             }],
+
             'moeda' => ['required',function($attribute, $value, $onFailure) {
                 if ($this->currency == null) {
                     $onFailure('Moeda: Nao foi encontrada');

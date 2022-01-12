@@ -22,7 +22,7 @@ use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LogsController;
 use App\Http\Controllers\CountryController;
-use App\Http\Controllers\BillToPayController;
+use App\Http\Controllers\PaymentRequestController;
 use App\Http\Controllers\ApprovalFlowByUserController;
 use App\Http\Controllers\TypeOfTaxController;
 use App\Http\Controllers\ReportController;
@@ -206,15 +206,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [CountryController::class, 'import']);
     });
 
-    //Restful route -> Bill-to-pay
-    Route::prefix('bill-to-pay')->group(function () {
-        Route::post('/import', [BillToPayController::class, 'import']);
-        Route::get('/', [BillToPayController::class, 'index']);
-        Route::get('/{id}', [BillToPayController::class, 'show']);
-        Route::post('/', [BillToPayController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
-        Route::post('/{id}', [BillToPayController::class, 'update'])->middleware(['check.installments', 'check.values.invoice']);
-        Route::delete('/{id}', [BillToPayController::class, 'destroy']);
-        Route::put('/installment/pay/{id}', [BillToPayController::class, 'payInstallment']);
+    //Restful route -> Payment Request
+    Route::prefix('payment-request')->group(function () {
+        Route::post('/import', [PaymentRequestController::class, 'import']);
+        Route::get('/', [PaymentRequestController::class, 'index']);
+        Route::get('/{id}', [PaymentRequestController::class, 'show']);
+        Route::post('/', [PaymentRequestController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
+        Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice']);
+        Route::delete('/{id}', [PaymentRequestController::class, 'destroy']);
     });
 
     Route::prefix('account-payable-approval-flow')->group(function () {

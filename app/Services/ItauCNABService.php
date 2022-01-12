@@ -1,23 +1,23 @@
 <?php
 
 namespace App\Services;
-use App\Models\BillToPay;
-use App\Models\BillToPayHasInstallments;
+use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasInstallments;
 use App\Models\Company;
 use Carbon\Carbon;
 
 
 class ItauCNABService
 {
-    private $billToPay;
+    private $paymentRequest;
     private $installments;
     private $company;
     private $withCompany = ['bank_account', 'managers', 'city'];
-    private $withBillToPay = ['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $withPaymentRequest = ['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(BillToPay $billToPay, Company $company, BillToPayHasInstallments $installments)
+    public function __construct(PaymentRequest $paymentRequest, Company $company, PaymentRequestHasInstallments $installments)
     {
-        $this->billToPay = $billToPay;
+        $this->paymentRequest = $paymentRequest;
         $this->company = $company;
         $this->installments = $installments;
     }
@@ -55,36 +55,36 @@ class ItauCNABService
             ]
         );
 
-        $allBillToPay = $this->billToPay->with($this->withBillToPay)->whereIn('id', $requestInfo['bill_to_pay_ids'])->get();
+        $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
 
-        foreach($allBillToPay as $billToPay) {
+        foreach($allPaymentRequest as $paymentRequest) {
 
             $payer = new \App\Helpers\Pessoa(
                 [
-                    'nome'      => $billToPay->provider->company_name,
-                    'endereco'  => $billToPay->provider->address,
-                    'cep'       => $billToPay->provider->cep,
-                    'uf'        => $billToPay->provider->city->state->title,
-                    'cidade'    => $billToPay->provider->city,
-                    'documento' => $billToPay->provider->provider_type == 'F' ? $billToPay->provider->cpf : $billToPay->provider->cnpj,
-                    'numero' => $billToPay->provider->number,
-                    'complemento' => $billToPay->provider->complement,
+                    'nome'      => $paymentRequest->provider->company_name,
+                    'endereco'  => $paymentRequest->provider->address,
+                    'cep'       => $paymentRequest->provider->cep,
+                    'uf'        => $paymentRequest->provider->city->state->title,
+                    'cidade'    => $paymentRequest->provider->city,
+                    'documento' => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->cpf : $paymentRequest->provider->cnpj,
+                    'numero' => $paymentRequest->provider->number,
+                    'complemento' => $paymentRequest->provider->complement,
                 ]
             );
 
-            foreach($billToPay->installments as $installment) {
+            foreach($paymentRequest->installments as $installment) {
                 $billet = new \App\Helpers\Boleto\Banco\Itau(
                     [
                         'dataVencimento'         => new Carbon($installment->due_date),
                         'valor'                  => $installment->portion_amount,
-                        'transferTypeIdentification' => $billToPay->bank_account_provider->account_type,
+                        'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
                         'numeroDocumento'        => $installment->id,
                         'pagador'                => $payer,
                         'beneficiario'           => $recipient,
-                        'agencia'                => $billToPay->bank_account_provider->agency_number,
-                        'conta'                  => $billToPay->bank_account_provider->account_number,
-                        'contaDv'                => $billToPay->bank_account_provider->account_check_number,
+                        'agencia'                => $paymentRequest->bank_account_provider->agency_number,
+                        'conta'                  => $paymentRequest->bank_account_provider->account_number,
+                        'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
                     ]
                 );
                 array_push($billets, $billet);
@@ -112,7 +112,6 @@ class ItauCNABService
             $installments->amount_received = $batch->valorRecebido;
             $installments->save();
         }
-
-        return response('Processo finalizado.')->send();
+        return response('Processo finalizado.', 200)->send();
     }
 }
