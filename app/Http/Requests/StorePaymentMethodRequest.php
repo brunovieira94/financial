@@ -14,7 +14,7 @@ class StorePaymentMethodRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255',
+            'title' => 'required|max:255|unique:payment_method,title,NULL,id,deleted_at,NULL',
             'initials' => 'required|max:255',
         ];
     }

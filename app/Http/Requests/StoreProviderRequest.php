@@ -18,7 +18,7 @@ class StoreProviderRequest extends FormRequest
             'company_name' => 'required_if:provider_type,==,J|max:250|prohibited_if:provider_type,==,F',
             'trade_name' => 'max:150|prohibited_if:provider_type,==,F',
             'alias' => 'max:150',
-            'cnpj' => 'required_if:provider_type,==,J|max:17|prohibited_if:provider_type,==,F',
+            'cnpj' => 'required_if:provider_type,==,J|max:17|prohibited_if:provider_type,==,F|unique:providers,cnpj,NULL,id,deleted_at,NULL',
             'responsible' => 'max:250',
             'provider_categories_id' => 'required|integer',
             'cost_center_id' => 'integer',
@@ -42,7 +42,7 @@ class StoreProviderRequest extends FormRequest
             'bank_accounts.*.pix_key_type' => 'integer|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id|min:0|max:4',
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
             //validation physical person
-            'cpf' => 'required_if:provider_type,==,F|numeric|digits:11|prohibited_if:provider_type,==,J',
+            'cpf' => 'required_if:provider_type,==,F|numeric|digits:11|prohibited_if:provider_type,==,J|unique:providers,cpf,NULL,id,deleted_at,NULL',
             'rg' => 'required_if:provider_type,==,F|string|prohibited_if:provider_type,==,J',
             'full_name' => 'required_if:provider_type,==,F|string|max:255|prohibited_if:provider_type,==,J',
             'birth_date' => 'required_if:provider_type,==,F|date|max:255|prohibited_if:provider_type,==,J',

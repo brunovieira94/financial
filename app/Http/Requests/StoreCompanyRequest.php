@@ -16,7 +16,7 @@ class StoreCompanyRequest extends FormRequest
         return [
             'company_name' => 'required|max:250',
             'trade_name' => 'max:150',
-            'cnpj' => 'max:45',
+            'cnpj' => 'max:45|unique:companies,cnpj,NULL,id,deleted_at,NULL',
             'cep' => 'max:10',
             'cities_id' => 'integer',
             'address' => 'max:250',
