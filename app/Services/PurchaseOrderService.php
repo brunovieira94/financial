@@ -149,6 +149,7 @@ class PurchaseOrderService
                     'money_discount' => $service['money_discount'],
                     'frequency_of_installments' => $service['frequency_of_installments'],
                     'contract_duration' => $service['contract_duration'],
+                    'unique_discount' => $service['unique_discount'],
                 ]);
                 $this->syncInstallments($purchaseOrderHasServices, $service);
             }
@@ -180,6 +181,7 @@ class PurchaseOrderService
                         'money_discount' => $service['money_discount'],
                         'frequency_of_installments' => $service['frequency_of_installments'],
                         'contract_duration' => $service['contract_duration'],
+                        'unique_discount' => $service['unique_discount'],
                     ]);
                     $createdServices[] = $purchaseOrderHasServices->id;
                 }
