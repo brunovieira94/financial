@@ -29,7 +29,7 @@ class ApprovalFlowSupplyByUserService
         $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow,$requestInfo);
         return Utils::pagination($supplyApprovalFlow
         ->whereIn('order', $approvalFlowUserOrder->toArray())
-        ->WhereIn('status', [0, 2])
+        ->WhereIn('status', 0)
         ->whereRelation('purchase_order', 'deleted_at', '=', null)
         ->with(['purchase_order']),$requestInfo);
     }

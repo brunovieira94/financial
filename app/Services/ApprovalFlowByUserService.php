@@ -28,7 +28,7 @@ class ApprovalFlowByUserService
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->whereIn('order', $approvalFlowUserOrder->toArray())
-        ->WhereIn('status', [0, 2])
+        ->WhereIn('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->with(['payment_request']),$requestInfo);
     }
