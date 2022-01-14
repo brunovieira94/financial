@@ -45,6 +45,7 @@ class PutPaymentRequestRequest extends FormRequest
                     }
                 },
             ],
+            'invoice_type' => 'max:150',
             //installments
             'installments.*.portion_amount' => 'numeric',
             'installments.*.due_date' => 'date',

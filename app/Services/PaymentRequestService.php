@@ -7,6 +7,7 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\PaymentRequestHasTax;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PaymentRequestService
 {
@@ -50,7 +51,17 @@ class PaymentRequestService
         if (array_key_exists('xml_file', $paymentRequestInfo)){
             $paymentRequestInfo['xml_file'] = $this->storeXML($request);
         }
-
+        if(!array_key_exists('invoice_type', $paymentRequestInfo)) {
+            if (array_key_exists('invoice_number', $paymentRequestInfo)){
+                $invoiceType = DB::table('payment_requests')
+                ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
+                ->where('invoice_type', '<>', null)
+                ->groupBy('invoice_type')
+                ->orderBy('repeated', 'desc')
+                ->get();
+                $paymentRequestInfo['invoice_type'] = $invoiceType[0]->invoice_type ?? null;
+            }
+        }
 
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);

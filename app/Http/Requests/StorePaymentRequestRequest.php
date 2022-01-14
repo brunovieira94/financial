@@ -38,6 +38,7 @@ class StorePaymentRequestRequest extends FormRequest
                     }
                 },
             ],
+            'invoice_type' => 'max:150',
             //NF
             'invoice_file' => 'file|required_with_all:invoice_number,type_of_tax,net_value,tax_amount',
             'invoice_number' => ['max:150', 'required_with_all:invoice_file,type_of_tax,net_value,tax_amount', new DuplicatePaymentRequest(request()->input('business_id'), request()->input('force_registration') ?? false)],

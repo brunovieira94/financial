@@ -45,6 +45,7 @@ class PaymentRequest extends Model
         'billet_file',
         'user_id',
         'xml_file',
+        'invoice_type',
     ];
 
     public function getXmlLinkAttribute()
