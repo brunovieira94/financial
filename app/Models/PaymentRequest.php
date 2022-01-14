@@ -23,7 +23,7 @@ class PaymentRequest extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'bank_account_company_id', 'bank_account_company_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['billet_link', 'invoice_link'];
+    protected $appends = ['billet_link', 'invoice_link', 'xml_link'];
 
     protected $fillable = [
         'provider_id',
@@ -44,7 +44,16 @@ class PaymentRequest extends Model
         'invoice_file',
         'billet_file',
         'user_id',
+        'xml_file',
     ];
+
+    public function getXmlLinkAttribute()
+    {
+        if (!is_null($this->attributes['xml_file'])) {
+            $XML = $this->attributes['xml_file'];
+            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(5));
+        }
+    }
 
     public function getBilletLinkAttribute()
     {

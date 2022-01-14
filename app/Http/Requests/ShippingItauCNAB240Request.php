@@ -16,7 +16,7 @@ class ShippingItauCNAB240Request extends FormRequest
     {
         return [
             'bank_account_id' => ['required', 'integer', 'exists:bank_accounts,id', new CheckCNABItauWallet],
-            'bill_to_pay_ids' => 'required|array',
+            'payment_request_ids' => 'required|array',
             'company_id' => 'required|integer|exists:companies,id',
         ];
     }
