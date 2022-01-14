@@ -5,9 +5,8 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\PaymentRequestHasTax;
-use Illuminate\Http\Response;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class PaymentRequestService
 {
@@ -48,6 +47,10 @@ class PaymentRequestService
         if (array_key_exists('billet_file', $paymentRequestInfo)){
             $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
         }
+        if (array_key_exists('xml_file', $paymentRequestInfo)){
+            $paymentRequestInfo['xml_file'] = $this->storeXML($request);
+        }
+
 
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
@@ -60,7 +63,7 @@ class PaymentRequestService
         ]);
 
         $this->syncTax($paymentRequest, $paymentRequestInfo);
-        $this->syncInstallments($paymentRequest, $paymentRequestInfo);
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -80,14 +83,20 @@ class PaymentRequestService
         if (array_key_exists('invoice_file', $paymentRequestInfo)){
             $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
         }
-
         if (array_key_exists('billet_file', $paymentRequestInfo)){
             $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
+        }
+        if (array_key_exists('xml_file', $paymentRequestInfo)){
+            $paymentRequestInfo['xml_file'] = $this->storeXML($request);
         }
 
         $paymentRequest->fill($paymentRequestInfo)->save();
         $this->syncTax($paymentRequest, $paymentRequestInfo);
-        $this->syncInstallments($paymentRequest, $paymentRequestInfo);
+
+        $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
+        $updateExtension = array_key_exists('competence_date', $paymentRequestInfo);
+
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -104,17 +113,31 @@ class PaymentRequestService
         return true;
     }
 
+    public function storeXML(Request $request){
+
+        $nameFile = null;
+        $data = uniqid(date('HisYmd'));
+
+        $originalName  = explode('.', $request->xml_file->getClientOriginalName());
+        $extension = $originalName[count($originalName)-1];
+        $nameFile = "{$originalName[0]}_{$data}.{$extension}";
+        $uploadXML = $request->xml_file->storeAs('XML', $nameFile);
+
+        if ( !$uploadXML )
+                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+
+        return $nameFile;
+    }
+
     public function storeInvoice(Request $request){
 
         $nameFile = null;
         $data = uniqid(date('HisYmd'));
 
-        $originalNameInvoice  = explode('.', $request->invoice_file->getClientOriginalName());
-        $extensionInvoice = $request->invoice_file->extension();
-
-        $nameFileInvoice = "{$originalNameInvoice[0]}_{$data}.{$extensionInvoice}";
-
-        $uploadInvoice = $request->invoice_file->storeAs('invoice', $nameFileInvoice);
+        $originalName  = explode('.', $request->invoice_file->getClientOriginalName());
+        $extension = $request->invoice_file->extension();
+        $nameFile = "{$originalName[0]}_{$data}.{$extension}";
+        $uploadInvoice = $request->invoice_file->storeAs('invoice', $nameFile);
 
         if ( !$uploadInvoice )
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
@@ -129,18 +152,19 @@ class PaymentRequestService
 
         if ($request->hasFile('billet_file') && $request->file('billet_file')->isValid()) {
 
-            $extensionBillet = $request->billet_file->extension();
-            $originalNameBillet  = explode('.' , $request->billet_file->getClientOriginalName());
-            $nameFileBillet = "{$originalNameBillet[0]}_{$data}.{$extensionBillet}";
-            $uploadBillet = $request->billet_file->storeAs('billet', $nameFileBillet);
+            $extension = $request->billet_file->extension();
+            $originalName  = explode('.' , $request->billet_file->getClientOriginalName());
+            $nameFile = "{$originalName[0]}_{$data}.{$extension}";
+            $uploadBillet = $request->billet_file->storeAs('billet', $nameFile);
 
-            if ( !$uploadBillet )
+            if (!$uploadBillet)
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
-          return $nameFileBillet;
+
+          return $nameFile;
         }
     }
 
-    public function syncInstallments($paymentRequest, $paymentRequestInfo)
+    public function syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension)
     {
         if(array_key_exists('installments', $paymentRequestInfo)){
             $this->destroyInstallments($paymentRequest);
@@ -148,6 +172,21 @@ class PaymentRequestService
                 $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
                 $installments['payment_request_id'] = $paymentRequest['id'];
                 $installments['parcel_number'] = $key + 1;
+
+                if($updateCompetence){
+                    if(!array_key_exists('competence_date', $installments)){
+                        $date = new Carbon($installments['due_date']);
+                        $date->subMonths(1);
+                        $installments['extension_date'] = $date;
+                    }
+                }
+
+                if($updateExtension){
+                    if(!array_key_exists('extension_date', $installments)) {
+                        $installments['extension_date'] = $installments['due_date'];
+                    }
+                }
+
                 try {
                     $paymentRequestHasInstallments = $paymentRequestHasInstallments->create($installments);
                 } catch (\Exception $e) {
