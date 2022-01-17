@@ -23,7 +23,7 @@ class PurchaseOrder extends Model
 
     use SoftDeletes;
     protected $table='purchase_orders';
-    protected $fillable = ['order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance'];
+    protected $fillable = ['order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount'];
     protected $hidden = ['currency_id', 'provider_id'];
 
     public function attachments(){

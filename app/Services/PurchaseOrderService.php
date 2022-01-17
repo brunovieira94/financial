@@ -97,7 +97,6 @@ class PurchaseOrderService
                     'quantity' => $product['quantity'],
                     'percentage_discount' => $product['percentage_discount'],
                     'money_discount' => $product['money_discount'],
-                    'unique_discount' => $product['unique_discount'],
                 ]);
             }
         }
@@ -123,7 +122,6 @@ class PurchaseOrderService
                         'quantity' => $product['quantity'],
                         'percentage_discount' => $product['percentage_discount'],
                         'money_discount' => $product['money_discount'],
-                        'unique_discount' => $product['unique_discount'],
                     ]);
                     $createdProducts[] = $purchaseOrderHasProducts->id;
                 }

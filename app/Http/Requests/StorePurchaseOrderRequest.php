@@ -30,6 +30,7 @@ class StorePurchaseOrderRequest extends FormRequest
             'percentage_discount_products' => 'numeric',
             'money_discount_products' => 'numeric',
             'increase_tolerance' => 'numeric',
+            'unique_product_discount' => 'boolean',
         ];
     }
 
