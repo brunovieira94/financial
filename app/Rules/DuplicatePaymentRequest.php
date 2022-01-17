@@ -21,26 +21,23 @@ class DuplicatePaymentRequest implements Rule
 
     public function passes($attribute, $value)
     {
-        if(!$this->force_registration){
-            return false;
-        }
-
         if(is_null($this->business_id)){
             $paymentRequest = PaymentRequest::with('business')
             ->findOrFail($this->paymentRequestID);
             $this->business_id = $paymentRequest->business->id;
         }
 
-        $paymentRequest = PaymentRequest::with('business')
+        if(!PaymentRequest::with('business')
         ->where($attribute, $value)
         ->whereRelation('business', 'id', '=', $this->business_id)
-        ->get();
-
-        if($paymentRequest->isEmpty()){
-            return false;
+        ->exists()){
+            return true;
         }
 
-        return true;
+        if($this->force_registration){
+            return true;
+        }
+        return false;
     }
 
     public function message()
