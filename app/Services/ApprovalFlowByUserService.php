@@ -28,7 +28,7 @@ class ApprovalFlowByUserService
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->whereIn('order', $approvalFlowUserOrder->toArray())
-        ->WhereIn('status', 0)
+        ->Where('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->with(['payment_request']),$requestInfo);
     }
@@ -63,7 +63,8 @@ class ApprovalFlowByUserService
             $accountApproval->order -= 1;
         }
         $accountApproval->reason = $request->reason;
-        $accountApproval->save();
+
+        $accountApproval->fill($request->all())->save();
         return true;
     }
 
@@ -72,7 +73,6 @@ class ApprovalFlowByUserService
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $accountApproval->status = 3;
 
-        $accountApproval->reason = $request->reason;
-        return $accountApproval->save();
+        return $accountApproval->fill($request->all())->save();
     }
 }

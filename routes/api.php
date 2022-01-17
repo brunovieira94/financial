@@ -34,6 +34,7 @@ use App\Http\Controllers\AttributeTypeController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
 use App\Http\Controllers\ApprovalFlowSupplyByUserController;
+use App\Http\Controllers\ReasonToRejectController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -299,6 +300,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/approve/{id}', [ApprovalFlowSupplyByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowSupplyByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowSupplyByUserController::class, 'cancelAccount']);
+    });
+
+    Route::prefix('reason-to-reject')->group(function () {
+        Route::get('/', [ReasonToRejectController::class, 'index']);
+        Route::get('/{id}', [ReasonToRejectController::class, 'show']);
+        Route::post('/', [ReasonToRejectController::class, 'store']);
+        Route::put('/{id}', [ReasonToRejectController::class, 'update']);
+        Route::delete('/{id}', [ReasonToRejectController::class, 'destroy']);
     });
 });
 

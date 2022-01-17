@@ -21,7 +21,7 @@ class AccountsPayableApprovalFlow extends Model
     }
 
     protected $table='accounts_payable_approval_flows';
-    protected $fillable = ['payment_request_id', 'order', 'status', 'reason'];
+    protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id'];
 
@@ -33,5 +33,10 @@ class AccountsPayableApprovalFlow extends Model
     public function approval_flow()
     {
         return $this->hasOne(ApprovalFlow::class, 'order', 'order')->with('role')->latest();
+    }
+
+    public function reason_to_reject()
+    {
+        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id');
     }
 }
