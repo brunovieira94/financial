@@ -23,7 +23,7 @@ class State extends Model
     }
 
     use softDeletes;
-    protected $fillable = ['title', 'country_id'];
+    protected $fillable = ['title', 'country_id','uf'];
     protected $table='states';
     protected $appends = ['linked_cities'];
 

@@ -37,7 +37,7 @@ class ItauCNABService
                 'nome'      => $company->company_name,
                 'endereco'  => $company->address,
                 'cep'       => $company->cep,
-                'uf'        => $company->city->state->title,
+                'uf'        => $company->city->state->uf,
                 'cidade'    => $company->city->title,
                 'documento' => $company->cnpj,
                 'numero' => $company->number,
