@@ -15,7 +15,7 @@ class PutProductRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'max:255',
+            'title' => 'max:255|unique:products,title,NULL,id,deleted_at,NULL',
             'measurement_units_id' => 'integer',
             'chart_of_accounts_id' => 'integer',
             'attributes' => 'array',

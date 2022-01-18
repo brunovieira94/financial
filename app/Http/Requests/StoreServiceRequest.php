@@ -15,7 +15,7 @@ class StoreServiceRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255',
+            'title' => 'required|max:255|unique:services,title,NULL,id,deleted_at,NULL',
             'chart_of_accounts_id' => 'integer|required',
             'description' => 'required',
         ];
