@@ -16,7 +16,7 @@ class StoreBankRequest extends FormRequest
     {
         return [
             'bank_code' => 'numeric',
-            'title' => 'required|max:150',
+            'title' => 'required|max:150|unique:banks,title,NULL,id,deleted_at,NULL',
             'cnab400' => 'required|boolean',
             'cnab240' => 'required|boolean',
         ];

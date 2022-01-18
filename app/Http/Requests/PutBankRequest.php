@@ -14,7 +14,7 @@ class PutBankRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'max:150',
+            'title' => 'max:150|unique:banks,title,NULL,id,deleted_at,NULL',
             'cnab400' => 'boolean',
             'cnab240' => 'boolean',
             'bank_code' => 'numeric',
