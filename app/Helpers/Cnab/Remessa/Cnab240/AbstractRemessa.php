@@ -176,6 +176,8 @@ abstract class AbstractRemessa extends AbstractRemessaGeneric
         $this->trailer();
         $stringRemessa .= $this->valida($this->getTrailer()) . $this->fimArquivo;
 
-        return Encoding::toUTF8($stringRemessa);
+        return $stringRemessa;
+
+      //  return Encoding::toUTF8($stringRemessa);
     }
 }
