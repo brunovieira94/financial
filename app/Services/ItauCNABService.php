@@ -5,6 +5,8 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\Company;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 
 class ItauCNABService
@@ -93,7 +95,12 @@ class ItauCNABService
 
         $shipping->addBoletos($billets);
         $shipping->save(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
-        return response()->download(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
+        $file = File::get(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
+        Storage::disk('s3')->put('tempCNAB/itau.txt', $file);
+
+        return response()->json([
+            'linkArchive' => Storage::temporaryUrl('tempCNAB/itau.txt', now()->addMinutes(5)),
+        ]);
     }
 
     public function receiveCNAB240($requestInfo) {
