@@ -1,0 +1,15 @@
+stages:
+  - deploy
+variables:
+  GIT_STRATEGY: clone
+deploy_master:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+    - aws s3 cp s3://123-deploy/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://123-deploy/autoscaling-deploy-ASG-123.sh /tmp/autoscaling-deploy-ASG-123.sh
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy-ASG-123.sh
+    - bash /tmp/autoscaling-deploy-ASG-123.sh Gerenciadores master /tmp/financeiro-art.pem 0 80 /home/admin/gerenciador >> /tmp/prod.gerenciador.deploy.log
+  only:
+    - master
