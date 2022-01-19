@@ -17,7 +17,7 @@ class ReportService
         $this->paymentRequest = $paymentRequest;
     }
 
-    public function getAllDueBills($requestInfo)
+    public function getAllDuePaymentRequest($requestInfo)
     {
         $result = Utils::search($this->paymentRequest,$requestInfo);
         $result = $result->with(['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
@@ -33,11 +33,30 @@ class ReportService
         return Utils::pagination($result,$requestInfo);
     }
 
-    public function getAllApprovedBills($requestInfo)
+    public function getAllApprovedPaymentRequest($requestInfo)
     {
-        $approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
+        //$approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
-        return Utils::pagination($accountsPayableApprovalFlow->with('payment_request')->where('order', $approvalFlowOrder)->where('status', 1),$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request')
+        //->where('order', $approvalFlowOrder)
+        ->where('status', 1),$requestInfo);
+    }
+
+    public function getAllDisapprovedPaymentRequest($requestInfo){
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request')
+        ->where('status', 2),
+        $requestInfo);
+    }
+
+    public function getAllPaymentRequestsDeleted($requestInfo){
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request_trashed')
+        ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null),
+        $requestInfo);
     }
 }
 
