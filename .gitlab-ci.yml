@@ -10,7 +10,7 @@ deploy_master:
     - aws s3 cp s3://123-deploy/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh
     - chmod 0400 /tmp/financeiro-art.pem
     - chmod 755 /tmp/autoscaling-deploy.sh
-    - bash /tmp/autoscaling-deploy-ASG-123.sh ASG-123 main /tmp/financeiro-art.pem 0 80 /home/admin/api
+    - bash /tmp/autoscaling-deploy.sh ASG-123 main /tmp/financeiro-art.pem 0 80 /home/admin/api
   only:
     - main
 #
