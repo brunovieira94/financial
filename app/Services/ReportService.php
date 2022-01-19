@@ -35,11 +35,11 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
-        //$approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
+        $approvalFlowOrder = $requestInfo['approvalFlowOrder'] ?? $this->approvalFlow->max('order');
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
-        //->where('order', $approvalFlowOrder)
+        ->where('order', $approvalFlowOrder)
         ->where('status', 1),$requestInfo);
     }
 
@@ -57,6 +57,15 @@ class ReportService
         ->with('payment_request_trashed')
         ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null),
         $requestInfo);
+    }
+
+    public function getAllApprovedPaymentRequestCNAB($requestInfo)
+    {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request')
+        ->whereRelation('payment_request', 'bar_code', '!=', null)
+        ->where('status', 1),$requestInfo);
     }
 }
 

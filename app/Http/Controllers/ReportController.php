@@ -20,7 +20,7 @@ class ReportController extends Controller
         return $this->reportService->getAllDuePaymentRequest($request->all());
     }
 
-    public function ApprovedPaymentRequest(Request $request)
+    public function approvedPaymentRequest(Request $request)
     {
         return $this->reportService->getAllApprovedPaymentRequest($request->all());
     }
@@ -33,5 +33,10 @@ class ReportController extends Controller
     public function paymentRequestsDeleted(Request $request)
     {
         return $this->reportService->getAllPaymentRequestsDeleted($request->all());
+    }
+
+    public function approvedPaymentRequestCNAB(Request $request)
+    {
+        return $this->reportService->getAllApprovedPaymentRequestCNAB($request->all());
     }
 }
