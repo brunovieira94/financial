@@ -13,4 +13,3 @@ deploy_master:
     - bash /tmp/autoscaling-deploy-ASG-123.sh ASG-123 main /tmp/financeiro-art.pem 0 80 /home/admin/api
   only:
     - main
-#
