@@ -1,0 +1,3 @@
+[submodule "api-specs"]
+	path = api-specs
+	url = https://git.in8.com.br/123milhas/finances/api-specs.git
