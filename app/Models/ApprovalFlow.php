@@ -30,6 +30,6 @@ class ApprovalFlow extends Model
 
     public function role()
     {
-        return $this->hasOne(Role::class, 'id', 'role_id');
+        return $this->hasOne(Role::class, 'id', 'role_id')->withTrashed();
     }
 }
