@@ -27,17 +27,23 @@ class DuplicatePaymentRequest implements Rule
             $this->business_id = $paymentRequest->business->id;
         }
 
-        if(!PaymentRequest::with('business')
+        if(PaymentRequest::with('business')
         ->where($attribute, $value)
         ->whereRelation('business', 'id', '=', $this->business_id)
         ->exists()){
-            return true;
+            response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 409)->send();
+            die();
         }
 
-        if($this->force_registration){
-            return true;
+        if(PaymentRequest::where($attribute, $value)
+        ->exists()){
+            if($this->force_registration){
+                return true;
+            }
+            response('Já existe a nota fiscal ou boleto cadastrado no sistema!', 424)->send();
+            die();
         }
-        return false;
+        return true;
     }
 
     public function message()
