@@ -15,13 +15,23 @@ class ReportController extends Controller
         $this->reportService = $reportService;
     }
 
-    public function dueBills(Request $request)
+    public function duePaymentRequest(Request $request)
     {
-        return $this->reportService->getAllDueBills($request->all());
+        return $this->reportService->getAllDuePaymentRequest($request->all());
     }
 
-    public function approvedBills(Request $request)
+    public function ApprovedPaymentRequest(Request $request)
     {
-        return $this->reportService->getAllApprovedBills($request->all());
+        return $this->reportService->getAllApprovedPaymentRequest($request->all());
+    }
+
+    public function disapprovedPaymentRequest(Request $request)
+    {
+        return $this->reportService->getAllDisapprovedPaymentRequest($request->all());
+    }
+
+    public function paymentRequestsDeleted(Request $request)
+    {
+        return $this->reportService->getAllPaymentRequestsDeleted($request->all());
     }
 }

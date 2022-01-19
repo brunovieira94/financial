@@ -233,8 +233,11 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('reports')->group(function () {
-        Route::get('/due-bills', [ReportController::class, 'dueBills']);
-        Route::get('/approved-bills', [ReportController::class, 'approvedBills']);
+        Route::get('/due-payment-request', [ReportController::class, 'duePaymentRequest']);
+        Route::get('/approved-payment-request', [ReportController::class, 'ApprovedPaymentRequest']);
+        Route::get('/disapproved-payment-request', [ReportController::class, 'disapprovedPaymentRequest']);
+        Route::get('/payment-requests-deleted', [ReportController::class, 'paymentRequestsDeleted']);
+
     });
 
     Route::prefix('product')->group(function () {
