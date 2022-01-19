@@ -94,8 +94,8 @@ class ItauCNABService
         }
 
         $shipping->addBoletos($billets);
-        $shipping->save(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
-        $file = File::get(storage_path() . DIRECTORY_SEPARATOR . 'itau.txt');
+        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
+        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
         Storage::disk('s3')->put('tempCNAB/itau.txt', $file);
 
         return response()->json([
