@@ -25,6 +25,7 @@ class StoreApprovalFlowRequest extends FormRequest
     {
         return [
             'order' => 'required|array',
+            'prorrogation_competency' => 'required|array',
         ];
     }
 }
