@@ -23,7 +23,7 @@ class PaymentRequest extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'bank_account_company_id', 'bank_account_company_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['billet_link', 'invoice_link', 'xml_link'];
+    protected $appends = ['billet_link', 'invoice_link', 'xml_link', 'days_late'];
 
     protected $fillable = [
         'provider_id',
@@ -124,6 +124,20 @@ class PaymentRequest extends Model
     public function tax()
     {
         return $this->hasMany(PaymentRequestHasTax::class, 'payment_request_id', 'id')->with('typeOfTax');
+    }
+
+    public function getDaysLateAttribute()
+    {
+        foreach ($this->installments as $value) {
+            $dueDate = date_create($value['due_date']);
+            $daysLate = date_diff($dueDate, now());
+            if($dueDate < now() && $value['status'] != 'BD'){
+                return $daysLate->days;
+            }
+            else {
+                return 0;
+            }
+        }
     }
 
 }
