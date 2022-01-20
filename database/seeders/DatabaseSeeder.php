@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TaxSeeder::class);
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
+        $this->call(BanksTableSeeder::class);
         // \App\Models\User::factory(10)->create();
     }
 }
