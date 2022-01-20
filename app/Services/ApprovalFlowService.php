@@ -24,6 +24,7 @@ class ApprovalFlowService
         $info = [];
         foreach($approvalFlowInfo['order'] as $key=>$roles){
             $info['order'] = $key;
+            $info['prorrogation_competency'] = $approvalFlowInfo['prorrogation_competency'][$key];
             foreach($roles as $role){
                 $info['role_id'] = $role;
                 $approvalFlow->create($info);
