@@ -47,7 +47,7 @@ class ReportService
     public function getAllDisapprovedPaymentRequest($requestInfo){
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
-        ->with('payment_request')
+        ->with(['payment_request', 'reason_to_reject'])
         ->where('status', 2),
         $requestInfo);
     }
