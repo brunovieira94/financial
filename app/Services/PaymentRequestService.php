@@ -105,7 +105,7 @@ class PaymentRequestService
         $this->syncTax($paymentRequest, $paymentRequestInfo);
 
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
-        $updateExtension = array_key_exists('competence_date', $paymentRequestInfo);
+        $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
 
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);

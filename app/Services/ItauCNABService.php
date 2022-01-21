@@ -51,8 +51,8 @@ class ItauCNABService
             [
                 'agencia'      => $bankAccount->agency_number,
                 'conta'        => $bankAccount->account_number,
-                'contaDv'      => $bankAccount->account_check_number,
-                'carteira'     => $bankAccount->wallet,
+                'contaDv'      => $bankAccount->account_check_number ?? '',
+                'carteira'     => '112',
                 'beneficiario' => $recipient,
             ]
         );
@@ -64,7 +64,7 @@ class ItauCNABService
 
             $payer = new \App\Helpers\Pessoa(
                 [
-                    'nome'      => $paymentRequest->provider->company_name,
+                    'nome'      => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->full_name : $paymentRequest->provider->company_name,
                     'endereco'  => $paymentRequest->provider->address,
                     'cep'       => $paymentRequest->provider->cep,
                     'uf'        => $paymentRequest->provider->city->state->title,
@@ -76,19 +76,22 @@ class ItauCNABService
             );
 
             foreach($paymentRequest->installments as $installment) {
-                $billet = new \App\Helpers\Boleto\Banco\Itau(
-                    [
-                        'dataVencimento'         => new Carbon($installment->due_date),
-                        'valor'                  => $installment->portion_amount,
-                        'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
-                        'numeroDocumento'        => $installment->id,
-                        'pagador'                => $payer,
-                        'beneficiario'           => $recipient,
-                        'agencia'                => $paymentRequest->bank_account_provider->agency_number,
-                        'conta'                  => $paymentRequest->bank_account_provider->account_number,
-                        'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
-                    ]
-                );
+
+                if($installment->codBank != 'BD') {
+                    $billet = new \App\Helpers\Boleto\Banco\Itau(
+                        [
+                            'dataVencimento'         => new Carbon($installment->due_date),
+                            'valor'                  => $installment->portion_amount,
+                            'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
+                            'numeroDocumento'        => $installment->id,
+                            'pagador'                => $payer,
+                            'beneficiario'           => $recipient,
+                            'agencia'                => $paymentRequest->bank_account_provider->agency_number,
+                            'conta'                  => $paymentRequest->bank_account_provider->account_number,
+                            'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
+                        ]
+                    );
+                }
                 array_push($billets, $billet);
             }
         }
