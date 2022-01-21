@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\ApprovalFlow;
 
 class ApprovalFlowService
@@ -22,15 +23,14 @@ class ApprovalFlowService
         ApprovalFlow::truncate();
         $approvalFlow = new ApprovalFlow;
         $info = [];
-        foreach($approvalFlowInfo['order'] as $key=>$roles){
+        foreach ($approvalFlowInfo['order'] as $key => $roles) {
             $info['order'] = $key;
-            foreach($roles as $role){
+            $info['prorrogation_competency'] = $approvalFlowInfo['prorrogation_competency'][$key];
+            foreach ($roles as $role) {
                 $info['role_id'] = $role;
                 $approvalFlow->create($info);
             }
         }
         return true;
     }
-
 }
-

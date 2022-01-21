@@ -28,6 +28,10 @@ class StoreChartOfAccountsRequest extends FormRequest
             'title' => 'required|max:255',
             'parent' => 'nullable|integer',
             'code' => new DuplicateRoleChartOfAccounts(request()->input('parent')),
+            'accounting_title' => 'nullable|max:255',
+            'group_title' => 'nullable|max:255',
+            'referential_title' => 'nullable|max:255',
+            'group' => 'nullable|integer',
         ];
     }
 }

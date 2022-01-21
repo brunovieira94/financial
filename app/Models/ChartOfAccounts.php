@@ -22,8 +22,8 @@ class ChartOfAccounts extends Model
     }
 
     use SoftDeletes;
-    protected $table='chart_of_accounts';
-    protected $fillable = ['title', 'parent', 'code'];
+    protected $table = 'chart_of_accounts';
+    protected $fillable = ['title', 'parent', 'code', 'group', 'accounting_title', 'accounting_code', 'group_title', 'group_code', 'referential_title', 'referential_code'];
 
     protected $appends = ['linked_chartOfAccounts'];
 
@@ -32,18 +32,21 @@ class ChartOfAccounts extends Model
         return $this->hasMany(ChartOfAccounts::class, 'parent', 'id')->count();
     }
 
-    public function parent() {
+    public function parent()
+    {
         return $this->belongsTo(self::class, 'parent');
     }
 
-    public function children() {
+    public function children()
+    {
         return $this->hasMany(self::class, 'parent');
     }
 
-    public static function nestable($chartOfAccounts) {
-       foreach ($chartOfAccounts as $chart) {
-           if (!$chart->children->isEmpty()) {
-               $chart->children = self::nestable($chart->children);
+    public static function nestable($chartOfAccounts)
+    {
+        foreach ($chartOfAccounts as $chart) {
+            if (!$chart->children->isEmpty()) {
+                $chart->children = self::nestable($chart->children);
             }
         }
 
