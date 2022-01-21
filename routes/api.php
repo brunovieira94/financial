@@ -65,7 +65,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [PaymentMethodController::class, 'import']);
     });
 
-//Restful route -> Payments Types
+    //Restful route -> Payments Types
     Route::prefix('payment-type')->group(function () {
         Route::get('/', [PaymentTypeController::class, 'index']);
         Route::get('/{id}', [PaymentTypeController::class, 'show']);
@@ -76,7 +76,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
 
-//Restful route -> Banks
+    //Restful route -> Banks
     Route::prefix('bank')->group(function () {
         Route::get('/', [BankController::class, 'index']);
         Route::get('/{id}', [BankController::class, 'show']);
@@ -95,7 +95,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [ChartOfAccountsController::class, 'import']);
     });
 
-//Restful route -> Bank Accounts
+    //Restful route -> Bank Accounts
     Route::prefix('bank-account')->group(function () {
         Route::get('/', [BankAccountController::class, 'index']);
         Route::get('/{id}', [BankAccountController::class, 'show']);
@@ -104,7 +104,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [BankAccountController::class, 'destroy']);
     });
 
-//Restful route -> Provider Categories
+    //Restful route -> Provider Categories
 
     Route::prefix('provider-category')->group(function () {
         Route::get('/', [ProviderCategoryController::class, 'index']);
@@ -127,7 +127,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [RoleController::class, 'update']);
         Route::delete('/{id}', [RoleController::class, 'destroy']);
     });
-//Restful route -> States
+    //Restful route -> States
 
     Route::prefix('state')->group(function () {
         Route::get('/', [StateController::class, 'index']);
@@ -138,7 +138,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [StateController::class, 'import']);
     });
 
-//Restful route -> City
+    //Restful route -> City
     Route::prefix('city')->group(function () {
         Route::get('/', [CityController::class, 'index']);
         Route::get('/{id}', [CityController::class, 'show']);
@@ -153,7 +153,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ApprovalFlowController::class, 'store']);
     });
 
-//Restful route -> Provider
+    //Restful route -> Provider
     Route::prefix('provider')->group(function () {
         Route::get('/', [ProviderController::class, 'index']);
         Route::get('/{id}', [ProviderController::class, 'show']);
@@ -163,7 +163,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [ProviderController::class, 'import']);
     });
 
-//Restful route -> Company
+    //Restful route -> Company
     Route::prefix('company')->group(function () {
         Route::get('/', [CompanyController::class, 'index']);
         Route::get('/{id}', [CompanyController::class, 'show']);
@@ -173,7 +173,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [CompanyController::class, 'import']);
     });
 
-//Restful route -> Business
+    //Restful route -> Business
     Route::prefix('business')->group(function () {
         Route::get('/', [BusinessController::class, 'index']);
         Route::get('/{id}', [BusinessController::class, 'show']);
@@ -183,7 +183,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [BusinessController::class, 'import']);
     });
 
-//Restful route -> User
+    //Restful route -> User
     Route::prefix('user')->group(function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('/{id}', [UserController::class, 'show']);
@@ -234,10 +234,11 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('reports')->group(function () {
         Route::get('/due-payment-request', [ReportController::class, 'duePaymentRequest']);
-        Route::get('/approved-payment-request', [ReportController::class, 'ApprovedPaymentRequest']);
+        Route::get('/approved-payment-request', [ReportController::class, 'approvedPaymentRequest']);
         Route::get('/disapproved-payment-request', [ReportController::class, 'disapprovedPaymentRequest']);
         Route::get('/payment-requests-deleted', [ReportController::class, 'paymentRequestsDeleted']);
-
+        Route::get('/payment-requests-cnab', [ReportController::class, 'approvedPaymentRequestCNAB']);
+        Route::get('/bills-to-pay', [ReportController::class, 'billsToPay']);
     });
 
     Route::prefix('product')->group(function () {

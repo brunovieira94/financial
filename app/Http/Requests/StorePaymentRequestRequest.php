@@ -19,8 +19,8 @@ class StorePaymentRequestRequest extends FormRequest
             'provider_id' => 'required|integer',
             'emission_date' => 'required|Date',
             'pay_date'  => 'required|Date',
-            'bank_account_provider_id' => 'integer',
-            'bank_account_company_id' => 'integer',
+            'bank_account_provider_id' => 'required|integer',
+            'bank_account_company_id' => 'required|integer',
             'amount' => 'required|numeric',
             'business_id' => 'required|integer',
             'cost_center_id' => 'required|integer',
@@ -33,8 +33,8 @@ class StorePaymentRequestRequest extends FormRequest
                 'file',
                 function ($attribute, $value, $fail) {
                     $xml_file = explode('.', $value->getClientOriginalName());
-                    if($xml_file[count($xml_file)-1] != 'xml'){
-                        $fail($attribute.'\'s extension is invalid.');
+                    if ($xml_file[count($xml_file) - 1] != 'xml') {
+                        $fail($attribute . '\'s extension is invalid.');
                     }
                 },
             ],

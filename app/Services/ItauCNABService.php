@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\Company;
@@ -29,7 +30,7 @@ class ItauCNABService
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = null;
 
-        foreach($company->bank_account as $bank) {
+        foreach ($company->bank_account as $bank) {
             if ($bank->id == $requestInfo['bank_account_id'])
                 $bankAccount = $bank;
         }
@@ -51,8 +52,8 @@ class ItauCNABService
             [
                 'agencia'      => $bankAccount->agency_number,
                 'conta'        => $bankAccount->account_number,
-                'contaDv'      => $bankAccount->account_check_number,
-                'carteira'     => $bankAccount->wallet,
+                'contaDv'      => $bankAccount->account_check_number ?? '',
+                'carteira'     => '112',
                 'beneficiario' => $recipient,
             ]
         );
@@ -60,11 +61,11 @@ class ItauCNABService
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
 
-        foreach($allPaymentRequest as $paymentRequest) {
+        foreach ($allPaymentRequest as $paymentRequest) {
 
             $payer = new \App\Helpers\Pessoa(
                 [
-                    'nome'      => $paymentRequest->provider->company_name,
+                    'nome'      => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->full_name : $paymentRequest->provider->company_name,
                     'endereco'  => $paymentRequest->provider->address,
                     'cep'       => $paymentRequest->provider->cep,
                     'uf'        => $paymentRequest->provider->city->state->title,
@@ -75,27 +76,30 @@ class ItauCNABService
                 ]
             );
 
-            foreach($paymentRequest->installments as $installment) {
-                $billet = new \App\Helpers\Boleto\Banco\Itau(
-                    [
-                        'dataVencimento'         => new Carbon($installment->due_date),
-                        'valor'                  => $installment->portion_amount,
-                        'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
-                        'numeroDocumento'        => $installment->id,
-                        'pagador'                => $payer,
-                        'beneficiario'           => $recipient,
-                        'agencia'                => $paymentRequest->bank_account_provider->agency_number,
-                        'conta'                  => $paymentRequest->bank_account_provider->account_number,
-                        'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
-                    ]
-                );
+            foreach ($paymentRequest->installments as $installment) {
+
+                if ($installment->codBank != 'BD') {
+                    $billet = new \App\Helpers\Boleto\Banco\Itau(
+                        [
+                            'dataVencimento'         => new Carbon($installment->due_date),
+                            'valor'                  => $installment->portion_amount,
+                            'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
+                            'numeroDocumento'        => $installment->id,
+                            'pagador'                => $payer,
+                            'beneficiario'           => $recipient,
+                            'agencia'                => $paymentRequest->bank_account_provider->agency_number,
+                            'conta'                  => $paymentRequest->bank_account_provider->account_number,
+                            'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
+                        ]
+                    );
+                }
                 array_push($billets, $billet);
             }
         }
 
         $shipping->addBoletos($billets);
-        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
-        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
+        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab' . DIRECTORY_SEPARATOR . 'itau.txt');
+        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'cnab' . DIRECTORY_SEPARATOR . 'itau.txt');
         Storage::disk('s3')->put('tempCNAB/itau.txt', $file);
 
         return response()->json([
@@ -103,7 +107,8 @@ class ItauCNABService
         ]);
     }
 
-    public function receiveCNAB240($requestInfo) {
+    public function receiveCNAB240($requestInfo)
+    {
 
         $returnFile = $requestInfo->file('return-file');
 
@@ -112,7 +117,7 @@ class ItauCNABService
 
         $returnArray = $processArchive->getDetalhes();
 
-        foreach($returnArray as $batch){
+        foreach ($returnArray as $batch) {
             $installments =  $this->installments->findOrFail($batch->numeroDocumento);
             $installments->status = $batch->ocorrencia;
             $installments->codBank = $batch->nossoNumero;
