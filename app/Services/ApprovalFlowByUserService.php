@@ -30,7 +30,7 @@ class ApprovalFlowByUserService
         ->whereIn('order', $approvalFlowUserOrder->toArray())
         ->Where('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->with(['payment_request, reason_to_reject']),$requestInfo);
+        ->with(['payment_request', 'reason_to_reject']),$requestInfo);
     }
 
     public function approveAccount($id)
