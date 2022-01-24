@@ -26,7 +26,7 @@ class StoreProviderRequest extends FormRequest
             'cities_id' => 'required|integer',
             'address' => 'required|max:250',
             'number' => 'required|max:250',
-            'complement' => 'required|max:150',
+            'complement' => 'max:150',
             'district' => 'max:150',
             'email' => 'max:250',
             'responsible_phone' => 'max:250',

@@ -43,7 +43,7 @@ class ItauCNABService
                 'cidade'    => $company->city->title,
                 'documento' => $company->cnpj,
                 'numero' => $company->number,
-                'complemento' => $company->complement,
+                'complemento' => $company->complement ?? '',
             ]
         );
 
@@ -71,7 +71,7 @@ class ItauCNABService
                     'cidade'    => $paymentRequest->provider->city,
                     'documento' => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->cpf : $paymentRequest->provider->cnpj,
                     'numero' => $paymentRequest->provider->number,
-                    'complemento' => $paymentRequest->provider->complement,
+                    'complemento' => $paymentRequest->provider->complement ?? '',
                 ]
             );
 
