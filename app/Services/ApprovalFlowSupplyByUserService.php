@@ -6,6 +6,7 @@ use App\Models\SupplyApprovalFlow;
 use App\Models\ApprovalFlowSupply;
 use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
+use Config;
 
 class ApprovalFlowSupplyByUserService
 {
@@ -41,7 +42,7 @@ class ApprovalFlowSupplyByUserService
         $accountApproval->status = 0;
 
         if ($accountApproval->order == $maxOrder) {
-            $accountApproval->status = 1;
+            $accountApproval->status = Config::get('constants.status.approved');
         } else {
             $accountApproval->order += 1;
         }
@@ -54,7 +55,7 @@ class ApprovalFlowSupplyByUserService
     {
         $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
-        $accountApproval->status = 2;
+        $accountApproval->status = Config::get('constants.status.disapproved');
 
         if ($accountApproval->order > $maxOrder) {
             $accountApproval->order = 0;
@@ -70,7 +71,7 @@ class ApprovalFlowSupplyByUserService
     public function cancelAccount($id, Request $request)
     {
         $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
-        $accountApproval->status = 3;
+        $accountApproval->status = Config::get('constants.status.canceled');
         $accountApproval->reason = $request->reason;
         return $accountApproval->save();
     }

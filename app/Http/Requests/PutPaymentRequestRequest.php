@@ -20,7 +20,6 @@ class PutPaymentRequestRequest extends FormRequest
             'emission_date' => 'Date',
             'pay_date'  => 'Date',
             'bank_account_provider_id' => 'integer',
-            'bank_account_company_id' => 'integer',
             'amount' => 'numeric',
             'business_id' => 'integer',
             'cost_center_id' => 'integer',
