@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\AccountsPayableApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Config;
 
 
 class ItauCNABService
@@ -30,7 +33,7 @@ class ItauCNABService
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = null;
 
-        foreach ($company->bank_account as $bank) {
+        foreach($company->bank_account as $bank) {
             if ($bank->id == $requestInfo['bank_account_id'])
                 $bankAccount = $bank;
         }
@@ -44,7 +47,7 @@ class ItauCNABService
                 'cidade'    => $company->city->title,
                 'documento' => $company->cnpj,
                 'numero' => $company->number,
-                'complemento' => $company->complement,
+                'complemento' => $company->complement ?? '',
             ]
         );
 
@@ -61,7 +64,7 @@ class ItauCNABService
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
 
-        foreach ($allPaymentRequest as $paymentRequest) {
+        foreach($allPaymentRequest as $paymentRequest) {
 
             $payer = new \App\Helpers\Pessoa(
                 [
@@ -72,13 +75,12 @@ class ItauCNABService
                     'cidade'    => $paymentRequest->provider->city,
                     'documento' => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->cpf : $paymentRequest->provider->cnpj,
                     'numero' => $paymentRequest->provider->number,
-                    'complemento' => $paymentRequest->provider->complement,
+                    'complemento' => $paymentRequest->provider->complement ?? '',
                 ]
             );
 
-            foreach ($paymentRequest->installments as $installment) {
-
-                if ($installment->codBank != 'BD') {
+            foreach($paymentRequest->installments as $installment) {
+                if($installment->codBank != 'BD') {
                     $billet = new \App\Helpers\Boleto\Banco\Itau(
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
@@ -98,17 +100,24 @@ class ItauCNABService
         }
 
         $shipping->addBoletos($billets);
-        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab' . DIRECTORY_SEPARATOR . 'itau.txt');
-        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'cnab' . DIRECTORY_SEPARATOR . 'itau.txt');
+        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
+        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
         Storage::disk('s3')->put('tempCNAB/itau.txt', $file);
+
+        DB::table('accounts_payable_approval_flows')
+        ->whereIn('payment_request_id', $requestInfo['payment_request_ids'])
+        ->update(
+            array(
+                'status' => Config::get('constants.status.cnab generated')
+            )
+        );
 
         return response()->json([
             'linkArchive' => Storage::temporaryUrl('tempCNAB/itau.txt', now()->addMinutes(5)),
         ]);
     }
 
-    public function receiveCNAB240($requestInfo)
-    {
+    public function receiveCNAB240($requestInfo) {
 
         $returnFile = $requestInfo->file('return-file');
 
@@ -117,7 +126,7 @@ class ItauCNABService
 
         $returnArray = $processArchive->getDetalhes();
 
-        foreach ($returnArray as $batch) {
+        foreach($returnArray as $batch){
             $installments =  $this->installments->findOrFail($batch->numeroDocumento);
             $installments->status = $batch->ocorrencia;
             $installments->codBank = $batch->nossoNumero;
