@@ -21,8 +21,8 @@ class ChartOfAccountsImport implements ToModel, WithValidation, WithHeadingRow
     public function model(array $row)
     {
         return new ChartOfAccounts([
-            'title'     => $row['descricao_plano_de_contas_contabil'], //descricao_plano_de_contas_contabil
-            'code'    => $row['codigo_do_plano_de_contas_contabil'], //codigo_do_plano_de_contas_contabil
+            'title'     => $row['descricao_plano_de_contas_contabil'],//descricao_plano_de_contas_contabil
+            'code'    => $row['codigo_do_plano_de_contas_contabil'],//codigo_do_plano_de_contas_contabil
             'parent' => $this->parentId->id ?? null,
             'group' => $this->group,
             'managerial_title' => $row['descricao_plano_de_contas_gerencial'],
@@ -38,17 +38,17 @@ class ChartOfAccountsImport implements ToModel, WithValidation, WithHeadingRow
     {
         return [
             'descricao_plano_de_contas_contabil' => 'required|max:255',
-            'codigo_do_plano_de_contas_contabil' => ['nullable', function ($attribute, $value, $onFailure) {
-                if ($this->verify) {
+            'codigo_do_plano_de_contas_contabil' => ['nullable', function($attribute, $value, $onFailure) {
+                if($this->verify){
                     if ($this->parentId == null) {
                         $onFailure('Pai não existe');
                     }
                 }
             }],
-            'codigo_do_pai' => ['nullable', function ($attribute, $value, $onFailure) {
-                if ($this->parentId != null) {
+            'codigo_do_pai' => ['nullable', function($attribute, $value, $onFailure) {
+                if($this->parentId != null){
                     if (ChartOfAccounts::where('code', $value)->where('parent', $this->parentId->id)->exists()) {
-                        $onFailure('Código já cadastrado!');
+                            $onFailure('Código já cadastrado!');
                     }
                 }
             }],
@@ -72,7 +72,7 @@ class ChartOfAccountsImport implements ToModel, WithValidation, WithHeadingRow
                     $this->group = 3;
                     break;
             }
-            if ($value['codigo_do_pai'] != null) {
+            if($value['codigo_do_pai'] != null){
                 $this->verify = true;
                 $this->parentId = ChartOfAccounts::where('code', $value['codigo_do_pai'])->first();
             }

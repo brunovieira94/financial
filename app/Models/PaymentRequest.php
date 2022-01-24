@@ -131,9 +131,10 @@ class PaymentRequest extends Model
         foreach ($this->installments as $value) {
             $dueDate = date_create($value['due_date']);
             $daysLate = date_diff($dueDate, now());
-            if ($dueDate < now() && $value['status'] != 'BD') {
+            if($dueDate < now() && $value['status'] != 'BD'){
                 return $daysLate->days;
-            } else {
+            }
+            else {
                 return 0;
             }
         }

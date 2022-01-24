@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
-use App\Models\PaymentRequest;
 use Illuminate\Http\Request;
+use Config;
 
 class ApprovalFlowByUserService
 {
@@ -25,22 +25,31 @@ class ApprovalFlowByUserService
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
-            ->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->Where('status', 0)
-            ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->with(['payment_request', 'reason_to_reject']), $requestInfo);
+        ->whereIn('order', $approvalFlowUserOrder->toArray())
+        ->Where('status', 0)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->with(['payment_request', 'reason_to_reject']),$requestInfo);
     }
 
     public function approveAccount($id)
     {
-        $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
+        $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
 
         if ($accountApproval->order == $maxOrder) {
-            $accountApproval->status = 1;
+            if($accountApproval->payment_request->bank_account_provider_id == null){
+                response()->json([
+                    'erro' => 'É necessário informar o fornecedor para aprovar esta conta',
+                ], 422)
+                ->send();
+                die();
+            }else {
+                $accountApproval->status = Config::get('constants.status.approved');
+            }
+
         } else {
             $accountApproval->order += 1;
         }
@@ -53,10 +62,10 @@ class ApprovalFlowByUserService
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
-        $accountApproval->status = 2;
+        $accountApproval->status = Config::get('constants.status.disapproved');
 
         if ($accountApproval->order > $maxOrder) {
-            $accountApproval->order = 0;
+            $accountApproval->order = Config::get('constants.status.open');
         } else if ($accountApproval->order == 0) {
             $accountApproval->reason = $request->reason;
         } else {
@@ -71,7 +80,7 @@ class ApprovalFlowByUserService
     public function cancelAccount($id, Request $request)
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
-        $accountApproval->status = 3;
+        $accountApproval->status = Config::get('constants.status.canceled');
 
         return $accountApproval->fill($request->all())->save();
     }

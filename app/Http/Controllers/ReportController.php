@@ -35,11 +35,6 @@ class ReportController extends Controller
         return $this->reportService->getAllPaymentRequestsDeleted($request->all());
     }
 
-    public function approvedPaymentRequestCNAB(Request $request)
-    {
-        return $this->reportService->getAllApprovedPaymentRequestCNAB($request->all());
-    }
-
     public function billsToPay(Request $request)
     {
         return $this->reportService->getBillsToPay($request->all());

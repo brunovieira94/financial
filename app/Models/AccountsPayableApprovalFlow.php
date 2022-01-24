@@ -20,7 +20,7 @@ class AccountsPayableApprovalFlow extends Model
         $activity->causer_object = $user;
     }
 
-    protected $table = 'accounts_payable_approval_flows';
+    protected $table='accounts_payable_approval_flows';
     protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];

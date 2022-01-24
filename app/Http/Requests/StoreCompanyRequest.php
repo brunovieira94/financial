@@ -21,7 +21,7 @@ class StoreCompanyRequest extends FormRequest
             'cities_id' => 'required|integer',
             'address' => 'required|max:250',
             'number' => 'required|max:250',
-            'complement' => 'required|max:150',
+            'complement' => 'max:150',
             'district' => 'max:150',
             'bank_accounts.*.agency_number' => 'required_without_all:bank_accounts.*.pix_key|numeric',
             'bank_accounts.*.agency_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
