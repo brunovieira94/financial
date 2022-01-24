@@ -23,7 +23,7 @@ class ModuleSupplysTableSeeder extends Seeder
             ],
             [
                 'title' => 'Serviços',
-                'route' => 'services',
+                'route' => 'service',
                 'parent' => $supplys->toArray()['id'],
             ],
             [
