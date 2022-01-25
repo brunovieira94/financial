@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(BanksTableSeeder::class);
+        $this->call(AddedModulesSeeder::class);
         // \App\Models\User::factory(10)->create();
     }
 }
