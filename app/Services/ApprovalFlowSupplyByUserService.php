@@ -32,7 +32,7 @@ class ApprovalFlowSupplyByUserService
         ->whereIn('order', $approvalFlowUserOrder->toArray())
         ->where('status', 0)
         ->whereRelation('purchase_order', 'deleted_at', '=', null)
-        ->with(['purchase_order']),$requestInfo);
+        ->with(['purchase_order', 'approval_flow']),$requestInfo);
     }
 
     public function approveAccount($id)
