@@ -19,7 +19,7 @@ class ItauCNABService
     private $installments;
     private $company;
     private $withCompany = ['bank_account', 'managers', 'city'];
-    private $withPaymentRequest = ['approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $withPaymentRequest = ['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(PaymentRequest $paymentRequest, Company $company, PaymentRequestHasInstallments $installments)
     {
@@ -133,6 +133,45 @@ class ItauCNABService
             $installments->amount_received = $batch->valorRecebido;
             $installments->save();
         }
-        return response('Processo finalizado.', 200)->send();
+
+        $idParcelsAlreadyVerified = [];
+        $idUnpaidPayment = [];
+        $idPaidPayment = [];
+
+        foreach($returnArray as $batch){
+
+            if(!in_array($batch->numeroDocumento, $idParcelsAlreadyVerified)){
+                $paymentRequest = PaymentRequest::with('installments')
+                ->whereRelation('installments', 'id', '=', $batch->numeroDocumento)
+                ->first();
+
+                $thePaymentHasBeenPaid = true;
+
+                foreach($paymentRequest->installments as $installment){
+                    array_push($idParcelsAlreadyVerified, $installment->id);
+
+                    if($installment->status != 'BD'){
+                        $thePaymentHasBeenPaid = false;
+                        if (!in_array($paymentRequest->id, $idUnpaidPayment)) {
+                            array_push($idUnpaidPayment, $paymentRequest->id);
+                        }
+                    }
+                }
+
+                if($thePaymentHasBeenPaid == true){
+                    array_push($idPaidPayment, $paymentRequest->id);
+                }
+            }
+        }
+
+        AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaidPayment)
+        ->update(['status' => Config::get('constants.status.paid out')]);
+
+        AccountsPayableApprovalFlow::whereIn('payment_request_id', $idUnpaidPayment)
+        ->update(['status' => Config::get('constants.status.approved')]);
+
+        return response()->json([
+            'Sucesso' => 'Processo finalizado.',
+        ], 200);
     }
 }

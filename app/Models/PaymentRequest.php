@@ -12,7 +12,7 @@ class PaymentRequest extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', '*'];
+    protected static $logAttributes = ['installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', '*'];
     protected static $logName = 'payment_request';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -22,7 +22,7 @@ class PaymentRequest extends Model
     }
     use SoftDeletes;
     protected $table = 'payment_requests';
-    protected $hidden = ['provider_id', 'bank_account_provider_id', 'bank_account_company_id', 'bank_account_company_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
+    protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
     protected $appends = ['billet_link', 'invoice_link', 'xml_link', 'days_late'];
 
     protected $fillable = [
@@ -30,7 +30,6 @@ class PaymentRequest extends Model
         'emission_date',
         'pay_date',
         'bank_account_provider_id',
-        'bank_account_company_id',
         'amount',
         'business_id',
         'cost_center_id',
@@ -89,11 +88,6 @@ class PaymentRequest extends Model
     public function bank_account_provider()
     {
         return $this->hasOne(BankAccount::class, 'id', 'bank_account_provider_id');
-    }
-
-    public function bank_account_company()
-    {
-        return $this->hasOne(BankAccount::class, 'id', 'bank_account_company_id');
     }
 
     public function business()
