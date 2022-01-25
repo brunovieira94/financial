@@ -239,6 +239,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-deleted', [ReportController::class, 'paymentRequestsDeleted']);
         Route::get('/bills-to-pay', [ReportController::class, 'billsToPay']);
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
+        Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
     });
 
     Route::prefix('product')->group(function () {

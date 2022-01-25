@@ -23,7 +23,7 @@ class ModuleReportsTableSeeder extends Seeder
                 'parent' => $reports->toArray()['id'],
             ],
             [
-                'title' => 'Contas Aprovadas',
+                'title' => 'Contas aprovadas',
                 'route' => 'approved-payment-request',
                 'parent' => $reports->toArray()['id'],
             ],
