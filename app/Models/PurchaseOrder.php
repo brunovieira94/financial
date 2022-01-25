@@ -55,6 +55,11 @@ class PurchaseOrder extends Model
         return $this->hasOne(Provider::class, 'id', 'provider_id');
     }
 
+    public function approval()
+    {
+        return $this->hasOne(SupplyApprovalFlow::class, 'id_purchase_order', 'id')->with('approval_flow');
+    }
+
     public static function boot() {
         parent::boot();
         self::deleting(function($attachments) {
