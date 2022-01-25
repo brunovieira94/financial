@@ -27,11 +27,6 @@ class ModuleReportsTableSeeder extends Seeder
                 'route' => 'approved-payment-request',
                 'parent' => $reports->toArray()['id'],
             ],
-            [
-                'title' => 'Contas deletadas',
-                'route' => 'payment-requests-deleted',
-                'parent' => $reports->toArray()['id'],
-            ],
         ];
         Module::insert($modules);
     }
