@@ -874,7 +874,9 @@ final class Util
             $aFile = $file_content;
         }
 
-        return array_map('\ForceUTF8\Encoding::toUTF8', $aFile);
+        return $aFile;
+
+       // return array_map('\ForceUTF8\Encoding::toUTF8', $aFile);
     }
 
     /**

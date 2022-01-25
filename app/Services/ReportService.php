@@ -21,7 +21,7 @@ class ReportService
     public function getAllDuePaymentRequest($requestInfo)
     {
         $result = Utils::search($this->paymentRequest,$requestInfo);
-        $result = $result->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = $result->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('from', $requestInfo)){
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
@@ -50,6 +50,14 @@ class ReportService
         ->where('status', 6),$requestInfo);
     }
 
+    public function getAllPaymentRequestPaid($requestInfo)
+    {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request')
+        ->where('status', 4),$requestInfo);
+    }
+
     public function getAllDisapprovedPaymentRequest($requestInfo){
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
@@ -69,7 +77,7 @@ class ReportService
     public function getBillsToPay($requestInfo)
     {
         $query = $this->paymentRequest->query();
-        $query = $query->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'bank_account_company', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $query = $query->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('cpfcnpj', $requestInfo)){
             $query->whereHas('provider', function ($query) use ($requestInfo){
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
