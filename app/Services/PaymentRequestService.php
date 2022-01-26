@@ -5,6 +5,7 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\PaymentRequestHasTax;
+use App\Models\ProviderHasBankAccounts;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,6 @@ class PaymentRequestService
     public function postPaymentRequest(Request $request)
     {
         $paymentRequestInfo = $request->all();
-
         $paymentRequestInfo['user_id'] = auth()->user()->id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)){
@@ -63,6 +63,16 @@ class PaymentRequestService
             }
         }
 
+        $idBankProviderDefault = null;
+        foreach(ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank){
+            $idBankProviderDefault = $bank->bank_account_id;
+            if($bank->default_bank == true){
+                $idBankProviderDefault = $bank->bank_account_id;
+                break;
+            }
+        }
+
+        $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
         $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;

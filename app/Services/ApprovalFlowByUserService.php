@@ -42,7 +42,7 @@ class ApprovalFlowByUserService
         if ($accountApproval->order == $maxOrder) {
             if($accountApproval->payment_request->bank_account_provider_id == null){
                 response()->json([
-                    'erro' => 'É necessário informar o fornecedor para aprovar esta conta',
+                    'erro' => 'Não existe dados bancários para o fornecedor.',
                 ], 422)
                 ->send();
                 die();
