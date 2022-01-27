@@ -22,6 +22,14 @@ class CheckUserHasPermission
         $user = $request->user();
         $uri = $request->path();
         $route = explode('/' ,$uri);
+        $whiteList = [
+            'logs',
+            'module',
+        ];
+
+        if(in_array($route[1], $whiteList)){
+            return $next($request);
+        }
 
         if($user->role_id == 1)
             return $next($request);

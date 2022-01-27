@@ -39,21 +39,34 @@ class ApprovalFlowByUserService
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
 
-        if ($accountApproval->order == $maxOrder) {
-            if($accountApproval->payment_request->bank_account_provider_id == null){
-                response()->json([
-                    'erro' => 'Não existe dados bancários para o fornecedor.',
-                ], 422)
-                ->send();
-                die();
-            }else {
-                $accountApproval->status = Config::get('constants.status.approved');
-            }
+        if($accountApproval->order == $maxOrder) {
+            if($accountApproval->payment_request->provider->accept_billet_payment){
+                if($accountApproval->payment_request->bar_code == null){
+                    response()->json([
+                        'error' => 'O boleto não foi informado',
 
+                    ], 422)->send();
+                    die();
+                }
+            } else {
+                if ($accountApproval->payment_request->invoice_number == null){
+                    response()->json([
+                        'error' => 'A nota fiscal não foi informada',
+                    ], 422)->send();
+                    die();
+                }
+                if($accountApproval->payment_request->bank_account_provider_id == null){
+                    response()->json([
+                        'error' => 'O banco do fornecedor não foi informado',
+                    ], 422)->send();
+                    die();
+                }
+
+            }
+            $accountApproval->status = Config::get('constants.status.approved');
         } else {
             $accountApproval->order += 1;
         }
-
         $accountApproval->reason = null;
         return $accountApproval->save();
     }
