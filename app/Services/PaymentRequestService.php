@@ -95,9 +95,6 @@ class PaymentRequestService
 
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        if($approval->order != 0)
-           return response('Só é permitido atualizar a conta na ordem 0', 422)->send();
-
         $approval->status = 0;
         $approval->save();
 
