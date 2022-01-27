@@ -9,6 +9,7 @@ use App\Models\ProviderHasBankAccounts;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Config;
 
 class PaymentRequestService
 {
@@ -95,7 +96,10 @@ class PaymentRequestService
 
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        $approval->status = 0;
+        if($approval->status == Config::get('constants.status.disapproved')){
+            $approval->order += 1;
+        }
+        $approval->status = Config::get('constants.status.open');
         $approval->save();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)){
