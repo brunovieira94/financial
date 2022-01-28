@@ -27,9 +27,28 @@ class CheckUserHasPermission
             'module',
         ];
 
-        if(in_array($route[1], $whiteList)){
-            return $next($request);
+        $unverifiedSubRoutes = [
+            'approve',
+            'reprove',
+            'cancel',
+        ];
+
+        $routeAccessed = null;
+
+        if(is_numeric($route[count($route)-1])){
+            if(in_array($route[count($route)-2], $unverifiedSubRoutes)){
+                $routeAccessed = $route[count($route)-3];
+            } else{
+                $routeAccessed = $route[count($route)-2];
+            }
+        } else if(in_array($route[count($route)-1], $unverifiedSubRoutes)){
+            $routeAccessed = $route[count($route)-2];
+        } else{
+            $routeAccessed = $route[count($route)-1];
         }
+
+        if(in_array($routeAccessed, $whiteList))
+            return $next($request);
 
         if($user->role_id == 1)
             return $next($request);
@@ -40,7 +59,7 @@ class CheckUserHasPermission
         foreach($roles as $role){
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);
 
-            if($route[1] == $routesAllowedByUser[0]->route){
+            if($routeAccessed == $routesAllowedByUser[0]->route){
                 $role = $this->role->where('role_id', $user->role_id)->where('module_id', $role->module_id)->first();
 
                 if ($request->isMethod('GET')) {
