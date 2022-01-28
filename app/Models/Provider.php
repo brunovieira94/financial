@@ -30,12 +30,12 @@ class Provider extends Model
     ];
     protected $fillable = ['company_name', 'trade_name', 'alias', 'cnpj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email', 'user_id', 'responsible_phone', 'responsible_email', 'state_subscription', 'chart_of_accounts_id', 'cpf', 'rg', 'full_name', 'birth_date', 'provider_type', 'surname', 'city_subscription', 'accept_billet_payment'];
 
-    //public function bank_account()
-    //{
-    //    return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with('bank');
-    //}
-
     public function bank_account()
+    {
+        return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with('bank');
+    }
+
+    public function bank_account_has_provider()
     {
         return $this->hasMany(ProviderHasBankAccounts::class, 'provider_id', 'id')->with('bank_account');
     }

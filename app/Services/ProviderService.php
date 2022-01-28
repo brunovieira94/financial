@@ -10,7 +10,7 @@ class ProviderService
     private $provider;
     private $bankAccount;
     private $providerHasBankAccounts;
-    private $with = ['bank_account', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city'];
+    private $with = ['bank_account_has_provider', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city'];
     public function __construct(Provider $provider, BankAccount $bankAccount, ProviderHasBankAccounts $providerHasBankAccounts)
     {
         $this->provider = $provider;
