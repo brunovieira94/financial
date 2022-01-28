@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\RoleHasModule;
 use App\Models\Module;
+use Illuminate\Support\Facades\Route;
 
 class CheckUserHasPermission
 {
@@ -20,8 +21,9 @@ class CheckUserHasPermission
     public function handle($request, Closure $next)
     {
         $user = $request->user();
-        $uri = $request->path();
+        $uri = Route::current()->uri();
         $route = explode('/' ,$uri);
+
         $whiteList = [
             'logs',
             'module',
