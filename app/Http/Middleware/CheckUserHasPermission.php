@@ -47,7 +47,7 @@ class CheckUserHasPermission
             $routeAccessed = $route[count($route)-1];
         }
 
-        if(in_array($routeAccessed, $whiteList))
+        if(in_array($route[1], $whiteList))
             return $next($request);
 
         if($user->role_id == 1)
