@@ -65,7 +65,7 @@ class CheckUserHasPermission
                 $role = $this->role->where('role_id', $user->role_id)->where('module_id', $role->module_id)->first();
 
                 if ($request->isMethod('GET')) {
-                    if ($request->has('noAuth') || $role->read == true){
+                    if (array_key_exists('noAuth', $request->all()) || $role->read == true){
                         return $next($request);
                     }
                 }
