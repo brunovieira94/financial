@@ -79,13 +79,9 @@ class ApprovalFlowByUserService
 
         if ($accountApproval->order > $maxOrder) {
             $accountApproval->order = Config::get('constants.status.open');
-        } else if ($accountApproval->order == 0) {
-            $accountApproval->reason = $request->reason;
         } else {
             $accountApproval->order -= 1;
         }
-        $accountApproval->reason = $request->reason;
-
         $accountApproval->fill($request->all())->save();
         return true;
     }
