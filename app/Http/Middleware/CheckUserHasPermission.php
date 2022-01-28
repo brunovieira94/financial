@@ -37,7 +37,7 @@ class CheckUserHasPermission
 
         $routeAccessed = null;
 
-        if(is_numeric($route[count($route)-1])){
+        if('{id}' == $route[count($route)-1]){
             if(in_array($route[count($route)-2], $unverifiedSubRoutes)){
                 $routeAccessed = $route[count($route)-3];
             } else{
@@ -65,7 +65,7 @@ class CheckUserHasPermission
                 $role = $this->role->where('role_id', $user->role_id)->where('module_id', $role->module_id)->first();
 
                 if ($request->isMethod('GET')) {
-                    if ($role->read == true) {
+                    if ($request->has('noAuth') || $role->read == true){
                         return $next($request);
                     }
                 }
