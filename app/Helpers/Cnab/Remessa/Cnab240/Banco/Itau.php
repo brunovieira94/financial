@@ -115,39 +115,6 @@ class Itau extends AbstractRemessa implements RemessaContract
         return $this;
     }
 
-    protected function segmentoA(BoletoContract $boleto)
-    {
-        $this->iniciaDetalhe();
-        $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
-        $this->add(4, 7, '0001');
-        $this->add(8, 8, '3');
-        $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5));
-        $this->add(14, 14, 'A');
-        $this->add(15, 17, '001');
-        $this->add(18, 20, '009');
-        $this->add(21, 23, Util::onlyNumbers($boleto->getCodigoBanco()));
-        $this->add(24, 28, Util::formatCnab('9', $boleto->getAgencia(), 5));
-        $this->add(29, 29, '');
-        $this->add(30, 41, Util::formatCnab('9', $boleto->getConta(), 12));
-        $this->add(43, 43, Util::formatCnab('9', $boleto->getContaDv(), 1));
-        $this->add(44, 73, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
-        $this->add(74, 93, Util::formatCnab('X', $boleto->getNumeroDocumento(), 20));//número do documento atribuído a empresa VEERIFICAR
-        $this->add(94, 101, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
-        $this->add(102, 104, Util::formatCnab('X', 'REA', 3));
-        $this->add(105, 112, Util::formatCnab('9', '', 8));
-        $this->add(113, 114, Util::formatCnab('X', $boleto->getTransferTypeIdentification(), 2));//terminar aqui
-        $this->add(115, 119, Util::formatCnab('9', '', 5));
-        $this->add(120, 134, Util::formatCnab('9', $boleto->getValor(), 15));
-        $this->add(135, 149, Util::formatCnab('X', '', 15));
-        $this->add(150, 154, Util::formatCnab('X', '', 5));
-        $this->add(155, 181, Util::formatCnab('9', '', 27)); //dados retorno
-        $this->add(182, 197, Util::formatCnab('X', '', 15));
-        $this->add(198, 203, Util::formatCnab('9', '', 6));
-        $this->add(204, 217, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 14));
-        $this->add(218, 229, '');
-        $this->add(230, 230, 0);
-        return $this;
-    }
     /**
      * @param BoletoContract $boleto
      *
