@@ -15,10 +15,8 @@ class CheckPortionAmounts
         $this->paymentRequest = $paymentRequest;
     }
 
-
     public function handle(Request $request, Closure $next)
     {
-
         $installments = $request->all();
         $amount = 0;
 
