@@ -92,6 +92,7 @@ class ItauCNABService
                             'agencia'                => $paymentRequest->bank_account_provider->agency_number,
                             'conta'                  => $paymentRequest->bank_account_provider->account_number,
                             'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
+                            'codigoDeBarras'         => $paymentRequest->bar_code,
                         ]
                     );
                 }

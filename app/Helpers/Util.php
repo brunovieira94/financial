@@ -1028,4 +1028,13 @@ final class Util
         }
         return trim($appended);
     }
+
+    public static function tipoDeMovimentoPorDocumento($documento)
+    {
+        if(strlen(preg_replace("/[^0-9]/", "", $documento)) == 14){
+            return '001';
+        } else {
+            return '002';
+        }
+    }
 }

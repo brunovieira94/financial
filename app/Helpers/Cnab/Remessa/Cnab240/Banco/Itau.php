@@ -65,8 +65,8 @@ class Itau extends AbstractRemessa implements RemessaContract
     public function addBoleto(BoletoContract $boleto)
     {
         $this->boletos[] = $boleto;
-        $this->segmentoA($boleto);
-        //$this->segmentoP($boleto);
+        //$this->segmentoA($boleto);
+        $this->segmentoJ($boleto);
         //$this->segmentoQ($boleto);
         //if($boleto->getSacadorAvalista()) {
         //    $this->segmentoY($boleto);
@@ -88,7 +88,7 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(8, 8, '3');
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5));
         $this->add(14, 14, 'A');
-        $this->add(15, 17, '001');
+        $this->add(15, 17, Util::tipoDeMovimentoPorDocumento($boleto->getPagador()->getDocumento()));
         $this->add(18, 20, '009');
         $this->add(21, 23, Util::onlyNumbers($boleto->getCodigoBanco()));
         $this->add(24, 28, Util::formatCnab('9', $boleto->getAgencia(), 5));
@@ -111,6 +111,22 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(204, 217, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 14));
         $this->add(218, 229, '');
         $this->add(230, 230, 0);
+        return $this;
+    }
+
+    protected function segmentoJ(BoletoContract $boleto)
+    {
+        $this->iniciaDetalhe();
+        $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco())); //ok
+        $this->add(4, 7, '0001'); //ok
+        $this->add(8, 8, '3'); //ok
+        $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5)); //ok
+        $this->add(14, 14, 'J'); //ok
+        $this->add(15, 17, Util::tipoDeMovimentoPorDocumento($boleto->getPagador()->getDocumento())); //ok
+        $this->add(18, 61, '000000000000000000000000000000000000000000');
+        $this->add(62, 91, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
+        $this->add(92, 99, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
+
         return $this;
     }
     /**
