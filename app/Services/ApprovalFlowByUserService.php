@@ -34,6 +34,7 @@ class ApprovalFlowByUserService
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
         ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
+        ->select(['accounts_payable_approval_flows.*'])
         ->join("payment_requests", function($join) use ($userCostCenter) {
             $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
             ->where(function($q) use ($userCostCenter) {
@@ -54,7 +55,9 @@ class ApprovalFlowByUserService
         ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
         ->where('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->with(['payment_request', 'reason_to_reject']), $requestInfo);
+        ->with(['payment_request', 'reason_to_reject'])
+        ->distinct()
+        , $requestInfo);
 
         // return $accountsPayableApprovalFlow
         // ->whereIn('order', $approvalFlowUserOrder->get('order')->toArray())
