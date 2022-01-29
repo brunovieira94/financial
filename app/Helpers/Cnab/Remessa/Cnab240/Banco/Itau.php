@@ -65,8 +65,14 @@ class Itau extends AbstractRemessa implements RemessaContract
     public function addBoleto(BoletoContract $boleto)
     {
         $this->boletos[] = $boleto;
+<<<<<<< HEAD
         //$this->segmentoA($boleto);
         $this->segmentoJ($boleto);
+=======
+        $this->segmentoA($boleto);
+        $this->segmentoJ($boleto);
+        //$this->segmentoP($boleto);
+>>>>>>> develop
         //$this->segmentoQ($boleto);
         //if($boleto->getSacadorAvalista()) {
         //    $this->segmentoY($boleto);
