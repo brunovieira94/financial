@@ -20,17 +20,54 @@ class ApprovalFlowByUserService
 
     public function getAllAccountsForApproval($requestInfo)
     {
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id);
+
+        $userCostCenter = auth()->user()->cost_center->map(function($e) {
+            return $e->id;
+        });
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
+
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
-        ->whereIn('order', $approvalFlowUserOrder->toArray())
-        ->Where('status', 0)
+        ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
+        ->join("payment_requests", function($join) use ($userCostCenter) {
+            $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
+            ->where(function($q) use ($userCostCenter) {
+                $q->where(function($query) use ($userCostCenter) {
+                    $query->where("approval_flow.filter_cost_center", true)
+                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                })
+                ->orWhere(function($query) {
+                    $query->where("approval_flow.filter_cost_center", false);
+                });
+            });
+
+            // ->orWhere(function($query) {
+            //     $query->where("approval_flow.filter_cost_center", false);
+            // });
+            //->whereIn("payment_requests.cost_center_id", $userCostCenter);
+        })
+        ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
+        ->where('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->with(['payment_request', 'reason_to_reject']),$requestInfo);
+        ->with(['payment_request', 'reason_to_reject']), $requestInfo);
+
+        // return $accountsPayableApprovalFlow
+        // ->whereIn('order', $approvalFlowUserOrder->get('order')->toArray())
+        // ->Where('status', 0)
+        // ->whereRelation('payment_request', 'deleted_at', '=', null)
+        // ->join('payment_requests', function($join) use ($userCostCenter) {
+        //     $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
+        //     ->on("accounts_payable_approval_flows.filter_cost_center = true", function($q) use ($userCostCenter) {
+        //         var_dump("asd");
+        //         $q->whereIn("payment_requests.cost_center_id", $userCostCenter);
+        //     });
+        // })
+        // ->with(['payment_request', 'reason_to_reject'])->get();
     }
 
     public function approveAccount($id)
