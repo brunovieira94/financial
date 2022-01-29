@@ -56,7 +56,7 @@ class ApprovalFlowByUserService
         ->where('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->with(['payment_request', 'reason_to_reject'])
-        ->distinct()
+        ->distinct(['accounts_payable_approval_flows.id'])
         , $requestInfo);
 
         // return $accountsPayableApprovalFlow
