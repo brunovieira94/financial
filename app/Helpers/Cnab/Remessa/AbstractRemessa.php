@@ -2,6 +2,7 @@
 namespace App\Helpers\Cnab\Remessa;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 use App\Helpers\Util;
 use App\Helpers\Contracts\Pessoa as PessoaContract;
 use App\Helpers\Contracts\Boleto\Boleto as BoletoContract;
@@ -507,21 +508,11 @@ abstract class AbstractRemessa
      * @return mixed
      * @throws \Exception
      */
-    public function save($path)
+    public function save()
     {
-        $folder = dirname($path);
-        if (! is_dir($folder)) {
-            mkdir($folder, 0777, true);
-        }
-
-        if (! is_writable(dirname($path))) {
-            throw new \Exception('Path ' . $folder . ' não possui permissao de escrita');
-        }
-
         $string = $this->gerar();
-        file_put_contents($path, $string);
-
-        return $path;
+        Storage::disk('s3')->put('tempCNAB/itau.txt', $string);
+        return true;
     }
 
     /**

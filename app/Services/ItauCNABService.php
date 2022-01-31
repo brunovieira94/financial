@@ -84,7 +84,7 @@ class ItauCNABService
                     $billet = new \App\Helpers\Boleto\Banco\Itau(
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
-                            'valor'                  => $installment->portion_amount,
+                            'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
                             'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
                             'numeroDocumento'        => $installment->id,
                             'pagador'                => $payer,
@@ -92,6 +92,11 @@ class ItauCNABService
                             'agencia'                => $paymentRequest->bank_account_provider->agency_number,
                             'conta'                  => $paymentRequest->bank_account_provider->account_number,
                             'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
+                            'codigoDeBarra'          => $paymentRequest->bar_code,
+                            'desconto'               => 0,
+                            'multa '                 => 0,
+                            'dataPagamento'          => new Carbon($paymentRequest->pay_date),
+                            'valorPagamento'       => $paymentRequest->amount,
                         ]
                     );
                 }
@@ -100,9 +105,7 @@ class ItauCNABService
         }
 
         $shipping->addBoletos($billets);
-        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
-        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
-        Storage::disk('s3')->put('tempCNAB/itau.txt', $file);
+        $shipping->save();
 
         DB::table('accounts_payable_approval_flows')
         ->whereIn('payment_request_id', $requestInfo['payment_request_ids'])

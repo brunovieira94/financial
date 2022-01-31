@@ -71,9 +71,21 @@ class PurchaseOrderService
         if(!array_key_exists('billing_date', $purchaseOrderInfo)) {
             $purchaseOrderInfo['billing_date'] = null;
         }
+
+        $oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+
         $purchaseOrder->fill($purchaseOrderInfo)->save();
         $this->putProducts($id, $purchaseOrderInfo);
         $this->putServices($id, $purchaseOrderInfo);
+
+        $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+
+        if($newValue > ($oldValue + ($oldValue*$purchaseOrder['increase_tolerance']/100))){
+            $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
+            $supplyApprovalFlow['order'] = 0;
+            $supplyApprovalFlow->save();
+        }
+
         $this->putCostCenters($id, $purchaseOrderInfo);
         $this->putAttachments($id, $purchaseOrderInfo, $request);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
@@ -319,5 +331,36 @@ class PurchaseOrderService
             }
             return $nameFileAttachment;
         }
+    }
+
+    public function getPurchaseOrderValue($purchaseOrder, $id)
+    {
+        $currentValue = 0;
+        foreach ($this->purchaseOrderHasServices->with('installments')->where('purchase_order_id', $id)->get() as $key => $purchaseOrderHasServices) {
+            $serviceValue = 0;
+            $serviceDiscount = 0;
+            foreach ($purchaseOrderHasServices['installments'] as $value) {
+                $serviceValue += $value['portion_amount'];
+                $serviceDiscount += $value['money_discount'];
+            }
+            if($purchaseOrder->services[$key]['unique_discount'] == 1){
+                $serviceDiscount = $purchaseOrder->services[$key]['money_discount'];
+            }
+            $serviceValue -= $serviceDiscount;
+            $currentValue += $serviceValue;
+        }
+        foreach ($this->purchaseOrderHasProducts->where('purchase_order_id', $id)->get() as $value) {
+            $productValue = $value['unitary_value']*$value['quantity'];
+            $productDiscount = 0;
+            if($purchaseOrder['unique_product_discount'] == 0){
+                $productDiscount = $value['money_discount'];
+            }
+            $productValue -= $productDiscount;
+            $currentValue += $productValue;
+        }
+        if($purchaseOrder['unique_product_discount']){
+            $currentValue -= $purchaseOrder['money_discount_products'];
+        }
+        return $currentValue;
     }
 }

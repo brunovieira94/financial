@@ -49,12 +49,6 @@ interface Boleto
      * @return mixed
      */
     public function getLinhaDigitavel();
-
-    /**
-     * @return mixed
-     */
-    public function getCodigoBarras();
-
     /**
      * @return PessoaContract
      */
@@ -64,6 +58,8 @@ interface Boleto
      * @return mixed
      */
     public function getTransferTypeIdentification();
+
+    public function getDataPagamento();
 
     /**
      * @return mixed
@@ -133,6 +129,11 @@ interface Boleto
     /**
      * @return mixed
      */
+    public function getValorPagamento();
+
+    /**
+     * @return mixed
+     */
     public function getDesconto();
 
     /**
@@ -144,6 +145,8 @@ interface Boleto
      * @return mixed
      */
     public function getJuros();
+
+    public function getCodigoDeBarra();
 
     /**
      * @return mixed

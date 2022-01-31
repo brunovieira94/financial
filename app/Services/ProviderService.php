@@ -29,13 +29,12 @@ class ProviderService
       return $this->provider->with($this->with)->findOrFail($id);
     }
 
-    public function postProvider($userId, $providerInfo)
+    public function postProvider($providerInfo)
     {
         $provider = new Provider;
-        $providerInfo['user_id'] = $userId;
         $provider = $provider->create($providerInfo);
 
-        self::syncBankAccounts($provider, $providerInfo);
+        $this->syncBankAccounts($provider, $providerInfo);
         return $this->provider->with($this->with)->findOrFail($provider->id);
     }
 
@@ -44,7 +43,7 @@ class ProviderService
         $provider = $this->provider->findOrFail($id);
         $provider->fill($providerInfo)->save();
 
-        self::putBankAccounts($id, $providerInfo);
+        $this->putBankAccounts($id, $providerInfo);
         return $this->provider->with($this->with)->findOrFail($provider->id);
     }
 
@@ -88,7 +87,10 @@ class ProviderService
             foreach($providerInfo['bank_accounts'] as $bank){
                 $bankAccount = new BankAccount;
                 $bankAccount = $bankAccount->create($bank);
-                $syncArray[] = $bankAccount->id;
+                $syncArray[] = [
+                    'bank_account_id' => $bankAccount->id,
+                    'default_bank' => $bank['default_bank'] ?? false,
+                ];
             }
             $provider->bank_account()->sync($syncArray);
         }

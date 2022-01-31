@@ -5,9 +5,11 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\PaymentRequestHasTax;
+use App\Models\ProviderHasBankAccounts;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Config;
 
 class PaymentRequestService
 {
@@ -39,7 +41,6 @@ class PaymentRequestService
     public function postPaymentRequest(Request $request)
     {
         $paymentRequestInfo = $request->all();
-
         $paymentRequestInfo['user_id'] = auth()->user()->id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)){
@@ -63,6 +64,16 @@ class PaymentRequestService
             }
         }
 
+        $idBankProviderDefault = null;
+        foreach(ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank){
+            $idBankProviderDefault = $bank->bank_account_id;
+            if($bank->default_bank == true){
+                $idBankProviderDefault = $bank->bank_account_id;
+                break;
+            }
+        }
+
+        $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
         $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
@@ -85,10 +96,10 @@ class PaymentRequestService
 
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        if($approval->order != 0)
-           return response('Só é permitido atualizar a conta na ordem 0', 422)->send();
-
-        $approval->status = 0;
+        if($approval->status == Config::get('constants.status.disapproved')){
+            $approval->order += 1;
+        }
+        $approval->status = Config::get('constants.status.open');
         $approval->save();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)){
@@ -102,7 +113,7 @@ class PaymentRequestService
         }
 
         $paymentRequest->fill($paymentRequestInfo)->save();
-        $this->syncTax($paymentRequest, $paymentRequestInfo);
+        $this->putTax($id, $paymentRequestInfo);
 
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
@@ -231,4 +242,35 @@ class PaymentRequestService
         $collection = $this->tax->where('payment_request_id', $paymentRequest['id'])->get(['id']);
         $this->tax->destroy($collection->toArray());
     }
+<<<<<<< HEAD
+=======
+
+    public function putTax($id, $paymentRequestInfo)
+    {
+
+        $updateTax = [];
+        $createdTax = [];
+
+        if (array_key_exists('tax', $paymentRequestInfo)) {
+            foreach ($paymentRequestInfo['tax'] as $tax) {
+                if (array_key_exists('id', $tax)) {
+                    $paymentRequestHasTax = $this->tax->findOrFail($tax['id']);
+                    $paymentRequestHasTax->fill($tax)->save();
+                    $updateTax[] = $tax['id'];
+                } else {
+                    $paymentRequestHasTax = $this->tax->create([
+                        'payment_request_id' => $id,
+                        'type_of_tax_id' => $tax['type_of_tax_id'],
+                        'tax_amount' => $tax['tax_amount'],
+                    ]);
+                    $createdTax[] = $paymentRequestHasTax->id;
+                }
+            }
+        }
+
+        $collection = $this->tax->where('payment_request_id', $id)->whereNotIn('id', $updateTax)->whereNotIn('id', $createdTax)->get(['id']);
+        $this->tax->destroy($collection->toArray());
+    }
+
+>>>>>>> develop
 }
