@@ -46,6 +46,7 @@ class ProvidersImport implements ToModel, WithValidation, WithHeadingRow
             'responsible_email' => $row['e_mail_responsavel_fornecedor'],
             'responsible_phone' => $row['telefone_responsavel_fornecedor'],
             'state_subscription' => $row['assinatura_do_estado'],
+            'city_subscription' => $row['inscricao_estadual'],
             'chart_of_accounts_id' => $this->chartOfAccountsID,
             'cost_center_id' => $this->costCenterID,
             'provider_categories_id' => $this->providerCategory->id,

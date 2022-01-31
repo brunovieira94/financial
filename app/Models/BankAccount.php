@@ -30,4 +30,9 @@ class BankAccount extends Model
     {
         return $this->hasOne(Bank::class, 'id', 'bank_id');
     }
+
+    public function bank_account_default()
+    {
+        return $this->hasMany(ProviderHasBankAccounts::class, 'bank_account_id', 'id');
+    }
 }

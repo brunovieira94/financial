@@ -14,7 +14,7 @@ class StoreCountryRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:150|unique:countries,title,NULL,id,deleted_at,NULL',
+            'title' => 'required|max:150|unique:countries,title,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
 }
