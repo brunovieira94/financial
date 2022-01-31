@@ -13,7 +13,7 @@ class ProviderHasBankAccounts extends Model
 
     public function bank_account()
     {
-        return $this->hasMany(BankAccount::class, 'id', 'bank_account_id')->with('bank');
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_id')->with('bank');
     }
 
 }
