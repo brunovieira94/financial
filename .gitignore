@@ -13,8 +13,4 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
-<<<<<<< HEAD
 .composer.lock
-=======
-/cnab
->>>>>>> parent of 143ef62 (fix: remove folder cnab)
