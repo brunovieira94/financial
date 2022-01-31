@@ -78,7 +78,27 @@ class ItauCNABService
                     'complemento' => $paymentRequest->provider->complement ?? '',
                 ]
             );
-
+            if($paymentRequest->bar_code != null){
+                $billet = new \App\Helpers\Boleto\Banco\Itau(
+                    [
+                        'dataVencimento'         => new Carbon($paymentRequest->due_date),
+                        'valor'                  => $paymentRequest->amount,
+                        'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
+                        'numeroDocumento'        => $paymentRequest->id,
+                        'pagador'                => $payer,
+                        'beneficiario'           => $recipient,
+                        'agencia'                => $paymentRequest->bank_account_provider->agency_number,
+                        'conta'                  => $paymentRequest->bank_account_provider->account_number,
+                        'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
+                        'codigoDeBarra'          => $paymentRequest->bar_code,
+                        'desconto'               => 0,
+                        'multa '                 => 0,
+                        'dataPagamento'          => new Carbon($paymentRequest->pay_date),
+                        'valorPagamento'       => $paymentRequest->amount,
+                    ]
+                );
+                array_push($billets, $billet);
+            } else{
             foreach($paymentRequest->installments as $installment) {
                 if($installment->codBank != 'BD') {
                     $billet = new \App\Helpers\Boleto\Banco\Itau(
@@ -92,12 +112,17 @@ class ItauCNABService
                             'agencia'                => $paymentRequest->bank_account_provider->agency_number,
                             'conta'                  => $paymentRequest->bank_account_provider->account_number,
                             'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
-                            'codigoDeBarras'         => $paymentRequest->bar_code,
+                            //'codigoDeBarra'          => $paymentRequest->bar_code,
+                            //'desconto'               => 0,
+                            //'multa '                 => 0,
+                            //'dataPagamento'          => new Carbon($paymentRequest->pay_date),
+                            //'valorPagamento'       => $paymentRequest->amount,
                         ]
                     );
                 }
                 array_push($billets, $billet);
             }
+        }
         }
 
         $shipping->addBoletos($billets);

@@ -404,6 +404,40 @@ final class Util
      *
      * @return string
      */
+
+    public static function codigoBancoFavorecidoBoleto($boleto)
+    {
+        return substr($boleto, 0, 3);
+    }
+
+    public static function codigoMoedaBoleto($boleto)
+    {
+        return substr($boleto, 3, 1);
+    }
+
+    public static function dvBoleto($boleto)
+    {
+        return substr($boleto, 32, 1);
+    }
+
+    public static function valorBoleto($boleto)
+    {
+        return substr($boleto, 37, 10);
+    }
+
+    public static function campoLivreBoleto($boleto)
+    {
+        $primeiroCampoLivre = substr($boleto, 4, 5);
+        $segundoCampoLivre = substr($boleto, 10, 10);
+        $terceiroCampoLivre = substr($boleto, 21, 10);
+        return "{$primeiroCampoLivre}{$segundoCampoLivre}{$terceiroCampoLivre}";
+    }
+
+    public static function fatorVencimentoBoleto($boleto)
+    {
+        return substr($boleto, 33, 4);
+    }
+
     public static function percent($big, $percent)
     {
         if ($percent < 0.01) {

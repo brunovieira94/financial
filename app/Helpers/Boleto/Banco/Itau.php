@@ -8,7 +8,6 @@ use App\Helpers\Util;
 
 class Itau extends AbstractBoleto implements BoletoContract
 {
-
     /**
      * Local de pagamento
      *

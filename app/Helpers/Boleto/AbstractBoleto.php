@@ -57,7 +57,19 @@ abstract class AbstractBoleto implements BoletoContract
      *
      * @var float
      */
+    protected $valorPagamento;
+    /**
+     * Desconto total do boleto
+     *
+     * @var float
+     */
     protected $desconto;
+    /**
+     * Valor para multa
+     *
+     * @var float
+     */
+    protected $codigoDeBarra;
     /**
      * Valor para multa
      *
@@ -111,6 +123,14 @@ abstract class AbstractBoleto implements BoletoContract
      *
      * @var \Carbon\Carbon
      */
+
+    protected $dataPagamento;
+    /**
+     * Data do pagamento do boleto
+     *
+     * @var \Carbon\Carbon
+     */
+
     protected $dataDesconto;
     /**
      * Campo de aceite
@@ -591,6 +611,17 @@ abstract class AbstractBoleto implements BoletoContract
     public function getDataVencimento()
     {
         return $this->dataVencimento;
+    }
+
+    public function setDataPagamento(Carbon $dataPagamento)
+    {
+        $this->dataPagamento = $dataPagamento;
+        return $this;
+    }
+
+    public function getDataPagamento()
+    {
+        return $this->dataPagamento;
     }
 
     /**
@@ -1083,6 +1114,17 @@ abstract class AbstractBoleto implements BoletoContract
         return Util::nFloat($this->valor, 2, false);
     }
 
+    public function setValorPagamento($valorPagamento)
+    {
+        $this->valorPagamento = Util::nFloat($valorPagamento, 2, false);
+        return $this;
+    }
+
+    public function getValorPagamento()
+    {
+        return Util::nFloat($this->valorPagamento, 2, false);
+    }
+
     /**
      * Define o desconto total do boleto (incluindo taxas)
      *
@@ -1153,6 +1195,17 @@ abstract class AbstractBoleto implements BoletoContract
     public function getJuros()
     {
         return $this->juros;
+    }
+
+    public function setCodigoDeBarra($codigoDeBarra)
+    {
+        $this->codigoDeBarra = $codigoDeBarra;
+
+        return $this;
+    }
+    public function getCodigoDeBarra()
+    {
+        return $this->codigoDeBarra;
     }
 
     /**
