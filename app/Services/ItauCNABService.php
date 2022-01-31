@@ -103,7 +103,6 @@ class ItauCNABService
                 array_push($billets, $billet);
             }
         }
-        }
 
         $shipping->addBoletos($billets);
         $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
