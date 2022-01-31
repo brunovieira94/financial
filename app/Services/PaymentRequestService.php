@@ -113,7 +113,7 @@ class PaymentRequestService
         }
 
         $paymentRequest->fill($paymentRequestInfo)->save();
-        $this->putTax($paymentRequest, $paymentRequestInfo);
+        $this->putTax($id, $paymentRequestInfo);
 
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
