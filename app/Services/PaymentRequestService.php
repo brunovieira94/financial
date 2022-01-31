@@ -235,7 +235,6 @@ class PaymentRequestService
                 $paymentRequestHasTax = $paymentRequestHasTax->create($tax);
             }
         }
-
     }
 
     public function destroyTax($paymentRequest)

@@ -105,9 +105,7 @@ class ItauCNABService
         }
 
         $shipping->addBoletos($billets);
-        $shipping->save(base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR .'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
-        $file = File::get(base_path() . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR .'cnab'. DIRECTORY_SEPARATOR . 'itau.txt');
-        Storage::disk('s3')->put('tempCNAB/itau.txt', $file);
+        $shipping->save();
 
         DB::table('accounts_payable_approval_flows')
         ->whereIn('payment_request_id', $requestInfo['payment_request_ids'])
