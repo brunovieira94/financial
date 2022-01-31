@@ -26,7 +26,6 @@ class PaymentRequest extends Model
     protected $appends = ['billet_link', 'invoice_link', 'xml_link', 'days_late'];
 
     protected $fillable = [
-        'due_date',
         'provider_id',
         'emission_date',
         'pay_date',
