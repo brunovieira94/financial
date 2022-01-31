@@ -514,9 +514,9 @@ abstract class AbstractRemessa
             mkdir($folder, 0777, true);
         }
 
-        if (! is_writable(dirname($path))) {
-            throw new \Exception('Path ' . $folder . ' não possui permissao de escrita');
-        }
+        //if (! is_writable(dirname($path))) {
+       //     throw new \Exception('Path ' . $folder . ' não possui permissao de escrita');
+       // }
 
         $string = $this->gerar();
         file_put_contents($path, $string);
