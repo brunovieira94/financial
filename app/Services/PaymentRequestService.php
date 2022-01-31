@@ -113,7 +113,7 @@ class PaymentRequestService
         }
 
         $paymentRequest->fill($paymentRequestInfo)->save();
-        $this->syncTax($paymentRequest, $paymentRequestInfo);
+        $this->putTax($paymentRequest, $paymentRequestInfo);
 
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
@@ -241,6 +241,33 @@ class PaymentRequestService
     public function destroyTax($paymentRequest)
     {
         $collection = $this->tax->where('payment_request_id', $paymentRequest['id'])->get(['id']);
+        $this->tax->destroy($collection->toArray());
+    }
+
+    public function putTax($id, $paymentRequestInfo)
+    {
+
+        $updateTax = [];
+        $createdTax = [];
+
+        if (array_key_exists('tax', $paymentRequestInfo)) {
+            foreach ($paymentRequestInfo['tax'] as $tax) {
+                if (array_key_exists('id', $tax)) {
+                    $paymentRequestHasTax = $this->tax->findOrFail($tax['id']);
+                    $paymentRequestHasTax->fill($tax)->save();
+                    $updateTax[] = $tax['id'];
+                } else {
+                    $paymentRequestHasTax = $this->tax->create([
+                        'payment_request_id' => $id,
+                        'type_of_tax_id' => $tax['type_of_tax_id'],
+                        'tax_amount' => $tax['tax_amount'],
+                    ]);
+                    $createdTax[] = $paymentRequestHasTax->id;
+                }
+            }
+        }
+
+        $collection = $this->tax->where('payment_request_id', $id)->whereNotIn('id', $updateTax)->whereNotIn('id', $createdTax)->get(['id']);
         $this->tax->destroy($collection->toArray());
     }
 
