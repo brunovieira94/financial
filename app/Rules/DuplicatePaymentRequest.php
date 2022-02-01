@@ -13,7 +13,8 @@ class DuplicatePaymentRequest implements Rule
     private $force_registration;
     private $paymentRequestID;
 
-    public function __construct($business_id, $force_registration, $paymentRequestID = null){
+    public function __construct($business_id, $force_registration, $paymentRequestID = null)
+    {
         $this->business_id = $business_id;
         $this->force_registration = $force_registration;
         $this->paymentRequestID = $paymentRequestID;
@@ -21,38 +22,40 @@ class DuplicatePaymentRequest implements Rule
 
     public function passes($attribute, $value)
     {
-        if(is_null($this->business_id)){
+        if (is_null($this->business_id)) {
             $paymentRequest = PaymentRequest::with('business')
-            ->findOrFail($this->paymentRequestID);
+                ->findOrFail($this->paymentRequestID);
             $this->business_id = $paymentRequest->business->id;
         }
 
-        if(!is_null($this->paymentRequestID)){
+        if (!is_null($this->paymentRequestID)) {
             $paymentRequest = PaymentRequest::with('business')
-            ->findOrFail($this->paymentRequestID);
+                ->findOrFail($this->paymentRequestID);
 
             $columnValidation = '';
-            if($paymentRequest->bar_code == null){
+            if ($paymentRequest->bar_code == null) {
                 $columnValidation = $paymentRequest->invoice_number;
             } else {
                 $columnValidation = $paymentRequest->bar_code;
             }
-            if($columnValidation == $value){
+            if ($columnValidation == $value) {
                 return true;
             }
         }
 
-        if(PaymentRequest::with('business')
-        ->where($attribute, $value)
-        ->whereRelation('business', 'id', '=', $this->business_id)
-        ->exists()){
-            response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 409)->send();
+        if (PaymentRequest::with('business')
+            ->where($attribute, $value)
+            ->whereRelation('business', 'id', '=', $this->business_id)
+            ->exists()
+        ) {
+            response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 422)->send();
             die();
         }
 
-        if(PaymentRequest::where($attribute, $value)
-        ->exists()){
-            if($this->force_registration){
+        if (PaymentRequest::where($attribute, $value)
+            ->exists()
+        ) {
+            if ($this->force_registration) {
                 return true;
             }
             response('Já existe a nota fiscal ou boleto cadastrado no sistema!', 424)->send();
