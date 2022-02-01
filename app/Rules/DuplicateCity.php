@@ -32,8 +32,8 @@ class DuplicateCity implements Rule
                 ->where($attribute, $value)
                 ->whereRelation('state', 'id', '=', $this->states_id)
                 ->exists()){
-            return false;
-        };
+                   return false;
+                };
                 return true;
             }
         }
