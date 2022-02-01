@@ -130,7 +130,7 @@ class PaymentRequestService
         if($approval->order != 0)
             return response()->json([
             'erro' => 'Só é permitido deletar conta na ordem 0',
-            ])->send();
+            ], 422)->send();
 
         $this->destroyInstallments($paymentRequest);
         $this->paymentRequest->findOrFail($id)->delete();
