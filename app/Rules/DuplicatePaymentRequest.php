@@ -48,8 +48,8 @@ class DuplicatePaymentRequest implements Rule
             ->whereRelation('business', 'id', '=', $this->business_id)
             ->exists()
         ) {
-            response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 200)->send();
-            die();
+            response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 409)->send();
+            return false;
         }
 
         if (PaymentRequest::where($attribute, $value)
@@ -59,7 +59,7 @@ class DuplicatePaymentRequest implements Rule
                 return true;
             }
             response('Já existe a nota fiscal ou boleto cadastrado no sistema!', 424)->send();
-            die();
+            return false;
         }
         return true;
     }
