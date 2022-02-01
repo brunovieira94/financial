@@ -27,7 +27,7 @@ class PutPaymentRequestRequest extends FormRequest
             'currency_id' => 'integer',
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
-            'invoice_number' => 'max:150',
+            'invoice_number' => ['max:150', new DuplicatePaymentRequest(request()->input('business_id') ?? null, request()->input('force_registration') ?? false, Request::instance()->id)],
             'type_of_tax' => 'max:150',
             'tax_amount' => 'numeric',
             'net_value' => 'numeric',
