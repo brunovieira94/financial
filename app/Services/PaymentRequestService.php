@@ -244,8 +244,6 @@ class PaymentRequestService
         $collection = $this->tax->where('payment_request_id', $paymentRequest['id'])->get(['id']);
         $this->tax->destroy($collection->toArray());
     }
-<<<<<<< HEAD
-=======
 
     public function putTax($id, $paymentRequestInfo)
     {
@@ -273,6 +271,4 @@ class PaymentRequestService
         $collection = $this->tax->where('payment_request_id', $id)->whereNotIn('id', $updateTax)->whereNotIn('id', $createdTax)->get(['id']);
         $this->tax->destroy($collection->toArray());
     }
-
->>>>>>> develop
 }
