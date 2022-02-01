@@ -23,6 +23,21 @@ class DuplicateCity implements Rule
             $this->states_id = $city->state->id;
         }
 
+        if(!is_null($this->cityID)){
+            $city = City::with('state')
+            ->findOrFail($this->cityID);
+
+            if($city->title == $value){
+                if(City::with('state')
+                ->where($attribute, $value)
+                ->whereRelation('state', 'id', '=', $this->states_id)
+                ->exists()){
+                   return false;
+                };
+                return true;
+            }
+        }
+
         if(City::with('state')
         ->where($attribute, $value)
         ->whereRelation('state', 'id', '=', $this->states_id)
