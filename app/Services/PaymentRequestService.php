@@ -128,9 +128,7 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         if($approval->order != 0)
-            return response()->json([
-            'erro' => 'Só é permitido deletar conta na ordem 0',
-            ], 422)->send();
+           return response('Só é permitido deletar conta na ordem 0', 422)->send();
 
         $this->destroyInstallments($paymentRequest);
         $this->paymentRequest->findOrFail($id)->delete();
@@ -244,35 +242,5 @@ class PaymentRequestService
         $collection = $this->tax->where('payment_request_id', $paymentRequest['id'])->get(['id']);
         $this->tax->destroy($collection->toArray());
     }
-<<<<<<< HEAD
-=======
 
-    public function putTax($id, $paymentRequestInfo)
-    {
-
-        $updateTax = [];
-        $createdTax = [];
-
-        if (array_key_exists('tax', $paymentRequestInfo)) {
-            foreach ($paymentRequestInfo['tax'] as $tax) {
-                if (array_key_exists('id', $tax)) {
-                    $paymentRequestHasTax = $this->tax->findOrFail($tax['id']);
-                    $paymentRequestHasTax->fill($tax)->save();
-                    $updateTax[] = $tax['id'];
-                } else {
-                    $paymentRequestHasTax = $this->tax->create([
-                        'payment_request_id' => $id,
-                        'type_of_tax_id' => $tax['type_of_tax_id'],
-                        'tax_amount' => $tax['tax_amount'],
-                    ]);
-                    $createdTax[] = $paymentRequestHasTax->id;
-                }
-            }
-        }
-
-        $collection = $this->tax->where('payment_request_id', $id)->whereNotIn('id', $updateTax)->whereNotIn('id', $createdTax)->get(['id']);
-        $this->tax->destroy($collection->toArray());
-    }
-
->>>>>>> develop
 }
