@@ -48,7 +48,7 @@ class DuplicatePaymentRequest implements Rule
             ->whereRelation('business', 'id', '=', $this->business_id)
             ->exists()
         ) {
-            response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 409)->send();
+            //response('Já existe a nota fiscal ou boleto cadastrado para esse negócio!', 409)->send();
             return false;
         }
 
@@ -58,7 +58,7 @@ class DuplicatePaymentRequest implements Rule
             if ($this->force_registration) {
                 return true;
             }
-            response('Já existe a nota fiscal ou boleto cadastrado no sistema!', 424)->send();
+            //response('Já existe a nota fiscal ou boleto cadastrado no sistema!', 424)->send();
             return false;
         }
         return true;
