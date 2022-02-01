@@ -112,6 +112,7 @@ class ApprovalFlowByUserService
                 }
             }
             $accountApproval->status = Config::get('constants.status.approved');
+            $accountApproval->order += 1;
         } else {
             $accountApproval->order += 1;
         }
@@ -127,7 +128,7 @@ class ApprovalFlowByUserService
 
         if ($accountApproval->order > $maxOrder) {
             $accountApproval->order = Config::get('constants.status.open');
-        } else {
+        } else if ($accountApproval->order != 0){
             $accountApproval->order -= 1;
         }
         $accountApproval->fill($request->all())->save();
