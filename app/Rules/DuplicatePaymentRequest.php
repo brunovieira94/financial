@@ -27,6 +27,21 @@ class DuplicatePaymentRequest implements Rule
             $this->business_id = $paymentRequest->business->id;
         }
 
+        if(!is_null($this->paymentRequestID)){
+            $paymentRequest = PaymentRequest::with('business')
+            ->findOrFail($this->paymentRequestID);
+
+            $columnValidation = '';
+            if($paymentRequest->bar_code == null){
+                $columnValidation = $paymentRequest->invoice_number;
+            } else {
+                $columnValidation = $paymentRequest->bar_code;
+            }
+            if($columnValidation == $value){
+                return true;
+            }
+        }
+
         if(PaymentRequest::with('business')
         ->where($attribute, $value)
         ->whereRelation('business', 'id', '=', $this->business_id)
