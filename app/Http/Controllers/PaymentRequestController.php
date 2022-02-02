@@ -7,6 +7,7 @@ use App\Http\Requests\StorePaymentRequestRequest;
 use App\Services\PaymentRequestService as PaymentRequestService;
 use App\Http\Requests\PutPaymentRequestRequest;
 use App\Imports\PaymentRequestsImport;
+use App\Models\PaymentRequest;
 
 class PaymentRequestController extends Controller
 {
@@ -31,11 +32,95 @@ class PaymentRequestController extends Controller
 
     public function store(StorePaymentRequestRequest $request)
     {
-        return $this->paymentRequestService->postPaymentRequest($request);
+        $attribute = null;
+
+        if(array_key_exists('bar_code', $request->all())){
+            $attribute = 'bar_code';
+            $value = $request->bar_code;
+        }else if (array_key_exists('invoice_number', $request->all())){
+            $attribute = 'invoice_number';
+            $value = $request->invoice_number;
+        }
+
+        if($attribute != null){
+            if (PaymentRequest::with('business')
+            ->where($attribute, $value)
+            ->whereRelation('business', 'id', '=', $request->business_id)
+            ->exists())
+            {
+                return response()->json([
+                    'erro' => 'Já existe a nota fiscal ou boleto cadastrado para esse negócio!'
+                ], 409);
+            }
+        if (PaymentRequest::where($attribute, $value)
+            ->exists())
+            {
+                if ($request->force_registration) {
+                    return $this->paymentRequestService->postPaymentRequest($request);
+                }
+            return response()->json([
+                'erro' => 'Já existe a nota fiscal ou boleto cadastrado no sistema!'
+            ], 424);
+        }
+
     }
+        return $this->paymentRequestService->postPaymentRequest($request);
+}
 
     public function update(PutPaymentRequestRequest $request, $id)
     {
+        $attribute = null;
+        $business_id = null;
+
+        if(array_key_exists('bar_code', $request->all())){
+            $attribute = 'bar_code';
+            $value = $request->bar_code;
+        }else if (array_key_exists('invoice_number', $request->all())){
+            $attribute = 'invoice_number';
+            $value = $request->invoice_number;
+        }
+
+        if($attribute != null){
+
+            $paymentRequest = PaymentRequest::with('business')->findOrFail($id);
+            $columnValidation = '';
+
+            if ($paymentRequest->bar_code == null) {
+                $columnValidation = $paymentRequest->invoice_number;
+            } else {
+                $columnValidation = $paymentRequest->bar_code;
+            }
+            if ($columnValidation == $value)
+            {
+                return $this->paymentRequestService->putPaymentRequest($id, $request);
+            }
+
+            if(array_key_exists('business_id', $request->all())){
+                $business_id = $request->business_id;
+            }else{
+                $business_id = $paymentRequest->business_id;
+            }
+
+            if(PaymentRequest::with('business')
+            ->where($attribute, $value)
+            ->whereRelation('business', 'id', '=', $business_id)
+            ->exists())
+            {
+                return response()->json([
+                    'erro' => 'Já existe a nota fiscal ou boleto cadastrado para esse negócio!'
+                ], 409);
+            }
+            if(PaymentRequest::where($attribute, $value)
+            ->exists())
+            {
+                if ($request->force_registration) {
+                    return $this->paymentRequestService->putPaymentRequest($id, $request);
+                }
+                return response()->json([
+                    'erro' => 'Já existe a nota fiscal ou boleto cadastrado no sistema!'
+                ], 424);
+            }
+        }
         return $this->paymentRequestService->putPaymentRequest($id, $request);
     }
 
