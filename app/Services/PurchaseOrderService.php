@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasProducts;
+use App\Models\PurchaseOrderHasCompanies;
 use App\Models\PurchaseOrderHasServices;
 use App\Models\PurchaseOrderHasCostCenters;
 use App\Models\PurchaseOrderHasAttachments;
@@ -16,17 +17,19 @@ class PurchaseOrderService
 {
     private $purchaseOrder;
     private $purchaseOrderHasProducts;
+    private $purchaseOrderHasCompanies;
     private $purchaseOrderHasServices;
     private $purchaseOrderHasCostCenters;
     private $purchaseOrderServicesHasInstallments;
     private $attachments;
 
-    private $with = ['approval','cost_centers', 'attachments', 'services', 'products', 'currency', 'provider'];
+    private $with = ['approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments)
+    public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments)
     {
         $this->purchaseOrder = $purchaseOrder;
         $this->purchaseOrderHasProducts = $purchaseOrderHasProducts;
+        $this->purchaseOrderHasCompanies = $purchaseOrderHasCompanies;
         $this->purchaseOrderHasServices = $purchaseOrderHasServices;
         $this->purchaseOrderHasCostCenters = $purchaseOrderHasCostCenters;
         $this->attachments = $attachments;
@@ -50,6 +53,7 @@ class PurchaseOrderService
         $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
         $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
         $this->syncServices($purchaseOrder, $purchaseOrderInfo);
+        $this->syncCompanies($purchaseOrder, $purchaseOrderInfo);
         $this->syncCostCenters($purchaseOrder, $purchaseOrderInfo);
         $this->syncAttachments($purchaseOrder, $purchaseOrderInfo, $request);
 
@@ -86,6 +90,7 @@ class PurchaseOrderService
             $supplyApprovalFlow->save();
         }
 
+        $this->putCompanies($id, $purchaseOrderInfo);
         $this->putCostCenters($id, $purchaseOrderInfo);
         $this->putAttachments($id, $purchaseOrderInfo, $request);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
@@ -269,6 +274,45 @@ class PurchaseOrderService
 
         $collection = $this->purchaseOrderHasCostCenters->where('purchase_order_id', $id)->whereNotIn('id', $updateCostCenters)->whereNotIn('id', $createdCostCenters)->get(['id']);
         $this->purchaseOrderHasCostCenters->destroy($collection->toArray());
+    }
+
+    public function syncCompanies($purchaseOrder, $purchaseOrderInfo)
+    {
+        if (array_key_exists('companies', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['companies'] as $company) {
+                $purchaseOrderHasCompanies = new PurchaseOrderHasCompanies;
+                $purchaseOrderHasCompanies = $purchaseOrderHasCompanies->create([
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'company_id' => $company['company_id'],
+                ]);
+            }
+        }
+    }
+
+    public function putCompanies($id, $purchaseOrderInfo)
+    {
+
+        $updateCompanies = [];
+        $createdCompanies = [];
+
+        if (array_key_exists('companies', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['companies'] as $company) {
+                if (array_key_exists('id', $company)) {
+                    $purchaseOrderHasCompanies = $this->purchaseOrderHasCompanies->findOrFail($company['id']);
+                    $purchaseOrderHasCompanies->fill($company)->save();
+                    $updateCompanies[] = $company['id'];
+                } else {
+                    $purchaseOrderHasCompanies = $this->purchaseOrderHasCompanies->create([
+                        'purchase_order_id' => $id,
+                        'company_id' => $company['company_id'],
+                    ]);
+                    $createdCompanies[] = $purchaseOrderHasCompanies->id;
+                }
+            }
+        }
+
+        $collection = $this->purchaseOrderHasCompanies->where('purchase_order_id', $id)->whereNotIn('id', $updateCompanies)->whereNotIn('id', $createdCompanies)->get(['id']);
+        $this->purchaseOrderHasCompanies->destroy($collection->toArray());
     }
 
     public function syncAttachments($purchaseOrder, $purchaseOrderInfo, Request $request)
