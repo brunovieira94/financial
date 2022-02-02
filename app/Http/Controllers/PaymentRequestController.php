@@ -49,7 +49,7 @@ class PaymentRequestController extends Controller
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Já existe a nota fiscal ou boleto cadastrado para esse negócio!'
+                    'erro' => 'Este número de nota fiscal/boleto já foi cadastrado para este negócio.'
                 ], 409);
             }
         if (PaymentRequest::where($attribute, $value)
@@ -59,7 +59,7 @@ class PaymentRequestController extends Controller
                     return $this->paymentRequestService->postPaymentRequest($request);
                 }
             return response()->json([
-                'erro' => 'Já existe a nota fiscal ou boleto cadastrado no sistema!'
+                'erro' => 'O número da nota fiscal/boleto já foi cadastrado no sistema em outro negócio, tem certeza que deseja cadastrar mesmo assim?'
             ], 424);
         }
 
@@ -107,7 +107,7 @@ class PaymentRequestController extends Controller
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Já existe a nota fiscal ou boleto cadastrado para esse negócio!'
+                    'erro' => 'Este número de nota fiscal/boleto já foi cadastrado para este negócio.'
                 ], 409);
             }
             if(PaymentRequest::where($attribute, $value)
