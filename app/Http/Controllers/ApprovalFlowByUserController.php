@@ -23,14 +23,12 @@ class ApprovalFlowByUserController extends Controller
 
     public function approveAccount($id)
     {
-        $this->accountsPayableApprovalFlowService->approveAccount($id);
-        return response('Conta aprovada');
+        return $this->accountsPayableApprovalFlowService->approveAccount($id);
     }
 
     public function reproveAccount($id, PutAccountsPayableApprovalFlowRequest $request)
     {
-        $this->accountsPayableApprovalFlowService->reproveAccount($id, $request);
-        return response('Conta reprovada');
+        return $this->accountsPayableApprovalFlowService->reproveAccount($id, $request);
     }
 
     public function cancelAccount($id, PutAccountsPayableApprovalFlowRequest $request)

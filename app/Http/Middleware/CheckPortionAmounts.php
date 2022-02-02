@@ -35,8 +35,10 @@ class CheckPortionAmounts
                     $parcelSum += $installments['portion_amount'];
                 }
             }
-            if ($amount != $parcelSum) {
-                return response('Verifique o valor total das parcelas', 422);
+            if (number_format($amount, 2) != number_format($parcelSum, 2)) {
+                return response()->json([
+                    'erro' => 'Verifique o valor total das parcelas.'
+                ], 422);
             }
         }
         return $next($request);

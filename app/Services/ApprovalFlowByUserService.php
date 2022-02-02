@@ -83,32 +83,28 @@ class ApprovalFlowByUserService
             if($accountApproval->payment_request->bar_code != null || $accountApproval->payment_request->invoice_number != null){
                 if($accountApproval->payment_request->provider->accept_billet_payment){
                     if($accountApproval->payment_request->bar_code == null){
-                        response()->json([
+                        return response()->json([
                             'error' => 'O boleto não foi informado',
 
-                        ], 422)->send();
-                        die();
+                        ], 422);
                     }
                 } else {
                     if ($accountApproval->payment_request->invoice_number == null){
-                        response()->json([
+                        return response()->json([
                             'error' => 'A nota fiscal não foi informada',
-                        ], 422)->send();
-                        die();
+                        ], 422);
                     }
                     if($accountApproval->payment_request->bank_account_provider_id == null){
-                        response()->json([
+                        return response()->json([
                             'error' => 'O banco do fornecedor não foi informado',
-                        ], 422)->send();
-                        die();
+                        ], 422);
                     }
                 }
             } else {
                 if($accountApproval->payment_request->bank_account_provider_id == null){
-                    response()->json([
+                    return response()->json([
                         'error' => 'O banco do fornecedor não foi informado',
-                    ], 422)->send();
-                    die();
+                    ], 422);
                 }
             }
             $accountApproval->status = Config::get('constants.status.approved');
@@ -117,7 +113,10 @@ class ApprovalFlowByUserService
             $accountApproval->order += 1;
         }
         $accountApproval->reason = null;
-        return $accountApproval->save();
+        $accountApproval->save();
+        return response()->json([
+            'Sucesso' => 'Conta aprovada',
+        ], 200);
     }
 
     public function reproveAccount($id, Request $request)
@@ -132,14 +131,18 @@ class ApprovalFlowByUserService
             $accountApproval->order -= 1;
         }
         $accountApproval->fill($request->all())->save();
-        return true;
+        return response()->json([
+            'Sucesso' => 'Conta reprovada',
+        ], 200);
     }
 
     public function cancelAccount($id, Request $request)
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $accountApproval->status = Config::get('constants.status.canceled');
-
-        return $accountApproval->fill($request->all())->save();
+        $accountApproval->fill($request->all())->save();
+        return response()->json([
+            'Sucesso' => 'Conta cancelada',
+        ], 200);
     }
 }
