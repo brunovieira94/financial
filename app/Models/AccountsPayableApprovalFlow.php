@@ -42,6 +42,6 @@ class AccountsPayableApprovalFlow extends Model
 
     public function reason_to_reject()
     {
-        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id');
+        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
     }
 }
