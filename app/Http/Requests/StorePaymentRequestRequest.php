@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\DuplicatePaymentRequest;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePaymentRequestRequest extends FormRequest
@@ -40,11 +39,11 @@ class StorePaymentRequestRequest extends FormRequest
             'invoice_type' => 'max:150',
             //NF
             'invoice_file' => 'file|required_with_all:invoice_number,type_of_tax,net_value,tax_amount',
-            'invoice_number' => ['max:150', 'required_with_all:invoice_file,type_of_tax,net_value,tax_amount', new DuplicatePaymentRequest(request()->input('business_id'), request()->input('force_registration') ?? false)],
+            'invoice_number' => ['max:150', 'required_with_all:invoice_file,type_of_tax,net_value,tax_amount'],
             'tax.*.type_of_tax_id' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount',
             'tax.*.tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,tax.*.id_type_of_tax,net_value',
             //Boleto
-            'bar_code' => ['max:150', 'required_with_all:billet_file', new DuplicatePaymentRequest(request()->input('business_id'), request()->input('force_registration') ?? false)],
+            'bar_code' => ['max:150', 'required_with_all:billet_file'],
             'billet_file' => 'file|required_with_all:bar_code',
             //installments
             'installments.*.portion_amount' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',

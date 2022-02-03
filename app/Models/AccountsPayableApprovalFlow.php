@@ -11,7 +11,7 @@ class AccountsPayableApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['payment_request', '*'];
+    protected static $logAttributes = ['payment_request', 'reason_to_reject', '*'];
     protected static $logName = 'accounts_payable_approval_flows';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -27,12 +27,12 @@ class AccountsPayableApprovalFlow extends Model
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax']);
     }
 
     public function payment_request_trashed()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->withTrashed();
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax'])->withTrashed();
     }
 
     public function approval_flow()
@@ -42,6 +42,6 @@ class AccountsPayableApprovalFlow extends Model
 
     public function reason_to_reject()
     {
-        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id');
+        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
     }
 }

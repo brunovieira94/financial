@@ -15,6 +15,7 @@ class StoreProviderRequest extends FormRequest
     {
         return [
             'provider_type' => 'required|max:1|in:F,J',
+            'international' => 'boolean',
             'company_name' => 'required_if:provider_type,==,J|max:250|prohibited_if:provider_type,==,F',
             'trade_name' => 'max:150|prohibited_if:provider_type,==,F',
             'alias' => 'max:150',
