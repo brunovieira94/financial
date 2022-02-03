@@ -82,7 +82,7 @@ class PaymentRequest extends Model
 
     public function provider()
     {
-        return $this->hasOne(Provider::class, 'id', 'provider_id')->with(['city']);
+        return $this->hasOne(Provider::class, 'id', 'provider_id')->with(['city', 'bank_account', 'user', 'provider_category', 'chart_of_account', 'cost_center']);
     }
 
     public function bank_account_provider()

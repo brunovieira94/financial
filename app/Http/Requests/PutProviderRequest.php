@@ -16,6 +16,7 @@ class PutProviderRequest extends FormRequest
         return [
             'provider_type' => 'max:1|in:F,J',
             'company_name' => 'max:250',
+            'international' => 'boolean',
             'trade_name' => 'max:150',
             'alias' => 'max:150',
             'cnpj' => 'max:17',
