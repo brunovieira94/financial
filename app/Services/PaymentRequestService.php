@@ -201,7 +201,7 @@ class PaymentRequestService
                     if(!array_key_exists('competence_date', $installments)){
                         $date = new Carbon($installments['due_date']);
                         $date->subMonths(1);
-                        $installments['extension_date'] = $date;
+                        $installments['competence_date'] = $date;
                     }
                 }
 
