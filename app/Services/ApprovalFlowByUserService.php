@@ -80,7 +80,7 @@ class ApprovalFlowByUserService
         $accountApproval->status = 0;
 
         if($accountApproval->order == $maxOrder) {
-            if($accountApproval->payment_request->bar_code != null || $accountApproval->payment_request->invoice_number != null){
+            if($accountApproval->payment_request->bar_code != null && $accountApproval->payment_request->invoice_number != null){
                 if($accountApproval->payment_request->provider->accept_billet_payment){
                     if($accountApproval->payment_request->bar_code == null){
                         return response()->json([
