@@ -125,10 +125,9 @@ class PaymentRequest extends Model
         foreach ($this->installments as $value) {
             $dueDate = date_create($value['due_date']);
             $daysLate = date_diff($dueDate, now());
-            if($dueDate < now() && $value['status'] != 'BD'){
+            if ($dueDate < now() && $value['status'] != 'BD') {
                 return $daysLate->days;
-            }
-            else {
+            } else {
                 return 0;
             }
         }
@@ -136,11 +135,11 @@ class PaymentRequest extends Model
 
     public function getNextExtensionDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date;
+        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date ?? null;
     }
 
     public function getNextCompetenceDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date;
+        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date ?? null;
     }
 }
