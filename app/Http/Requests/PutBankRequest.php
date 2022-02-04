@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Bank;
+use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
 class PutBankRequest extends FormRequest
 {
@@ -14,7 +17,7 @@ class PutBankRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'max:150|unique:banks,title,NULL,id,deleted_at,NULL',
+            'title' => 'unique:banks,title,' . $this->id . ',id,deleted_at,NULL',
             'cnab400' => 'boolean',
             'cnab240' => 'boolean',
             'bank_code' => 'numeric',
