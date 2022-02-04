@@ -136,11 +136,11 @@ class PaymentRequest extends Model
 
     public function getNextExtensionDateAttribute()
     {
-        return$this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date;
+        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date;
     }
 
     public function getNextCompetenceDateAttribute()
     {
-        return$this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date;
+        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date;
     }
 }
