@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
@@ -43,31 +44,31 @@ class PaymentRequestService
         $paymentRequestInfo = $request->all();
         $paymentRequestInfo['user_id'] = auth()->user()->id;
 
-        if (array_key_exists('invoice_file', $paymentRequestInfo)){
+        if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
         }
-        if (array_key_exists('billet_file', $paymentRequestInfo)){
+        if (array_key_exists('billet_file', $paymentRequestInfo)) {
             $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
         }
-        if (array_key_exists('xml_file', $paymentRequestInfo)){
+        if (array_key_exists('xml_file', $paymentRequestInfo)) {
             $paymentRequestInfo['xml_file'] = $this->storeXML($request);
         }
-        if(!array_key_exists('invoice_type', $paymentRequestInfo)) {
-            if (array_key_exists('invoice_number', $paymentRequestInfo)){
+        if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
+            if (array_key_exists('invoice_number', $paymentRequestInfo)) {
                 $invoiceType = DB::table('payment_requests')
-                ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
-                ->where('invoice_type', '<>', null)
-                ->groupBy('invoice_type')
-                ->orderBy('repeated', 'desc')
-                ->get();
+                    ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
+                    ->where('invoice_type', '<>', null)
+                    ->groupBy('invoice_type')
+                    ->orderBy('repeated', 'desc')
+                    ->get();
                 $paymentRequestInfo['invoice_type'] = $invoiceType[0]->invoice_type ?? null;
             }
         }
 
         $idBankProviderDefault = null;
-        foreach(ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank){
+        foreach (ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank) {
             $idBankProviderDefault = $bank->bank_account_id;
-            if($bank->default_bank == true){
+            if ($bank->default_bank == true) {
                 $idBankProviderDefault = $bank->bank_account_id;
                 break;
             }
@@ -96,19 +97,16 @@ class PaymentRequestService
 
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        if($approval->status == Config::get('constants.status.disapproved')){
-            $approval->order += 1;
-        }
         $approval->status = Config::get('constants.status.open');
         $approval->save();
 
-        if (array_key_exists('invoice_file', $paymentRequestInfo)){
+        if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
         }
-        if (array_key_exists('billet_file', $paymentRequestInfo)){
+        if (array_key_exists('billet_file', $paymentRequestInfo)) {
             $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
         }
-        if (array_key_exists('xml_file', $paymentRequestInfo)){
+        if (array_key_exists('xml_file', $paymentRequestInfo)) {
             $paymentRequestInfo['xml_file'] = $this->storeXML($request);
         }
 
@@ -127,9 +125,9 @@ class PaymentRequestService
         $paymentRequest = $this->paymentRequest->findOrFail($id);
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        if($approval->order != 0)
+        if ($approval->order != 0)
             return response()->json([
-            'erro' => 'Só é permitido deletar conta na ordem 0',
+                'erro' => 'Só é permitido deletar conta na ordem 0',
             ], 422)->send();
 
         $this->destroyInstallments($paymentRequest);
@@ -137,23 +135,25 @@ class PaymentRequestService
         return true;
     }
 
-    public function storeXML(Request $request){
+    public function storeXML(Request $request)
+    {
 
         $nameFile = null;
         $data = uniqid(date('HisYmd'));
 
         $originalName  = explode('.', $request->xml_file->getClientOriginalName());
-        $extension = $originalName[count($originalName)-1];
+        $extension = $originalName[count($originalName) - 1];
         $nameFile = "{$originalName[0]}_{$data}.{$extension}";
         $uploadXML = $request->xml_file->storeAs('XML', $nameFile);
 
-        if ( !$uploadXML )
-                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+        if (!$uploadXML)
+            return response('Falha ao realizar o upload do arquivo.', 500)->send();
 
         return $nameFile;
     }
 
-    public function storeInvoice(Request $request){
+    public function storeInvoice(Request $request)
+    {
 
         $nameFile = null;
         $data = uniqid(date('HisYmd'));
@@ -163,13 +163,14 @@ class PaymentRequestService
         $nameFile = "{$originalName[0]}_{$data}.{$extension}";
         $uploadInvoice = $request->invoice_file->storeAs('invoice', $nameFile);
 
-        if ( !$uploadInvoice )
-                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+        if (!$uploadInvoice)
+            return response('Falha ao realizar o upload do arquivo.', 500)->send();
 
         return $nameFile;
     }
 
-    public function storeBillet(Request $request){
+    public function storeBillet(Request $request)
+    {
 
         $nameFile = null;
         $data = uniqid(date('HisYmd'));
@@ -177,36 +178,36 @@ class PaymentRequestService
         if ($request->hasFile('billet_file') && $request->file('billet_file')->isValid()) {
 
             $extension = $request->billet_file->extension();
-            $originalName  = explode('.' , $request->billet_file->getClientOriginalName());
+            $originalName  = explode('.', $request->billet_file->getClientOriginalName());
             $nameFile = "{$originalName[0]}_{$data}.{$extension}";
             $uploadBillet = $request->billet_file->storeAs('billet', $nameFile);
 
             if (!$uploadBillet)
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
 
-          return $nameFile;
+            return $nameFile;
         }
     }
 
     public function syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension)
     {
-        if(array_key_exists('installments', $paymentRequestInfo)){
+        if (array_key_exists('installments', $paymentRequestInfo)) {
             $this->destroyInstallments($paymentRequest);
-            foreach($paymentRequestInfo['installments'] as $key=>$installments){
+            foreach ($paymentRequestInfo['installments'] as $key => $installments) {
                 $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
                 $installments['payment_request_id'] = $paymentRequest['id'];
                 $installments['parcel_number'] = $key + 1;
 
-                if($updateCompetence){
-                    if(!array_key_exists('competence_date', $installments)){
+                if ($updateCompetence) {
+                    if (!array_key_exists('competence_date', $installments)) {
                         $date = new Carbon($installments['due_date']);
                         $date->subMonths(1);
                         $installments['competence_date'] = $date;
                     }
                 }
 
-                if($updateExtension){
-                    if(!array_key_exists('extension_date', $installments)) {
+                if ($updateExtension) {
+                    if (!array_key_exists('extension_date', $installments)) {
                         $installments['extension_date'] = $installments['due_date'];
                     }
                 }
@@ -228,10 +229,11 @@ class PaymentRequestService
         $this->installments->destroy($collection->toArray());
     }
 
-    public function syncTax($paymentRequest, $paymentRequestInfo){
-        if(array_key_exists('tax', $paymentRequestInfo)){
+    public function syncTax($paymentRequest, $paymentRequestInfo)
+    {
+        if (array_key_exists('tax', $paymentRequestInfo)) {
             $this->destroyTax($paymentRequest);
-            foreach($paymentRequestInfo['tax'] as $key=>$tax){
+            foreach ($paymentRequestInfo['tax'] as $key => $tax) {
                 $paymentRequestHasTax = new PaymentRequestHasTax;
                 $tax['payment_request_id'] = $paymentRequest['id'];
                 $paymentRequestHasTax = $paymentRequestHasTax->create($tax);
@@ -271,5 +273,4 @@ class PaymentRequestService
         $collection = $this->tax->where('payment_request_id', $id)->whereNotIn('id', $updateTax)->whereNotIn('id', $createdTax)->get(['id']);
         $this->tax->destroy($collection->toArray());
     }
-
 }
