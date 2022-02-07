@@ -77,13 +77,16 @@ class PaymentRequestService
         $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
+
         $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
 
+        activity()->disableLogging();
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
             'payment_request_id' => $paymentRequest->id,
             'order' => 0,
             'status' => 0,
         ]);
+        activity()->enableLogging();
 
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true);
