@@ -101,6 +101,8 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         $approval->status = Config::get('constants.status.open');
+        $approval->reason = null;
+        $approval->reason_to_reject_id = null;
         $approval->save();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
