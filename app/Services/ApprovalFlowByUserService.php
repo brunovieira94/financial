@@ -113,6 +113,7 @@ class ApprovalFlowByUserService
             $accountApproval->order += 1;
         }
         $accountApproval->reason = null;
+        $accountApproval->reason_to_reject_id = null;
         $accountApproval->save();
         return response()->json([
             'Sucesso' => 'Conta aprovada',
