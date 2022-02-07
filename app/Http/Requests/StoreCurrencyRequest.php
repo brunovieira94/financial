@@ -14,7 +14,7 @@ class StoreCurrencyRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255||unique:currency,title,NULL,id,deleted_at,NULL',
+            'title' => 'required|max:255|unique:currency,title,' . $this->id . ',id,deleted_at,NULL',
             'initials' => 'required|max:255',
             'default' => 'boolean',
             'currency_symbol' => 'required|max:255',

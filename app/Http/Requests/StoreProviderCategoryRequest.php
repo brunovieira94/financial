@@ -14,7 +14,7 @@ class StoreProviderCategoryRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255|unique:provider_categories,title,NULL,id,deleted_at,NULL',
+            'title' => 'required|max:255|unique:provider_categories,title,' . $this->id . ',id,deleted_at,NULL',
             'payment_before_weekends' => 'required|boolean',
         ];
     }
