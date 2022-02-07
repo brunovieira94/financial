@@ -85,7 +85,6 @@ class ApprovalFlowByUserService
                     if($accountApproval->payment_request->bar_code == null){
                         return response()->json([
                             'error' => 'O boleto não foi informado',
-
                         ], 422);
                     }
                 } else {
@@ -100,7 +99,7 @@ class ApprovalFlowByUserService
                         ], 422);
                     }
                 }
-            } else {
+            } else if ($accountApproval->payment_request->bar_code == null){
                 if($accountApproval->payment_request->bank_account_provider_id == null){
                     return response()->json([
                         'error' => 'O banco do fornecedor não foi informado',
