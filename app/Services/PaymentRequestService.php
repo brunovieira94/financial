@@ -100,10 +100,12 @@ class PaymentRequestService
 
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
+        activity()->disableLogging();
         $approval->status = Config::get('constants.status.open');
         $approval->reason = null;
         $approval->reason_to_reject_id = null;
         $approval->save();
+        activity()->enableLogging();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
