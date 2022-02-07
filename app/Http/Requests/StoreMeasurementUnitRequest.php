@@ -15,8 +15,8 @@ class StoreMeasurementUnitRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255',
-            'unit' => 'required|max:5',
+            'title' => 'required|max:255|unique:measurement_units,title,' . $this->id . ',id,deleted_at,NULL',
+            'unit' => 'required|max:5|unique:measurement_units,unit,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
 
