@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\ProviderCitySubscription;
 use App\Rules\ProviderStateSubscription;
 use App\Rules\ProviderCNPJ;
+use App\Rules\ProviderUniqueCNPJ;
+use Illuminate\Validation\Rule;
 
 class PutProviderRequest extends FormRequest
 {
@@ -22,7 +24,13 @@ class PutProviderRequest extends FormRequest
             'international' => 'boolean',
             'trade_name' => 'max:150',
             'alias' => 'max:150',
-            'cnpj' => [new ProviderCNPJ(request()->input('international'),request()->input('provider_type')), 'max:17', 'prohibited_if:provider_type,==,F',' unique:providers,cnpj,NULL,id,deleted_at,NULL'],
+            'cnpj' => [new ProviderCNPJ(request()->input('international'),request()->input('provider_type')), 'max:17', 'prohibited_if:provider_type,==,F',
+                Rule::unique('providers', 'cnpj')
+                ->where(static function ($query) {
+                    return $query->whereNotNull('cnpj')->whereNull('deleted_at');
+                })
+                ->ignore($this->cnpj),
+            ],
             'responsible' => 'max:250',
             'provider_categories_id' => 'integer',
             'cost_center_id' => 'integer',
