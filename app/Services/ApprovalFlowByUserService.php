@@ -80,24 +80,11 @@ class ApprovalFlowByUserService
         $accountApproval->status = 0;
 
         if($accountApproval->order == $maxOrder) {
-            if($accountApproval->payment_request->bar_code == null && $accountApproval->payment_request->invoice_number == null){
-                if($accountApproval->payment_request->provider->accept_billet_payment){
-                    if($accountApproval->payment_request->bar_code == null){
-                        return response()->json([
-                            'error' => 'Não foi informado boleto ou nota fiscal para essa conta',
-                        ], 422);
-                    }
-                } else {
-                    if ($accountApproval->payment_request->invoice_number == null){
-                        return response()->json([
-                            'error' => 'A nota fiscal não foi informada',
-                        ], 422);
-                    }
-                    if($accountApproval->payment_request->bank_account_provider_id == null){
-                        return response()->json([
-                            'error' => 'O banco do fornecedor não foi informado',
-                        ], 422);
-                    }
+            if ($accountApproval->payment_request->payment_type != 1){
+                if($accountApproval->payment_request->bank_account_provider_id == null){
+                    return response()->json([
+                        'error' => 'O banco do fornecedor não foi informado',
+                    ], 422);
                 }
             }
 
