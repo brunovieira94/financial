@@ -84,7 +84,7 @@ class ApprovalFlowByUserService
                 if($accountApproval->payment_request->provider->accept_billet_payment){
                     if($accountApproval->payment_request->bar_code == null){
                         return response()->json([
-                            'error' => 'O boleto não foi informado',
+                            'error' => 'Não foi informado boleto ou nota fiscal para essa conta',
                         ], 422);
                     }
                 } else {
@@ -99,13 +99,8 @@ class ApprovalFlowByUserService
                         ], 422);
                     }
                 }
-            } else if ($accountApproval->payment_request->bar_code == null){
-                if($accountApproval->payment_request->bank_account_provider_id == null){
-                    return response()->json([
-                        'error' => 'O banco do fornecedor não foi informado',
-                    ], 422);
-                }
             }
+
             $accountApproval->status = Config::get('constants.status.approved');
             $accountApproval->order += 1;
         } else {
