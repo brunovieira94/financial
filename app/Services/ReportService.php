@@ -60,11 +60,18 @@ class ReportService
 
     public function getAllDisapprovedPaymentRequest($requestInfo){
 
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id);
+
         $userCostCenter = auth()->user()->cost_center->map(function($e) {
             return $e->id;
         });
 
+        if (!$approvalFlowUserOrder){
+            return response([], 404);
+        }
+
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
         ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
         ->select(['accounts_payable_approval_flows.*'])
@@ -80,8 +87,10 @@ class ReportService
                 });
             });
         })
-        ->with(['payment_request', 'reason_to_reject'])
+        ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
         ->where('status', 2)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->with(['payment_request', 'reason_to_reject'])
         ->distinct(['accounts_payable_approval_flows.id']),
         $requestInfo);
     }
