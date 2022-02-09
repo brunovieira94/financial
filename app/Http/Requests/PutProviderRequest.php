@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Rules\ProviderCitySubscription;
+use App\Rules\ProviderStateSubscription;
+use App\Rules\ProviderCNPJ;
 
 class PutProviderRequest extends FormRequest
 {
@@ -19,7 +22,7 @@ class PutProviderRequest extends FormRequest
             'international' => 'boolean',
             'trade_name' => 'max:150',
             'alias' => 'max:150',
-            'cnpj' => 'max:17',
+            'cnpj' => [new ProviderCNPJ(request()->input('international'),request()->input('provider_type')), 'max:17', 'prohibited_if:provider_type,==,F',' unique:providers,cnpj,NULL,id,deleted_at,NULL'],
             'responsible' => 'max:250',
             'provider_categories_id' => 'integer',
             'cost_center_id' => 'integer',
@@ -32,8 +35,8 @@ class PutProviderRequest extends FormRequest
             'email' => 'max:250',
             'responsible_phone' => 'max:250',
             'responsible_email' => 'max:250',
-            'state_subscription' => 'max:250|prohibited_if:provider_type,==,F|required_without:city_subscription',
-            'city_subscription' => 'max:250|prohibited_if:provider_type,==,F|required_without:state_subscription',
+            'state_subscription' => ['max:250', 'prohibited_if:provider_type,==,F', new ProviderStateSubscription(request()->input('international'),request()->input('city_subscription'))],
+            'city_subscription' => ['max:250', 'prohibited_if:provider_type,==,F', new ProviderCitySubscription(request()->input('international'),request()->input('state_subscription'))],
             'accept_billet_payment' => 'boolean',
             'chart_of_accounts_id' => 'integer',
             'bank_accounts.*.agency_number' => 'required_without_all:bank_accounts.*.pix_key|numeric',
@@ -49,6 +52,20 @@ class PutProviderRequest extends FormRequest
             'rg' => 'string|prohibited_if:provider_type,==,J',
             'full_name' => 'string|max:255|prohibited_if:provider_type,==,J',
             'birth_date' => 'date|max:255|prohibited_if:provider_type,==,J',
+            'international' => 'boolean',
         ];
+    }
+
+    protected function prepareForValidation()
+    {
+        if (!$this->has('city_subscription')){
+            $this->merge(['city_subscription'=>null]);
+        }
+        if (!$this->has('state_subscription')){
+            $this->merge(['state_subscription'=>null]);
+        }
+        if (!$this->has('cnpj') && $this->provider_type == 'J' && !$this->international){
+            $this->merge(['cnpj'=>null]);
+        }
     }
 }
