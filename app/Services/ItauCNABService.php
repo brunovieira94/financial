@@ -85,7 +85,7 @@ class ItauCNABService
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
                             'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
-                            'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type ?? 0,
+                            'transferTypeIdentification' => $paymentRequest->form_payment ?? 0,
                             'numeroDocumento'        => $installment->id,
                             'pagador'                => $payer,
                             'beneficiario'           => $recipient,
