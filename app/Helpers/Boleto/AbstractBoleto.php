@@ -421,18 +421,7 @@ abstract class AbstractBoleto implements BoletoContract
 
     public function setTransferTypeIdentification($transferTypeIdentification)
     {
-        //pix
-        if($transferTypeIdentification == null)
-             $this->transferTypeIdentification = "04";
-
-        //poupança
-        if($transferTypeIdentification == 0)
-             $this->transferTypeIdentification = "03";
-
-        //corrente
-        if($transferTypeIdentification == 1)
-             $this->transferTypeIdentification = "01";
-
+        $this->transferTypeIdentification = $transferTypeIdentification;
         return $this;
     }
 
