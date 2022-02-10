@@ -10,5 +10,6 @@ return [
         'paid out' => '4',
         'error' => '5',
         'cnab generated' => '6',
+        'finished' => '7',
     ]
 ];

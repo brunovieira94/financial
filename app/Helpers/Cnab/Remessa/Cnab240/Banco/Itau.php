@@ -66,9 +66,11 @@ class Itau extends AbstractRemessa implements RemessaContract
     {
         $this->boletos[] = $boleto;
 
-        if($boleto->getCodigoDeBarra() != null){
+        if($boleto->getTipoDocumento() == 0){
             $this->segmentoA($boleto);
-        } else {
+        } elseif($boleto->getTipoDocumento() == 2){
+            $this->segmentoA($boleto);
+        } elseif($boleto->getTipoDocumento() == 1){
             $this->segmentoJ($boleto);
         }
         return $this;

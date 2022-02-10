@@ -194,5 +194,13 @@ class ReportService
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return Utils::pagination($query,$requestInfo);
     }
+
+    public function getAllPaymentRequestFinished($requestInfo)
+    {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request')
+        ->where('status', 7),$requestInfo);
+    }
 }
 
