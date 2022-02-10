@@ -35,4 +35,9 @@ class BankAccount extends Model
     {
         return $this->hasOne(ProviderHasBankAccounts::class, 'bank_account_id', 'id');
     }
+
+    public function bank_account_default_company()
+    {
+        return $this->hasOne(CompanyHasBankAccount::class, 'bank_account_id', 'id');
+    }
 }
