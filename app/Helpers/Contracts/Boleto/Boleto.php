@@ -61,6 +61,8 @@ interface Boleto
 
     public function getDataPagamento();
 
+    public function getTipoDocumento();
+
     /**
      * @return mixed
      */

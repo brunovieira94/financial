@@ -113,7 +113,17 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         activity()->disableLogging();
-        $approval->status = Config::get('constants.status.open');
+        if($paymentRequest->payment_type != 0){
+            if(array_key_exists('invoice_number', $paymentRequestInfo)){
+                if($approval->status == 4){
+                    $approval->status = 7;
+                }
+
+            }
+        }
+        if($approval->status != 7){
+            $approval->status = Config::get('constants.status.open');
+        }
         $approval->reason = null;
         $approval->reason_to_reject_id = null;
         $approval->save();

@@ -83,8 +83,16 @@ class ApprovalFlowByUserService
             if ($accountApproval->payment_request->payment_type != 1){
                 if($accountApproval->payment_request->bank_account_provider_id == null){
                     return response()->json([
-                        'error' => 'O banco do fornecedor não foi informado',
+                        'error' => 'O banco do fornecedor não foi informado.',
                     ], 422);
+                }
+            } elseif($accountApproval->payment_request->payment_type == 1){
+                if (!$accountApproval->payment_request->provider->accept_billet_payment){
+                    if(is_null($accountApproval->payment_request->invoice_number)){
+                        return response()->json([
+                            'error' => 'A nota fiscal não foi informada.',
+                        ], 422);
+                    }
                 }
             }
 
