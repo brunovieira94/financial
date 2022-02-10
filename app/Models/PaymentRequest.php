@@ -148,11 +148,7 @@ class PaymentRequest extends Model
 
     public function getAllowEditingRequesterAttribute()
     {
-        if(!LogActivity::where('log_name', 'accounts_payable_approval_flows')
-        ->where('subject_id', $this->approval->id)
-        ->exists()){
-            return true;
-        } elseif ($this->approval->order == 0){
+        if ($this->approval->order == 0){
             return true;
         }
         return false;
