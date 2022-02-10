@@ -24,7 +24,7 @@ class PaymentRequest extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $appends = ['allow_editing_requester', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
         'provider_id',
@@ -144,5 +144,17 @@ class PaymentRequest extends Model
     public function getNextCompetenceDateAttribute()
     {
         return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date ?? null;
+    }
+
+    public function getAllowEditingRequesterAttribute()
+    {
+        if(!LogActivity::where('log_name', 'accounts_payable_approval_flows')
+        ->where('subject_id', $this->approval->id)
+        ->exists()){
+            return true;
+        } elseif ($this->approval->order == 0){
+            return true;
+        }
+        return false;
     }
 }
