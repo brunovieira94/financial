@@ -102,15 +102,15 @@ class CompanyService
                 }
             }
 
-            $collection = $this->providerHasBankAccounts
-            ->where('provider_id', $id)
+            $collection = $this->companyHasBankAccount
+            ->where('company_id', $id)
             ->whereNotIn('bank_account_id', $updateBankAccounts)
             ->whereNotIn('bank_account_id', $createdBankAccounts)
             ->get(['bank_account_id']);
             $this->bankAccount->destroy($collection->toArray());
 
-            $provider = $this->provider->findOrFail($id);
-            $provider->bank_account()->attach($attachArray);
+            $company = $this->company->findOrFail($id);
+            $company->bank_account()->attach($attachArray);
         }
     }
 }
