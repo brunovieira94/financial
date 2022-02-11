@@ -29,7 +29,7 @@ class PutProviderRequest extends FormRequest
                 ->where(static function ($query) {
                     return $query->whereNotNull('cnpj')->whereNull('deleted_at');
                 })
-                ->ignore($this->cnpj),
+                ->ignore($this->id),
             ],
             'responsible' => 'max:250',
             'provider_categories_id' => 'integer',
