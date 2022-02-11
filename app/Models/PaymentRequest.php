@@ -148,7 +148,7 @@ class PaymentRequest extends Model
 
     public function getApplicantCanEditAttribute()
     {
-        if ($this->approval->order == 1 && $this->approval->status){
+        if ($this->approval->order == 1 && $this->approval->status == 0){
             return true;
         } else if ($this->approval->order == 0){
             return true;
