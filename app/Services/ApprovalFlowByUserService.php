@@ -124,6 +124,7 @@ class ApprovalFlowByUserService
         return response()->json([
             'Sucesso' => 'Conta reprovada',
         ], 200);
+
     }
 
     public function cancelAccount($id, Request $request)

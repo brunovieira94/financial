@@ -95,7 +95,7 @@ class PaymentRequestService
         activity()->disableLogging();
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
             'payment_request_id' => $paymentRequest->id,
-            'order' => 0,
+            'order' => 1,
             'status' => 0,
         ]);
         activity()->enableLogging();
@@ -125,6 +125,8 @@ class PaymentRequestService
             $approval->status = Config::get('constants.status.open');
         }
         $approval->reason = null;
+        $approval->status = 0;
+        $approval->order += 1;
         $approval->reason_to_reject_id = null;
         $approval->save();
         activity()->enableLogging();
