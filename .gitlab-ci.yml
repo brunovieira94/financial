@@ -3,6 +3,7 @@ stages:
 variables:
   GIT_STRATEGY: clone
 deploy_master:
+  environment: develop
   stage: deploy
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
