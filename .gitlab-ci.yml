@@ -11,6 +11,7 @@ deploy_master:
     - chmod 0400 /tmp/financeiro-art.pem
     - chmod 755 /tmp/autoscaling-deploy.sh
     - bash /tmp/autoscaling-deploy.sh finac-ASG main /tmp/financeiro-art.pem 0 80 /home/admin/api
+  tags: financ-homolog
   only:
     - develop
 #
