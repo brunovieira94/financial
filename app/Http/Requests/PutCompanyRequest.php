@@ -16,7 +16,7 @@ class PutCompanyRequest extends FormRequest
         return [
             'company_name' => 'max:250',
             'trade_name' => 'max:150',
-            'cnpj' => 'max:45',
+            'cnpj' => 'max:45|unique:companies,cnpj,' . $this->id . ',id,deleted_at,NULL',
             'cep' => 'max:10',
             'cities_id' => 'integer',
             'address' => 'max:250',
