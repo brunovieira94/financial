@@ -79,7 +79,7 @@ class ApprovalFlowByUserService
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
 
-        if($accountApproval->order == $maxOrder) {
+        if($accountApproval->order >= $maxOrder) {
             if ($accountApproval->payment_request->payment_type != 1){
                 if($accountApproval->payment_request->bank_account_provider_id == null){
                     return response()->json([

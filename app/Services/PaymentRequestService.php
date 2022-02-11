@@ -10,6 +10,7 @@ use App\Models\ProviderHasBankAccounts;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\ApprovalFlow;
 use Config;
 
 class PaymentRequestService
@@ -17,15 +18,17 @@ class PaymentRequestService
     private $paymentRequest;
     private $installments;
     private $tax;
+    private $approvalFlow;
 
     private $with = ['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax)
+    public function __construct(ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
         $this->approval = $approval;
         $this->tax = $tax;
+        $this->approvalFlow = $approvalFlow;
     }
 
     public function getAllPaymentRequest($requestInfo)
@@ -109,7 +112,7 @@ class PaymentRequestService
     {
         $paymentRequestInfo = $request->all();
         $paymentRequest = $this->paymentRequest->findOrFail($id);
-
+        $maxOrder = $this->approvalFlow->max('order');
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         activity()->disableLogging();
@@ -121,13 +124,19 @@ class PaymentRequestService
 
             }
         }
+
         if($approval->status != 7){
             $approval->status = Config::get('constants.status.open');
         }
-        $approval->reason = null;
-        $approval->status = 0;
-        $approval->order += 1;
+
+        if($approval->order >= $maxOrder) {
+            $approval->status = 1;
+        } else{
+            $approval->order += 1;
+        }
+
         $approval->reason_to_reject_id = null;
+        $approval->reason = null;
         $approval->save();
         activity()->enableLogging();
 
