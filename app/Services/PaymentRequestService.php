@@ -126,6 +126,7 @@ class PaymentRequestService
         }
         $approval->reason = null;
         $approval->status = 0;
+        $approval->order += 1;
         $approval->reason_to_reject_id = null;
         $approval->save();
         activity()->enableLogging();
