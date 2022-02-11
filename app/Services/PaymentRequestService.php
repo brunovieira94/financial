@@ -125,6 +125,7 @@ class PaymentRequestService
             $approval->status = Config::get('constants.status.open');
         }
         $approval->reason = null;
+        $approval->status = 0;
         $approval->reason_to_reject_id = null;
         $approval->save();
         activity()->enableLogging();
