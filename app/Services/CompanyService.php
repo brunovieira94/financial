@@ -89,7 +89,7 @@ class CompanyService
                     $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
-                    $companyHasBankAccount = CompanyHasBankAccount::findOrFail($bankAccount->bank_account_default->id);
+                    $companyHasBankAccount = CompanyHasBankAccount::findOrFail($bankAccount->bank_account_default_company->id);
                     $companyHasBankAccount->fill($bank)->save();
                 } else {
                     $bankAccount = new BankAccount;
