@@ -38,13 +38,15 @@ class ApprovalFlowByUserService
         ->join("payment_requests", function($join) use ($userCostCenter) {
             $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
             ->where(function($q) use ($userCostCenter) {
-                $q->where(function($query) use ($userCostCenter) {
-                    $query->where("approval_flow.filter_cost_center", true)
-                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                })
-                ->orWhere(function($query) {
-                    $query->where("approval_flow.filter_cost_center", false);
-                });
+                if(!$userCostCenter->isEmpty()){
+                    $q->where(function($query) use ($userCostCenter) {
+                        $query->where("approval_flow.filter_cost_center", true)
+                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                    })
+                    ->orWhere(function($query) {
+                        $query->where("approval_flow.filter_cost_center", false);
+                    });
+                }
             });
 
             // ->orWhere(function($query) {
