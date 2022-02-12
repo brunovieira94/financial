@@ -172,14 +172,16 @@ class PaymentRequestService
         $paymentRequest = $this->paymentRequest->findOrFail($id);
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        if ($approval->order != 0)
+
+        if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)){
+            $this->destroyInstallments($paymentRequest);
+            $this->paymentRequest->findOrFail($id)->delete();
+            return true;
+        }else {
             return response()->json([
                 'erro' => 'Só é permitido deletar conta na ordem 0',
             ], 422)->send();
-
-        $this->destroyInstallments($paymentRequest);
-        $this->paymentRequest->findOrFail($id)->delete();
-        return true;
+        }
     }
 
     public function storeXML(Request $request)
