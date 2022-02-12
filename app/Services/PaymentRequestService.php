@@ -130,7 +130,7 @@ class PaymentRequestService
             $approval->status = Config::get('constants.status.open');
         }
 
-        if ($approval->status != 0) {
+        if ($approval->order != 0) {
             if($paymentRequestInfo['approve'] ==  true){
                 if($approval->order >= $maxOrder) {
                     $approval->status = 1;
