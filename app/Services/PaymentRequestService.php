@@ -116,6 +116,7 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         activity()->disableLogging();
+
         if($paymentRequest->payment_type != 0){
             if(array_key_exists('invoice_number', $paymentRequestInfo)){
                 if($approval->status == 4){
@@ -129,14 +130,16 @@ class PaymentRequestService
             $approval->status = Config::get('constants.status.open');
         }
 
-        if($approval->order >= $maxOrder) {
-            $approval->status = 1;
-        } else{
-            $approval->order += 1;
-        }
 
-        $approval->reason_to_reject_id = null;
-        $approval->reason = null;
+        if(!$paymentRequestInfo['not_approve']){
+            if($approval->order >= $maxOrder) {
+                $approval->status = 1;
+            } else{
+                $approval->order += 1;
+            }
+            $approval->reason_to_reject_id = null;
+            $approval->reason = null;
+        }
         $approval->save();
         activity()->enableLogging();
 
