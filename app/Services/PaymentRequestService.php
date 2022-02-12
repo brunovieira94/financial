@@ -180,7 +180,7 @@ class PaymentRequestService
         }else {
             return response()->json([
                 'erro' => 'Só é permitido deletar conta na ordem 0',
-            ], 422)->send();
+            ], 422);
         }
     }
 
