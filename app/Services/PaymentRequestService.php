@@ -131,7 +131,7 @@ class PaymentRequestService
         }
 
 
-        if(!$paymentRequestInfo['not_approve']){
+        if($paymentRequestInfo['approve'] ==  true){
             if($approval->order >= $maxOrder) {
                 $approval->status = 1;
             } else{
