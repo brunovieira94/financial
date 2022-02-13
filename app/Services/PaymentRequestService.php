@@ -139,8 +139,6 @@ class PaymentRequestService
                 $approval->reason_to_reject_id = null;
                 $approval->reason = null;
             }
-        } else {
-            $approval->order += 1;
         }
 
         $approval->save();
