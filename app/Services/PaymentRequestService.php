@@ -129,7 +129,16 @@ class PaymentRequestService
             $approval->status = Config::get('constants.status.open');
         }
 
-        if ($approval->order != 0) {
+        if ($approval->order == 0) {
+            if ($approval->order >= $maxOrder) {
+                $approval->status = 1;
+            } else {
+                $approval->order += 1;
+            }
+            $approval->reason_to_reject_id = null;
+            $approval->reason = null;
+        }
+        /*if ($approval->order != 0) {
             if ($paymentRequestInfo['approve'] == "true") {
                 if ($approval->order >= $maxOrder) {
                     $approval->status = 1;
@@ -139,7 +148,7 @@ class PaymentRequestService
                 $approval->reason_to_reject_id = null;
                 $approval->reason = null;
             }
-        }
+        }*/
 
         $approval->save();
         activity()->enableLogging();
