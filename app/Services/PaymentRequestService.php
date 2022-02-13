@@ -59,11 +59,11 @@ class PaymentRequestService
         if (!array_key_exists('form_payment', $paymentRequestInfo)) {
             $paymentRequestInfo['form_payment'] = '04'; //default code pix
         }
-        if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)){
+        if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)) {
             $paymentRequestInfo['payment_type'] = 2;
-        } elseif (array_key_exists('bar_code', $paymentRequestInfo)){
+        } elseif (array_key_exists('bar_code', $paymentRequestInfo)) {
             $paymentRequestInfo['payment_type'] = 1;
-        } else{
+        } else {
             $paymentRequestInfo['payment_type'] = 0;
         }
 
@@ -117,24 +117,23 @@ class PaymentRequestService
 
         activity()->disableLogging();
 
-        if($paymentRequest->payment_type != 0){
-            if(array_key_exists('invoice_number', $paymentRequestInfo)){
-                if($approval->status == 4){
+        if ($paymentRequest->payment_type != 0) {
+            if (array_key_exists('invoice_number', $paymentRequestInfo)) {
+                if ($approval->status == 4) {
                     $approval->status = 7;
                 }
-
             }
         }
 
-        if($approval->status != 7){
+        if ($approval->status != 7) {
             $approval->status = Config::get('constants.status.open');
         }
 
         if ($approval->order != 0) {
-            if($paymentRequestInfo['approve'] ==  true){
-                if($approval->order >= $maxOrder) {
+            if ($paymentRequestInfo['approve'] == "true") {
+                if ($approval->order >= $maxOrder) {
                     $approval->status = 1;
-                } else{
+                } else {
                     $approval->order += 1;
                 }
                 $approval->reason_to_reject_id = null;
@@ -173,11 +172,11 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
 
-        if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)){
+        if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)) {
             $this->destroyInstallments($paymentRequest);
             $this->paymentRequest->findOrFail($id)->delete();
             return true;
-        }else {
+        } else {
             return response()->json([
                 'erro' => 'Só é permitido deletar conta na ordem 0',
             ], 422);
