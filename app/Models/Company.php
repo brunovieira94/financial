@@ -27,7 +27,7 @@ class Company extends Model
 
     public function bank_account()
     {
-        return $this->belongsToMany(BankAccount::class, 'company_has_bank_accounts', 'company_id', 'bank_account_id')->with('bank');
+        return $this->belongsToMany(BankAccount::class, 'company_has_bank_accounts', 'company_id', 'bank_account_id')->with(['bank', 'bank_account_default_company']);
     }
 
     public function managers()

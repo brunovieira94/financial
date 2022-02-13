@@ -17,13 +17,14 @@ class PaymentRequest extends Model
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
+        $user->role = Role::findOrFail($user->role_id);
         $activity->causer_id = $user->id;
         $activity->causer_object = $user;
     }
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['billet_link', 'invoice_link', 'xml_link', 'days_late'];
+    protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
         'provider_id',
@@ -45,6 +46,8 @@ class PaymentRequest extends Model
         'user_id',
         'xml_file',
         'invoice_type',
+        'form_payment',
+        'payment_type',
     ];
 
     public function getXmlLinkAttribute()
@@ -125,12 +128,32 @@ class PaymentRequest extends Model
         foreach ($this->installments as $value) {
             $dueDate = date_create($value['due_date']);
             $daysLate = date_diff($dueDate, now());
-            if($dueDate < now() && $value['status'] != 'BD'){
+            if ($dueDate < now() && $value['status'] != 'BD') {
                 return $daysLate->days;
-            }
-            else {
+            } else {
                 return 0;
             }
+        }
+    }
+
+    public function getNextExtensionDateAttribute()
+    {
+        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date ?? null;
+    }
+
+    public function getNextCompetenceDateAttribute()
+    {
+        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date ?? null;
+    }
+
+    public function getApplicantCanEditAttribute()
+    {
+        if ($this->approval->order == 1 && $this->approval->status == 0) {
+            return true;
+        } else if ($this->approval->order == 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

@@ -60,17 +60,25 @@ class ReportService
 
     public function getAllDisapprovedPaymentRequest($requestInfo){
 
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id);
+
         $userCostCenter = auth()->user()->cost_center->map(function($e) {
             return $e->id;
         });
 
+        if (!$approvalFlowUserOrder){
+            return response([], 404);
+        }
+
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
         ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
         ->select(['accounts_payable_approval_flows.*'])
         ->join("payment_requests", function($join) use ($userCostCenter) {
             $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
             ->where(function($q) use ($userCostCenter) {
+                if(!$userCostCenter->isEmpty()){
                 $q->where(function($query) use ($userCostCenter) {
                     $query->where("approval_flow.filter_cost_center", true)
                     ->whereIn("payment_requests.cost_center_id", $userCostCenter);
@@ -78,10 +86,13 @@ class ReportService
                 ->orWhere(function($query) {
                     $query->where("approval_flow.filter_cost_center", false);
                 });
+            }
             });
         })
-        ->with(['payment_request', 'reason_to_reject'])
+        ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
         ->where('status', 2)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->with(['payment_request', 'reason_to_reject'])
         ->distinct(['accounts_payable_approval_flows.id']),
         $requestInfo);
     }
@@ -184,6 +195,14 @@ class ReportService
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return Utils::pagination($query,$requestInfo);
+    }
+
+    public function getAllPaymentRequestFinished($requestInfo)
+    {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+        ->with('payment_request')
+        ->where('status', 7),$requestInfo);
     }
 }
 

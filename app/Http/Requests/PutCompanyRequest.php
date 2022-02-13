@@ -16,7 +16,7 @@ class PutCompanyRequest extends FormRequest
         return [
             'company_name' => 'max:250',
             'trade_name' => 'max:150',
-            'cnpj' => 'max:45',
+            'cnpj' => 'max:45|unique:companies,cnpj,' . $this->id . ',id,deleted_at,NULL',
             'cep' => 'max:10',
             'cities_id' => 'integer',
             'address' => 'max:250',
@@ -32,6 +32,7 @@ class PutCompanyRequest extends FormRequest
             'bank_accounts.*.pix_key_type' => 'integer|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id|min:0|max:4',
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
             'managers' => 'array',
+            'bank_accounts.*.default_bank' => 'boolean',
         ];
     }
 }

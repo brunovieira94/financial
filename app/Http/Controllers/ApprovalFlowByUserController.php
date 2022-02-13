@@ -8,7 +8,6 @@ use App\Http\Requests\PutAccountsPayableApprovalFlowRequest;
 
 class ApprovalFlowByUserController extends Controller
 {
-
     private $accountsPayableApprovalFlowService;
 
     public function __construct(ApprovalFlowByUserService $accountsPayableApprovalFlowService)

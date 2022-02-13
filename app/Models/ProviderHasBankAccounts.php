@@ -9,7 +9,7 @@ class ProviderHasBankAccounts extends Model
     protected $table='provider_has_bank_accounts';
     public $timestamps = false;
     protected $fillable = ['provider_id', 'bank_account_id', 'default_bank'];
-    protected $hidden = ['provider_id', 'bank_account_id'];
+    protected $hidden = ['provider_id'];
 
     public function bank_account()
     {

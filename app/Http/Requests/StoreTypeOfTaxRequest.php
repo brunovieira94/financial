@@ -15,7 +15,7 @@ class StoreTypeOfTaxRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:150|unique:type_of_tax,title,NULL,id,deleted_at,NULL',
+            'title' => 'required|max:150|unique:type_of_tax,title,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
 

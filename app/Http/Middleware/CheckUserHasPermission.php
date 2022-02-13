@@ -27,6 +27,7 @@ class CheckUserHasPermission
         $whiteList = [
             'logs',
             'module',
+            'cnab',
         ];
 
         $unverifiedSubRoutes = [

@@ -49,4 +49,9 @@ class ReportController extends Controller
     {
         return $this->reportService->getAllPaymentRequestPaid($request->all());
     }
+
+    public function paymentRequestFinished(Request $request)
+    {
+        return $this->reportService->getAllPaymentRequestFinished($request->all());
+    }
 }

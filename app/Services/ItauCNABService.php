@@ -85,18 +85,19 @@ class ItauCNABService
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
                             'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
-                            'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type,
+                            'transferTypeIdentification' => $paymentRequest->form_payment ?? '',
                             'numeroDocumento'        => $installment->id,
                             'pagador'                => $payer,
                             'beneficiario'           => $recipient,
-                            'agencia'                => $paymentRequest->bank_account_provider->agency_number,
-                            'conta'                  => $paymentRequest->bank_account_provider->account_number,
-                            'contaDv'                => $paymentRequest->bank_account_provider->account_check_number,
+                            'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
+                            'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
+                            'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
                             'codigoDeBarra'          => $paymentRequest->bar_code,
                             'desconto'               => 0,
                             'multa '                 => 0,
                             'dataPagamento'          => new Carbon($paymentRequest->pay_date),
                             'valorPagamento'       => $paymentRequest->amount,
+                            'tipoDocumento'        => $paymentRequest->payment_type,
                         ]
                     );
                 }
@@ -140,6 +141,7 @@ class ItauCNABService
         $idParcelsAlreadyVerified = [];
         $idUnpaidPayment = [];
         $idPaidPayment = [];
+        $idPaymentFinished = [];
 
         foreach($returnArray as $batch){
 
@@ -162,13 +164,20 @@ class ItauCNABService
                 }
 
                 if($thePaymentHasBeenPaid == true){
-                    array_push($idPaidPayment, $paymentRequest->id);
+                    if($paymentRequest->payment_type == 0){
+                        array_push($idPaymentFinished, $paymentRequest->id);
+                    }else {
+                        array_push($idPaidPayment, $paymentRequest->id);
+                    }
                 }
             }
         }
 
         AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaidPayment)
         ->update(['status' => Config::get('constants.status.paid out')]);
+
+        AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaymentFinished)
+        ->update(['status' => Config::get('constants.status.finished')]);
 
         AccountsPayableApprovalFlow::whereIn('payment_request_id', $idUnpaidPayment)
         ->update(['status' => Config::get('constants.status.approved')]);

@@ -38,7 +38,7 @@ class CompanyService
         if (array_key_exists('managers', $companyInfo)) {
             $company->managers()->sync($companyInfo['managers']);
         }
-        self::syncBankAccounts($company, $companyInfo);
+        $this->syncBankAccounts($company, $companyInfo);
         return $this->company->with($this->with)->findOrFail($company->id);
     }
 
@@ -49,7 +49,7 @@ class CompanyService
         if (array_key_exists('managers', $companyInfo)) {
             $company->managers()->sync($companyInfo['managers']);
         }
-        self::putBankAccounts($id, $companyInfo);
+        $this->putBankAccounts($id, $companyInfo);
         return $this->company->with($this->with)->findOrFail($company->id);
     }
 
@@ -61,46 +61,56 @@ class CompanyService
         return true;
     }
 
-    public function syncBankAccounts($company, $companyInfo)
-    {
+    public function syncBankAccounts($company, $companyInfo){
         $syncArray = [];
-        if (array_key_exists('bank_accounts', $companyInfo)) {
-            foreach ($companyInfo['bank_accounts'] as $bank) {
+        if(array_key_exists('bank_accounts', $companyInfo)){
+            foreach($companyInfo['bank_accounts'] as $bank){
                 $bankAccount = new BankAccount;
                 $bankAccount = $bankAccount->create($bank);
-                $syncArray[] = $bankAccount->id;
+                $syncArray[] = [
+                    'bank_account_id' => $bankAccount->id,
+                    'default_bank' => $bank['default_bank'] ?? false,
+                ];
             }
             $company->bank_account()->sync($syncArray);
         }
     }
 
-    public function putBankAccounts($id, $companyInfo)
-    {
+    public function putBankAccounts($id, $companyInfo){
 
         $updateBankAccounts = [];
         $createdBankAccounts = [];
 
-        if (array_key_exists('bank_accounts', $companyInfo)) {
-            foreach ($companyInfo['bank_accounts'] as $bank) {
-                if (array_key_exists('id', $bank)) {
-                    $bankAccount = $this->bankAccount->findOrFail($bank['id']);
+        if(array_key_exists('bank_accounts', $companyInfo)){
+            $attachArray = [];
+
+            foreach($companyInfo['bank_accounts'] as $bank){
+                if (array_key_exists('id', $bank)){
+                    $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
+                    $companyHasBankAccount = CompanyHasBankAccount::findOrFail($bankAccount->bank_account_default_company->id);
+                    $companyHasBankAccount->fill($bank)->save();
                 } else {
                     $bankAccount = new BankAccount;
                     $bankAccount = $bankAccount->create($bank);
+                    $attachArray[] = [
+                        'bank_account_id' => $bankAccount->id,
+                        'default_bank' => $bank['default_bank'] ?? false,
+                    ];
                     $createdBankAccounts[] = $bankAccount->id;
                 }
             }
-            $collection = $this->companyHasBankAccount->where('company_id', $id)
-                ->whereNotIn('bank_account_id', $updateBankAccounts)
-                ->whereNotIn('bank_account_id', $createdBankAccounts)
-                ->get(['bank_account_id']);
 
+            $collection = $this->companyHasBankAccount
+            ->where('company_id', $id)
+            ->whereNotIn('bank_account_id', $updateBankAccounts)
+            ->whereNotIn('bank_account_id', $createdBankAccounts)
+            ->get(['bank_account_id']);
             $this->bankAccount->destroy($collection->toArray());
 
             $company = $this->company->findOrFail($id);
-            $company->bank_account()->attach($createdBankAccounts);
+            $company->bank_account()->attach($attachArray);
         }
     }
 }
