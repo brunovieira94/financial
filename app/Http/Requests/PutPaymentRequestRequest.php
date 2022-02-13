@@ -16,6 +16,7 @@ class PutPaymentRequestRequest extends FormRequest
     {
         return [
             'provider_id' => 'integer',
+            'form_payment' => 'max:2',
             'emission_date' => 'Date',
             'pay_date'  => 'Date',
             'bank_account_provider_id' => 'integer',

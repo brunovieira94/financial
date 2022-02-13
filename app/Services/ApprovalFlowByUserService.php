@@ -38,13 +38,15 @@ class ApprovalFlowByUserService
         ->join("payment_requests", function($join) use ($userCostCenter) {
             $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
             ->where(function($q) use ($userCostCenter) {
-                $q->where(function($query) use ($userCostCenter) {
-                    $query->where("approval_flow.filter_cost_center", true)
-                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                })
-                ->orWhere(function($query) {
-                    $query->where("approval_flow.filter_cost_center", false);
-                });
+                if(!$userCostCenter->isEmpty()){
+                    $q->where(function($query) use ($userCostCenter) {
+                        $query->where("approval_flow.filter_cost_center", true)
+                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                    })
+                    ->orWhere(function($query) {
+                        $query->where("approval_flow.filter_cost_center", false);
+                    });
+                }
             });
 
             // ->orWhere(function($query) {
@@ -79,40 +81,30 @@ class ApprovalFlowByUserService
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
 
-        if($accountApproval->order == $maxOrder) {
-            if($accountApproval->payment_request->bar_code == null && $accountApproval->payment_request->invoice_number == null){
-                if($accountApproval->payment_request->provider->accept_billet_payment){
-                    if($accountApproval->payment_request->bar_code == null){
-                        return response()->json([
-                            'error' => 'O boleto não foi informado',
-
-                        ], 422);
-                    }
-                } else {
-                    if ($accountApproval->payment_request->invoice_number == null){
-                        return response()->json([
-                            'error' => 'A nota fiscal não foi informada',
-                        ], 422);
-                    }
-                    if($accountApproval->payment_request->bank_account_provider_id == null){
-                        return response()->json([
-                            'error' => 'O banco do fornecedor não foi informado',
-                        ], 422);
-                    }
-                }
-            } else {
+        if($accountApproval->order >= $maxOrder) {
+            if ($accountApproval->payment_request->payment_type != 1){
                 if($accountApproval->payment_request->bank_account_provider_id == null){
                     return response()->json([
-                        'error' => 'O banco do fornecedor não foi informado',
+                        'error' => 'O banco do fornecedor não foi informado.',
                     ], 422);
                 }
-            }
+            } //elseif($accountApproval->payment_request->payment_type == 1){
+              //  if (!$accountApproval->payment_request->provider->accept_billet_payment){
+              //      if(is_null($accountApproval->payment_request->invoice_number)){
+              //          return response()->json([
+              //              'error' => 'A nota fiscal não foi informada.',
+              //          ], 422);
+              //      }
+              //  }
+            //}
+
             $accountApproval->status = Config::get('constants.status.approved');
             $accountApproval->order += 1;
         } else {
             $accountApproval->order += 1;
         }
         $accountApproval->reason = null;
+        $accountApproval->reason_to_reject_id = null;
         $accountApproval->save();
         return response()->json([
             'Sucesso' => 'Conta aprovada',
@@ -134,6 +126,7 @@ class ApprovalFlowByUserService
         return response()->json([
             'Sucesso' => 'Conta reprovada',
         ], 200);
+
     }
 
     public function cancelAccount($id, Request $request)

@@ -282,6 +282,9 @@ abstract class AbstractBoleto implements BoletoContract
      *
      * @var array
      */
+
+    protected $tipoDocumento;
+
     public $variaveis_adicionais = [];
     /**
      * Cache do campo livre para evitar processamento desnecessário.
@@ -421,18 +424,7 @@ abstract class AbstractBoleto implements BoletoContract
 
     public function setTransferTypeIdentification($transferTypeIdentification)
     {
-        //pix
-        if($transferTypeIdentification == null)
-             $this->transferTypeIdentification = "04";
-
-        //poupança
-        if($transferTypeIdentification == 0)
-             $this->transferTypeIdentification = "03";
-
-        //corrente
-        if($transferTypeIdentification == 1)
-             $this->transferTypeIdentification = "01";
-
+        $this->transferTypeIdentification = $transferTypeIdentification;
         return $this;
     }
 
@@ -444,6 +436,17 @@ abstract class AbstractBoleto implements BoletoContract
     public function getTransferTypeIdentification()
     {
         return $this->transferTypeIdentification;
+    }
+
+    public function setTipoDocumento($tipoDocumento)
+    {
+        $this->tipoDocumento = $tipoDocumento;
+        return $this;
+    }
+
+    public function getTipoDocumento()
+    {
+        return $this->tipoDocumento;
     }
 
     /**

@@ -15,7 +15,7 @@ class StorePaymentTypeRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255|unique:payment_types,title,NULL,id,deleted_at,NULL',
+            'title' => 'required|max:255|unique:payment_types,title,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
 

@@ -61,23 +61,35 @@ class ProviderService
         $createdBankAccounts = [];
 
         if(array_key_exists('bank_accounts', $providerInfo)){
+            $attachArray = [];
+
             foreach($providerInfo['bank_accounts'] as $bank){
                 if (array_key_exists('id', $bank)){
-                    $bankAccount = $this->bankAccount->findOrFail($bank['id']);
+                    $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
+                    $providerHasBankAccount = ProviderHasBankAccounts::findOrFail($bankAccount->bank_account_default->id);
+                    $providerHasBankAccount->fill($bank)->save();
                 } else {
                     $bankAccount = new BankAccount;
                     $bankAccount = $bankAccount->create($bank);
+                    $attachArray[] = [
+                        'bank_account_id' => $bankAccount->id,
+                        'default_bank' => $bank['default_bank'] ?? false,
+                    ];
                     $createdBankAccounts[] = $bankAccount->id;
                 }
             }
 
-            $collection = $this->providerHasBankAccounts->where('provider_id', $id)->whereNotIn('bank_account_id', $updateBankAccounts)->whereNotIn('bank_account_id', $createdBankAccounts)->get(['bank_account_id']);
+            $collection = $this->providerHasBankAccounts
+            ->where('provider_id', $id)
+            ->whereNotIn('bank_account_id', $updateBankAccounts)
+            ->whereNotIn('bank_account_id', $createdBankAccounts)
+            ->get(['bank_account_id']);
             $this->bankAccount->destroy($collection->toArray());
 
             $provider = $this->provider->findOrFail($id);
-            $provider->bank_account()->attach($createdBankAccounts);
+            $provider->bank_account()->attach($attachArray);
         }
     }
 

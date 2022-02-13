@@ -45,6 +45,11 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderHasProducts::class, 'purchase_order_id', 'id')->with('product');
     }
 
+    public function companies()
+    {
+        return $this->hasMany(PurchaseOrderHasCompanies::class, 'purchase_order_id', 'id')->with('company');
+    }
+
     public function currency()
     {
         return $this->hasOne(Currency::class, 'id', 'currency_id');

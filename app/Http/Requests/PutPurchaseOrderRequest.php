@@ -25,6 +25,7 @@ class PutPurchaseOrderRequest extends FormRequest
             'attachments' => 'array',
             'services' => 'array',
             'products' => 'array',
+            'companies' => 'array',
             'percentage_discount_services' => 'numeric',
             'money_discount_services' => 'numeric',
             'percentage_discount_products' => 'numeric',

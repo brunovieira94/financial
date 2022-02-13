@@ -14,7 +14,7 @@ class StoreReasonToRejectRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:150|unique:reasons_to_reject,title,NULL,id,deleted_at,NULL',
+            'title' => 'required|max:150|unique:reasons_to_reject,title,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
 

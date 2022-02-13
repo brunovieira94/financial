@@ -16,6 +16,7 @@ class StorePaymentRequestRequest extends FormRequest
     {
         return [
             'provider_id' => 'required|integer',
+            'form_payment' => 'max:2',
             'emission_date' => 'required|Date',
             'pay_date'  => 'required|Date',
             'bank_account_provider_id' => 'integer',
