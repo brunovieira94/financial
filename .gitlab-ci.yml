@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 777 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "cd /var/www/html/rentalcars-api && git reset --hard HEAD && git checkout testing && git pull origin testisg && composer i && composer update && php artisan migrate && exit"
+    - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api && git reset --hard HEAD && git checkout testing && git pull origin testisg && composer i && composer update && php artisan migrate && exit"
 
   tags:
     - financ-homolog
