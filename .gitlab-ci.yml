@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh -o StrictHostKeyChecking=no admin@44.226.205.244 "cd /var/www/html;"
+    - ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i admin@44.226.205.244
 
   tags:
     - financ-homolog
