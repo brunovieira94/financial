@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 777 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api && composer i && composer update"
+    - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api"
     - git reset --hard HEAD
     - git checkout -b testing
     - git pull origin testing
