@@ -22,9 +22,7 @@ deploy_develop:
     - git reset --hard HEAD
     - git checkout testing
     - git pull origin testing 
-    - git add .
-    - git commit -m "My CI commit"
-
+    
   tags:
     - financ-homolog
   only:
