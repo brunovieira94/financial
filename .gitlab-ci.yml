@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i admin@172.22.57.61 && git reset --hard HEAD && git checkout && git pull origin && composer i && composer update && php artisan migrate && exit"
+    - ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i admin@172.22.57.61 && git reset --hard HEAD && git checkout && git pull origin && composer i && composer update && php artisan migrate && exit
 
   tags:
     - financ-homolog
