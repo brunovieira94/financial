@@ -13,9 +13,9 @@ deploy_develop:
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh
+    - chmod 777 ~/.ssh
     - ssh-keyscan $EC2_IPADDRESS >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
+    - chmod 777 ~/.ssh/known_hosts
     
   script:
     - ssh -o StrictHostKeyChecking=no admin@44.226.205.244
