@@ -19,6 +19,7 @@ deploy_develop:
     
   script:
     - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api && git pull"
+    - git add .
 
   tags:
     - financ-homolog
