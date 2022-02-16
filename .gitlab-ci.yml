@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 777 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "cd /var/www"
+    - ssh admin@$EC2_IPADDRESS "cd /var/www && sudo mkdir teste"
 
   tags:
     - financ-homolog
