@@ -20,6 +20,7 @@ deploy_develop:
   script:
     - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api"
     - git add .
+    - git commit -m "My CI commit"
 
   tags:
     - financ-homolog
