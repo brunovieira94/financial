@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 777 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "sudo apt-get update"
+    - ssh admin@$EC2_IPADDRESS "cd /var/www"
 
   tags:
     - financ-homolog
