@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "hostname && sudo -i && cd /var/www/html/dev-api && git status"
+    - ssh admin@$EC2_IPADDRESS "hostname && sudo -i && cd /var/www/html/dev-api && git branch"
     
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
