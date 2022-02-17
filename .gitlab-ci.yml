@@ -19,9 +19,9 @@ deploy_develop:
     
   script:
     - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api && sudo mkdir teste"
-    - git reset --hard HEAD
-    - git checkout -b testing
-    - git pull origin testing
+   # - git reset --hard HEAD
+   # - git checkout -b testing
+   # - git pull origin testing
     
     
   tags:
