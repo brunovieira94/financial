@@ -28,7 +28,7 @@ deploy_develop:
     - financ-homolog
   only:
     - testing
-#deploy_master:
+#deploy_master
 #  stage: deploy
 #  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
 #  script:
