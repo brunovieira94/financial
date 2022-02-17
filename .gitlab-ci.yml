@@ -16,7 +16,6 @@ deploy_develop:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh/id_rsa
     - ssh-keyscan $EC2_IPADDRESS >> ~/.ssh/known_hosts
-    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
     - chmod 644 ~/.ssh/known_hosts
     
   script:
