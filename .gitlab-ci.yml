@@ -18,8 +18,8 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh -o StrictHostKeyChecking=no -i admin@$EC2_IPADDRESS
-    #- ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www && ls && pwd"
+    - ssh admin@$EC2_IPADDRESS
+    - hostname
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
     #- "pwd"
