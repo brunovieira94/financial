@@ -18,8 +18,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www"
-    - "ls && pwd"
+    - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www && ls && pwd"
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
     #- "pwd"
