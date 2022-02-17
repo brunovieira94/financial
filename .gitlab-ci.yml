@@ -18,8 +18,8 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api && pwd && curl ifconfig.me"
-    - "cd /var/www/html"
+    - ssh admin@$EC2_IPADDRESS
+    - "cd /var/www/html/rentalcars-api/"
     - "dir"
     - "pwd"
     #- git reset --hard HEAD
