@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh admin@$EC2_IPADDRESS "hostname && cd /var/www/html/rentalcars-api/ && git reset --hard HEAD"
+    - ssh admin@$EC2_IPADDRESS "hostname && sudo -i cd /var/www/html/rentalcars-api/ && git reset --hard HEAD"
     
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
