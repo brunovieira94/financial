@@ -16,7 +16,7 @@ deploy_develop:
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
     
   script:
-    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api && sudo git reset --hard HEAD && sudo git checkout testing && sudo git pull origin testing"
+    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api/api && sudo git reset --hard HEAD && sudo git checkout testing && sudo git pull origin testing"
     
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
