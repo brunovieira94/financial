@@ -21,7 +21,7 @@ deploy_develop:
     - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api"
     - git reset --hard HEAD
     - git checkout -b testing
-    - git pull
+    - git pull origin testing
     
     
   tags:
