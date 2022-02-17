@@ -19,8 +19,8 @@ deploy_develop:
     
   script:
     - ssh admin@$EC2_IPADDRESS "sudo -i cd /var/www/html/rentalcars-api && pwd && curl ifconfig.me"
-    - sudo -i cd /var/www/html
-    - sudo pwd
+    - "cd /var/www/html"
+    - "pwd"
    # - git reset --hard HEAD
    # - git checkout -b testing
    # - git pull origin testing
