@@ -70,7 +70,7 @@ class ReportService
             return response([], 404);
         }
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo,['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
         ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
