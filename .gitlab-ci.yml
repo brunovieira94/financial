@@ -18,7 +18,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api && sudo git reset --hard HEAD && sudo git checkout -b testing && git status"
+    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api && sudo git reset --hard HEAD && sudo git pull origin testing && git status"
     
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
