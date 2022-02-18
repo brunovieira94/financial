@@ -56,6 +56,19 @@ class Itau extends AbstractRemessa implements RemessaContract
      */
     protected $carteiras = ['112', '115', '188', '109', '121', '175'];
 
+    protected $codigoFormaPagamento;
+
+    public function getCodigoFormaPagamento()
+    {
+        return $this->codigoFormaPagamento;
+    }
+
+    public function setCodigoFormaPagamento($codigoFormaPagamento)
+    {
+        $this->codigoFormaPagamento = $codigoFormaPagamento;
+        return $this;
+    }
+
     /**
      * @param BoletoContract $boleto
      *
@@ -357,9 +370,9 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '0001');
         $this->add(8, 8, '1');
-        $this->add(9, 9, 'C');
+        $this->add(9, 9, '2');
         $this->add(10, 11, '20');
-        $this->add(12, 13, '45');
+        $this->add(12, 13, Util::formatCnab('9', $this->getCodigoFormaPagamento(), 2));
         $this->add(14, 16, '040');
         $this->add(17, 17, '');
         $this->add(18, 18, strlen(Util::onlyNumbers($this->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);

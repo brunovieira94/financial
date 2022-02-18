@@ -76,6 +76,10 @@ class Bb extends AbstractRemessa implements RemessaContract
      */
     protected $variacaoCarteira;
 
+    protected $codigoFormaPagamento;
+
+    protected $tipoSeguimento;
+
     /**
      * @return mixed
      */
@@ -93,6 +97,28 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->convenio = ltrim($convenio, 0);
 
+        return $this;
+    }
+
+    public function getCodigoFormaPagamento()
+    {
+        return $this->codigoFormaPagamento;
+    }
+
+    public function setCodigoFormaPagamento($codigoFormaPagamento)
+    {
+        $this->codigoFormaPagamento = $codigoFormaPagamento;
+        return $this;
+    }
+
+    public function getTipoSeguimento()
+    {
+        return $this->tipoSeguimento;
+    }
+
+    public function setTipoSeguimento($tipoSeguimento)
+    {
+        $this->tipoSeguimento = $tipoSeguimento;
         return $this;
     }
 
@@ -149,11 +175,14 @@ class Bb extends AbstractRemessa implements RemessaContract
     public function addBoleto(BoletoContract $boleto)
     {
         $this->boletos[] = $boleto;
-        $this->segmentoP($boleto);
-        $this->segmentoQ($boleto);
-		if($boleto->getStatus() == $boleto::STATUS_REGISTRO) {
-			$this->segmentoR($boleto);
-		}
+
+        if($this->tipoSeguimento == 0){
+            $this->segmentoA($boleto);
+        } elseif($this->tipoSeguimento == 2){
+            $this->segmentoA($boleto);
+        } elseif($this->tipoSeguimento == 1){
+            $this->segmentoJ($boleto);
+        }
         return $this;
     }
 
@@ -163,68 +192,66 @@ class Bb extends AbstractRemessa implements RemessaContract
      * @return $this
      * @throws \Exception
      */
-    protected function segmentoP(BoletoContract $boleto)
+    protected function segmentoA(BoletoContract $boleto)
     {
         $this->iniciaDetalhe();
-
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '0001');
         $this->add(8, 8, '3');
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5));
-        $this->add(14, 14, 'P');
-        $this->add(15, 15, '');
-        $this->add(16, 17, self::OCORRENCIA_REMESSA);
-        if ($boleto->getStatus() == $boleto::STATUS_BAIXA) {
-            $this->add(16, 17, self::OCORRENCIA_PEDIDO_BAIXA);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO) {
-            $this->add(16, 17, self::OCORRENCIA_ALT_OUTROS_DADOS);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_ALTERACAO_DATA) {
-            $this->add(16, 17, self::OCORRENCIA_ALT_VENCIMENTO);
-        }
-        if ($boleto->getStatus() == $boleto::STATUS_CUSTOM) {
-            $this->add(16, 17, sprintf('%2.02s', $boleto->getComando()));
-        }
-        $this->add(18, 22, Util::formatCnab('9', $this->getAgencia(), 5));
-        $this->add(23, 23, CalculoDV::bbAgencia($this->getAgencia()));
-        $this->add(24, 35, Util::formatCnab('9', $this->getConta(), 12));
-        $this->add(36, 36, CalculoDV::bbContaCorrente($this->getConta()));
-        $this->add(37, 37, '');
-        $this->add(38, 57, Util::formatCnab('X', $this->nossoNumero($boleto), 20));
-        $this->add(58, 58, '1'); //'1' = Cobrança Simples
-        $this->add(59, 59, '');
-        $this->add(60, 60, '');
-        $this->add(61, 61, '');
-        $this->add(62, 62, '');
-        $this->add(63, 77, Util::formatCnab('9', $boleto->getNumeroDocumento(), 15)); //valor do número do documento
-        $this->add(78, 85, $boleto->getDataVencimento()->format('dmY'));
-        $this->add(86, 100, Util::formatCnab('9', $boleto->getValor(), 15, 2));
-        $this->add(101, 105, '00000');
-        $this->add(106, 106, '0');
-        $this->add(107, 108, Util::formatCnab('9', $boleto->getEspecieDocCodigo(), 2));
-        $this->add(109, 109, Util::formatCnab('9', $boleto->getAceite(), 1));
-        $this->add(110, 117, $boleto->getDataDocumento()->format('dmY'));
-        $this->add(118, 118, $boleto->getJuros() ? '2' : '3'); //'1' = Valor por Dia, '2' = Taxa Mensal, '3' = Isento
-        $this->add(119, 126, $boleto->getDataVencimento()->format('dmY'));
-        $this->add(127, 141, Util::formatCnab('9', $boleto->getJuros(), 15, 2)); //Valor da mora/dia ou Taxa mensal
-        $this->add(142, 142, $boleto->getDesconto() > 0 ? '1' : '0'); // Se houver desconto '1' = Valor Fixo Até a Data Informada, Se não houver envia o 0
-        $this->add(143, 150, $boleto->getDesconto() > 0 ? $boleto->getDataDesconto()->format('dmY') : '00000000');
-        $this->add(151, 165, Util::formatCnab('9', $boleto->getDesconto(), 15, 2));
-        $this->add(166, 180, Util::formatCnab('9', 0, 15, 2));
-        $this->add(181, 195, Util::formatCnab('9', 0, 15, 2));
-        $this->add(196, 220, Util::formatCnab('X', $boleto->getNumeroControle(), 25));
-        $this->add(221, 221, self::PROTESTO_NAO_PROTESTAR);
-        if ($boleto->getDiasProtesto() > 0) {
-            $this->add(221, 221, self::PROTESTO_DIAS_UTEIS);
-        }
-        $this->add(222, 223, Util::formatCnab('9', $boleto->getDiasProtesto(), 2));
-        $this->add(224, 224, '0');
-        $this->add(225, 227, '000');
-        $this->add(228, 229, Util::formatCnab('9', $boleto->getMoeda(), 2));
-        $this->add(230, 239, '0000000000');
-        $this->add(240, 240, '');
+        $this->add(14, 14, 'A');
+        $this->add(15, 15, '0'); //Tipo de Movimento
+        $this->add(16, 17, '00'); //cod Tipo de Movimento
+        $this->add(18, 20, '009'); // validar
+        $this->add(21, 23, Util::onlyNumbers($boleto->getCodigoBanco()));
+        $this->add(24, 28, Util::formatCnab('9', $boleto->getAgencia(), 5));
+        $this->add(29, 29, Util::formatCnab('X', $boleto->getAgenciaDv(), 1));
+        $this->add(30, 41, Util::formatCnab('9', $boleto->getConta(), 12));
+        $this->add(42, 42, Util::formatCnab('9', $boleto->getContaDv(), 1));
+        $this->add(42, 42, ' ');  //validar
+        $this->add(44, 73, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
+        $this->add(74, 93, Util::formatCnab('X', $boleto->getNumeroDocumento(), 20));//número do documento atribuído a empresa VEERIFICAR
+        $this->add(94, 101, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
+        $this->add(102, 104, Util::formatCnab('X', 'BRL', 3));
+        $this->add(105, 119, Util::formatCnab('9', '000000000000000', 15));
+        $this->add(120, 134, Util::formatCnab('9', $boleto->getValor(), 15));
+        $this->add(135, 154, Util::formatCnab('X', '', 20));
+        $this->add(155, 162, Util::formatCnab('9', '', 8));
+        $this->add(163, 177, Util::formatCnab('9', '', 15)); //dados retorno
+        $this->add(178, 217, Util::formatCnab('X', '', 40));
+        $this->add(218, 219, Util::formatCnab('X', '', 2));
+        $this->add(220, 224, Util::formatCnab('X', '', 5));
+        $this->add(225, 226, Util::formatCnab('X', '', 2));
+        $this->add(227, 229, Util::formatCnab('X', '', 3));
+        $this->add(230, 230, Util::formatCnab('9', '', 1));
+        $this->add(231, 240, Util::formatCnab('X', '', 10));
+        return $this;
+    }
 
+    protected function segmentoJ(BoletoContract $boleto)
+    {
+        $this->iniciaDetalhe();
+        $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco())); //ok
+        $this->add(4, 7, '0001'); //ok
+        $this->add(8, 8, '3'); //ok
+        $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5)); //ok
+        $this->add(14, 14, 'J'); //ok
+        $this->add(15, 15, '0'); //Tipo de Movimento
+        $this->add(16, 17, '00'); //cod Tipo de Movimento
+        $this->add(18, 61, Util::formatCnab('9', $boleto->getCodigoDeBarra(), 44)); //ok
+        $this->add(62, 91, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
+        $this->add(92, 99, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
+        $this->add(100, 114, Util::formatCnab('9', $boleto->getValor(), 15));
+        $this->add(115, 129, Util::formatCnab('9', $boleto->getDesconto(), 15));
+        $this->add(130, 144, Util::formatCnab('9', $boleto->getMulta(), 15));
+        $this->add(145, 152, Util::formatCnab('9', $boleto->getDataPagamento()->format('dmY'), 8));
+        $this->add(153, 167, Util::formatCnab('9', $boleto->getValorPagamento(), 15));
+        $this->add(168, 182, Util::formatCnab('9', '', 15));
+        $this->add(183, 202, Util::formatCnab('X', $boleto->getNumeroDocumento(), 20));
+        $this->add(203, 222, Util::formatCnab('X', '', 20));
+        $this->add(223, 224, Util::formatCnab('9', '09', 20));
+        $this->add(225, 230, Util::formatCnab('X', '', 6));
+        $this->add(231, 240, Util::formatCnab('X', '0000000000', 10));
         return $this;
     }
 
@@ -338,9 +365,6 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->iniciaHeader();
 
-        /**
-         * HEADER DE ARQUIVO
-         */
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '0000');
         $this->add(8, 8, '0');
@@ -348,17 +372,17 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(18, 18, strlen(Util::onlyNumbers($this->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);
         $this->add(19, 32, Util::formatCnab('9', Util::onlyNumbers($this->getBeneficiario()->getDocumento()), 14));
         $this->add(33, 41, Util::formatCnab('9', Util::onlyNumbers($this->getConvenio()), 9));
-        $this->add(42, 45, '0014');
-        $this->add(46, 47, Util::formatCnab('9', $this->getCarteira(), 2));
-        $this->add(48, 50, Util::formatCnab('9', $this->getVariacaoCarteira(), 3));
-        $this->add(51, 52, '');
+        $this->add(42, 45, '0126');
+        $this->add(46, 50, Util::formatCnab('X', '', 5));
+        //$this->add(51, 52, 'TS'); //ARQUIVO DE TESTE
+        $this->add(51, 52, ''); // correto
         $this->add(53, 57, Util::formatCnab('9', $this->getAgencia(), 5));
         $this->add(58, 58, CalculoDV::bbAgencia($this->getAgencia()));
         $this->add(59, 70, Util::formatCnab('9', $this->getConta(), 12));
         $this->add(71, 71, CalculoDV::bbContaCorrente($this->getConta()));
-        $this->add(72, 72, '');
+        $this->add(72, 72, '0');
         $this->add(73, 102, Util::formatCnab('X', $this->getBeneficiario()->getNome(), 30));
-        $this->add(103, 132, Util::formatCnab('X', 'BANCO DO BRASIL S.A.', 30));
+        $this->add(103, 142, Util::formatCnab('X', 'BANCO DO BRASIL S.A.', 30));
         $this->add(133, 142, '');
         $this->add(143, 143, 1);
         $this->add(144, 151, $this->getDataRemessa('dmY'));
@@ -368,7 +392,6 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(167, 171, '01600');
         $this->add(172, 211, '');
         $this->add(212, 240, '');
-
         return $this;
     }
 
@@ -380,38 +403,77 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->iniciaHeaderLote();
 
-        /**
-         * HEADER DE LOTE
-         */
+        if($this->tipoSeguimento == 0 || 2){
+            $this->headerLoteA();
+        } elseif($this->tipoSeguimento == 1){
+            $this->headerLoteJ();
+        }
+    }
+
+    public function headerLoteA(){
+
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '0001');
         $this->add(8, 8, '1');
-        $this->add(9, 9, 'R');
-        $this->add(10, 11, '01');
-        $this->add(12, 13, '');
+        $this->add(9, 9, 'C');
+        $this->add(10, 11, '20'); //Validar
+        $this->add(12, 13, Util::formatCnab('9', $this->getCodigoFormaPagamento(), 2)); // validar
         $this->add(14, 16, '042');
         $this->add(17, 17, '');
         $this->add(18, 18, strlen(Util::onlyNumbers($this->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);
-        $this->add(19, 33, Util::formatCnab('9', Util::onlyNumbers($this->getBeneficiario()->getDocumento()), 15));
-        $this->add(34, 42, Util::formatCnab('9', Util::onlyNumbers($this->getConvenio()), 9));
-        $this->add(43, 46, '0014');
-        $this->add(47, 48, Util::formatCnab('9', $this->getCarteira(), 2));
-        $this->add(49, 51, Util::formatCnab('9', $this->getVariacaoCarteira(), 3));
-        $this->add(52, 53, '');
-        $this->add(54, 58, Util::formatCnab('9', $this->getAgencia(), 5));
-        $this->add(59, 59, CalculoDV::bbAgencia($this->getAgencia()));
-        $this->add(60, 71, Util::formatCnab('9', $this->getConta(), 12));
-        $this->add(72, 72, CalculoDV::bbContaCorrente($this->getConta()));
-        $this->add(73, 73, '');
-        $this->add(74, 103, Util::formatCnab('X', $this->getBeneficiario()->getNome(), 30));
-        $this->add(104, 183, '');
-        $this->add(184, 191, '00000000');
+        $this->add(19, 32, Util::formatCnab('9', Util::onlyNumbers($this->getBeneficiario()->getDocumento()), 14));
+        $this->add(33, 41, Util::formatCnab('9', Util::onlyNumbers($this->getConvenio()), 9));
+        $this->add(42, 45, '0126');
+        $this->add(46, 50, Util::formatCnab('9', '', 5));
+        $this->add(51, 52, '');
+        $this->add(53, 57, Util::formatCnab('9', $this->getAgencia(), 5));
+        $this->add(58, 58, CalculoDV::bbAgencia($this->getAgencia()));
+        $this->add(59, 70, Util::formatCnab('9', $this->getConta(), 12));
+        $this->add(71, 71, CalculoDV::bbContaCorrente($this->getConta()));
+        $this->add(72, 72, '0');
+        $this->add(73, 102, Util::formatCnab('X', $this->getBeneficiario()->getNome(), 30));
+        $this->add(103, 142, '');
+        $this->add(143, 172, Util::formatCnab('X', '', 30));
+        $this->add(173, 177, Util::formatCnab('9', '00000', 5));
+        $this->add(178, 192, Util::formatCnab('X', '', 15));
         $this->add(192, 199, date('dmY'));
         $this->add(200, 207, '00000000');
         $this->add(208, 240, '');
-
         return $this;
     }
+
+    public function headerLoteJ(){
+
+        $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
+        $this->add(4, 7, '0001');
+        $this->add(8, 8, '1');
+        $this->add(9, 9, 'C');
+        $this->add(10, 11, '20'); //Validar
+        $this->add(12, 13, Util::formatCnab('9', $this->getCodigoFormaPagamento(), 2)); // validar
+        $this->add(14, 16, '042');
+        $this->add(17, 17, '');
+        $this->add(18, 18, strlen(Util::onlyNumbers($this->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);
+        $this->add(19, 32, Util::formatCnab('9', Util::onlyNumbers($this->getBeneficiario()->getDocumento()), 14));
+        $this->add(33, 41, Util::formatCnab('9', Util::onlyNumbers($this->getConvenio()), 9));
+        $this->add(42, 45, '0126');
+        $this->add(46, 50, Util::formatCnab('9', '', 5));
+        $this->add(51, 52, '');
+        $this->add(53, 57, Util::formatCnab('9', $this->getAgencia(), 5));
+        $this->add(58, 58, CalculoDV::bbAgencia($this->getAgencia()));
+        $this->add(59, 70, Util::formatCnab('9', $this->getConta(), 12));
+        $this->add(71, 71, CalculoDV::bbContaCorrente($this->getConta()));
+        $this->add(72, 72, '0');
+        $this->add(73, 102, Util::formatCnab('X', $this->getBeneficiario()->getNome(), 30));
+        $this->add(103, 142, '');
+        $this->add(143, 172, Util::formatCnab('X', '', 30));
+        $this->add(173, 177, Util::formatCnab('9', '00000', 5));
+        $this->add(178, 192, Util::formatCnab('X', '', 15));
+        $this->add(192, 199, date('dmY'));
+        $this->add(200, 207, '00000000');
+        $this->add(208, 240, '');
+        return $this;
+    }
+
 
     /**
      * @return $this
@@ -421,13 +483,20 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->iniciaTrailerLote();
 
+        $valor = array_reduce($this->boletos, function($valor, $boleto) {
+            return $valor + $boleto->getValor();
+        }, 0);
+
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '0001');
         $this->add(8, 8, '5');
         $this->add(9, 17, '');
-        $this->add(18, 23, Util::formatCnab('9', $this->getCountDetalhes() + 2, 6));
-        $this->add(24, 240, '');
-
+        $this->add(18, 23, Util::formatCnab('9', count($this->boletos) + 2, 6));
+        $this->add(24, 41, Util::formatCnab('9', $valor, 18 , 2));
+        $this->add(42, 59, Util::formatCnab('9', 0, 18));
+        $this->add(60, 65, '000000');
+        $this->add(66, 230, '');
+        $this->add(231, 240, '0000000000');
         return $this;
     }
 
@@ -438,14 +507,13 @@ class Bb extends AbstractRemessa implements RemessaContract
     protected function trailer()
     {
         $this->iniciaTrailer();
-
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '9999');
         $this->add(8, 8, '9');
         $this->add(9, 17, '');
         $this->add(18, 23, Util::formatCnab('9', 1, 6));
         $this->add(24, 29, Util::formatCnab('9', $this->getCount(), 6));
-        $this->add(30, 35, '000001');
+        $this->add(30, 35, '000000');
         $this->add(36, 240, '');
 
         return $this;

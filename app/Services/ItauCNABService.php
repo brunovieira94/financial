@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\BankAccount;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\Company;
@@ -31,12 +32,7 @@ class ItauCNABService
     public function generateCNAB240Shipping($requestInfo)
     {
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
-        $bankAccount = null;
-
-        foreach($company->bank_account as $bank) {
-            if ($bank->id == $requestInfo['bank_account_id'])
-                $bankAccount = $bank;
-        }
+        $bankAccount = BankAccount::with('bank')->findOrFail($requestInfo['bank_account_id']);
 
         $recipient = new \App\Helpers\Pessoa(
             [
@@ -46,20 +42,44 @@ class ItauCNABService
                 'uf'        => $company->city->state->uf,
                 'cidade'    => $company->city->title,
                 'documento' => $company->cnpj,
-                'numero' => $company->number,
+                'numero'    => $company->number,
                 'complemento' => $company->complement ?? '',
             ]
         );
 
-        $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau(
-            [
-                'agencia'      => $bankAccount->agency_number,
-                'conta'        => $bankAccount->account_number,
-                'contaDv'      => $bankAccount->account_check_number ?? '',
-                'carteira'     => '112',
-                'beneficiario' => $recipient,
-            ]
-        );
+        switch ($bankAccount->bank->bank_code) {
+            case '341':
+                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau(
+                    [
+                        'agencia'      => $bankAccount->agency_number,
+                        'conta'        => $bankAccount->account_number,
+                        'contaDv'      => $bankAccount->account_check_number ?? '',
+                        'carteira'     => '112',
+                        'beneficiario' => $recipient,
+                        'codigoFormaPagamento' => $requestInfo['code_cnab'],
+                        'tipoSeguimento' => $requestInfo['tipoSeguimento'],
+                    ]
+                );
+                break;
+            case '001':
+                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Bb(
+                    [
+                        'agencia'      => $bankAccount->agency_number,
+                        'conta'        => $bankAccount->account_number,
+                        'contaDv'      => $bankAccount->account_check_number ?? '',
+                        'beneficiario' => $recipient,
+                        'variacaoCarteira'     => '017',
+                        'convenio'     => '1111', //Validar
+                        'carteira'     => '11',
+                        'codigoFormaPagamento' => $requestInfo['code_cnab'],
+                        'tipoSeguimento' => $requestInfo['tipoSeguimento'],
+                    ]
+                );
+        //     dd($shipping);
+                break;
+            default:
+                return Response('Banco infomado inválido', 422);
+        }
 
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
@@ -74,35 +94,69 @@ class ItauCNABService
                     'uf'        => $paymentRequest->provider->city->state->title,
                     'cidade'    => $paymentRequest->provider->city,
                     'documento' => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->cpf : $paymentRequest->provider->cnpj,
-                    'numero' => $paymentRequest->provider->number,
+                    'numero'    => $paymentRequest->provider->number,
                     'complemento' => $paymentRequest->provider->complement ?? '',
                 ]
             );
 
-            foreach($paymentRequest->installments as $installment) {
-                if($installment->codBank != 'BD') {
-                    $billet = new \App\Helpers\Boleto\Banco\Itau(
-                        [
-                            'dataVencimento'         => new Carbon($installment->due_date),
-                            'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
-                            'transferTypeIdentification' => $paymentRequest->form_payment ?? '',
-                            'numeroDocumento'        => $installment->id,
-                            'pagador'                => $payer,
-                            'beneficiario'           => $recipient,
-                            'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
-                            'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
-                            'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
-                            'codigoDeBarra'          => $paymentRequest->bar_code,
-                            'desconto'               => 0,
-                            'multa '                 => 0,
-                            'dataPagamento'          => new Carbon($paymentRequest->pay_date),
-                            'valorPagamento'       => $paymentRequest->amount,
-                            'tipoDocumento'        => $paymentRequest->payment_type,
-                        ]
-                    );
-                }
-                array_push($billets, $billet);
+            switch ($bankAccount->bank->bank_code) {
+                case '341':
+                    foreach($paymentRequest->installments as $installment) {
+                        if($installment->codBank != 'BD') {
+                            $billet = new \App\Helpers\Boleto\Banco\Itau(
+                                [
+                                    'dataVencimento'         => new Carbon($installment->due_date),
+                                    'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
+                                    'transferTypeIdentification' => $paymentRequest->form_payment ?? '',
+                                    'numeroDocumento'        => $installment->id,
+                                    'pagador'                => $payer,
+                                    'beneficiario'           => $recipient,
+                                    'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
+                                    'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
+                                    'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
+                                    'codigoDeBarra'          => $paymentRequest->bar_code,
+                                    'desconto'               => 0,
+                                    'multa '                 => 0,
+                                    'dataPagamento'          => new Carbon($paymentRequest->pay_date),
+                                    'valorPagamento'       => $paymentRequest->amount,
+                                ]
+                            );
+                        }
+                        array_push($billets, $billet);
+                    }
+                    break;
+                case '001':
+                    foreach($paymentRequest->installments as $installment) {
+                        if($installment->codBank != 'BD') {
+                            $billet = new \App\Helpers\Boleto\Banco\Bb(
+                                [
+                                    'dataVencimento'         => new Carbon($installment->due_date),
+                                    'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
+                                    'transferTypeIdentification' => $paymentRequest->form_payment ?? '',
+                                    'numeroDocumento'        => $installment->id,
+                                    'pagador'                => $payer,
+                                    'beneficiario'           => $recipient,
+                                    'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
+                                    'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
+                                    'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
+                                    'codigoDeBarra'          => $paymentRequest->bar_code,
+                                    'desconto'               => 0,
+                                    'multa '                 => 0,
+                                    'dataPagamento'          => new Carbon($paymentRequest->pay_date),
+                                    'valorPagamento'         => $paymentRequest->amount,
+                                    'tipoDocumento'          => $paymentRequest->payment_type,
+                                    'convenio'               => '1111', //Validar
+                                    'agenciaDv'              => $paymentRequest->bank_account_provider->agency_check_number ?? '',
+                                ]
+                            );
+                        }
+                        array_push($billets, $billet);
+                    }
+                    break;
+                default:
+                    return Response('Banco infomado inválido', 422);
             }
+
         }
 
         $shipping->addBoletos($billets);
@@ -117,7 +171,7 @@ class ItauCNABService
         );
 
         return response()->json([
-            'linkArchive' => Storage::temporaryUrl('tempCNAB/itau.txt', now()->addMinutes(5)),
+            'linkArchive' => Storage::temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5)),
         ]);
     }
 

@@ -44,4 +44,9 @@ class Bank extends Model
             $bankAccount->bankAccount()->delete();
         });
     }
+
+    public function form_payment()
+    {
+        return $this->hasMany(FormPayment::class, 'bank_code', 'bank_code');
+    }
 }
