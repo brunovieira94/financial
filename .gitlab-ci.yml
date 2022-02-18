@@ -19,7 +19,7 @@ deploy_develop:
     - chmod 644 ~/.ssh/known_hosts
     
   script:
-    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api/api && sudo git checkout testing && sudo git config remote.origin.url https://git.in8.com.br/123milhas/finances/api.git sudo git pull origin testing"
+    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api/api && sudo git config remote.origin.url https://git.in8.com.br/123milhas/finances/api.git sudo git pull origin testing"
     
     # - "cd /var/www/html/rentalcars-api/"
     #- "dir"
