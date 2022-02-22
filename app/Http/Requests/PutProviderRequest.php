@@ -46,6 +46,7 @@ class PutProviderRequest extends FormRequest
             'state_subscription' => ['max:250', 'prohibited_if:provider_type,==,F', new ProviderStateSubscription(request()->input('international'),request()->input('city_subscription'),request()->input('provider_type'))],
             'city_subscription' => ['max:250', 'prohibited_if:provider_type,==,F', new ProviderCitySubscription(request()->input('international'),request()->input('state_subscription'),request()->input('provider_type'))],
             'accept_billet_payment' => 'boolean',
+            'credit_card_payment' => 'boolean',
             'chart_of_accounts_id' => 'integer',
             'bank_accounts.*.agency_number' => 'required_without_all:bank_accounts.*.pix_key|numeric',
             'bank_accounts.*.agency_check_number' => 'integer|required_without_all:bank_accounts.*.pix_key',
