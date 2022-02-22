@@ -280,11 +280,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('cnab')->group(function () {
-        Route::prefix('/itau')->group(function () {
-            Route::prefix('/240')->group(function () {
-                Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
-                Route::post('/return', [ItauCNABController::class, 'return240']);
-            });
+        Route::prefix('/240')->group(function () {
+            Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
+            Route::post('/return', [ItauCNABController::class, 'return240']);
         });
     });
 
