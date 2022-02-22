@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\ReportService;
+use App\Exports\AllDuePaymentRequestExport;
 
 class ReportController extends Controller
 {
@@ -18,6 +19,11 @@ class ReportController extends Controller
     public function duePaymentRequest(Request $request)
     {
         return $this->reportService->getAllDuePaymentRequest($request->all());
+    }
+
+    public function duePaymentRequestExport()
+    {
+        return (new AllDuePaymentRequestExport)->download('contasVencidas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
     }
 
     public function approvedPaymentRequest(Request $request)
