@@ -1071,4 +1071,27 @@ final class Util
             return '002';
         }
     }
+
+    public static function identificacaoTipoTransferencia($tipoConta)
+    {
+        switch ($tipoConta) {
+            case 0:
+                return '03'; // POUPANÇA
+                break;
+            case 1:
+                return '01'; // C CORRENTE
+                break;
+            case 2:
+                return 'PG'; // C SALÁRIO
+                break;
+            case 3:
+                return '04'; // PIX
+                break;
+        }
+    }
+
+    public static function codigoBarrasBB($linhaDigitavel)
+    {
+        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 9, 6) . substr($linhaDigitavel, 16, 4) . substr($linhaDigitavel, 21, 10);
+    }
 }

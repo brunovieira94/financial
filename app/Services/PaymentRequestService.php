@@ -56,9 +56,7 @@ class PaymentRequestService
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
             $paymentRequestInfo['xml_file'] = $this->storeXML($request);
         }
-        if (!array_key_exists('form_payment', $paymentRequestInfo)) {
-            $paymentRequestInfo['form_payment'] = '04'; //default code pix
-        }
+
         if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)) {
             $paymentRequestInfo['payment_type'] = 2;
         } elseif (array_key_exists('bar_code', $paymentRequestInfo)) {

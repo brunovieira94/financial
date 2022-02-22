@@ -47,42 +47,32 @@ class ItauCNABService
             ]
         );
 
-        switch ($bankAccount->bank->bank_code) {
-            case '341':
-                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau(
-                    [
-                        'agencia'      => $bankAccount->agency_number,
-                        'conta'        => $bankAccount->account_number,
-                        'contaDv'      => $bankAccount->account_check_number ?? '',
-                        'carteira'     => '112',
-                        'beneficiario' => $recipient,
-                        'codigoFormaPagamento' => $requestInfo['code_cnab'],
-                        'tipoSeguimento' => $requestInfo['tipoSeguimento'],
-                    ]
-                );
-                break;
-            case '001':
-                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Bb(
-                    [
-                        'agencia'      => $bankAccount->agency_number,
-                        'conta'        => $bankAccount->account_number,
-                        'contaDv'      => $bankAccount->account_check_number ?? '',
-                        'beneficiario' => $recipient,
-                        'variacaoCarteira'     => '017',
-                        'convenio'     => '1111', //Validar
-                        'carteira'     => '11',
-                        'codigoFormaPagamento' => $requestInfo['code_cnab'],
-                        'tipoSeguimento' => $requestInfo['tipoSeguimento'],
-                    ]
-                );
-        //     dd($shipping);
-                break;
-            default:
-                return Response('Banco infomado inválido', 422);
-        }
+        $bankData = [
+            'agencia'      => $bankAccount->agency_number,
+            'conta'        => $bankAccount->account_number,
+            'contaDv'      => $bankAccount->account_check_number ?? '',
+            'beneficiario' => $recipient,
+            'variacaoCarteira'     => '017',
+            'convenio'     => '1111', //Validar
+            'carteira'     => '11',
+            'codigoFormaPagamento' => $requestInfo['code_cnab'],
+            'tipoSeguimento' => $requestInfo['payment_type'],
+        ];
 
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
+
+
+        switch ($bankAccount->bank->bank_code) {
+            case '341':
+                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau($bankData);
+                break;
+            case '001':
+                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Bb($bankData);
+                break;
+            default:
+                return Response('Não é possível gerar CNAB com este código bancário.', 422);
+        }
 
         foreach($allPaymentRequest as $paymentRequest) {
 
@@ -132,7 +122,7 @@ class ItauCNABService
                                 [
                                     'dataVencimento'         => new Carbon($installment->due_date),
                                     'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
-                                    'transferTypeIdentification' => $paymentRequest->form_payment ?? '',
+                                    'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type ?? 3, // 3 - Pix
                                     'numeroDocumento'        => $installment->id,
                                     'pagador'                => $payer,
                                     'beneficiario'           => $recipient,
@@ -153,8 +143,6 @@ class ItauCNABService
                         array_push($billets, $billet);
                     }
                     break;
-                default:
-                    return Response('Banco infomado inválido', 422);
             }
 
         }
