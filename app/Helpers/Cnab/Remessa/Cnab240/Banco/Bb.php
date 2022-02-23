@@ -271,7 +271,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(14, 14, 'J'); //ok
         $this->add(15, 15, '0'); //Tipo de Movimento
         $this->add(16, 17, '00'); //cod Tipo de Movimento
-        $this->add(18, 61, Util::formatCnab('9', Util::codigoBarrasBB($boleto->getCodigoDeBarra()), 44)); //ok;
+        $this->add(18, 61, Util::formatCnab('9', Util::codigoBarrasBB(Util::onlyNumbers($boleto->getCodigoDeBarra())), 44)); //ok;
         $this->add(62, 91, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
         $this->add(92, 99, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
         $this->add(100, 114, Util::formatCnab('9', $boleto->getValor(), 15));

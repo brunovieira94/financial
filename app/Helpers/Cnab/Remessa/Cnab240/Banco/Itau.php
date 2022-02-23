@@ -150,12 +150,12 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5)); //ok
         $this->add(14, 14, 'J'); //ok
         $this->add(15, 17, Util::tipoDeMovimentoPorDocumento($boleto->getPagador()->getDocumento())); //ok
-        $this->add(18, 20, Util::formatCnab('9', Util::codigoBancoFavorecidoBoleto($boleto->getCodigoDeBarra()), 3));
-        $this->add(21, 21, Util::formatCnab('9', Util::codigoMoedaBoleto($boleto->getCodigoDeBarra()), 1));
-        $this->add(22, 22, Util::formatCnab('9', Util::dvBoleto($boleto->getCodigoDeBarra()), 1));
-        $this->add(23, 26, Util::formatCnab('9', Util::fatorVencimentoBoleto($boleto->getCodigoDeBarra()), 4));
-        $this->add(27, 36, Util::formatCnab('9', Util::valorBoleto($boleto->getCodigoDeBarra()), 10));
-        $this->add(37, 61, Util::formatCnab('9', Util::campoLivreBoleto($boleto->getCodigoDeBarra()), 25));
+        $this->add(18, 20, Util::formatCnab('9', Util::codigoBancoFavorecidoBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 3));
+        $this->add(21, 21, Util::formatCnab('9', Util::codigoMoedaBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 1));
+        $this->add(22, 22, Util::formatCnab('9', Util::dvBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 1));
+        $this->add(23, 26, Util::formatCnab('9', Util::fatorVencimentoBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 4));
+        $this->add(27, 36, Util::formatCnab('9', Util::valorBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 10));
+        $this->add(37, 61, Util::formatCnab('9', Util::campoLivreBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 25));
         $this->add(62, 91, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
         $this->add(92, 99, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
         $this->add(100, 114, Util::formatCnab('9', $boleto->getValor(), 15));

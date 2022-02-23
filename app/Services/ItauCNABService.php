@@ -62,20 +62,7 @@ class ItauCNABService
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
 
-
-        switch ($bankAccount->bank->bank_code) {
-            case '341':
-                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau($bankData);
-                break;
-            case '001':
-                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Bb($bankData);
-                break;
-            default:
-                return Response('Não é possível gerar CNAB com este código bancário.', 422);
-        }
-
         foreach($allPaymentRequest as $paymentRequest) {
-
             $payer = new \App\Helpers\Pessoa(
                 [
                     'nome'      => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->full_name : $paymentRequest->provider->company_name,
@@ -89,62 +76,53 @@ class ItauCNABService
                 ]
             );
 
-            switch ($bankAccount->bank->bank_code) {
-                case '341':
-                    foreach($paymentRequest->installments as $installment) {
-                        if($installment->codBank != 'BD') {
-                            $billet = new \App\Helpers\Boleto\Banco\Itau(
-                                [
-                                    'dataVencimento'         => new Carbon($installment->due_date),
-                                    'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
-                                    'transferTypeIdentification' => $paymentRequest->form_payment ?? '',
-                                    'numeroDocumento'        => $installment->id,
-                                    'pagador'                => $payer,
-                                    'beneficiario'           => $recipient,
-                                    'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
-                                    'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
-                                    'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
-                                    'codigoDeBarra'          => $paymentRequest->bar_code,
-                                    'desconto'               => 0,
-                                    'multa '                 => 0,
-                                    'dataPagamento'          => new Carbon($paymentRequest->pay_date),
-                                    'valorPagamento'       => $paymentRequest->amount,
-                                ]
-                            );
-                        }
-                        array_push($billets, $billet);
-                    }
-                    break;
-                case '001':
-                    foreach($paymentRequest->installments as $installment) {
-                        if($installment->codBank != 'BD') {
-                            $billet = new \App\Helpers\Boleto\Banco\Bb(
-                                [
-                                    'dataVencimento'         => new Carbon($installment->due_date),
-                                    'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
-                                    'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type ?? 3, // 3 - Pix
-                                    'numeroDocumento'        => $installment->id,
-                                    'pagador'                => $payer,
-                                    'beneficiario'           => $recipient,
-                                    'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
-                                    'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
-                                    'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
-                                    'codigoDeBarra'          => $paymentRequest->bar_code,
-                                    'desconto'               => 0,
-                                    'multa '                 => 0,
-                                    'dataPagamento'          => new Carbon($paymentRequest->pay_date),
-                                    'valorPagamento'         => $paymentRequest->amount,
-                                    'tipoDocumento'          => $paymentRequest->payment_type,
-                                    'convenio'               => '1111', //Validar
-                                    'agenciaDv'              => $paymentRequest->bank_account_provider->agency_check_number ?? '',
-                                ]
-                            );
-                        }
-                        array_push($billets, $billet);
-                    }
-                    break;
-            }
+            foreach($paymentRequest->installments as $installment) {
+                if($installment->codBank != 'BD') {
+                    $billet =
+                        [
+                            'dataVencimento'         => new Carbon($installment->due_date),
+                            'valor'                  => $installment->portion_amount ?? $paymentRequest->amount,
+                            'transferTypeIdentification' => $paymentRequest->bank_account_provider->account_type ?? 3, // 3 - Pix
+                            'numeroDocumento'        => $installment->id,
+                            'pagador'                => $payer,
+                            'beneficiario'           => $recipient,
+                            'agencia'                => $paymentRequest->bank_account_provider->agency_number ?? 0,
+                            'conta'                  => $paymentRequest->bank_account_provider->account_number ?? 0,
+                            'contaDv'                => $paymentRequest->bank_account_provider->account_check_number ?? 0,
+                            'codigoDeBarra'          => $paymentRequest->bar_code,
+                            'desconto'               => 0,
+                            'multa '                 => 0,
+                            'dataPagamento'          => new Carbon($paymentRequest->pay_date),
+                            'valorPagamento'         => $paymentRequest->amount,
+                            'tipoDocumento'          => $paymentRequest->payment_type,
+                            'convenio'               => '1111', //Validar
+                            'agenciaDv'              => $paymentRequest->bank_account_provider->agency_check_number ?? '',
+                        ];
 
+                        switch ($bankAccount->bank->bank_code) {
+                            case '341':
+                                $billetData = new \App\Helpers\Boleto\Banco\Itau($billet);
+                                break;
+                            case '001':
+                                $billetData = new \App\Helpers\Boleto\Banco\Bb($billet);
+                                break;
+                            default:
+                                return Response('Não é possível gerar CNAB com este código bancário.', 422);
+                        }
+                    array_push($billets, $billetData);
+                }
+            };
+        }
+
+        switch ($bankAccount->bank->bank_code) {
+            case '341':
+                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau($bankData);
+                break;
+            case '001':
+                $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Bb($bankData);
+                break;
+            default:
+                return Response('Não é possível gerar CNAB com este código bancário.', 422);
         }
 
         $shipping->addBoletos($billets);
