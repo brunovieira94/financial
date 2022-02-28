@@ -142,9 +142,9 @@ class ReportService
                 $query->where('status', $requestInfo['status']);
             });
         }
-        if(array_key_exists('approvalOrder', $requestInfo)){
+        if(array_key_exists('approval_order', $requestInfo)){
             $query->whereHas('approval', function ($query) use ($requestInfo){
-                $query->where('order', $requestInfo['approvalOrder']);
+                $query->where('order', $requestInfo['approval_order']);
             });
         }
         if(array_key_exists('created_at', $requestInfo)){
