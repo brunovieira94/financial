@@ -32,6 +32,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\AttributeTypeController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
 use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
@@ -302,6 +303,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PurchaseOrderController::class, 'store']);
         Route::post('/{id}', [PurchaseOrderController::class, 'update']);
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
+    });
+
+    Route::prefix('purchase-request')->group(function () {
+        Route::get('/', [PurchaseRequestController::class, 'index']);
+        Route::get('/{id}', [PurchaseRequestController::class, 'show']);
+        Route::post('/', [PurchaseRequestController::class, 'store']);
+        Route::post('/{id}', [PurchaseRequestController::class, 'update']);
+        Route::delete('/{id}', [PurchaseRequestController::class, 'destroy']);
     });
 
     Route::prefix('approval-flow-supply')->group(function () {
