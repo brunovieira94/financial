@@ -27,6 +27,9 @@ class PaymentRequest extends Model
     protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'fees',
+        'note',
+        'discount',
         'provider_id',
         'emission_date',
         'pay_date',
