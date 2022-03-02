@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use Config;
+use ZipStream\Option\Archive;
 
 class PaymentRequestService
 {
@@ -48,13 +49,16 @@ class PaymentRequestService
         $paymentRequestInfo['user_id'] = auth()->user()->id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
+        }
+        if (array_key_exists('other_files', $paymentRequestInfo)) {
+            $paymentRequestInfo['other_files'] = $this->storeArchive($request->other_files, 'otherFiles');
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeXML($request);
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
         if (!array_key_exists('form_payment', $paymentRequestInfo)) {
             $paymentRequestInfo['form_payment'] = '04'; //default code pix
@@ -154,14 +158,18 @@ class PaymentRequestService
         activity()->enableLogging();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeInvoice($request);
+           $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeBillet($request);
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+        }
+        if (array_key_exists('other_files', $paymentRequestInfo)) {
+            $paymentRequestInfo['other_files'] = $this->storeArchive($request->other_files, 'otherFiles');
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeXML($request);
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
+
 
         $paymentRequest->fill($paymentRequestInfo)->save();
         $this->putTax($id, $paymentRequestInfo);
@@ -190,58 +198,32 @@ class PaymentRequestService
         }
     }
 
-    public function storeXML(Request $request)
+    public function storeArchive($archives, $folder)
     {
+        $nameFiles = [];
 
-        $nameFile = null;
-        $data = uniqid(date('HisYmd'));
+        if(!is_array($archives)){
+            $archives = [
+                $archives
+            ];
+        }
 
-        $originalName  = explode('.', $request->xml_file->getClientOriginalName());
-        $extension = $originalName[count($originalName) - 1];
-        $nameFile = "{$originalName[0]}_{$data}.{$extension}";
-        $uploadXML = $request->xml_file->storeAs('XML', $nameFile);
+        foreach($archives as $archive){
+            $generatedName = null;
+            $data = uniqid(date('HisYmd'));
 
-        if (!$uploadXML)
-            return response('Falha ao realizar o upload do arquivo.', 500)->send();
+            $originalName  = explode('.', $archive->getClientOriginalName());
+            $extension = $originalName[count($originalName) - 1];
+            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
+            $upload = $archive->storeAs($folder, $generatedName);
 
-        return $nameFile;
-    }
-
-    public function storeInvoice(Request $request)
-    {
-
-        $nameFile = null;
-        $data = uniqid(date('HisYmd'));
-
-        $originalName  = explode('.', $request->invoice_file->getClientOriginalName());
-        $extension = $request->invoice_file->extension();
-        $nameFile = "{$originalName[0]}_{$data}.{$extension}";
-        $uploadInvoice = $request->invoice_file->storeAs('invoice', $nameFile);
-
-        if (!$uploadInvoice)
-            return response('Falha ao realizar o upload do arquivo.', 500)->send();
-
-        return $nameFile;
-    }
-
-    public function storeBillet(Request $request)
-    {
-
-        $nameFile = null;
-        $data = uniqid(date('HisYmd'));
-
-        if ($request->hasFile('billet_file') && $request->file('billet_file')->isValid()) {
-
-            $extension = $request->billet_file->extension();
-            $originalName  = explode('.', $request->billet_file->getClientOriginalName());
-            $nameFile = "{$originalName[0]}_{$data}.{$extension}";
-            $uploadBillet = $request->billet_file->storeAs('billet', $nameFile);
-
-            if (!$uploadBillet)
+            if (!$upload)
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
 
-            return $nameFile;
+            array_push($nameFiles, $generatedName);
         }
+
+        return $nameFiles;
     }
 
     public function syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension)
