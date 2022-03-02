@@ -27,9 +27,6 @@ class CheckPortionAmounts
             $paymentRequest = $this->paymentRequest->findOrFail($id);
         }
 
-        dd($paymentRequest->all());
-
-
         if(array_key_exists('amount', $paymentRequestInfo)){
             $amount = $request->amount;
         } else {
