@@ -39,6 +39,7 @@ class ReportService
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
+        ->whereRelation('payment_request', 'payment_type', '=', $requestInfo['payment_type'])
         ->where('status', 1),$requestInfo);
     }
 

@@ -35,6 +35,9 @@ class ReportController extends Controller
 
     public function approvedPaymentRequest(Request $request)
     {
+        $request->validate([
+            'payment_type' => 'required|integer',
+        ]);
         return $this->reportService->getAllApprovedPaymentRequest($request->all());
     }
 
