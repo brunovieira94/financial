@@ -22,7 +22,10 @@ class AllPaymentRequestPaidExport implements FromCollection, ShouldAutoSize, Wit
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])->where('status', 4)->get();
+        return AccountsPayableApprovalFlow::with(['payment_request'])
+        ->where('status', 4)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array

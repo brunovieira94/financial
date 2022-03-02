@@ -22,12 +22,16 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])->where('status', 1)->get();
+        return AccountsPayableApprovalFlow::with(['payment_request'])
+        ->where('status', 1)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
     {
         $this->totalTax = 0;
+
         foreach ($accountsPayableApprovalFlow->payment_request->tax as $value) {
             $this->totalTax += $value['tax_amount'];
         }

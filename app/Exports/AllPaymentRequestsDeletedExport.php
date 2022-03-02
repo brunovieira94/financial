@@ -22,35 +22,37 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request_trashed'])->whereRelation('payment_request_trashed', 'deleted_at', '!=', null)->get();
+        return AccountsPayableApprovalFlow::with(['payment_request_trashed'])
+        ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null)
+        ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
     {
         $this->totalTax = 0;
-        foreach ($accountsPayableApprovalFlow->payment_request->tax as $value) {
+        foreach ($accountsPayableApprovalFlow->payment_request_trashed->tax as $value) {
             $this->totalTax += $value['tax_amount'];
         }
 
         return [
-            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? $accountsPayableApprovalFlow->payment_request->provider->cnpj : $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
-            $accountsPayableApprovalFlow->payment_request->emission_date,
-            $accountsPayableApprovalFlow->payment_request->pay_date,
-            $accountsPayableApprovalFlow->payment_request->amount,
-            $accountsPayableApprovalFlow->payment_request->chart_of_accounts ? $accountsPayableApprovalFlow->payment_request->chart_of_accounts->title : $accountsPayableApprovalFlow->payment_request->chart_of_accounts,
-            $accountsPayableApprovalFlow->payment_request->cost_center ? $accountsPayableApprovalFlow->payment_request->cost_center->title : $accountsPayableApprovalFlow->payment_request->cost_center,
-            $accountsPayableApprovalFlow->payment_request->business ? $accountsPayableApprovalFlow->payment_request->business->name : $accountsPayableApprovalFlow->payment_request->business,
-            $accountsPayableApprovalFlow->payment_request->currency ? $accountsPayableApprovalFlow->payment_request->currency->title : $accountsPayableApprovalFlow->payment_request->currency,
-            $accountsPayableApprovalFlow->payment_request->exchange_rate,
-            $accountsPayableApprovalFlow->payment_request->frequency_of_installments,
-            $accountsPayableApprovalFlow->payment_request->days_late,
-            $accountsPayableApprovalFlow->payment_request->payment_type,
-            $accountsPayableApprovalFlow->payment_request->user ? $accountsPayableApprovalFlow->payment_request->user->email : $accountsPayableApprovalFlow->payment_request->user,
-            $accountsPayableApprovalFlow->payment_request->invoice_number,
-            $accountsPayableApprovalFlow->payment_request->invoice_type,
-            $accountsPayableApprovalFlow->payment_request->bar_code,
-            $accountsPayableApprovalFlow->payment_request->net_value,
-            $accountsPayableApprovalFlow->payment_request->created_at,
+            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? $accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
+            $accountsPayableApprovalFlow->payment_request_trashed->emission_date,
+            $accountsPayableApprovalFlow->payment_request_trashed->pay_date,
+            $accountsPayableApprovalFlow->payment_request_trashed->amount,
+            $accountsPayableApprovalFlow->payment_request_trashed->chart_of_accounts ? $accountsPayableApprovalFlow->payment_request_trashed->chart_of_accounts->title : $accountsPayableApprovalFlow->payment_request_trashed->chart_of_accounts,
+            $accountsPayableApprovalFlow->payment_request_trashed->cost_center ? $accountsPayableApprovalFlow->payment_request_trashed->cost_center->title : $accountsPayableApprovalFlow->payment_request_trashed->cost_center,
+            $accountsPayableApprovalFlow->payment_request_trashed->business ? $accountsPayableApprovalFlow->payment_request_trashed->business->name : $accountsPayableApprovalFlow->payment_request_trashed->business,
+            $accountsPayableApprovalFlow->payment_request_trashed->currency ? $accountsPayableApprovalFlow->payment_request_trashed->currency->title : $accountsPayableApprovalFlow->payment_request_trashed->currency,
+            $accountsPayableApprovalFlow->payment_request_trashed->exchange_rate,
+            $accountsPayableApprovalFlow->payment_request_trashed->frequency_of_installments,
+            $accountsPayableApprovalFlow->payment_request_trashed->days_late,
+            $accountsPayableApprovalFlow->payment_request_trashed->payment_type,
+            $accountsPayableApprovalFlow->payment_request_trashed->user ? $accountsPayableApprovalFlow->payment_request_trashed->user->email : $accountsPayableApprovalFlow->payment_request_trashed->user,
+            $accountsPayableApprovalFlow->payment_request_trashed->invoice_number,
+            $accountsPayableApprovalFlow->payment_request_trashed->invoice_type,
+            $accountsPayableApprovalFlow->payment_request_trashed->bar_code,
+            $accountsPayableApprovalFlow->payment_request_trashed->net_value,
+            $accountsPayableApprovalFlow->payment_request_trashed->created_at,
             $this->totalTax,
         ];
     }

@@ -22,7 +22,10 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, ShouldAuto
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])->where('status', 6)->get();
+        return AccountsPayableApprovalFlow::with(['payment_request'])
+        ->where('status', 6)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array

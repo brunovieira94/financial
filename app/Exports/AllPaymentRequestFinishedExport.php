@@ -22,7 +22,10 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])->where('status', 7)->get();
+        return AccountsPayableApprovalFlow::with(['payment_request'])
+        ->where('status', 7)
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
