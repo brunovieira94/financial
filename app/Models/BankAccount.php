@@ -28,7 +28,7 @@ class BankAccount extends Model
 
     public function bank()
     {
-        return $this->hasOne(Bank::class, 'id', 'bank_id');
+        return $this->hasOne(Bank::class, 'id', 'bank_id')->with('form_payment');
     }
 
     public function bank_account_default()
