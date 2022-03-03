@@ -44,7 +44,16 @@ class Utils
         return $date = implode('-', $date);
     }
 
-    public static function search($model,$requestInfo){
+    public static function search($model,$requestInfo,$excludeFields = null){
+        $fillable = $model->getFillable();
+        if ($excludeFields != null)
+        {
+            foreach ($fillable as $key=>$value) {
+                if(in_array($fillable[$key], $excludeFields)){
+                    unset($fillable[$key]);
+                }
+            }
+        }
         $query = $model->query();
         if(array_key_exists('search', $requestInfo)){
 
@@ -55,7 +64,7 @@ class Utils
                 $query->whereLike($requestInfo['searchFields'], "%{$requestInfo['search']}%");
             }
             else{
-                $query->whereLike($model->getFillable(), "%{$requestInfo['search']}%");
+                $query->whereLike($fillable, "%{$requestInfo['search']}%");
             }
         }
         return $query;
