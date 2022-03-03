@@ -36,6 +36,11 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
+        if(!array_key_exists('payment_type', $requestInfo)){
+            return response()->json([
+                'Erro' => 'Payment type não enviado'
+            ]);
+        }
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
