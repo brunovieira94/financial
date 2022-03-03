@@ -58,8 +58,7 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['other_files'])) {
             $files = [];
-            foreach((array) json_decode($this->attributes['other_files']) as $file)
-            {
+            foreach ((array) json_decode($this->attributes['other_files']) as $file) {
                 array_push($files, Storage::disk('s3')->temporaryUrl("otherFiles/{$file}", now()->addMinutes(5)));
             }
             return $files;
@@ -164,10 +163,10 @@ class PaymentRequest extends Model
 
     public function getApplicantCanEditAttribute()
     {
-        if($this->approval){
-            if ($this->approval->order == 1 && $this->approval->status == 0){
+        if (isset($this->approval)) {
+            if ($this->approval->order == 1 && $this->approval->status == 0) {
                 return true;
-            } else if ($this->approval->order == 0){
+            } else if ($this->approval->order == 0) {
                 return true;
             } else {
                 return false;
