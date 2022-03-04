@@ -156,7 +156,7 @@ class PaymentRequestService
         activity()->enableLogging();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-           $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
             $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
@@ -200,20 +200,20 @@ class PaymentRequestService
     {
         $nameFiles = [];
 
-        if(!is_array($archives)){
+        if (!is_array($archives)) {
             $archives = [
                 $archives
             ];
         }
 
-        foreach($archives as $archive){
+        foreach ($archives as $archive) {
             $generatedName = null;
             $data = uniqid(date('HisYmd'));
 
-            $originalName  = explode('.', $archive->getClientOriginalName());
+            $originalName  = explode('.', $archive['file']->getClientOriginalName());
             $extension = $originalName[count($originalName) - 1];
             $generatedName = "{$originalName[0]}_{$data}.{$extension}";
-            $upload = $archive->storeAs($folder, $generatedName);
+            $upload = $archive['file']->storeAs($folder, $generatedName);
 
             if (!$upload)
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
