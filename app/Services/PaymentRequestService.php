@@ -159,13 +159,13 @@ class PaymentRequestService
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+             $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
         }
         if (array_key_exists('other_files', $paymentRequestInfo)) {
             $paymentRequestInfo['other_files'] = $this->storeArchive($request->other_files, 'otherFiles');
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
+             $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
 
 
@@ -210,10 +210,14 @@ class PaymentRequestService
             $generatedName = null;
             $data = uniqid(date('HisYmd'));
 
-            $originalName  = explode('.', $archive['file']->getClientOriginalName());
+            if(is_array($archive)){
+                $archive = $archive['file'];
+            }
+            $originalName  = explode('.', $archive->getClientOriginalName());
             $extension = $originalName[count($originalName) - 1];
             $generatedName = "{$originalName[0]}_{$data}.{$extension}";
-            $upload = $archive['file']->storeAs($folder, $generatedName);
+
+            $upload = $archive->storeAs($folder, $generatedName);
 
             if (!$upload)
                 return response('Falha ao realizar o upload do arquivo.', 500)->send();
