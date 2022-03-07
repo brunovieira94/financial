@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
+use App\Models\GroupFormPayment;
 use Config;
 use ZipStream\Option\Archive;
 
@@ -20,16 +21,18 @@ class PaymentRequestService
     private $installments;
     private $tax;
     private $approvalFlow;
+    private $groupFormPayment;
 
     private $with = ['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax)
+    public function __construct(ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
         $this->approval = $approval;
         $this->tax = $tax;
         $this->approvalFlow = $approvalFlow;
+        $this->groupFormPayment = $groupFormPayment;
     }
 
     public function getAllPaymentRequest($requestInfo)
@@ -311,5 +314,11 @@ class PaymentRequestService
 
         $collection = $this->tax->where('payment_request_id', $id)->whereNotIn('id', $updateTax)->whereNotIn('id', $createdTax)->get(['id']);
         $this->tax->destroy($collection->toArray());
+    }
+
+    public function getAllGroupFormPayment($requestInfo)
+    {
+        $groupPaymentRequest = Utils::search($this->groupFormPayment, $requestInfo);
+        return Utils::pagination($groupPaymentRequest, $requestInfo);
     }
 }

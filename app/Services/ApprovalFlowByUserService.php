@@ -135,7 +135,9 @@ class ApprovalFlowByUserService
         $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
         $accountApproval->status = Config::get('constants.status.canceled');
         $accountApproval->fill($request->all())->save();
+        activity()->disableLogging();
         PaymentRequest::findOrFail($accountApproval->payment_request->id)->delete();
+        activity()->enableLogging();
         return response()->json([
             'Sucesso' => 'Conta cancelada',
         ], 200);

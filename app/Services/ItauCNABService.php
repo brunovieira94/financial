@@ -54,7 +54,6 @@ class ItauCNABService
             'beneficiario' => $recipient,
             'variacaoCarteira'     => '017',
             'convenio'     => '1111', //Validar
-            'carteira'     => '11',
             'codigoFormaPagamento' => $requestInfo['code_cnab'],
             'tipoSeguimento' => $requestInfo['payment_type'],
         ];
@@ -116,9 +115,11 @@ class ItauCNABService
 
         switch ($bankAccount->bank->bank_code) {
             case '341':
+                $bankData['carteira'] = 112;
                 $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Itau($bankData);
                 break;
             case '001':
+                $bankData['carteira'] = 11;
                 $shipping = new \App\Helpers\Cnab\Remessa\Cnab240\Banco\Bb($bankData);
                 break;
             default:
