@@ -1,12 +1,12 @@
 stages:
-  - homolog
+  - develop
   - deploy
 variables:
   GIT_STRATEGY: clone
 
 deploy_develop:
   environment: develop
-  stage: homolog
+  stage: develop
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
     - aws s3 cp s3://back-develop-s3/financeiro-art.pem /tmp/financeiro-art.pem
