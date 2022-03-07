@@ -1,5 +1,7 @@
 stages:
   - develop
+  - testing
+  - staging
   - deploy
 variables:
   GIT_STRATEGY: clone
@@ -18,6 +20,38 @@ deploy_develop:
     - financ-homolog
   only:
     - develop
+
+deploy_testing:
+  environment: develop
+  stage: testing
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+    - aws s3 cp s3://back-testing-s3/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://back-testing-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy.sh
+    - bash /tmp/autoscaling-deploy.sh Testing-financ-asg main /tmp/financeiro-art.pem 0 80 /home/admin/api
+  tags:
+    - financ-homolog
+  only:
+    - testing
+
+
+deploy_staging:
+  environment: develop
+  stage: testing
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+    - aws s3 cp s3://back-staging-s3/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://back-staging-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy.sh
+    - bash /tmp/autoscaling-deploy.sh staging-financ-ASG main /tmp/financeiro-art.pem 0 80 /home/admin/api
+  tags:
+    - financ-homolog
+  only:
+    - staging
+
 deploy_master:
   stage: deploy
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
