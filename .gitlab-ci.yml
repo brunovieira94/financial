@@ -1,46 +1,31 @@
 stages:
   - testing
-  - develop
-  - staging
+  - deploy
 variables:
   GIT_STRATEGY: clone
+
 deploy_develop:
-  environment: testing
+  environment: develop
   stage: testing
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
-  before_script:
-    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )' 
-    - eval `ssh-agent -s`
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-    - ssh-add <(echo "$SSH_PRIVATE_KEY")
-    - mkdir -p ~/.ssh
-    - chmod 700 ~/.ssh/id_rsa
-    - ssh-keyscan $EC2_IPADDRESS >> ~/.ssh/known_hosts
-    - chmod 644 ~/.ssh/known_hosts
-    
   script:
-    - ssh -o StrictHostKeyChecking=no admin@$EC2_IPADDRESS "hostname && cd /var/www/html/dev-api/api && sudo git pull origin testing"
-    
-    # - "cd /var/www/html/rentalcars-api/"
-    #- "dir"
-    #- "pwd"
-    #- git reset --hard HEAD
-    #- git checkout -b testing
-    #- git pull origin testing
-    
-    
+    - aws s3 cp s3://back-testing-s3/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://back-testing-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy.sh
+    - bash /tmp/autoscaling-deploy.sh Testing-financ-asg main /tmp/financeiro-art.pem 0 80 /home/admin/api
   tags:
     - financ-homolog
   only:
     - testing
-#deploy_master
-#  stage: deploy
-#  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
-#  script:
-#    - aws s3 cp s3://123-deploy/financeiro-art.pem /tmp/financeiro-art.pem
-#    - aws s3 cp s3://123-deploy/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh
-#    - chmod 0400 /tmp/financeiro-art.pem
-#   - chmod 755 /tmp/autoscaling-deploy.sh
-#    - bash /tmp/autoscaling-deploy.sh ASG-123 main /tmp/financeiro-art.pem 0 80 /home/admin/api
-#  only:
-#    - mai
+deploy_master:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+    - aws s3 cp s3://123-deploy/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://123-deploy/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy.sh
+    - bash /tmp/autoscaling-deploy.sh ASG-123 main /tmp/financeiro-art.pem 0 80 /home/admin/api
+  only:
+    - main
