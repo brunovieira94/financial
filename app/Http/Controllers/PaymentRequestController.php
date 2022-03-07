@@ -152,4 +152,9 @@ class PaymentRequestController extends Controller
         $this->paymentRequestImport->import(request()->file('import_file'));
         return response('');
     }
+
+    public function groupFormPayment(Request $request)
+    {
+        return $this->paymentRequestService->getAllGroupFormPayment($request->all());
+    }
 }
