@@ -39,7 +39,7 @@ deploy_testing:
 
 deploy_staging:
   environment: develop
-  stage: testing
+  stage: staging
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
     - aws s3 cp s3://back-staging-s3/financeiro-art.pem /tmp/financeiro-art.pem
