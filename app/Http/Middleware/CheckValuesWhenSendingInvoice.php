@@ -51,9 +51,7 @@ class CheckValuesWhenSendingInvoice
         if(array_key_exists('net_value', $paymentRequestInfo)){
             $netValue = $paymentRequestInfo['net_value'];
         } else {
-            if(!isNull($paymentRequest->net_value)){
-                $netValue = $paymentRequest->net_value;
-            }
+            $netValue = $paymentRequest->net_value ?? 0;
         }
 
         $amount += $fees;
