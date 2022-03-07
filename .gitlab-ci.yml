@@ -15,7 +15,7 @@ deploy_develop:
     - aws s3 cp s3://back-develop-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
     - chmod 0400 /tmp/financeiro-develop.pem
     - chmod 755 /tmp/autoscaling-deploy.sh
-    - bash /tmp/autoscaling-deploy.sh Develop-financ-ASG develop /tmp/financeiro-develop.pem 0 80 /home/admin/dev-api
+    - bash /tmp/autoscaling-deploy.sh Develop-financ-ASG develop /tmp/financeiro-develop.pem 0 80 /home/admin/api
   tags:
     - financ-homolog
   only:
