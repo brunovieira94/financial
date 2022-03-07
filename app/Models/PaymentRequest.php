@@ -30,7 +30,11 @@ class PaymentRequest extends Model
     ];
 
     protected $fillable = [
+        'group_form_payment_id',
         'other_files',
+        'fees',
+        'note',
+        'discount',
         'provider_id',
         'emission_date',
         'pay_date',
