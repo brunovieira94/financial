@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
+use App\Models\PaymentRequest;
 use Illuminate\Http\Request;
 use Config;
 
@@ -30,7 +31,7 @@ class ApprovalFlowByUserService
             return response([], 404);
 
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo, ['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
         ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
@@ -131,9 +132,10 @@ class ApprovalFlowByUserService
 
     public function cancelAccount($id, Request $request)
     {
-        $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
+        $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
         $accountApproval->status = Config::get('constants.status.canceled');
         $accountApproval->fill($request->all())->save();
+        PaymentRequest::findOrFail($accountApproval->payment_request->id)->delete();
         return response()->json([
             'Sucesso' => 'Conta cancelada',
         ], 200);

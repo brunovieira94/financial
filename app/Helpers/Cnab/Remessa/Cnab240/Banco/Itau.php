@@ -56,6 +56,31 @@ class Itau extends AbstractRemessa implements RemessaContract
      */
     protected $carteiras = ['112', '115', '188', '109', '121', '175'];
 
+    protected $codigoFormaPagamento;
+    protected $tipoSeguimento;
+
+    public function getCodigoFormaPagamento()
+    {
+        return $this->codigoFormaPagamento;
+    }
+
+    public function setCodigoFormaPagamento($codigoFormaPagamento)
+    {
+        $this->codigoFormaPagamento = $codigoFormaPagamento;
+        return $this;
+    }
+
+    public function getTipoSeguimento()
+    {
+        return $this->tipoSeguimento;
+    }
+
+    public function setTipoSeguimento($tipoSeguimento)
+    {
+        $this->tipoSeguimento = $tipoSeguimento;
+        return $this;
+    }
+
     /**
      * @param BoletoContract $boleto
      *
@@ -66,11 +91,11 @@ class Itau extends AbstractRemessa implements RemessaContract
     {
         $this->boletos[] = $boleto;
 
-        if($boleto->getTipoDocumento() == 0){
+        if($this->tipoSeguimento == 0){
             $this->segmentoA($boleto);
-        } elseif($boleto->getTipoDocumento() == 2){
+        } elseif($this->tipoSeguimento == 2){
             $this->segmentoA($boleto);
-        } elseif($boleto->getTipoDocumento() == 1){
+        } elseif($this->tipoSeguimento == 1){
             $this->segmentoJ($boleto);
         }
         return $this;
@@ -102,7 +127,7 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(94, 101, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
         $this->add(102, 104, Util::formatCnab('X', 'REA', 3));
         $this->add(105, 112, Util::formatCnab('9', '', 8));
-        $this->add(113, 114, Util::formatCnab('X', $boleto->getTransferTypeIdentification(), 2));//terminar aqui
+        $this->add(113, 114, Util::formatCnab('X', Util::identificacaoTipoTransferencia($boleto->getTransferTypeIdentification()), 2));//terminar aqui
         $this->add(115, 119, Util::formatCnab('9', '', 5));
         $this->add(120, 134, Util::formatCnab('9', $boleto->getValor(), 15));
         $this->add(135, 149, Util::formatCnab('X', '', 15));
@@ -125,12 +150,12 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5)); //ok
         $this->add(14, 14, 'J'); //ok
         $this->add(15, 17, Util::tipoDeMovimentoPorDocumento($boleto->getPagador()->getDocumento())); //ok
-        $this->add(18, 20, Util::formatCnab('9', Util::codigoBancoFavorecidoBoleto($boleto->getCodigoDeBarra()), 3));
-        $this->add(21, 21, Util::formatCnab('9', Util::codigoMoedaBoleto($boleto->getCodigoDeBarra()), 1));
-        $this->add(22, 22, Util::formatCnab('9', Util::dvBoleto($boleto->getCodigoDeBarra()), 1));
-        $this->add(23, 26, Util::formatCnab('9', Util::fatorVencimentoBoleto($boleto->getCodigoDeBarra()), 4));
-        $this->add(27, 36, Util::formatCnab('9', Util::valorBoleto($boleto->getCodigoDeBarra()), 10));
-        $this->add(37, 61, Util::formatCnab('9', Util::campoLivreBoleto($boleto->getCodigoDeBarra()), 25));
+        $this->add(18, 20, Util::formatCnab('9', Util::codigoBancoFavorecidoBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 3));
+        $this->add(21, 21, Util::formatCnab('9', Util::codigoMoedaBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 1));
+        $this->add(22, 22, Util::formatCnab('9', Util::dvBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 1));
+        $this->add(23, 26, Util::formatCnab('9', Util::fatorVencimentoBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 4));
+        $this->add(27, 36, Util::formatCnab('9', Util::valorBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 10));
+        $this->add(37, 61, Util::formatCnab('9', Util::campoLivreBoleto(Util::onlyNumbers($boleto->getCodigoDeBarra())), 25));
         $this->add(62, 91, Util::formatCnab('X', $boleto->getPagador()->getNome(), 30));
         $this->add(92, 99, Util::formatCnab('9', $boleto->getDataVencimento()->format('dmY'), 8));
         $this->add(100, 114, Util::formatCnab('9', $boleto->getValor(), 15));
@@ -142,7 +167,31 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(183, 202, Util::formatCnab('X', $boleto->getNumeroDocumento(), 20));
         $this->add(203, 215, Util::formatCnab('X', '', 13));
         $this->add(216, 240, Util::formatCnab('X', '', 25));
+        $this->segmentoJ52($boleto);
         return $this;
+    }
+
+    protected function segmentoJ52(BoletoContract $boleto)
+    {
+
+        $this->iniciaDetalhe();
+        $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco())); //ok
+        $this->add(4, 7, '0001'); //ok
+        $this->add(8, 8, '3'); //ok
+        $this->add(9, 13, Util::formatCnab('9', $this->iRegistrosLote, 5)); //ok
+        $this->add(14, 14, 'J'); //ok
+        $this->add(15, 17, Util::tipoDeMovimentoPorDocumento($boleto->getPagador()->getDocumento()));
+        $this->add(18, 19, '52'); //ok
+        $this->add(20, 20, strlen(Util::onlyNumbers($boleto->getPagador()->getDocumento())) == 14 ? 2 : 1);
+        $this->add(21, 35, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 15));
+        $this->add(36, 75, '');
+        $this->add(76, 76, strlen(Util::onlyNumbers($boleto->getPagador()->getDocumento())) == 14 ? 2 : 1);
+        $this->add(77, 91, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 15));
+        $this->add(92, 131, '');
+        $this->add(132, 132, '0');
+        $this->add(132, 132, '0');
+        $this->add(133, 147, '000000000000000');
+        $this->add(148, 240, '');
     }
     /**
      * @param BoletoContract $boleto
@@ -357,9 +406,9 @@ class Itau extends AbstractRemessa implements RemessaContract
         $this->add(1, 3, Util::onlyNumbers($this->getCodigoBanco()));
         $this->add(4, 7, '0001');
         $this->add(8, 8, '1');
-        $this->add(9, 9, 'C');
+        $this->add(9, 9, '2');
         $this->add(10, 11, '20');
-        $this->add(12, 13, '45');
+        $this->add(12, 13, Util::formatCnab('9', $this->getCodigoFormaPagamento(), 2));
         $this->add(14, 16, '040');
         $this->add(17, 17, '');
         $this->add(18, 18, strlen(Util::onlyNumbers($this->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);

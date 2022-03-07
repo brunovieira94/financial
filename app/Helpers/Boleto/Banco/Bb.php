@@ -140,6 +140,7 @@ class Bb extends AbstractBoleto implements BoletoContract
      */
     protected function gerarNossoNumero()
     {
+
         $convenio = $this->getConvenio();
         $numero_boleto = $this->getNumero();
         switch (strlen($convenio)) {

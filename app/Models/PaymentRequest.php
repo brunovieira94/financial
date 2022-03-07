@@ -24,9 +24,13 @@ class PaymentRequest extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $appends = ['other_files', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $casts = [
+        'other_files' => 'array',
+    ];
 
     protected $fillable = [
+        'other_files',
         'provider_id',
         'emission_date',
         'pay_date',
@@ -49,6 +53,17 @@ class PaymentRequest extends Model
         'form_payment',
         'payment_type',
     ];
+
+    public function getOtherFilesAttribute()
+    {
+        if (!is_null($this->attributes['other_files'])) {
+            $files = [];
+            foreach ((array) json_decode($this->attributes['other_files']) as $file) {
+                array_push($files, Storage::disk('s3')->temporaryUrl("otherFiles/{$file}", now()->addMinutes(5)));
+            }
+            return $files;
+        }
+    }
 
     public function getXmlLinkAttribute()
     {
@@ -148,12 +163,15 @@ class PaymentRequest extends Model
 
     public function getApplicantCanEditAttribute()
     {
-        if ($this->approval->order == 1 && $this->approval->status == 0) {
-            return true;
-        } else if ($this->approval->order == 0) {
-            return true;
-        } else {
-            return false;
+        if (isset($this->approval)) {
+            if ($this->approval->order == 1 && $this->approval->status == 0) {
+                return true;
+            } else if ($this->approval->order == 0) {
+                return true;
+            } else {
+                return false;
+            }
         }
+        return false;
     }
 }

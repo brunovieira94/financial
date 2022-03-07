@@ -511,7 +511,7 @@ abstract class AbstractRemessa
     public function save()
     {
         $string = $this->gerar();
-        Storage::disk('s3')->put('tempCNAB/itau.txt', $string);
+        Storage::disk('s3')->put('tempCNAB/cnab-remessa.txt', $string);
         return true;
     }
 

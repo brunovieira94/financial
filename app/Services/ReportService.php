@@ -36,9 +36,15 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
+        if(!array_key_exists('payment_type', $requestInfo)){
+            return response()->json([
+                'Erro' => 'Payment type não enviado'
+            ]);
+        }
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
+        ->whereRelation('payment_request', 'payment_type', '=', $requestInfo['payment_type'])
         ->where('status', 1),$requestInfo);
     }
 
@@ -70,7 +76,7 @@ class ReportService
             return response([], 404);
         }
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo,['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow
         ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
@@ -142,9 +148,9 @@ class ReportService
                 $query->where('status', $requestInfo['status']);
             });
         }
-        if(array_key_exists('approvalOrder', $requestInfo)){
+        if(array_key_exists('approval_order', $requestInfo)){
             $query->whereHas('approval', function ($query) use ($requestInfo){
-                $query->where('order', $requestInfo['approvalOrder']);
+                $query->where('order', $requestInfo['approval_order']);
             });
         }
         if(array_key_exists('created_at', $requestInfo)){

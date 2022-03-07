@@ -32,6 +32,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
 use App\Http\Controllers\AttributeTypeController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
 use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
@@ -241,6 +242,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
+        Route::post('/due-bills-export', [ReportController::class, 'duePaymentRequestExport']);
+        Route::post('/approved-payment-request-export', [ReportController::class, 'approvedPaymentRequestExport']);
+        Route::post('/disapproved-payment-request-export', [ReportController::class, 'disapprovedPaymentRequestExport']);
+        Route::post('/payment-requests-deleted-export', [ReportController::class, 'paymentRequestsDeletedExport']);
+        Route::post('/payment-requests-cnab-generated-export', [ReportController::class, 'generatedCNABPaymentRequestCNABExport']);
+        Route::post('/bills-to-pay-export', [ReportController::class, 'billsToPayExport']);
+        Route::post('/payment-requests-paid-export', [ReportController::class, 'paymentRequestPaidExport']);
+        Route::post('/payment-requests-finished-export', [ReportController::class, 'paymentRequestFinishedExport']);
     });
 
     Route::prefix('product')->group(function () {
@@ -280,11 +289,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('cnab')->group(function () {
-        Route::prefix('/itau')->group(function () {
-            Route::prefix('/240')->group(function () {
-                Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
-                Route::post('/return', [ItauCNABController::class, 'return240']);
-            });
+        Route::prefix('/240')->group(function () {
+            Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
+            Route::post('/return', [ItauCNABController::class, 'return240']);
         });
     });
 
@@ -294,6 +301,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PurchaseOrderController::class, 'store']);
         Route::post('/{id}', [PurchaseOrderController::class, 'update']);
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
+    });
+
+    Route::prefix('purchase-request')->group(function () {
+        Route::get('/', [PurchaseRequestController::class, 'index']);
+        Route::get('/{id}', [PurchaseRequestController::class, 'show']);
+        Route::post('/', [PurchaseRequestController::class, 'store']);
+        Route::post('/{id}', [PurchaseRequestController::class, 'update']);
+        Route::delete('/{id}', [PurchaseRequestController::class, 'destroy']);
     });
 
     Route::prefix('approval-flow-supply')->group(function () {
