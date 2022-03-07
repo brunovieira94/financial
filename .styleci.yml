@@ -1,14 +1,31 @@
-php:
-  preset: laravel
-  version: 8
-  disabled:
-    - no_unused_imports
-  finder:
-    not-name:
-      - index.php
-      - server.php
-js:
-  finder:
-    not-name:
-      - webpack.mix.js
-css: true
+stages:
+  - testing
+  - deploy
+variables:
+  GIT_STRATEGY: clone
+
+deploy_develop:
+  environment: develop
+  stage: testing
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+    - aws s3 cp s3://back-develop-s3/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://back-develop-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy.sh
+    - bash /tmp/autoscaling-deploy.sh Testing-financ-asg main /tmp/financeiro-art.pem 0 80 /home/admin/api
+  tags:
+    - financ-homolog
+  only:
+    - testing
+deploy_master:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+    - aws s3 cp s3://123-deploy/financeiro-art.pem /tmp/financeiro-art.pem
+    - aws s3 cp s3://123-deploy/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh
+    - chmod 0400 /tmp/financeiro-art.pem
+    - chmod 755 /tmp/autoscaling-deploy.sh
+    - bash /tmp/autoscaling-deploy.sh ASG-123 main /tmp/financeiro-art.pem 0 80 /home/admin/api
+  only:
+    - main
