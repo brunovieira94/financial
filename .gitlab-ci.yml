@@ -3,6 +3,7 @@ stages:
   - deploy
 variables:
   GIT_STRATEGY: clone
+
 deploy_develop:
   environment: develop
   stage: homolog
