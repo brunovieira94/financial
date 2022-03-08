@@ -58,6 +58,11 @@ class PaymentRequest extends Model
         'payment_type',
     ];
 
+    public function group_payment()
+    {
+        return $this->hasOne(GroupFormPayment::class, 'group_form_payment_id', 'id');
+    }
+
     public function getOtherFilesAttribute()
     {
         if (!is_null($this->attributes['other_files'])) {
