@@ -12,10 +12,10 @@ deploy_develop:
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
     - aws s3 cp s3://back-develop-s3/financeiro-develop.pem /tmp/financeiro-develop.pem
-    - aws s3 cp s3://back-develop-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
+    - aws s3 cp s3://back-develop-s3/autoscaling-deploytestee.sh /tmp/autoscaling-deploytestee.sh
     - chmod 0400 /tmp/financeiro-develop.pem
-    - chmod 755 /tmp/autoscaling-deploy.sh
-    - bash /tmp/autoscaling-deploy.sh Develop-financ-ASG develop /tmp/financeiro-develop.pem 0 80 /var/www/html/dev-api
+    - chmod 755 /tmp/autoscaling-deploytestee.sh
+    - bash /tmp/autoscaling-deploytestee.sh Develop-financ-ASG develop /tmp/financeiro-develop.pem 0 80 /home/admin/api
   tags:
     - financ-homolog
   only:
