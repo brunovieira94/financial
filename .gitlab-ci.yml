@@ -13,11 +13,11 @@ deploy_develop:
   script:
     - ls -l /tmp
     - aws s3 cp s3://back-develop-s3/financeiro-develop.pem /tmp/financeiro-develop.pem
-    - aws s3 cp s3://back-develop-s3/autoscaling-deploy-new.sh /tmp/autoscaling-deploy-new.sh
+    - aws s3 cp s3://back-develop-s3/autoscaling-deploy-novo.sh /tmp/autoscaling-deploy-novo.sh
     - chmod 0400 /tmp/financeiro-develop.pem
-    - chmod 755 /tmp/autoscaling-deploy-new.sh
-    - cat /tmp/autoscaling-deploy-new.sh
-    - bash /tmp/autoscaling-deploy-new.sh Develop-financ-ASG develop /tmp/financeiro-develop.pem 0 80 /var/www/html/dev-api
+    - chmod 755 /tmp/autoscaling-deploy-novo.sh
+    - cat /tmp/autoscaling-deploy-novo.sh
+    - bash /tmp/autoscaling-deploy-novo.sh Develop-financ-ASG develop /tmp/financeiro-develop.pem 0 80 /var/www/html/dev-api
   tags:
     - financ-homolog
   only:
