@@ -30,7 +30,7 @@ deploy_testing:
     - aws s3 cp s3://back-testing-s3/financeiro-develop.pem /tmp/financeiro-develop.pem
     - aws s3 cp s3://back-testing-s3/autoscaling-deploy.sh /tmp/autoscaling-deploy.sh --recursive
     - chmod 0400 /tmp/financeiro-develop.pem
-    - chmod 755 /tmp/autoscaling-deploy.sh
+    - chmod 755 /tmp/autoscaling-deployy.sh
     - bash /tmp/autoscaling-deploy.sh Testing-financ-asg testing /tmp/financeiro-develop.pem 0 80 /var/www/html/dev-api
   tags:
     - financ-homolog
