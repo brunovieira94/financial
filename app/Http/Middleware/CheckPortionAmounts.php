@@ -19,8 +19,6 @@ class CheckPortionAmounts
     {
         $paymentRequestInfo = $request->all();
         $amount = 0;
-        $fees = 0;
-        $discount = 0;
 
         if(array_key_exists('id', $request->route()->parameters())){
             $id = (int)$request->route()->parameters()['id'];
@@ -32,21 +30,6 @@ class CheckPortionAmounts
         } else {
             $amount = $paymentRequest->amount;
         }
-
-        if(array_key_exists('fees', $paymentRequestInfo)){
-            $fees = $request->fees;
-        } else {
-            $fees = $paymentRequest->fees ?? 0;
-        }
-
-        if(array_key_exists('discount', $paymentRequestInfo)){
-            $discount = $request->discount;
-        } else {
-            $discount = $paymentRequest->discount ?? 0;
-        }
-
-        $amount = $amount + $fees;
-        $amount = $amount - $discount;
 
         if(array_key_exists('installments', $paymentRequestInfo)){
             $parcelSum = 0;
