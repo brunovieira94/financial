@@ -22,24 +22,10 @@ class CheckValuesWhenSendingInvoice
         $amount = 0;
         $sumTax = 0;
         $netValue = 0;
-        $fees = 0;
-        $discount = 0;
 
         if(array_key_exists('id', $request->route()->parameters())){
             $id = (int)$request->route()->parameters()['id'];
             $paymentRequest = $this->paymentRequest->findOrFail($id);
-        }
-
-        if(array_key_exists('fees', $paymentRequestInfo)){
-            $fees = $request->fees;
-        } else {
-            $fees = $paymentRequest->fees ?? 0;
-        }
-
-        if(array_key_exists('discount', $paymentRequestInfo)){
-            $discount = $request->discount;
-        } else {
-            $discount = $paymentRequest->discount ?? 0;
         }
 
         if(array_key_exists('amount', $paymentRequestInfo)){
@@ -52,19 +38,13 @@ class CheckValuesWhenSendingInvoice
             $netValue = $paymentRequestInfo['net_value'];
         } else {
             $netValue = $paymentRequest->net_value ?? 0;
-        }
-
-        $amount += $fees;
-        $amount -= $discount;
+        };
 
         if(array_key_exists('tax', $paymentRequestInfo)){
             foreach($paymentRequestInfo['tax'] as $tax){
                 $sumTax += $tax['tax_amount'];
             }
         }
-
-        $netValue += $fees;
-        $netValue -= $discount;
 
         if(($netValue + $sumTax) != $amount){
             return response()->json([
