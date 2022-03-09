@@ -16,8 +16,8 @@ class ShippingItauCNAB240Request extends FormRequest
         return [
             'bank_account_id' => ['required', 'integer', 'exists:bank_accounts,id'],
             'payment_request_ids' => 'required|array',
-            'code_cnab' => 'required_if:payment_type,0',
-            'payment_type' => 'required|integer',
+            'code_cnab' => 'required_if:group_form_payment_id,!=,1',
+            'group_form_payment_id' => 'required|integer',
             'company_id' => 'required|integer|exists:companies,id',
         ];
     }

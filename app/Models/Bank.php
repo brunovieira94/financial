@@ -47,6 +47,6 @@ class Bank extends Model
 
     public function form_payment()
     {
-        return $this->hasMany(FormPayment::class, 'bank_code', 'bank_code');
+        return $this->hasMany(FormPayment::class, 'bank_code', 'bank_code')->where('group_form_payment_id', '!=', null)->with('group_payment');
     }
 }

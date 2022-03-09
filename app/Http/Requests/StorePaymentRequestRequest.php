@@ -20,6 +20,8 @@ class StorePaymentRequestRequest extends FormRequest
             'emission_date' => 'required|Date',
             'pay_date'  => 'required|Date',
             'bank_account_provider_id' => 'integer',
+            'discount' => 'numeric',
+            'percentage_discount' => 'numeric',
             'amount' => 'required|numeric',
             'business_id' => 'required|integer',
             'cost_center_id' => 'required|integer',
