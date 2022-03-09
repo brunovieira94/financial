@@ -17,6 +17,7 @@ class PutPaymentRequestRequest extends FormRequest
         return [
             'fees' => 'numeric',
             'discount' => 'numeric',
+            'percentage_discount' => 'numeric',
             'note' => 'max:255',
             'provider_id' => 'integer',
             'form_payment' => 'max:2',
