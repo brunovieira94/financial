@@ -24,13 +24,18 @@ class PaymentRequest extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['other_files', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
     protected $casts = [
         'other_files' => 'array',
     ];
 
     protected $fillable = [
+        'group_form_payment_id',
         'other_files',
+        'fees',
+        'note',
+        'discount',
+        'percentage_discount',
         'provider_id',
         'emission_date',
         'pay_date',
@@ -54,15 +59,13 @@ class PaymentRequest extends Model
         'payment_type',
     ];
 
-    public function getOtherFilesAttribute()
+    public function group_payment()
     {
-        if (!is_null($this->attributes['other_files'])) {
-            $files = [];
-            foreach ((array) json_decode($this->attributes['other_files']) as $file) {
-                array_push($files, Storage::disk('s3')->temporaryUrl("otherFiles/{$file}", now()->addMinutes(5)));
-            }
-            return $files;
-        }
+        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id');
+    }
+
+    public function attachments(){
+        return $this->hasMany(PaymentRequestHasAttachments::class, 'payment_request_id', 'id');
     }
 
     public function getXmlLinkAttribute()
