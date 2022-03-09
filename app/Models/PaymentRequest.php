@@ -35,6 +35,7 @@ class PaymentRequest extends Model
         'fees',
         'note',
         'discount',
+        'percentage_discount',
         'provider_id',
         'emission_date',
         'pay_date',
