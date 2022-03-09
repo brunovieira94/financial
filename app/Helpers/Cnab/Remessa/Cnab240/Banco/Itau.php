@@ -91,12 +91,10 @@ class Itau extends AbstractRemessa implements RemessaContract
     {
         $this->boletos[] = $boleto;
 
-        if($this->tipoSeguimento == 0){
-            $this->segmentoA($boleto);
-        } elseif($this->tipoSeguimento == 2){
-            $this->segmentoA($boleto);
-        } elseif($this->tipoSeguimento == 1){
+        if($this->tipoSeguimento == 1){
             $this->segmentoJ($boleto);
+        } else {
+            $this->segmentoA($boleto);
         }
         return $this;
     }
