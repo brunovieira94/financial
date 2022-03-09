@@ -36,15 +36,16 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
-        if(!array_key_exists('payment_type', $requestInfo)){
+        if(!array_key_exists('group_form_payment_id', $requestInfo)){
             return response()->json([
-                'Erro' => 'Payment type não enviado'
+                'erro' => 'O ID do grupo de pagamento não foi informado.'
             ]);
         }
+
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
-        ->whereRelation('payment_request', 'payment_type', '=', $requestInfo['payment_type'])
+        ->whereRelation('payment_request', 'group_form_payment_id', '=', $requestInfo['group_form_payment_id'])
         ->where('status', 1),$requestInfo);
     }
 

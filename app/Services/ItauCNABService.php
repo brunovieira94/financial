@@ -54,8 +54,8 @@ class ItauCNABService
             'beneficiario' => $recipient,
             'variacaoCarteira'     => '017',
             'convenio'     => '1111', //Validar
-            'codigoFormaPagamento' => $requestInfo['code_cnab'],
-            'tipoSeguimento' => $requestInfo['payment_type'],
+            'codigoFormaPagamento' => $requestInfo['code_cnab'] ?? '',
+            'tipoSeguimento' => $requestInfo['group_form_payment_id'],
         ];
 
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
