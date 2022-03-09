@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\GroupFormPayment;
+use App\Models\PaymentRequestHasAttachments;
 use Config;
 use ZipStream\Option\Archive;
 
@@ -22,10 +23,12 @@ class PaymentRequestService
     private $tax;
     private $approvalFlow;
     private $groupFormPayment;
+    private $attachments;
 
-    private $with = ['group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
+    private $with = ['attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+
+    public function __construct(PaymentRequestHasAttachments $attachments,ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
@@ -33,6 +36,7 @@ class PaymentRequestService
         $this->tax = $tax;
         $this->approvalFlow = $approvalFlow;
         $this->groupFormPayment = $groupFormPayment;
+        $this->attachments = $attachments;
     }
 
     public function getAllPaymentRequest($requestInfo)
@@ -48,14 +52,12 @@ class PaymentRequestService
 
     public function postPaymentRequest(Request $request)
     {
+
         $paymentRequestInfo = $request->all();
         $paymentRequestInfo['user_id'] = auth()->user()->id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
-        }
-        if (array_key_exists('other_files', $paymentRequestInfo)) {
-            $paymentRequestInfo['other_files'] = $this->storeArchive($request->other_files, 'otherFiles');
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
             $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
@@ -98,6 +100,11 @@ class PaymentRequestService
         $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
+
+        if (array_key_exists('attachments', $paymentRequestInfo)) {
+            $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request');
+            $this->syncAttachments($arrayAttachments, $paymentRequest);
+        }
 
         $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
         activity()->disableLogging();
@@ -164,8 +171,8 @@ class PaymentRequestService
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
              $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
         }
-        if (array_key_exists('other_files', $paymentRequestInfo)) {
-            $paymentRequestInfo['other_files'] = $this->storeArchive($request->other_files, 'otherFiles');
+        if (array_key_exists('attachments', $paymentRequestInfo)) {
+            $this->putAttachments($id, $paymentRequestInfo, $request);
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
              $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
@@ -214,7 +221,7 @@ class PaymentRequestService
             $data = uniqid(date('HisYmd'));
 
             if(is_array($archive)){
-                $archive = $archive['file'];
+                $archive = $archive['attachment'];
             }
             $originalName  = explode('.', $archive->getClientOriginalName());
             $extension = $originalName[count($originalName) - 1];
@@ -320,5 +327,48 @@ class PaymentRequestService
     {
         $groupPaymentRequest = Utils::search($this->groupFormPayment, $requestInfo);
         return Utils::pagination($groupPaymentRequest, $requestInfo);
+    }
+
+    public function syncAttachments($arrayAttachments, $paymentRequest)
+    {
+        foreach($arrayAttachments as $attachment)
+        {
+            PaymentRequestHasAttachments::create([
+                'payment_request_id' => $paymentRequest->id,
+                'attachment' => $attachment,
+            ]);
+        }
+    }
+
+    public function putAttachments($id, $paymentRequestInfo, Request $request)
+    {
+        $updateAttachments = [];
+        $createdAttachments = [];
+        $destroyCollection = [];
+
+        if (array_key_exists('attachments_ids', $paymentRequestInfo))
+        {
+            $updateAttachments[] = $paymentRequestInfo['attachments_ids'];
+        }
+
+        foreach ($paymentRequestInfo['attachments'] as $key => $attachment)
+        {
+            $paymentRequestHasAttachment = new PaymentRequestHasAttachments;
+            $attachment['attachment'] = $this->storeArchive($request->attachments[$key], 'attachment-payment-request')[0];
+            $paymentRequestHasAttachment = $paymentRequestHasAttachment->create([
+                'payment_request_id' => $id,
+                'attachment' => $attachment['attachment'],
+            ]);
+            $createdAttachments[] = $paymentRequestHasAttachment->id;
+        }
+
+        $collection = $this->attachments->where('payment_request_id', $id)->whereNotIn('id', $updateAttachments)->whereNotIn('id', $createdAttachments)->get();
+        foreach ($collection as $value)
+        {
+            $pushObject = [];
+            $pushObject['id'] = $value['id'];
+            array_push($destroyCollection, $pushObject);
+        }
+        $this->attachments->destroy($destroyCollection);
     }
 }

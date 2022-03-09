@@ -176,12 +176,10 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->boletos[] = $boleto;
 
-        if($this->tipoSeguimento == 0){
-            $this->segmentoA($boleto);
-        } elseif($this->tipoSeguimento == 2){
-            $this->segmentoA($boleto);
-        } elseif($this->tipoSeguimento == 1){
+        if($this->tipoSeguimento == 1){
             $this->segmentoJ($boleto);
+        } else {
+            $this->segmentoA($boleto);
         }
         return $this;
     }
@@ -461,12 +459,10 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->iniciaHeaderLote();
 
-        if($this->tipoSeguimento == 0){
-            $this->headerLoteA();
-        } elseif($this->tipoSeguimento == 2){
-            $this->headerLoteA();
-        } elseif($this->tipoSeguimento == 1){
+        if($this->tipoSeguimento == 1){
             $this->headerLoteJ();
+        } else {
+            $this->headerLoteA();
         }
     }
 
