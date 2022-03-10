@@ -120,6 +120,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
 
         return [
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? $paymentRequest->provider->cnpj : $paymentRequest->provider->cpf) : $paymentRequest->provider,
+            $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
             $paymentRequest->emission_date,
             $paymentRequest->pay_date,
             $paymentRequest->amount,
@@ -144,7 +145,8 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
     public function headings(): array
     {
         return [
-            'Fornecedor',
+            'CNPJ do Fornecedor',
+            'Nome do Fornecedor',
             'Data de Emissão',
             'Data de Pagamento',
             'Valor',
