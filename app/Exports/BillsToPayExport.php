@@ -119,11 +119,14 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
         }
 
         return [
+            $paymentRequest->id + 1000,
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? $paymentRequest->provider->cnpj : $paymentRequest->provider->cpf) : $paymentRequest->provider,
             $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
             $paymentRequest->emission_date,
             $paymentRequest->pay_date,
             $paymentRequest->amount,
+            $paymentRequest->net_value,
+            $this->totalTax,
             $paymentRequest->chart_of_accounts ? $paymentRequest->chart_of_accounts->title : $paymentRequest->chart_of_accounts,
             $paymentRequest->cost_center ? $paymentRequest->cost_center->title : $paymentRequest->cost_center,
             $paymentRequest->business ? $paymentRequest->business->name : $paymentRequest->business,
@@ -136,20 +139,21 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             $paymentRequest->invoice_number,
             $paymentRequest->invoice_type,
             $paymentRequest->bar_code,
-            $paymentRequest->net_value,
             $paymentRequest->created_at,
-            $this->totalTax,
         ];
     }
 
     public function headings(): array
     {
         return [
+            'Id',
             'CNPJ do Fornecedor',
             'Nome do Fornecedor',
             'Data de Emissão',
             'Data de Pagamento',
             'Valor',
+            'Valor Líquido',
+            'Total de Impostos',
             'Plano de Contas',
             'Centro de Custo',
             'Negócio',
@@ -162,9 +166,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
-            'Valor Líquido',
             'Data de Criação',
-            'Total de Impostos',
         ];
     }
 }
