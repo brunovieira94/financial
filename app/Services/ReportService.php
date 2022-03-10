@@ -36,11 +36,15 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+
         if(!array_key_exists('group_form_payment_id', $requestInfo)){
-            return response()->json([], 200);
+            return Utils::pagination($accountsPayableApprovalFlow
+            ->with('payment_request')
+            ->whereRelation('payment_request', 'group_form_payment_id', '=', $requestInfo['group_form_payment_id'])
+            ->where('status', -1),$requestInfo);
         }
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
         ->whereRelation('payment_request', 'group_form_payment_id', '=', $requestInfo['group_form_payment_id'])
