@@ -2,15 +2,14 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-class AddedDataInitalValue extends Migration
+class AddedDataInitialValueWhereNull extends Migration
 {
     public function up()
     {
         DB::table('payment_requests')
-              ->whereNotNull('initial_value')
+              ->where(['initial_value' => NULL])
               ->update(['initial_value' => 0]);
     }
 }
