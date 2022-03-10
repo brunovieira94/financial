@@ -36,7 +36,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
 
         return [
             $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? $accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
-            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->emission_date,
             $accountsPayableApprovalFlow->payment_request_trashed->pay_date,
             $accountsPayableApprovalFlow->payment_request_trashed->amount,
