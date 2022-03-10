@@ -35,11 +35,14 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
         }
 
         return [
+            $accountsPayableApprovalFlow->payment_request_trashed->id + 1000,
             $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? $accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->emission_date,
             $accountsPayableApprovalFlow->payment_request_trashed->pay_date,
             $accountsPayableApprovalFlow->payment_request_trashed->amount,
+            $accountsPayableApprovalFlow->payment_request_trashed->net_value,
+            $this->totalTax,
             $accountsPayableApprovalFlow->payment_request_trashed->chart_of_accounts ? $accountsPayableApprovalFlow->payment_request_trashed->chart_of_accounts->title : $accountsPayableApprovalFlow->payment_request_trashed->chart_of_accounts,
             $accountsPayableApprovalFlow->payment_request_trashed->cost_center ? $accountsPayableApprovalFlow->payment_request_trashed->cost_center->title : $accountsPayableApprovalFlow->payment_request_trashed->cost_center,
             $accountsPayableApprovalFlow->payment_request_trashed->business ? $accountsPayableApprovalFlow->payment_request_trashed->business->name : $accountsPayableApprovalFlow->payment_request_trashed->business,
@@ -52,20 +55,21 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->invoice_number,
             $accountsPayableApprovalFlow->payment_request_trashed->invoice_type,
             $accountsPayableApprovalFlow->payment_request_trashed->bar_code,
-            $accountsPayableApprovalFlow->payment_request_trashed->net_value,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
-            $this->totalTax,
         ];
     }
 
     public function headings(): array
     {
         return [
+            'Id',
             'CNPJ do Fornecedor',
             'Nome do Fornecedor',
             'Data de Emissão',
             'Data de Pagamento',
             'Valor',
+            'Valor Líquido',
+            'Total de Impostos',
             'Plano de Contas',
             'Centro de Custo',
             'Negócio',
@@ -78,9 +82,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
-            'Valor Líquido',
             'Data de Criação',
-            'Total de Impostos',
         ];
     }
 }
