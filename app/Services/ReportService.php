@@ -38,15 +38,17 @@ class ReportService
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
 
-        if(!array_key_exists('group_form_payment_id', $requestInfo)){
+        if(!array_key_exists('group_form_payment_id', $requestInfo) || $requestInfo['group_form_payment_id'] == 0){
             return Utils::pagination($accountsPayableApprovalFlow
             ->with('payment_request')
-            ->where('id', -1),$requestInfo); // not return data
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->where('status', 1),$requestInfo);
         }
 
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
         ->whereRelation('payment_request', 'group_form_payment_id', '=', $requestInfo['group_form_payment_id'])
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->where('status', 1),$requestInfo);
     }
 
