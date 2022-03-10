@@ -37,6 +37,7 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
 
         return [
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? $accountsPayableApprovalFlow->payment_request->provider->cnpj : $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->emission_date,
             $accountsPayableApprovalFlow->payment_request->pay_date,
             $accountsPayableApprovalFlow->payment_request->amount,
@@ -61,7 +62,8 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
     public function headings(): array
     {
         return [
-            'Fornecedor',
+            'CNPJ do Fornecedor',
+            'Nome do Fornecedor',
             'Data de Emissão',
             'Data de Pagamento',
             'Valor',
