@@ -15,6 +15,7 @@ class PutPaymentRequestRequest extends FormRequest
     public function rules()
     {
         return [
+            'initial_value' => 'numeric',
             'fees' => 'numeric',
             'discount' => 'numeric',
             'percentage_discount' => 'numeric',
