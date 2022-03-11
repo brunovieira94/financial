@@ -14,6 +14,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
 {
     private $requestInfo;
     private $totalTax;
+    private $filterCanceled = false;
 
     public function __construct($requestInfo){
         $this->requestInfo = $requestInfo;
@@ -56,6 +57,9 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
         if(array_key_exists('status', $infoRequest)){
             $query->whereHas('approval', function ($query) use ($infoRequest){
                 $query->where('status', $infoRequest['status']);
+                if($infoRequest['status'] == 3){
+                    $this->filterCanceled = true;
+                }
             });
         }
         if(array_key_exists('approvalOrder', $infoRequest)){
@@ -107,6 +111,12 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
                 $query->where('status', '!=', 'BD')->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($infoRequest['days_late']));
             });
         }
+
+        if($this->filterCanceled){
+            $query->withTrashed();
+            $query->where('deleted_at', '!=',NULL);
+        }
+
         return $query->get();
         //return PaymentRequest::with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->get();
     }
