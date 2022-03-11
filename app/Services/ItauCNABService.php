@@ -137,9 +137,7 @@ class ItauCNABService
             )
         );
 
-        return response()->json([
-            'linkArchive' => Storage::temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5)),
-        ]);
+        return $shipping->download('CNAB.txt');
     }
 
     public function receiveCNAB240($requestInfo) {
