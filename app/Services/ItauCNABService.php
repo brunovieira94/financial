@@ -137,13 +137,15 @@ class ItauCNABService
             )
         );
 
-        $filename = 'cnab.txt';
-        $tempImage = tempnam(sys_get_temp_dir(), $filename);
-        copy(Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5)), $tempImage);
 
-        return response()->download($tempImage, $filename);
+        return response()->json([
+            'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5))
+        ],200);
 
-      //  return $shipping->download('CNAB.txt');
+        //$filename = 'cnab.txt';
+        //$tempImage = tempnam(sys_get_temp_dir(), $filename);
+        //copy(, $tempImage);
+        //return response()->download($tempImage, $filename);
     }
 
     public function receiveCNAB240($requestInfo) {

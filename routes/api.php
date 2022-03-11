@@ -224,6 +224,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/approve/{id}', [ApprovalFlowByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowByUserController::class, 'cancelAccount']);
+        Route::post('/export', [ApprovalFlowByUserController::class, 'accountsApproveUserExport']);
     });
 
     Route::prefix('type-of-tax')->group(function () {
