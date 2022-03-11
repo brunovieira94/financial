@@ -1107,6 +1107,9 @@ final class Util
             case 45:
                 return '009';
                 break;
+            case 03:
+                return '700';
+                break;
             default:
                 return '000';
         }

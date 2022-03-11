@@ -545,6 +545,14 @@ class Bb extends AbstractRemessa implements RemessaContract
     {
         $this->iniciaTrailerLote();
 
+        $quantidadeBoleto = count($this->boletos);
+        if($this->tipoSeguimento == 1){
+            $quantidadeBoleto += 3;
+        } else {
+            $quantidadeBoleto = $quantidadeBoleto * 2;
+            $quantidadeBoleto += 2;
+        }
+
         $valor = array_reduce($this->boletos, function($valor, $boleto) {
             return $valor + $boleto->getValor();
         }, 0);
@@ -553,7 +561,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(4, 7, '0001');
         $this->add(8, 8, '5');
         $this->add(9, 17, '');
-        $this->add(18, 23, Util::formatCnab('9', count($this->boletos) + 3, 6));
+        $this->add(18, 23, Util::formatCnab('9', $quantidadeBoleto, 6));
         $this->add(24, 41, Util::formatCnab('9', $valor, 18 , 2));
         $this->add(42, 59, Util::formatCnab('9', 0, 18));
         $this->add(60, 65, '000000');
