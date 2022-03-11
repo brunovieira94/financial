@@ -10,6 +10,7 @@ class ReportService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
+    private $filterCanceled = false;
 
     public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest)
     {
@@ -120,8 +121,6 @@ class ReportService
         $query = $this->paymentRequest->query();
         $query = $query->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
-        $filterCanceled = false;
-
 
         if(array_key_exists('cpfcnpj', $requestInfo)){
             $query->whereHas('provider', function ($query) use ($requestInfo){
@@ -154,7 +153,9 @@ class ReportService
         if(array_key_exists('status', $requestInfo)){
             $query->whereHas('approval', function ($query) use ($requestInfo){
                 $query->where('status', $requestInfo['status']);
-                $filterCanceled = true;
+                if($requestInfo['status'] == 3){
+                    $this->filterCanceled = true;
+                }
             });
         }
         if(array_key_exists('approval_order', $requestInfo)){
@@ -207,8 +208,9 @@ class ReportService
             });
         }
 
-        if($filterCanceled){
-            $query->whereNotNull('deleted_at');
+        if($this->filterCanceled){
+            $query->withTrashed();
+            $query->where('deleted_at', '!=',NULL);
         }
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
