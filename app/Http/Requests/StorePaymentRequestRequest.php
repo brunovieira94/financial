@@ -15,6 +15,7 @@ class StorePaymentRequestRequest extends FormRequest
     public function rules()
     {
         return [
+            'initial_value' => 'required|numeric',
             'provider_id' => 'required|integer',
             'form_payment' => 'max:2',
             'emission_date' => 'required|Date',
@@ -46,8 +47,8 @@ class StorePaymentRequestRequest extends FormRequest
             'tax.*.type_of_tax_id' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount',
             'tax.*.tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,tax.*.id_type_of_tax,net_value',
             //Boleto
-            'bar_code' => ['max:150', 'required_with_all:billet_file'],
-            'billet_file' => 'file|required_with_all:bar_code',
+            'bar_code' => ['max:150', 'required_if:payment_type,==,1'],
+            'billet_file' => ['file', 'required_if:payment_type,==,1'],
             //installments
             'installments.*.portion_amount' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
             'installments.*.due_date' => 'required_with:installments.*.portion_amount,installments.*.note,installments.*.pay|date',
@@ -56,6 +57,9 @@ class StorePaymentRequestRequest extends FormRequest
             'force_registration' => 'boolean',
             'installments.*.extension_date' => 'date',
             'installments.*.competence_date' => 'date',
+            'installments.*.initial_value' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
+            'installments.*.discount' => 'numeric',
+            'installments.*.fees' => 'numeric',
         ];
     }
 }

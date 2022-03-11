@@ -10,6 +10,7 @@ class ReportService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
+    private $filterCanceled = false;
 
     public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest)
     {
@@ -38,15 +39,17 @@ class ReportService
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
 
-        if(!array_key_exists('group_form_payment_id', $requestInfo)){
+        if(!array_key_exists('group_form_payment_id', $requestInfo) || $requestInfo['group_form_payment_id'] == 0){
             return Utils::pagination($accountsPayableApprovalFlow
             ->with('payment_request')
-            ->where('id', -1),$requestInfo); // not return data
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->where('status', 1),$requestInfo);
         }
 
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
         ->whereRelation('payment_request', 'group_form_payment_id', '=', $requestInfo['group_form_payment_id'])
+        ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->where('status', 1),$requestInfo);
     }
 
@@ -87,14 +90,14 @@ class ReportService
             $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
             ->where(function($q) use ($userCostCenter) {
                 if(!$userCostCenter->isEmpty()){
-                $q->where(function($query) use ($userCostCenter) {
-                    $query->where("approval_flow.filter_cost_center", true)
-                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                })
-                ->orWhere(function($query) {
-                    $query->where("approval_flow.filter_cost_center", false);
-                });
-            }
+                    $q->where(function($query) use ($userCostCenter) {
+                        $query->where("approval_flow.filter_cost_center", true)
+                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                    })
+                    ->orWhere(function($query) {
+                        $query->where("approval_flow.filter_cost_center", false);
+                    });
+                }
             });
         })
         ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
@@ -117,6 +120,8 @@ class ReportService
     {
         $query = $this->paymentRequest->query();
         $query = $query->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+
+
         if(array_key_exists('cpfcnpj', $requestInfo)){
             $query->whereHas('provider', function ($query) use ($requestInfo){
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
@@ -148,6 +153,9 @@ class ReportService
         if(array_key_exists('status', $requestInfo)){
             $query->whereHas('approval', function ($query) use ($requestInfo){
                 $query->where('status', $requestInfo['status']);
+                if($requestInfo['status'] == 3){
+                    $this->filterCanceled = true;
+                }
             });
         }
         if(array_key_exists('approval_order', $requestInfo)){
@@ -200,6 +208,10 @@ class ReportService
             });
         }
 
+        if($this->filterCanceled){
+            $query->withTrashed();
+            $query->where('deleted_at', '!=',NULL);
+        }
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return Utils::pagination($query,$requestInfo);
