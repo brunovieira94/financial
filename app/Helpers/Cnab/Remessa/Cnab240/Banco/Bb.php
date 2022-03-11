@@ -200,7 +200,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(14, 14, 'A');
         $this->add(15, 15, '0'); //Tipo de Movimento
         $this->add(16, 17, '00'); //cod Tipo de Movimento
-        $this->add(18, 20, $this->codigoFormaPagamento == 42 || $this->codigoFormaPagamento == 41 ? '018' : '000'); // validar
+        $this->add(18, 20, $this->codigoFormaPagamento == 43 || $this->codigoFormaPagamento == 41 ? '018' : '000'); // validar
         $this->add(21, 23, Util::onlyNumbers($boleto->getCodigoBanco()));
         $this->add(24, 28, Util::formatCnab('9', $boleto->getAgencia(), 5));
         $this->add(29, 29, Util::formatCnab('X', $boleto->getAgenciaDv(), 1));
@@ -431,7 +431,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(42, 45, '0126');
         $this->add(46, 50, Util::formatCnab('X', '', 5));
         //$this->add(51, 52, 'TS'); //ARQUIVO DE TESTE
-        $this->add(51, 52, 'TS'); // correto
+        $this->add(51, 52, ''); // correto
         $this->add(53, 57, Util::formatCnab('9', $this->getAgencia(), 5));
         $this->add(58, 58, CalculoDV::bbAgencia($this->getAgencia()));
         $this->add(59, 70, Util::formatCnab('9', $this->getConta(), 12));
@@ -481,7 +481,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(33, 41, Util::formatCnab('9', Util::onlyNumbers($this->getConvenio()), 9));
         $this->add(42, 45, '0126');
         $this->add(46, 50, '');
-        $this->add(51, 52, 'TS');
+        $this->add(51, 52, '');
         $this->add(53, 57, Util::formatCnab('9', $this->getAgencia(), 5));
         $this->add(58, 58, CalculoDV::bbAgencia($this->getAgencia()));
         $this->add(59, 70, Util::formatCnab('9', $this->getConta(), 12));
@@ -516,7 +516,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(33, 41, Util::formatCnab('9', Util::onlyNumbers($this->getConvenio()), 9));
         $this->add(42, 45, '0126');
         $this->add(46, 50, Util::formatCnab('9', '', 5));
-        $this->add(51, 52, 'TS');
+        $this->add(51, 52, '');
         $this->add(53, 57, Util::formatCnab('9', $this->getAgencia(), 5));
         $this->add(58, 58, CalculoDV::bbAgencia($this->getAgencia()));
         $this->add(59, 70, Util::formatCnab('9', $this->getConta(), 12));
