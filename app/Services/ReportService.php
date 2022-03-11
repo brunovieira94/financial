@@ -119,6 +119,10 @@ class ReportService
     {
         $query = $this->paymentRequest->query();
         $query = $query->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+
+        $filterCanceled = false;
+
+
         if(array_key_exists('cpfcnpj', $requestInfo)){
             $query->whereHas('provider', function ($query) use ($requestInfo){
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
@@ -150,6 +154,7 @@ class ReportService
         if(array_key_exists('status', $requestInfo)){
             $query->whereHas('approval', function ($query) use ($requestInfo){
                 $query->where('status', $requestInfo['status']);
+                $filterCanceled = true;
             });
         }
         if(array_key_exists('approval_order', $requestInfo)){
@@ -202,6 +207,9 @@ class ReportService
             });
         }
 
+        if($filterCanceled){
+            $query->whereNotNull('deleted_at');
+        }
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return Utils::pagination($query,$requestInfo);
