@@ -57,6 +57,9 @@ class StorePaymentRequestRequest extends FormRequest
             'force_registration' => 'boolean',
             'installments.*.extension_date' => 'date',
             'installments.*.competence_date' => 'date',
+            'installments.*.initial_value' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
+            'installments.*.discount' => 'numeric',
+            'installments.*.fees' => 'numeric',
         ];
     }
 }
