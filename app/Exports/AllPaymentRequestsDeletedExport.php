@@ -14,6 +14,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
     private $requestInfo;
     private $totalTax;
 
+
     public function __construct($requestInfo){
         $this->requestInfo = $requestInfo;
     }
