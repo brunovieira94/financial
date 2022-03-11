@@ -94,6 +94,7 @@ class ApprovalFlowByUserService
                     return response()->json([
                         'error' => 'O código de barras não foi informado.',
                     ], 422);
+               }
             } //elseif($accountApproval->payment_request->payment_type == 1){
               //  if (!$accountApproval->payment_request->provider->accept_billet_payment){
               //      if(is_null($accountApproval->payment_request->invoice_number)){
