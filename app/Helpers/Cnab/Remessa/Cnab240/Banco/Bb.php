@@ -200,7 +200,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(14, 14, 'A');
         $this->add(15, 15, '0'); //Tipo de Movimento
         $this->add(16, 17, '00'); //cod Tipo de Movimento
-        $this->add(18, 20, '009'); // validar
+        $this->add(18, 20, $this->codigoFormaPagamento == 42 || $this->codigoFormaPagamento == 41 ? '018' : '000'); // validar
         $this->add(21, 23, Util::onlyNumbers($boleto->getCodigoBanco()));
         $this->add(24, 28, Util::formatCnab('9', $boleto->getAgencia(), 5));
         $this->add(29, 29, Util::formatCnab('X', $boleto->getAgenciaDv(), 1));
@@ -576,7 +576,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(18, 23, Util::formatCnab('9', 1, 6));
         $this->add(24, 29, Util::formatCnab('9', $this->getCount(), 6));
         $this->add(30, 35, '000000');
-        $this->add(36, 240, '');
+        $this->add(36, 240, ' ');
 
         return $this;
     }
