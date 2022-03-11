@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\ApprovalFlowByUserService;
 use App\Http\Requests\PutAccountsPayableApprovalFlowRequest;
+use App\Exports\AccountsPayableApprovalFlowExport;
 
 class ApprovalFlowByUserController extends Controller
 {
@@ -18,6 +19,11 @@ class ApprovalFlowByUserController extends Controller
     public function accountsApproveUser(Request $request)
     {
         return $this->accountsPayableApprovalFlowService->getAllAccountsForApproval($request->all());
+    }
+
+    public function accountsApproveUserExport(Request $request)
+    {
+        return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
     }
 
     public function approveAccount($id)
