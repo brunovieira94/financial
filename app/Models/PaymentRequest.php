@@ -32,9 +32,7 @@ class PaymentRequest extends Model
     protected $fillable = [
         'group_form_payment_id',
         'other_files',
-        'fees',
         'note',
-        'discount',
         'percentage_discount',
         'provider_id',
         'emission_date',

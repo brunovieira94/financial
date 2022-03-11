@@ -3,13 +3,14 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\ApprovalFlow;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $totalTax;
@@ -22,9 +23,38 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])
-        ->where('status', 7)
+
+        $approvalFlowUserOrder = ApprovalFlow::where('role_id', auth()->user()->role_id);
+
+        $userCostCenter = auth()->user()->cost_center->map(function($e) {
+            return $e->id;
+        });
+
+        if (!$approvalFlowUserOrder){
+            return response([], 404);
+        }
+
+        return AccountsPayableApprovalFlow::join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
+        ->select(['accounts_payable_approval_flows.*'])
+        ->join("payment_requests", function($join) use ($userCostCenter) {
+            $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
+            ->where(function($q) use ($userCostCenter) {
+                if(!$userCostCenter->isEmpty()){
+                $q->where(function($query) use ($userCostCenter) {
+                    $query->where("approval_flow.filter_cost_center", true)
+                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                })
+                ->orWhere(function($query) {
+                    $query->where("approval_flow.filter_cost_center", false);
+                });
+            }
+            });
+        })
+        ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
+        ->where('status', 0)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
+        ->with(['payment_request', 'reason_to_reject'])
+        ->distinct(['accounts_payable_approval_flows.id'])
         ->get();
     }
 
