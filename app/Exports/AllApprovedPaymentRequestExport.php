@@ -23,7 +23,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
     public function collection()
     {
         if(!array_key_exists('group_form_payment_id', $this->requestInfo) || $this->requestInfo['group_form_payment_id'] == 0){
-            AccountsPayableApprovalFlow::with(['payment_request'])
+            return AccountsPayableApprovalFlow::with(['payment_request'])
             ->where('status', 1)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->get();
