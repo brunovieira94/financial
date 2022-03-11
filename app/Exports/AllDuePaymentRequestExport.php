@@ -64,6 +64,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
             $paymentRequest->invoice_number,
             $paymentRequest->invoice_type,
             $paymentRequest->bar_code,
+            $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
         ];
     }
@@ -91,6 +92,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
+            'Pŕoxima data de prorrogação',
             'Data de Criação',
         ];
     }

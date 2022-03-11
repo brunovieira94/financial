@@ -37,7 +37,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
         return [
             $accountsPayableApprovalFlow->payment_request_trashed->id + 1000,
             $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? $accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
-            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->company_name ? $accountsPayableApprovalFlow->payment_request_trashed->provider->company_name : $accountsPayableApprovalFlow->payment_request_trashed->provider->full_name) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->emission_date,
             $accountsPayableApprovalFlow->payment_request_trashed->pay_date,
             $accountsPayableApprovalFlow->payment_request_trashed->amount,
@@ -55,6 +55,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->invoice_number,
             $accountsPayableApprovalFlow->payment_request_trashed->invoice_type,
             $accountsPayableApprovalFlow->payment_request_trashed->bar_code,
+            $accountsPayableApprovalFlow->payment_request_trashed->next_extension_date,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
         ];
     }
@@ -82,6 +83,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
+            'Pŕoxima data de prorrogação',
             'Data de Criação',
         ];
     }

@@ -86,6 +86,7 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
             $accountsPayableApprovalFlow->payment_request->invoice_number,
             $accountsPayableApprovalFlow->payment_request->invoice_type,
             $accountsPayableApprovalFlow->payment_request->bar_code,
+            $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
         ];
     }
@@ -113,6 +114,7 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
+            'Pŕoxima data de prorrogação',
             'Data de Criação',
         ];
     }
