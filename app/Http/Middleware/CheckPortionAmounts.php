@@ -34,8 +34,8 @@ class CheckPortionAmounts
         if(array_key_exists('installments', $paymentRequestInfo)){
             $parcelSum = 0;
             foreach($paymentRequestInfo['installments'] as $installments){
-                if(array_key_exists('portion_amount', $installments)){
-                    $parcelSum += $installments['portion_amount'];
+                if(array_key_exists('initial_value', $installments)){
+                    $parcelSum += $installments['initial_value'];
                 }
             }
             if (number_format($amount, 2) != number_format($parcelSum, 2)) {
