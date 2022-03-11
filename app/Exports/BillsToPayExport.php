@@ -139,6 +139,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             $paymentRequest->invoice_number,
             $paymentRequest->invoice_type,
             $paymentRequest->bar_code,
+            $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
         ];
     }
@@ -166,6 +167,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
+            'Pŕoxima data de prorrogação',
             'Data de Criação',
         ];
     }

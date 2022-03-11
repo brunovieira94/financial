@@ -22,8 +22,16 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
+        if(!array_key_exists('group_form_payment_id', $this->requestInfo) || $this->requestInfo['group_form_payment_id'] == 0){
+            AccountsPayableApprovalFlow::with(['payment_request'])
+            ->where('status', 1)
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->get();
+        }
+
         return AccountsPayableApprovalFlow::with(['payment_request'])
         ->where('status', 1)
+        ->whereRelation('payment_request', 'group_form_payment_id', '=', $this->requestInfo['group_form_payment_id'])
         ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->get();
     }
@@ -57,6 +65,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request->invoice_number,
             $accountsPayableApprovalFlow->payment_request->invoice_type,
             $accountsPayableApprovalFlow->payment_request->bar_code,
+            $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
         ];
     }
@@ -84,6 +93,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             'Número da fatura',
             'Tipo de fatura',
             'Código de barras',
+            'Pŕoxima data de prorrogação',
             'Data de Criação',
         ];
     }
