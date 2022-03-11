@@ -550,7 +550,7 @@ class Bb extends AbstractRemessa implements RemessaContract
             $quantidadeBoleto += 3;
         } else {
             $quantidadeBoleto = $quantidadeBoleto * 2;
-            $quantidadeBoleto += 3;
+            $quantidadeBoleto += 2;
         }
 
         $valor = array_reduce($this->boletos, function($valor, $boleto) {
