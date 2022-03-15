@@ -53,7 +53,7 @@ class ItauCNABService
             'contaDv'      => $bankAccount->account_check_number ?? '',
             'beneficiario' => $recipient,
             'variacaoCarteira'     => '017',
-            'convenio'     => '1111', //Validar
+            'convenio'     => $bankAccount->covenant ?? '',
             'codigoFormaPagamento' => $requestInfo['code_cnab'] ?? '',
             'tipoSeguimento' => $requestInfo['group_form_payment_id'],
         ];
