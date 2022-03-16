@@ -29,6 +29,12 @@ class AlterFieldNotePaymentRequest extends Migration
      */
     public function down()
     {
-        //
+        Schema::table('payment_requests', function (Blueprint $table) {
+            $table->string('note')->change();
+        });
+
+        Schema::table('payment_requests_installments', function (Blueprint $table) {
+            $table->string('note')->change();
+        });
     }
 }
