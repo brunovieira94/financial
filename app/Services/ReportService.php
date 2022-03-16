@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
+use App\Models\FormPayment;
 use App\Models\PaymentRequest;
 use Carbon\Carbon;
 
@@ -39,18 +40,38 @@ class ReportService
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
 
-        if(!array_key_exists('group_form_payment_id', $requestInfo) || $requestInfo['group_form_payment_id'] == 0){
+        if(!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0){
             return Utils::pagination($accountsPayableApprovalFlow
             ->with('payment_request')
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->where('status', 1),$requestInfo);
         }
 
-        return Utils::pagination($accountsPayableApprovalFlow
-        ->with('payment_request')
-        ->whereRelation('payment_request', 'group_form_payment_id', '=', $requestInfo['group_form_payment_id'])
-        ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->where('status', 1),$requestInfo);
+        $formPayment = FormPayment::findOrFail($requestInfo['form_payment_id']);
+
+        if($formPayment->group_form_payment_id == 1) {
+            if($formPayment->same_ownership){
+                return Utils::pagination($accountsPayableApprovalFlow
+                ->with('payment_request')
+                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                ->where('status', 1),$requestInfo);
+            } else {
+                return Utils::pagination($accountsPayableApprovalFlow
+                ->with('payment_request')
+                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                ->where('status', 1),$requestInfo);
+            }
+        } else {
+            return Utils::pagination($accountsPayableApprovalFlow
+            ->with('payment_request')
+            ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->where('status', 1),$requestInfo);
+        }
     }
 
     public function getAllGeneratedCNABPaymentRequest($requestInfo)
