@@ -28,12 +28,12 @@ class AccountsPayableApprovalFlow extends Model
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment']);
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment']);
     }
 
     public function payment_request_trashed()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
     }
 
     public function approval_flow()
