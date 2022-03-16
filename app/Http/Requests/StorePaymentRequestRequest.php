@@ -53,7 +53,6 @@ class StorePaymentRequestRequest extends FormRequest
             'installments.*.portion_amount' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
             'installments.*.due_date' => 'required_with:installments.*.portion_amount,installments.*.note,installments.*.pay|date',
             'installments.*.pay' => 'boolean',
-            'installments.*.note' => 'max:255',
             'force_registration' => 'boolean',
             'installments.*.extension_date' => 'date',
             'installments.*.competence_date' => 'date',
