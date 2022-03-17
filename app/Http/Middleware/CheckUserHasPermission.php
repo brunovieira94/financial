@@ -49,6 +49,9 @@ class CheckUserHasPermission
             $routeAccessed = $route[count($route)-2];
         } else{
             $routeAccessed = $route[count($route)-1];
+            if($routeAccessed == 'export'){
+                $routeAccessed = $route[count($route)-2];
+            }
         }
 
         if(in_array($route[1], $whiteList))
@@ -65,7 +68,6 @@ class CheckUserHasPermission
                 return $next($request);
             }
         }
-
         foreach($roles as $role){
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);
 
@@ -89,12 +91,12 @@ class CheckUserHasPermission
                 }
                 if ($request->isMethod('POST')) {
                     if(count($route) > 2){
-                        if($route[2] == 'import'){
+                        if($route[count($route)-1] == 'import'){
                             if ($role->import == true) {
                                 return $next($request);
                             }
                         }
-                        if($route[2] == 'export'){
+                        if($route[count($route)-1] == 'export'){
                             if ($role->export == true) {
                                 return $next($request);
                             }
