@@ -49,7 +49,7 @@ class PaymentRequestController extends Controller
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Este número de nota fiscal/boleto já foi cadastrado para este negócio na conta '.
+                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este negócio na conta '.
                     PaymentRequest::with('business')
                     ->where($attribute, $value)
                     ->whereRelation('business', 'id', '=', $request->business_id)->first()->id + 1000 .
@@ -63,7 +63,7 @@ class PaymentRequestController extends Controller
                     return $this->paymentRequestService->postPaymentRequest($request);
                 }
             return response()->json([
-                'erro' => 'O número da nota fiscal/boleto já foi cadastrado no sistema em outro negócio na conta '.
+                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro negócio na conta '.
                 PaymentRequest::where($attribute, $value)
                 ->first()->id + 1000 .
                 ', tem certeza que deseja cadastrar mesmo assim?'
@@ -114,7 +114,7 @@ class PaymentRequestController extends Controller
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Este número de nota fiscal/boleto já foi cadastrado para este negócio na conta '.
+                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este negócio na conta '.
                     PaymentRequest::with('business')
                     ->where($attribute, $value)
                     ->whereRelation('business', 'id', '=', $business_id)
@@ -130,7 +130,7 @@ class PaymentRequestController extends Controller
                     return $this->paymentRequestService->putPaymentRequest($id, $request);
                 }
                 return response()->json([
-                    'erro' => 'Já existe a nota fiscal ou boleto cadastrado no sistema na conta'.
+                    'erro' => 'Já existe a nota fiscal, boleto ou invoice cadastrado no sistema na conta'.
                     PaymentRequest::where($attribute, $value)
                     ->first()
                     ->id + 1000 .
