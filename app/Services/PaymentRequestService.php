@@ -66,14 +66,6 @@ class PaymentRequestService
             $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
 
-        //if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)) {
-        //    $paymentRequestInfo['payment_type'] = 2;
-        //} elseif (array_key_exists('bar_code', $paymentRequestInfo)) {
-        //    $paymentRequestInfo['payment_type'] = 1;
-        //} else {
-        //    $paymentRequestInfo['payment_type'] = 0;
-        //}
-
         if (!array_key_exists('bar_code', $paymentRequestInfo)) {
             if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
                 if (array_key_exists('invoice_number', $paymentRequestInfo)) {
@@ -88,16 +80,18 @@ class PaymentRequestService
             }
         }
 
-        $idBankProviderDefault = null;
-        foreach (ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank) {
+        if (!array_key_exists('bank_account_provider_id', $paymentRequestInfo)) {
+            $idBankProviderDefault = null;
+            foreach (ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank) {
             $idBankProviderDefault = $bank->bank_account_id;
             if ($bank->default_bank == true) {
                 $idBankProviderDefault = $bank->bank_account_id;
                 break;
             }
+            $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
+        }
         }
 
-        $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
 
