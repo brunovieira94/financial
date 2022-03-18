@@ -16,7 +16,6 @@ class StorePaymentRequestRequest extends FormRequest
     {
         return [
             'company_id' => 'required|integer',
-            'initial_value' => 'required|numeric',
             'provider_id' => 'required|integer',
             'form_payment' => 'max:2',
             'emission_date' => 'required|Date',

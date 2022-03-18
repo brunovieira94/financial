@@ -16,6 +16,8 @@ use App\Models\PaymentRequestHasAttachments;
 use Config;
 use ZipStream\Option\Archive;
 
+use function PHPUnit\Framework\isNull;
+
 class PaymentRequestService
 {
     private $paymentRequest;
@@ -81,16 +83,19 @@ class PaymentRequestService
         }
 
         if (!array_key_exists('bank_account_provider_id', $paymentRequestInfo)) {
-            $idBankProviderDefault = null;
-            foreach (ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank) {
-            $idBankProviderDefault = $bank->bank_account_id;
-            if ($bank->default_bank == true) {
-                $idBankProviderDefault = $bank->bank_account_id;
-                break;
+
+            $bankProviderDefault = null;
+
+            $bankProviderDefault = ProviderHasBankAccounts::with('bank_account')
+            ->where('provider_id', $paymentRequestInfo['provider_id'])
+            ->where('default_bank', true)
+            ->get('bank_account_id')->first();
+
+            if(!isNull($bankProviderDefault)){
+                $paymentRequestInfo['bank_account_provider_id'] = $bankProviderDefault->bank_account_id;
             }
-            $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
         }
-        }
+
 
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
