@@ -66,13 +66,13 @@ class PaymentRequestService
             $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
 
-        if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)) {
-            $paymentRequestInfo['payment_type'] = 2;
-        } elseif (array_key_exists('bar_code', $paymentRequestInfo)) {
-            $paymentRequestInfo['payment_type'] = 1;
-        } else {
-            $paymentRequestInfo['payment_type'] = 0;
-        }
+        //if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)) {
+        //    $paymentRequestInfo['payment_type'] = 2;
+        //} elseif (array_key_exists('bar_code', $paymentRequestInfo)) {
+        //    $paymentRequestInfo['payment_type'] = 1;
+        //} else {
+        //    $paymentRequestInfo['payment_type'] = 0;
+        //}
 
         if (!array_key_exists('bar_code', $paymentRequestInfo)) {
             if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
@@ -194,10 +194,13 @@ class PaymentRequestService
         $paymentRequest = $this->paymentRequest->findOrFail($id);
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-
         if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)) {
             $this->destroyInstallments($paymentRequest);
             $this->paymentRequest->findOrFail($id)->delete();
+            activity()->disableLogging();
+            $approval->status = 3;
+            $approval->save();
+            activity()->enableLogging();
             return true;
         } else {
             return response()->json([
