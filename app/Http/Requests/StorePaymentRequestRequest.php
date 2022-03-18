@@ -15,7 +15,7 @@ class StorePaymentRequestRequest extends FormRequest
     public function rules()
     {
         return [
-            'initial_value' => 'required|numeric',
+            'company_id' => 'required|integer',
             'provider_id' => 'required|integer',
             'form_payment' => 'max:2',
             'emission_date' => 'required|Date',

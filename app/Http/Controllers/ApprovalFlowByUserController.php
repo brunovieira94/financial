@@ -23,7 +23,14 @@ class ApprovalFlowByUserController extends Controller
 
     public function accountsApproveUserExport(Request $request)
     {
-        return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        if(array_key_exists('exportFormat', $request->all()))
+        {
+            if($request->all()['exportFormat'] == 'csv')
+            {
+                return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function approveAccount($id)
