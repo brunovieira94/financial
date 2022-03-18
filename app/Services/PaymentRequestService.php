@@ -91,7 +91,7 @@ class PaymentRequestService
             ->where('default_bank', true)
             ->get('bank_account_id')->first();
 
-            if(!isNull($bankProviderDefault)){
+            if($bankProviderDefault != null){
                 $paymentRequestInfo['bank_account_provider_id'] = $bankProviderDefault->bank_account_id;
             }
         }
