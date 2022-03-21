@@ -23,7 +23,7 @@ class ReportService
     public function getAllDuePaymentRequest($requestInfo)
     {
         $result = Utils::search($this->paymentRequest,$requestInfo);
-        $result = $result->with(['company','tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = $result->with(['group_payment', 'company','tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('from', $requestInfo)){
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
@@ -140,7 +140,7 @@ class ReportService
     public function getBillsToPay($requestInfo)
     {
         $query = $this->paymentRequest->query();
-        $query = $query->with(['company','tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $query = $query->with(['group_payment', 'company','tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
 
         if(array_key_exists('cpfcnpj', $requestInfo)){
