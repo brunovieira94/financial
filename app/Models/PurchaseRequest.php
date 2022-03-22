@@ -23,8 +23,8 @@ class PurchaseRequest extends Model
 
     use SoftDeletes;
     protected $table='purchase_requests';
-    protected $fillable = ['request_type', 'provider_id', 'observations'];
-    protected $hidden = ['currency_id', 'provider_id'];
+    protected $fillable = ['request_type', 'observations', 'status'];
+    protected $hidden = ['currency_id'];
 
     public function attachments(){
         return $this->hasMany(PurchaseRequestHasAttachments::class, 'purchase_request_id', 'id');
@@ -48,11 +48,6 @@ class PurchaseRequest extends Model
     public function companies()
     {
         return $this->hasMany(PurchaseRequestHasCompanies::class, 'purchase_request_id', 'id')->with('company');
-    }
-
-    public function provider()
-    {
-        return $this->hasOne(Provider::class, 'id', 'provider_id');
     }
 
     public static function boot() {

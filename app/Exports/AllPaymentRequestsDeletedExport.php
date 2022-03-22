@@ -37,7 +37,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
 
         return [
             $accountsPayableApprovalFlow->payment_request_trashed->id + 1000,
-            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? $accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
+            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? 'CNPJ: '.$accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : 'CPF: '. $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->company_name ? $accountsPayableApprovalFlow->payment_request_trashed->provider->company_name : $accountsPayableApprovalFlow->payment_request_trashed->provider->full_name) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->emission_date,
             $accountsPayableApprovalFlow->payment_request_trashed->pay_date,
@@ -65,7 +65,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
     {
         return [
             'Id',
-            'CNPJ do Fornecedor',
+            'Identificação do Fornecedor',
             'Nome do Fornecedor',
             'Data de Emissão',
             'Data de Pagamento',

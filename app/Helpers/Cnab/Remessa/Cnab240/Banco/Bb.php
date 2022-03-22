@@ -508,7 +508,7 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(8, 8, '1');
         $this->add(9, 9, 'C');
         $this->add(10, 11, '98'); //Validar
-        $this->add(12, 13, '31');
+        $this->add(12, 13, Util::formatCnab('9', $this->getCodigoFormaPagamento(), 2));
         $this->add(14, 16, '042');
         $this->add(17, 17, '');
         $this->add(18, 18, strlen(Util::onlyNumbers($this->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);
