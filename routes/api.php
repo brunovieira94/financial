@@ -152,6 +152,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
+        Route::get('/all', [ApprovalFlowController::class, 'index']);
     });
 
 //Restful route -> Provider
@@ -316,6 +317,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow-supply')->group(function () {
         Route::get('/', [ApprovalFlowSupplyController::class, 'index']);
         Route::post('/', [ApprovalFlowSupplyController::class, 'store']);
+        Route::get('/all', [ApprovalFlowSupplyController::class, 'index']);
     });
 
     Route::prefix('supply-approval-flow')->group(function () {
