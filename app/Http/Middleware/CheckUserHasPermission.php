@@ -35,6 +35,7 @@ class CheckUserHasPermission
             'reprove',
             'cancel',
             'group-form-payment',
+            'all',
         ];
 
         $routeAccessed = null;
@@ -53,6 +54,8 @@ class CheckUserHasPermission
                 $routeAccessed = $route[count($route)-2];
             }
         }
+
+        dd($routeAccessed);
 
         if(in_array($route[1], $whiteList))
             return $next($request);
