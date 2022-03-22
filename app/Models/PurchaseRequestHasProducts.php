@@ -9,7 +9,7 @@ class PurchaseRequestHasProducts extends Model
 {
     protected $table='purchase_request_has_products';
     public $timestamps = false;
-    protected $fillable = ['purchase_request_id', 'product_id', 'quantity'];
+    protected $fillable = ['purchase_request_id', 'product_id', 'quantity', 'observations'];
     protected $hidden = ['purchase_request_id', 'product_id'];
 
     public function product()
