@@ -232,13 +232,16 @@ return [
         'payment_request_id' => 'solicitação de pagamento',
         'fees' => 'juros',
         'discount' => 'desconto',
-
-
-
-
-
-
-
+        'measurement_units_id' => 'unidade de medida',
+        'unit' => 'unidade',
+        'chart_of_accounts_id' => 'plano de contas',
+        'description' => 'descrição',
+        'payment_before_weekends' => 'pagamento antes do fim de semana',
+        'alias' => 'pseudônimo',
+        'responsible' => 'responsável',
+        'responsible_phone' => 'telefone do responsável',
+        'state_subscription' => 'inscrição estadual',
+        'city_subscription' => 'inscrição municipal',
     ],
 
 ];
