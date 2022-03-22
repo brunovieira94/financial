@@ -69,9 +69,6 @@ class PutProviderRequest extends FormRequest
     {
         return [
             'title' => 'produto',
-            'measurement_units_id' => 'unidade de medida',
-            'chart_of_accounts_id' => 'plano de contas',
-            'attributes' => 'atributos',
         ];
     }
 

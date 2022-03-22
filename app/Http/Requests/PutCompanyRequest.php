@@ -35,20 +35,4 @@ class PutCompanyRequest extends FormRequest
             'bank_accounts.*.default_bank' => 'boolean',
         ];
     }
-
-    public function attributes()
-    {
-        return [
-            'company_name' => 'nome da empresa',
-            'trade_name' => 'nome fantasia',
-            'cep' => 'max:10',
-            'cities_id' => 'cidade',
-            'address' => 'endereço',
-            'number' => 'número',
-            'complement' => 'complemento',
-            'district' => 'distrito',
-            'managers' => 'diretores',
-            'states_id' => 'estado',
-        ];
-    }
 }

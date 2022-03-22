@@ -26,7 +26,6 @@ class PutBusinessRequest extends FormRequest
     {
         return [
             'name' => 'nome do negócio',
-            'company_id' => 'empresa',
         ];
     }
 }

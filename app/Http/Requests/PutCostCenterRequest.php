@@ -25,8 +25,6 @@ class PutCostCenterRequest extends FormRequest
     {
         return [
             'title' => 'nome da empresa',
-            'parent' => 'nome fantasia',
-            'code' => 'código',
         ];
     }
 }

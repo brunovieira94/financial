@@ -25,7 +25,6 @@ class PutCityRequest extends FormRequest
     {
         return [
             'title' => 'cidade',
-            'states_id' => 'estado',
         ];
     }
 }

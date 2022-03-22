@@ -30,12 +30,6 @@ class PutChartOfAccountsRequest extends FormRequest
     {
         return [
             'title' => 'plano de contas',
-            'parent' => 'parente',
-            'code' => 'código',
-            'managerial_code' => 'código gerencial',
-            'group_title' => 'nome do grupo',
-            'referential_title' => 'título referencial',
-            'group' => 'grupo',
         ];
     }
 }

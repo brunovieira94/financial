@@ -28,7 +28,6 @@ class PutBankRequest extends FormRequest
     {
         return [
             'title' => 'banco',
-            'bank_code' => 'código do banco',
         ];
     }
 }
