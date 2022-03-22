@@ -55,8 +55,6 @@ class CheckUserHasPermission
             }
         }
 
-        dd($routeAccessed);
-
         if(in_array($route[1], $whiteList))
             return $next($request);
 
