@@ -122,6 +122,9 @@ class PurchaseRequestService
         if (array_key_exists('services', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['services'] as $service) {
                 $purchaseRequestHasServices = new PurchaseRequestHasServices;
+                if($service['contract_type'] == 2 || $service['contract_type'] == 3){
+                    $service['contract_duration'] = 0;
+                }
                 $purchaseRequestHasServices = $purchaseRequestHasServices->create([
                     'purchase_request_id' => $purchaseRequest->id,
                     'service_id' => $service['service_id'],
@@ -141,6 +144,9 @@ class PurchaseRequestService
 
         if (array_key_exists('services', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['services'] as $service) {
+                if($service['contract_type'] == 2 || $service['contract_type'] == 3){
+                    $service['contract_duration'] = 0;
+                }
                 if (array_key_exists('id', $service)) {
                     $purchaseRequestHasServices = $this->purchaseRequestHasServices->findOrFail($service['id']);
                     $purchaseRequestHasServices->fill($service)->save();
