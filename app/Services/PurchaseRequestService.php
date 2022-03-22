@@ -21,7 +21,7 @@ class PurchaseRequestService
     private $purchaseRequestHasCostCenters;
     private $attachments;
 
-    private $with = ['cost_centers', 'attachments', 'services', 'products', 'companies', 'provider'];
+    private $with = ['cost_centers', 'attachments', 'services', 'products', 'companies'];
 
     public function __construct(PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseRequestHasCompanies $purchaseRequestHasCompanies, PurchaseRequestHasServices $purchaseRequestHasServices, PurchaseRequestHasCostCenters $purchaseRequestHasCostCenters, PurchaseRequestHasAttachments $attachments)
     {
@@ -83,6 +83,7 @@ class PurchaseRequestService
                     'purchase_request_id' => $purchaseRequest->id,
                     'product_id' => $product['product_id'],
                     'quantity' => $product['quantity'],
+                    'observations' => $product['observations'],
                 ]);
             }
         }
@@ -105,6 +106,7 @@ class PurchaseRequestService
                         'purchase_request_id' => $id,
                         'product_id' => $product['product_id'],
                         'quantity' => $product['quantity'],
+                        'observations' => $product['observations'],
                     ]);
                     $createdProducts[] = $purchaseRequestHasProducts->id;
                 }
@@ -124,6 +126,8 @@ class PurchaseRequestService
                     'purchase_request_id' => $purchaseRequest->id,
                     'service_id' => $service['service_id'],
                     'contract_duration' => $service['contract_duration'],
+                    'contract_type' => $service['contract_type'],
+                    'observations' => $service['observations'],
                 ]);
             }
         }
@@ -146,6 +150,8 @@ class PurchaseRequestService
                         'purchase_request_id' => $id,
                         'service_id' => $service['service_id'],
                         'contract_duration' => $service['contract_duration'],
+                        'contract_type' => $service['contract_type'],
+                        'observations' => $service['observations'],
                     ]);
                     $createdServices[] = $purchaseRequestHasServices->id;
                 }
