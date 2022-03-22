@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\FormPayment;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -22,18 +23,38 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        if(!array_key_exists('group_form_payment_id', $this->requestInfo) || $this->requestInfo['group_form_payment_id'] == 0){
+        if(!array_key_exists('form_payment_id', $this->requestInfo) || $this->requestInfo['form_payment_id'] == 0){
             return AccountsPayableApprovalFlow::with(['payment_request'])
             ->where('status', 1)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->get();
         }
 
-        return AccountsPayableApprovalFlow::with(['payment_request'])
-        ->where('status', 1)
-        ->whereRelation('payment_request', 'group_form_payment_id', '=', $this->requestInfo['group_form_payment_id'])
-        ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->get();
+        $formPayment = FormPayment::findOrFail($this->requestInfo['form_payment_id']);
+
+        if($formPayment->group_form_payment_id == 1) {
+            if($formPayment->same_ownership){
+                return AccountsPayableApprovalFlow::with('payment_request')
+                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                ->where('status', 1)
+                ->get();
+            } else {
+                return AccountsPayableApprovalFlow::with('payment_request')
+                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                ->where('status', 1)
+                ->get();
+            }
+        } else {
+            return AccountsPayableApprovalFlow::with('payment_request')
+            ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->where('status', 1)
+            ->get();
+        }
     }
 
     public function map($accountsPayableApprovalFlow): array
@@ -46,7 +67,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
 
         return [
             $accountsPayableApprovalFlow->payment_request->id + 1000,
-            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? $accountsPayableApprovalFlow->payment_request->provider->cnpj : $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: '. $accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: '. $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->emission_date,
             $accountsPayableApprovalFlow->payment_request->pay_date,
@@ -74,7 +95,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
     {
         return [
             'Id',
-            'CNPJ do Fornecedor',
+            'Identificação do Fornecedor',
             'Nome do Fornecedor',
             'Data de Emissão',
             'Data de Pagamento',

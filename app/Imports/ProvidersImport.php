@@ -62,7 +62,6 @@ class ProvidersImport implements ToModel, WithValidation, WithHeadingRow
             'cpf' => array_key_exists('cpf', $row) ? $row['cpf'] : null,
             'full_name' => array_key_exists('nome_completo_do_fornecedor', $row) ? $row['nome_completo_do_fornecedor'] : null,
             'rg' => array_key_exists('rg', $row) ? $row['rg'] : null,
-            'surname' => array_key_exists('apelido', $row) ? $row['apelido'] : null,
             'birth_date' => array_key_exists('data_de_nascimento', $row) ? Utils::formatDate($row['data_de_nascimento']) : null,
         ]);
     }

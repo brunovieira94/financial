@@ -16,6 +16,8 @@ use App\Models\PaymentRequestHasAttachments;
 use Config;
 use ZipStream\Option\Archive;
 
+use function PHPUnit\Framework\isNull;
+
 class PaymentRequestService
 {
     private $paymentRequest;
@@ -26,7 +28,7 @@ class PaymentRequestService
     private $attachments;
 
 
-    private $with = ['attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(PaymentRequestHasAttachments $attachments,ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
@@ -66,14 +68,6 @@ class PaymentRequestService
             $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
 
-        if (!array_key_exists('bar_code', $paymentRequestInfo) && !array_key_exists('invoice_number', $paymentRequestInfo)) {
-            $paymentRequestInfo['payment_type'] = 2;
-        } elseif (array_key_exists('bar_code', $paymentRequestInfo)) {
-            $paymentRequestInfo['payment_type'] = 1;
-        } else {
-            $paymentRequestInfo['payment_type'] = 0;
-        }
-
         if (!array_key_exists('bar_code', $paymentRequestInfo)) {
             if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
                 if (array_key_exists('invoice_number', $paymentRequestInfo)) {
@@ -88,16 +82,21 @@ class PaymentRequestService
             }
         }
 
-        $idBankProviderDefault = null;
-        foreach (ProviderHasBankAccounts::where('provider_id', $paymentRequestInfo['provider_id'])->get() as $bank) {
-            $idBankProviderDefault = $bank->bank_account_id;
-            if ($bank->default_bank == true) {
-                $idBankProviderDefault = $bank->bank_account_id;
-                break;
+        if (!array_key_exists('bank_account_provider_id', $paymentRequestInfo)) {
+
+            $bankProviderDefault = null;
+
+            $bankProviderDefault = ProviderHasBankAccounts::with('bank_account')
+            ->where('provider_id', $paymentRequestInfo['provider_id'])
+            ->where('default_bank', true)
+            ->get('bank_account_id')->first();
+
+            if($bankProviderDefault != null){
+                $paymentRequestInfo['bank_account_provider_id'] = $bankProviderDefault->bank_account_id;
             }
         }
 
-        $paymentRequestInfo['bank_account_provider_id'] = $idBankProviderDefault;
+
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
 

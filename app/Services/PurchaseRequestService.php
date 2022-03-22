@@ -21,7 +21,7 @@ class PurchaseRequestService
     private $purchaseRequestHasCostCenters;
     private $attachments;
 
-    private $with = ['cost_centers', 'attachments', 'services', 'products', 'companies', 'provider'];
+    private $with = ['cost_centers', 'attachments', 'services', 'products', 'companies'];
 
     public function __construct(PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseRequestHasCompanies $purchaseRequestHasCompanies, PurchaseRequestHasServices $purchaseRequestHasServices, PurchaseRequestHasCostCenters $purchaseRequestHasCostCenters, PurchaseRequestHasAttachments $attachments)
     {
@@ -83,6 +83,7 @@ class PurchaseRequestService
                     'purchase_request_id' => $purchaseRequest->id,
                     'product_id' => $product['product_id'],
                     'quantity' => $product['quantity'],
+                    'observations' => $product['observations'],
                 ]);
             }
         }
@@ -105,6 +106,7 @@ class PurchaseRequestService
                         'purchase_request_id' => $id,
                         'product_id' => $product['product_id'],
                         'quantity' => $product['quantity'],
+                        'observations' => $product['observations'],
                     ]);
                     $createdProducts[] = $purchaseRequestHasProducts->id;
                 }
@@ -120,10 +122,15 @@ class PurchaseRequestService
         if (array_key_exists('services', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['services'] as $service) {
                 $purchaseRequestHasServices = new PurchaseRequestHasServices;
+                if($service['contract_type'] == 2 || $service['contract_type'] == 3){
+                    $service['contract_duration'] = 0;
+                }
                 $purchaseRequestHasServices = $purchaseRequestHasServices->create([
                     'purchase_request_id' => $purchaseRequest->id,
                     'service_id' => $service['service_id'],
                     'contract_duration' => $service['contract_duration'],
+                    'contract_type' => $service['contract_type'],
+                    'observations' => $service['observations'],
                 ]);
             }
         }
@@ -137,6 +144,9 @@ class PurchaseRequestService
 
         if (array_key_exists('services', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['services'] as $service) {
+                if($service['contract_type'] == 2 || $service['contract_type'] == 3){
+                    $service['contract_duration'] = 0;
+                }
                 if (array_key_exists('id', $service)) {
                     $purchaseRequestHasServices = $this->purchaseRequestHasServices->findOrFail($service['id']);
                     $purchaseRequestHasServices->fill($service)->save();
@@ -146,6 +156,8 @@ class PurchaseRequestService
                         'purchase_request_id' => $id,
                         'service_id' => $service['service_id'],
                         'contract_duration' => $service['contract_duration'],
+                        'contract_type' => $service['contract_type'],
+                        'observations' => $service['observations'],
                     ]);
                     $createdServices[] = $purchaseRequestHasServices->id;
                 }

@@ -152,6 +152,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
+        Route::get('/all', [ApprovalFlowController::class, 'index']);
     });
 
 //Restful route -> Provider
@@ -244,14 +245,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
-        Route::post('/due-bills-export', [ReportController::class, 'duePaymentRequestExport']);
-        Route::post('/approved-payment-request-export', [ReportController::class, 'approvedPaymentRequestExport']);
-        Route::post('/disapproved-payment-request-export', [ReportController::class, 'disapprovedPaymentRequestExport']);
-        Route::post('/payment-requests-deleted-export', [ReportController::class, 'paymentRequestsDeletedExport']);
-        Route::post('/payment-requests-cnab-generated-export', [ReportController::class, 'generatedCNABPaymentRequestCNABExport']);
-        Route::post('/bills-to-pay-export', [ReportController::class, 'billsToPayExport']);
-        Route::post('/payment-requests-paid-export', [ReportController::class, 'paymentRequestPaidExport']);
-        Route::post('/payment-requests-finished-export', [ReportController::class, 'paymentRequestFinishedExport']);
+        Route::post('/due-bills/export', [ReportController::class, 'duePaymentRequestExport']);
+        Route::post('/approved-payment-request/export', [ReportController::class, 'approvedPaymentRequestExport']);
+        Route::post('/disapproved-payment-request/export', [ReportController::class, 'disapprovedPaymentRequestExport']);
+        Route::post('/payment-requests-deleted/export', [ReportController::class, 'paymentRequestsDeletedExport']);
+        Route::post('/payment-requests-cnab-generated/export', [ReportController::class, 'generatedCNABPaymentRequestCNABExport']);
+        Route::post('/bills-to-pay/export', [ReportController::class, 'billsToPayExport']);
+        Route::post('/payment-requests-paid/export', [ReportController::class, 'paymentRequestPaidExport']);
+        Route::post('/payment-requests-finished/export', [ReportController::class, 'paymentRequestFinishedExport']);
     });
 
     Route::prefix('product')->group(function () {
@@ -316,6 +317,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow-supply')->group(function () {
         Route::get('/', [ApprovalFlowSupplyController::class, 'index']);
         Route::post('/', [ApprovalFlowSupplyController::class, 'store']);
+        Route::get('/all', [ApprovalFlowSupplyController::class, 'index']);
     });
 
     Route::prefix('supply-approval-flow')->group(function () {

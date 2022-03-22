@@ -15,11 +15,11 @@ class PutPaymentRequestRequest extends FormRequest
     public function rules()
     {
         return [
+            'company_id' => 'integer',
             'initial_value' => 'numeric',
             'fees' => 'numeric',
             'discount' => 'numeric',
             'percentage_discount' => 'numeric',
-            'note' => 'max:255',
             'provider_id' => 'integer',
             'form_payment' => 'max:2',
             'emission_date' => 'Date',
@@ -54,7 +54,6 @@ class PutPaymentRequestRequest extends FormRequest
             'installments.*.portion_amount' => 'numeric',
             'installments.*.due_date' => 'date',
             'installments.*.pay' => 'boolean',
-            'installments.*.note' => 'max:255',
             'installments.*.extension_date' => 'date',
             'installments.*.competence_date' => 'date',
         ];
