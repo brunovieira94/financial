@@ -7,27 +7,26 @@ use App\Rules\PutDuplicateRoleCostCenter;
 
 class PutCostCenterRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
             'title' => 'required|max:255',
             'parent' => 'nullable|integer',
             'code' => new PutDuplicateRoleCostCenter(request()->input('parent'), \Request::instance()->id),
+        ];
+    }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'nome da empresa',
+            'parent' => 'nome fantasia',
+            'code' => 'código',
         ];
     }
 }

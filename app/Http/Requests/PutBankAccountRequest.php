@@ -24,4 +24,18 @@ class PutBankAccountRequest extends FormRequest
             'account_type' => 'integer|required_without_all:pix_key|min:0|max:2',
        ];
     }
+
+    public function attributes()
+    {
+        return [
+            'agency_number' => 'número da agência',
+            'agency_check_number' => 'dígito da agência',
+            'account_number' => 'número da conta',
+            'account_check_number' => 'dígito da conta',
+            'bank_id' => 'banco',
+            'pix_key' => 'chave PIX',
+            'pix_key_type' => 'tipo da chave PIX',
+            'account_type' => 'tipo da conta',
+        ];
+    }
 }

@@ -58,4 +58,33 @@ class PutPaymentRequestRequest extends FormRequest
             'installments.*.competence_date' => 'date',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'company_id' => 'empresa',
+            'initial_value' => 'valor inicial',
+            'fees' => 'juros',
+            'discount' => 'desconto',
+            'percentage_discount' => 'percentual de desconto',
+            'provider_id' => 'fornecedor',
+            'form_payment' => 'forma de pagamento',
+            'emission_date' => 'data de emissão',
+            'pay_date'  => 'data de pagamento',
+            'bank_account_provider_id' => 'banco do fornecedor',
+            'amount' => 'valor',
+            'business_id' => 'negócio',
+            'cost_center_id' => 'centro de custo',
+            'chart_of_account_id' => 'plano de contas',
+            'currency_id' => 'moeda',
+            'exchange_rate' => 'taxa de câmbio',
+            'frequency_of_installments' => 'frequência de parcelas',
+            'invoice_number' => 'número da nota fiscal',
+            'type_of_tax' => 'tipo de taxa',
+            'tax_amount' => 'valor da taxa',
+            'net_value' => 'valor líquido',
+            'bar_code' => 'código de barras',
+            'invoice_type' => 'tipo de nota fiscal',
+        ];
+    }
 }

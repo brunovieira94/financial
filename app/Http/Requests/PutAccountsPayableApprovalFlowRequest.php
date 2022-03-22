@@ -17,4 +17,11 @@ class PutAccountsPayableApprovalFlowRequest extends FormRequest
             'reason' => 'max:255'
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'reason' => 'motivo',
+        ];
+    }
 }

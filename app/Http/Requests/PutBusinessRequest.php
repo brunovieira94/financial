@@ -21,4 +21,12 @@ class PutBusinessRequest extends FormRequest
             'cost_user.*.user_id' => 'integer',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'name' => 'nome do negócio',
+            'company_id' => 'empresa',
+        ];
+    }
 }
