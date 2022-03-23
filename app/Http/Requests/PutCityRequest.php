@@ -20,4 +20,11 @@ class PutCityRequest extends FormRequest
             'states_id' => 'required_without:title|integer',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'cidade',
+        ];
+    }
 }

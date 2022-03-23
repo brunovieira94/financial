@@ -8,21 +8,11 @@ use Illuminate\Http\Request;
 
 class PutChartOfAccountsRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
@@ -33,6 +23,13 @@ class PutChartOfAccountsRequest extends FormRequest
             'group_title' => 'nullable|max:255',
             'referential_title' => 'nullable|max:255',
             'group' => 'nullable|integer',
+        ];
+    }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'plano de contas',
         ];
     }
 }
