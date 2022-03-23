@@ -19,4 +19,11 @@ class StoreCityRequest extends FormRequest
             'states_id' => 'required|integer',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'cidade',
+        ];
+    }
 }

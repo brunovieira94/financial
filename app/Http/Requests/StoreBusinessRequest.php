@@ -21,4 +21,11 @@ class StoreBusinessRequest extends FormRequest
             'cost_user.*.user_id' => 'integer',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'name' => 'negócio',
+        ];
+    }
 }

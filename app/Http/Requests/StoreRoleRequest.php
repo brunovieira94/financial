@@ -28,4 +28,11 @@ class StoreRoleRequest extends FormRequest
             'modules' => 'array',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'perfil',
+        ];
+    }
 }

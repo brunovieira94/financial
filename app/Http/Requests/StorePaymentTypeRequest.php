@@ -19,4 +19,11 @@ class StorePaymentTypeRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'tipo de pagamento',
+        ];
+    }
+
 }

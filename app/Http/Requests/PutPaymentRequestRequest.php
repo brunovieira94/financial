@@ -58,10 +58,4 @@ class PutPaymentRequestRequest extends FormRequest
             'installments.*.competence_date' => 'date',
         ];
     }
-
-    public function attributes()
-    {
-        return [
-        ];
-    }
 }

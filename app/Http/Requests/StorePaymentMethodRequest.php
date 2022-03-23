@@ -18,4 +18,11 @@ class StorePaymentMethodRequest extends FormRequest
             'initials' => 'required|max:255',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'metódo de pagamento',
+        ];
+    }
 }

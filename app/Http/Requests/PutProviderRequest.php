@@ -65,13 +65,6 @@ class PutProviderRequest extends FormRequest
         ];
     }
 
-    public function attributes()
-    {
-        return [
-            'title' => 'produto',
-        ];
-    }
-
     protected function prepareForValidation()
     {
         if (!$this->has('city_subscription')){
