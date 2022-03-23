@@ -34,4 +34,11 @@ class StoreChartOfAccountsRequest extends FormRequest
             'group' => 'nullable|integer',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'plano de contas',
+        ];
+    }
 }

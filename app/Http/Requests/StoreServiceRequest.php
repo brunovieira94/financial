@@ -21,4 +21,11 @@ class StoreServiceRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'serviço',
+        ];
+    }
+
 }

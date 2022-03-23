@@ -19,4 +19,11 @@ class StoreStateRequest extends FormRequest
             'uf' => 'required|size:2',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'estado',
+        ];
+    }
 }
