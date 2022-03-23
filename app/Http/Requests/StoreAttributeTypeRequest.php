@@ -18,4 +18,11 @@ class StoreAttributeTypeRequest extends FormRequest
             'default' => 'boolean',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'tipos de atributo',
+        ];
+    }
 }

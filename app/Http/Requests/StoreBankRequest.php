@@ -22,4 +22,10 @@ class StoreBankRequest extends FormRequest
         ];
     }
 
+    public function attributes(){
+        return [
+            'title' => 'banco',
+        ];
+    }
+
 }

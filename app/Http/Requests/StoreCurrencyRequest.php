@@ -20,4 +20,11 @@ class StoreCurrencyRequest extends FormRequest
             'currency_symbol' => 'required|max:255',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'moeda',
+        ];
+    }
 }
