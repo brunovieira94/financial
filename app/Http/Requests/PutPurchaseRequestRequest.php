@@ -16,7 +16,7 @@ class PutPurchaseRequestRequest extends FormRequest
     {
         return [
             'request_type' => 'required|integer|min:0|max:2',
-            'status' => 'integer|min:0|max:3',
+            'status' => 'integer|min:0|max:5',
             'cost_centers' => 'array',
             'attachments' => 'array',
             'services' => 'array',
