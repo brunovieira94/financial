@@ -23,4 +23,11 @@ class PutBankRequest extends FormRequest
             'bank_code' => 'numeric',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'banco',
+        ];
+    }
 }

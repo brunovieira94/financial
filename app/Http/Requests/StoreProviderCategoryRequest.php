@@ -18,4 +18,11 @@ class StoreProviderCategoryRequest extends FormRequest
             'payment_before_weekends' => 'required|boolean',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'categoria de fornecedor',
+        ];
+    }
 }

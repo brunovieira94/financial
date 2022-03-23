@@ -30,4 +30,11 @@ class StoreCostCenterRequest extends FormRequest
             'code' => new DuplicateRoleCostCenter(request()->input('parent')),
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'centro de custos',
+        ];
+    }
 }

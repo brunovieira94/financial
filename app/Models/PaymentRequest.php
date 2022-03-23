@@ -112,7 +112,7 @@ class PaymentRequest extends Model
 
     public function bank_account_provider()
     {
-        return $this->hasOne(BankAccount::class, 'id', 'bank_account_provider_id');
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_provider_id')->with('bank');
     }
 
     public function business()

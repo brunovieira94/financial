@@ -19,4 +19,11 @@ class PutStateRequest extends FormRequest
             'title' => 'required_without:country|max:150|unique:states,title,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'title' => 'estado',
+        ];
+    }
 }

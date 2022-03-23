@@ -20,4 +20,11 @@ class StoreMeasurementUnitRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'unidade de medida',
+        ];
+    }
+
 }

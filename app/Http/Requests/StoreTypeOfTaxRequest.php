@@ -19,4 +19,11 @@ class StoreTypeOfTaxRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'tipo de taxa',
+        ];
+    }
+
 }

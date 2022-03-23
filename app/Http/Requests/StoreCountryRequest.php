@@ -17,4 +17,11 @@ class StoreCountryRequest extends FormRequest
             'title' => 'required|max:150|unique:countries,title,' . $this->id . ',id,deleted_at,NULL',
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'title.unique'  => 'Este país já está cadastrado no sistema.',
+        ];
+    }
 }
