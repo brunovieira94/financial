@@ -13,4 +13,11 @@ class AlterIdPaymentRequest extends Migration
         'UPDATE payment_requests set id = id+1000'
         );
     }
+
+    public function down()
+    {
+        DB::statement(
+        'UPDATE payment_requests set id = id-1000'
+        );
+    }
 }
