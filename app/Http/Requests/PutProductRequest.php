@@ -22,4 +22,11 @@ class PutProductRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'produto',
+        ];
+    }
+
 }

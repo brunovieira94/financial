@@ -22,4 +22,11 @@ class StoreUserRequest extends FormRequest
             'password' => 'required|max:250|min:8',
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'name' => 'nome',
+        ];
+    }
 }

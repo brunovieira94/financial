@@ -18,4 +18,13 @@ class StoreReasonToRejectRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'motivo para rejeitar',
+        ];
+    }
+
+
+
 }

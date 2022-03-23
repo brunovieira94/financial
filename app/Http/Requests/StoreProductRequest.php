@@ -23,4 +23,11 @@ class StoreProductRequest extends FormRequest
         ];
     }
 
+    public function attributes()
+    {
+        return [
+            'title' => 'produto',
+        ];
+    }
+
 }
