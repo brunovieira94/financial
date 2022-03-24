@@ -14,6 +14,7 @@ class Module extends Model
     use SoftDeletes;
     protected static $logAttributes = ['*'];
     protected $table='module';
+    protected $fillable = ['title', 'route', 'parent'];
 
     public function roles()
     {
