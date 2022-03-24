@@ -16,7 +16,7 @@ class AddedRouteInModule extends Migration
     {
         if(!Module::where('route', '=', 'purchase-request')->exists()){
             Module::create([
-                'title' => 'Pedido de compra',
+                'title' => 'Requisição de compra',
                 'parent' => 4,
                 'route' => 'purchase-request',
             ]);
