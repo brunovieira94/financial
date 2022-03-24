@@ -36,7 +36,7 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
         }
 
         return [
-            $accountsPayableApprovalFlow->payment_request->id + 1000,
+            $accountsPayableApprovalFlow->payment_request->id,
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: '.$accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: '. $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->emission_date,

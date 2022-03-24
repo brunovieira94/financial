@@ -44,7 +44,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
         }
 
         return [
-            $paymentRequest->id + 1000,
+            $paymentRequest->id,
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? 'CNPJ: '.$paymentRequest->provider->cnpj : 'CPF: '. $paymentRequest->provider->cpf) : $paymentRequest->provider,
             $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
             $paymentRequest->emission_date,
