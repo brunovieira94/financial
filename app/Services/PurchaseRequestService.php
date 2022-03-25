@@ -36,6 +36,12 @@ class PurchaseRequestService
     public function getAllPurchaseRequest($requestInfo)
     {
         $purchaseRequest = Utils::search($this->purchaseRequest, $requestInfo);
+        if(array_key_exists('status', $requestInfo)){
+            $purchaseRequest->where('status', $requestInfo['status']);
+        }
+        if(array_key_exists('request_type', $requestInfo)){
+            $purchaseRequest->where('request_type', $requestInfo['request_type']);
+        }
         return Utils::pagination($purchaseRequest->with($this->with), $requestInfo);
     }
 
