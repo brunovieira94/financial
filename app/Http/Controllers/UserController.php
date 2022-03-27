@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PutMyUserRequest;
 use Illuminate\Http\Request;
 use App\Services\UserService as UserService;
 use App\Http\Requests\StoreUserRequest;
@@ -40,6 +41,11 @@ class UserController extends Controller
     {
         $user = $this->userService->deleteUser($id);
         return response('');
+    }
+
+    public function updateMyUser(PutMyUserRequest $request)
+    {
+        return $this->userService->updateMyUser($request->all());
     }
 
 }
