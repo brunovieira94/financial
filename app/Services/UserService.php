@@ -4,6 +4,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\CostCenter;
 use App\Models\Business;
+use AWS\CRT\HTTP\Response;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
@@ -62,6 +63,29 @@ class UserService
     {
       $this->user->findOrFail($id)->delete();
       return true;
+    }
+
+    public function updateMyUser($userInfo)
+    {
+        if(!Hash::check($userInfo['password'], auth()->user()->password))
+        {
+            return Response()->json([
+                'erro' => 'A senha informada é inválida',
+            ]);
+        }
+
+        if(array_key_exists('new-password', $userInfo))
+        {
+            $userInfo['password'] = Hash::make($userInfo['new-password']);
+        } else
+        {
+            unset($userInfo['password']);
+        }
+
+        $user = User::findOrFail(auth()->user()->id);
+        $user->fill($userInfo)->save();
+
+        return $this->user->with($this->with)->findOrFail(auth()->user()->id);
     }
 
     public function syncCostCenter($user, $userInfo){
