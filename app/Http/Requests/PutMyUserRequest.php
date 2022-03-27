@@ -25,4 +25,12 @@ class PutMyUserRequest extends FormRequest
             'new-password' => 'max:250|min:8'
         ];
     }
+
+    public function attributes()
+    {
+        return [
+            'new-password' => 'nova senha',
+            'extension' => 'ramal'
+        ];
+    }
 }
