@@ -27,6 +27,11 @@ class DuplicateCity implements Rule
             $city = City::with('state')
             ->findOrFail($this->cityID);
 
+            if($city->title == $value && $city->states_id == $this->states_id)
+            {
+                return true;
+            }
+
             if($city->title == $value){
                 if(City::with('state')
                 ->where($attribute, $value)
