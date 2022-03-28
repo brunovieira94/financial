@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         if(!$tokenResponse)
         {
-            return response(['mensagem'=>'Credencial inválida'], 422);
+            return response(['erro'=>'Usuário ou senha inválido.'], 422);
         }
 
         $tokenParts = explode(".", $tokenResponse->access_token);
