@@ -195,6 +195,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [UserController::class, '']);
     });
 
+    Route::put('update-user/', [UserController::class, 'updateMyUser']);
+
+
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
