@@ -62,9 +62,9 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
                 }
             });
         }
-        if(array_key_exists('approvalOrder', $infoRequest)){
+        if(array_key_exists('approval_order', $infoRequest)){
             $query->whereHas('approval', function ($query) use ($infoRequest){
-                $query->where('order', $infoRequest['approvalOrder']);
+                $query->where('order', $infoRequest['approval_order']);
             });
         }
         if(array_key_exists('created_at', $infoRequest)){
