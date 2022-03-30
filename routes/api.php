@@ -214,6 +214,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     //Restful route -> Payment Request
     Route::prefix('payment-request')->group(function () {
+        Route::get('/all', [PaymentRequestController::class, 'getAllPaymentRequest']);
         Route::post('/import', [PaymentRequestController::class, 'import']);
         Route::get('/group-form-payment', [PaymentRequestController::class, 'groupFormPayment']);
         Route::get('/', [PaymentRequestController::class, 'index']);

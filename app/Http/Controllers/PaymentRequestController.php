@@ -22,6 +22,11 @@ class PaymentRequestController extends Controller
 
     public function index(Request $request)
     {
+        return $this->paymentRequestService->getPaymentRequestByUser($request->all());
+    }
+
+    public function getAllPaymentRequest(Request $request)
+    {
         return $this->paymentRequestService->getAllPaymentRequest($request->all());
     }
 
