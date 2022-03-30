@@ -41,10 +41,16 @@ class PaymentRequestService
         $this->attachments = $attachments;
     }
 
-    public function getAllPaymentRequest($requestInfo)
+    public function getPaymentRequestByUser($requestInfo)
     {
         $paymentRequest = Utils::search($this->paymentRequest, $requestInfo);
         return Utils::pagination($paymentRequest->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
+    }
+
+    public function getAllPaymentRequest($requestInfo)
+    {
+        $paymentRequest = Utils::search($this->paymentRequest, $requestInfo);
+        return Utils::pagination($paymentRequest->with($this->with), $requestInfo);
     }
 
     public function getPaymentRequest($id)
@@ -94,6 +100,10 @@ class PaymentRequestService
             if($bankProviderDefault != null){
                 $paymentRequestInfo['bank_account_provider_id'] = $bankProviderDefault->bank_account_id;
             }
+        }
+
+        if (!array_key_exists('trade_name', $paymentRequestInfo)) {
+            $paymentRequestInfo['trade_name'] = $paymentRequestInfo['full_name'];
         }
 
 
