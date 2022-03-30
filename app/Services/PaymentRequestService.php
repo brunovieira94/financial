@@ -96,6 +96,10 @@ class PaymentRequestService
             }
         }
 
+        if (!array_key_exists('trade_name', $paymentRequestInfo)) {
+            $paymentRequestInfo['trade_name'] = $paymentRequestInfo['full_name'];
+        }
+
 
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
