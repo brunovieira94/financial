@@ -102,7 +102,6 @@ class PaymentRequestService
             }
         }
 
-
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
 
