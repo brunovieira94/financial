@@ -32,6 +32,9 @@ class ProviderService
     public function postProvider($providerInfo)
     {
         $provider = new Provider;
+        if (!array_key_exists('trade_name', $providerInfo)) {
+            $paymentRequestInfo['trade_name'] = $providerInfo['full_name'];
+        }
         $provider = $provider->create($providerInfo);
 
         $this->syncBankAccounts($provider, $providerInfo);
