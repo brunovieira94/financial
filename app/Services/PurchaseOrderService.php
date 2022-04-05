@@ -12,6 +12,7 @@ use App\Models\PurchaseOrderHasAttachments;
 use App\Models\PurchaseOrderServicesHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestHasProducts;
 
 use Illuminate\Http\Request;
 
@@ -19,6 +20,7 @@ class PurchaseOrderService
 {
     private $purchaseOrder;
     private $purchaseRequest;
+    private $purchaseRequestHasProducts;
     private $purchaseOrderHasProducts;
     private $purchaseOrderHasCompanies;
     private $purchaseOrderHasServices;
@@ -29,11 +31,12 @@ class PurchaseOrderService
 
     private $with = ['approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests)
+    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests)
     {
         $this->purchaseOrder = $purchaseOrder;
         $this->purchaseRequest = $purchaseRequest;
         $this->purchaseOrderHasProducts = $purchaseOrderHasProducts;
+        $this->purchaseRequestHasProducts = $purchaseRequestHasProducts;
         $this->purchaseOrderHasCompanies = $purchaseOrderHasCompanies;
         $this->purchaseOrderHasServices = $purchaseOrderHasServices;
         $this->purchaseOrderHasCostCenters = $purchaseOrderHasCostCenters;
@@ -172,8 +175,10 @@ class PurchaseOrderService
                     'percentage_discount' => $service['percentage_discount'],
                     'money_discount' => $service['money_discount'],
                     'frequency_of_installments' => $service['frequency_of_installments'],
-                    'contract_duration' => $service['contract_duration'],
+                    'installments_quantity' => $service['installments_quantity'],
                     'unique_discount' => $service['unique_discount'],
+                    'contract_time' => $service['contract_time'],
+                    'contract_frequency' => $service['contract_frequency'],
                 ]);
                 $this->syncInstallments($purchaseOrderHasServices, $service);
             }
@@ -204,8 +209,10 @@ class PurchaseOrderService
                         'percentage_discount' => $service['percentage_discount'],
                         'money_discount' => $service['money_discount'],
                         'frequency_of_installments' => $service['frequency_of_installments'],
-                        'contract_duration' => $service['contract_duration'],
+                        'installments_quantity' => $service['installments_quantity'],
                         'unique_discount' => $service['unique_discount'],
+                        'contract_time' => $service['contract_time'],
+                        'contract_frequency' => $service['contract_frequency'],
                     ]);
                     $createdServices[] = $purchaseOrderHasServices->id;
                 }
