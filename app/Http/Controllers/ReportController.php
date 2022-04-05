@@ -42,6 +42,15 @@ class ReportController extends Controller
 
     public function approvedPaymentRequest(Request $request)
     {
+        if(array_key_exists('form_payment_id', $request->all()))
+        {
+            if(!array_key_exists('company_id', $request->all()))
+            {
+                return response()->json([
+                    'erro' => 'A empresa não foi informada'
+                ], 422);
+            }
+        }
         return $this->reportService->getAllApprovedPaymentRequest($request->all());
     }
 
