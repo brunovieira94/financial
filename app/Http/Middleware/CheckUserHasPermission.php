@@ -28,6 +28,7 @@ class CheckUserHasPermission
             'logs',
             'module',
             'cnab',
+            'update-user',
         ];
 
         $unverifiedSubRoutes = [

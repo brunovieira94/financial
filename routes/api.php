@@ -195,6 +195,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/import', [UserController::class, '']);
     });
 
+    Route::put('update-user/', [UserController::class, 'updateMyUser']);
+
+
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
@@ -211,6 +214,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     //Restful route -> Payment Request
     Route::prefix('payment-request')->group(function () {
+        Route::get('/all', [PaymentRequestController::class, 'getAllPaymentRequest']);
         Route::post('/import', [PaymentRequestController::class, 'import']);
         Route::get('/group-form-payment', [PaymentRequestController::class, 'groupFormPayment']);
         Route::get('/', [PaymentRequestController::class, 'index']);

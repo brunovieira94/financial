@@ -9,5 +9,5 @@ class PurchaseOrderServicesHasInstallments extends Model
 {
     protected $table='purchase_order_services_has_installments';
     public $timestamps = false;
-    protected $fillable = ['po_services_id', 'parcel_number', 'portion_amount', 'due_date', 'note', 'percentage_discount', 'money_discount'];
+    protected $fillable = ['po_services_id', 'parcel_number', 'portion_amount', 'due_date', 'note', 'percentage_discount', 'money_discount', 'invoice_received', 'invoice_paid'];
 }

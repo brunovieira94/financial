@@ -23,7 +23,14 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        if(!array_key_exists('form_payment_id', $this->requestInfo) || $this->requestInfo['form_payment_id'] == 0){
+        if((!array_key_exists('form_payment_id', $this->requestInfo) || $this->requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $this->requestInfo)){
+            return AccountsPayableApprovalFlow::with(['payment_request'])
+            ->where('status', 1)
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
+            ->get();
+
+        }elseif(!array_key_exists('form_payment_id', $this->requestInfo) || $this->requestInfo['form_payment_id'] == 0){
             return AccountsPayableApprovalFlow::with(['payment_request'])
             ->where('status', 1)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
@@ -38,6 +45,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
                 ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
                 ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
                 ->where('status', 1)
                 ->get();
             } else {
@@ -45,6 +53,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
                 ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
                 ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
                 ->where('status', 1)
                 ->get();
             }
@@ -52,6 +61,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             return AccountsPayableApprovalFlow::with('payment_request')
             ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
             ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
             ->where('status', 1)
             ->get();
         }
