@@ -35,6 +35,11 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderHasCostCenters::class, 'purchase_order_id', 'id')->with('cost_center');
     }
 
+    public function purchase_requests()
+    {
+        return $this->hasMany(PurchaseOrderHasPurchaseRequests::class, 'purchase_order_id', 'id')->with('purchase_request');
+    }
+
     public function services()
     {
         return $this->hasMany(PurchaseOrderHasServices::class, 'purchase_order_id', 'id')->with(['service', 'installments']);

@@ -7,31 +7,40 @@ use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasCompanies;
 use App\Models\PurchaseOrderHasServices;
 use App\Models\PurchaseOrderHasCostCenters;
+use App\Models\PurchaseOrderHasPurchaseRequests;
 use App\Models\PurchaseOrderHasAttachments;
 use App\Models\PurchaseOrderServicesHasInstallments;
 use App\Models\SupplyApprovalFlow;
+use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestHasProducts;
 
 use Illuminate\Http\Request;
 
 class PurchaseOrderService
 {
     private $purchaseOrder;
+    private $purchaseRequest;
+    private $purchaseRequestHasProducts;
     private $purchaseOrderHasProducts;
     private $purchaseOrderHasCompanies;
     private $purchaseOrderHasServices;
     private $purchaseOrderHasCostCenters;
+    private $purchaseOrderHasPurchaseRequests;
     private $purchaseOrderServicesHasInstallments;
     private $attachments;
 
-    private $with = ['approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider'];
+    private $with = ['approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments)
+    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests)
     {
         $this->purchaseOrder = $purchaseOrder;
+        $this->purchaseRequest = $purchaseRequest;
         $this->purchaseOrderHasProducts = $purchaseOrderHasProducts;
+        $this->purchaseRequestHasProducts = $purchaseRequestHasProducts;
         $this->purchaseOrderHasCompanies = $purchaseOrderHasCompanies;
         $this->purchaseOrderHasServices = $purchaseOrderHasServices;
         $this->purchaseOrderHasCostCenters = $purchaseOrderHasCostCenters;
+        $this->purchaseOrderHasPurchaseRequests = $purchaseOrderHasPurchaseRequests;
         $this->attachments = $attachments;
         $this->purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments;
     }
@@ -56,6 +65,7 @@ class PurchaseOrderService
         $this->syncCompanies($purchaseOrder, $purchaseOrderInfo);
         $this->syncCostCenters($purchaseOrder, $purchaseOrderInfo);
         $this->syncAttachments($purchaseOrder, $purchaseOrderInfo, $request);
+        $this->syncPurchaseRequests($purchaseOrder, $purchaseOrderInfo);
 
         $supplyApprovalFlow = new SupplyApprovalFlow;
         $supplyApprovalFlow = $supplyApprovalFlow->create([
@@ -165,8 +175,10 @@ class PurchaseOrderService
                     'percentage_discount' => $service['percentage_discount'],
                     'money_discount' => $service['money_discount'],
                     'frequency_of_installments' => $service['frequency_of_installments'],
-                    'contract_duration' => $service['contract_duration'],
+                    'installments_quantity' => $service['installments_quantity'],
                     'unique_discount' => $service['unique_discount'],
+                    'contract_time' => $service['contract_time'],
+                    'contract_frequency' => $service['contract_frequency'],
                 ]);
                 $this->syncInstallments($purchaseOrderHasServices, $service);
             }
@@ -197,8 +209,10 @@ class PurchaseOrderService
                         'percentage_discount' => $service['percentage_discount'],
                         'money_discount' => $service['money_discount'],
                         'frequency_of_installments' => $service['frequency_of_installments'],
-                        'contract_duration' => $service['contract_duration'],
+                        'installments_quantity' => $service['installments_quantity'],
                         'unique_discount' => $service['unique_discount'],
+                        'contract_time' => $service['contract_time'],
+                        'contract_frequency' => $service['contract_frequency'],
                     ]);
                     $createdServices[] = $purchaseOrderHasServices->id;
                 }
@@ -275,6 +289,48 @@ class PurchaseOrderService
         $collection = $this->purchaseOrderHasCostCenters->where('purchase_order_id', $id)->whereNotIn('id', $updateCostCenters)->whereNotIn('id', $createdCostCenters)->get(['id']);
         $this->purchaseOrderHasCostCenters->destroy($collection->toArray());
     }
+
+    public function syncPurchaseRequests($purchaseOrder, $purchaseOrderInfo)
+    {
+        if (array_key_exists('purchase_requests', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['purchase_requests'] as $purchaseRequest) {
+                $purchaseOrderHasPurchaseRequests = new PurchaseOrderHasPurchaseRequests;
+                $purchaseOrderHasPurchaseRequests = $purchaseOrderHasPurchaseRequests->create([
+                    'purchase_order_id' => $purchaseOrder->id,
+                    'purchase_request_id' => $purchaseRequest['purchase_request_id'],
+                ]);
+                $purchaseRequest = $this->purchaseRequest->findOrFail($purchaseRequest['purchase_request_id']);
+                $purchaseRequest->status = 1;
+                $purchaseRequest->save();
+            }
+        }
+    }
+
+    // public function putPurchaseRequests($id, $purchaseOrderInfo)
+    // {
+
+    //     $updatePurchaseRequests = [];
+    //     $createdPurchaseRequests = [];
+
+    //     if (array_key_exists('purchase_requests', $purchaseOrderInfo)) {
+    //         foreach ($purchaseOrderInfo['purchase_requests'] as $purchaseRequest) {
+    //             if (array_key_exists('id', $purchaseRequest)) {
+    //                 $purchaseOrderHasPurchaseRequests = $this->purchaseOrderHasPurchaseRequests->findOrFail($purchaseRequest['id']);
+    //                 $purchaseOrderHasPurchaseRequests->fill($purchaseRequest)->save();
+    //                 $updatePurchaseRequests[] = $purchaseRequest['id'];
+    //             } else {
+    //                 $purchaseOrderHasPurchaseRequests = $this->purchaseOrderHasPurchaseRequests->create([
+    //                     'purchase_order_id' => $id,
+    //                     'purchase_request_id' => $purchaseRequest['purchase_request_id'],
+    //                 ]);
+    //                 $createdPurchaseRequests[] = $purchaseOrderHasPurchaseRequests->id;
+    //             }
+    //         }
+    //     }
+
+    //     $collection = $this->purchaseOrderHasPurchaseRequests->where('purchase_order_id', $id)->whereNotIn('id', $updatePurchaseRequests)->whereNotIn('id', $createdPurchaseRequests)->get(['id']);
+    //     $this->purchaseOrderHasPurchaseRequests->destroy($collection->toArray());
+    // }
 
     public function syncCompanies($purchaseOrder, $purchaseOrderInfo)
     {
