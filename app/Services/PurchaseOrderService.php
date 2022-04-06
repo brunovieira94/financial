@@ -221,7 +221,7 @@ class PurchaseOrderService
         }
 
         $collection = $this->purchaseOrderHasServices->where('purchase_order_id', $id)->whereNotIn('id', $updateServices)->whereNotIn('id', $createdServices)->get(['id']);
-        $this->purchaseOrderHasServices->destroy($collection->toArray());
+        $this->purchaseOrderHasServices->destroy($collection->makeHidden(['end_contract_date'])->toArray());
     }
 
     public function destroyInstallments($purchaseOrderHasServices)
