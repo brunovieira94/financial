@@ -29,18 +29,9 @@ class PurchaseOrderHasServices extends Model
             return date('Y-m-d', strtotime("+".$this->contract_time." days", strtotime($this->initial_date)));
         }
         if($this->contract_frequency == 1){
-            return date('Y-m-d', strtotime("+".($this->contract_time*10)." days", strtotime($this->initial_date)));
-        }
-        if($this->contract_frequency == 2){
-            return date('Y-m-d', strtotime("+".($this->contract_time*7)." days", strtotime($this->initial_date)));
-        }
-        if($this->contract_frequency == 3){
-            return date('Y-m-d', strtotime("+".($this->contract_time*15)." days", strtotime($this->initial_date)));
-        }
-        if($this->contract_frequency == 4){
             return date('Y-m-d', strtotime("+".$this->contract_time." months", strtotime($this->initial_date)));
         }
-        if($this->contract_frequency == 5){
+        if($this->contract_frequency == 2){
             return date('Y-m-d', strtotime("+".$this->contract_time." years", strtotime($this->initial_date)));
         }
     }
