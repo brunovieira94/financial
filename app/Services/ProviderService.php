@@ -33,7 +33,7 @@ class ProviderService
     {
         $provider = new Provider;
         if (!array_key_exists('trade_name', $providerInfo)) {
-            $paymentRequestInfo['trade_name'] = $providerInfo['full_name'];
+            $providerInfo['trade_name'] = $providerInfo['full_name'];
         }
         $provider = $provider->create($providerInfo);
 
@@ -44,6 +44,11 @@ class ProviderService
     public function putProvider($id, $providerInfo)
     {
         $provider = $this->provider->findOrFail($id);
+        if($provider->provider_type == 'F')
+        {
+            $providerInfo['trade_name'] = $providerInfo['full_name'];
+        }
+
         $provider->fill($providerInfo)->save();
 
         $this->putBankAccounts($id, $providerInfo);
