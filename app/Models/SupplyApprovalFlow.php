@@ -27,7 +27,7 @@ class SupplyApprovalFlow extends Model
 
     public function purchase_order()
     {
-        return $this->hasOne(PurchaseOrder::class, 'id', 'id_purchase_order')->with(['attachments', 'cost_centers', 'services', 'products', 'currency', 'provider']);
+        return $this->hasOne(PurchaseOrder::class, 'id', 'id_purchase_order')->with(['approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests']);
     }
 
     public function approval_flow()
