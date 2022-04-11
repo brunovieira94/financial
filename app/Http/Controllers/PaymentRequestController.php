@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PutInstallmentsRequest;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePaymentRequestRequest;
 use App\Services\PaymentRequestService as PaymentRequestService;
@@ -162,4 +163,11 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->getAllGroupFormPayment($request->all());
     }
+
+    public function updateDateInstallment(PutInstallmentsRequest $request)
+    {
+        return $this->paymentRequestService->updateDateInstallment($request->all());
+    }
+
+
 }
