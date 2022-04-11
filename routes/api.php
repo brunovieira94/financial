@@ -224,6 +224,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [PaymentRequestController::class, 'destroy']);
     });
 
+    Route::put('/update-date-installment', [PaymentRequestController::class, 'updateDateInstallment']);
+
     Route::prefix('account-payable-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowByUserController::class, 'accountsApproveUser']);
         Route::put('/approve/{id}', [ApprovalFlowByUserController::class, 'approveAccount']);
