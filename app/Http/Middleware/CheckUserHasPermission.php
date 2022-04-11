@@ -65,11 +65,11 @@ class CheckUserHasPermission
         //array de objetos com module id
         $roles = $this->role->where('role_id', $user->role_id)->get(['module_id']);
 
-        if ($request->isMethod('GET')) {
-            if (array_key_exists('noAuth', $request->all())){
-                return $next($request);
-            }
-        }
+        // if ($request->isMethod('GET')) {
+        //     if (array_key_exists('noAuth', $request->all())){
+        //         return $next($request);
+        //     }
+        // }
         foreach($roles as $role){
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);
 
