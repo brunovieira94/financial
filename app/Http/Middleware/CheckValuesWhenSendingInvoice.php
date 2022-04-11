@@ -46,7 +46,7 @@ class CheckValuesWhenSendingInvoice
             }
         }
 
-        if(($netValue + $sumTax) != $amount){
+        if((number_format($netValue + $sumTax, 2)) != number_format($amount, 2)){
             return response()->json([
                 'erro' => 'A soma do valor líquido acrescido das taxas informadas não corresponde ao valor bruto.'
             ], 422);

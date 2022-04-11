@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
+use AWS\CRT\HTTP\Response;
 use Config;
 use ZipStream\Option\Archive;
 
@@ -377,5 +378,50 @@ class PaymentRequestService
             array_push($destroyCollection, $pushObject);
         }
         $this->attachments->destroy($destroyCollection);
+    }
+
+    public function updateDateInstallment($requestInfo)
+    {
+        $permissionChange = true;
+        $paymentRequest = PaymentRequest::with('approval')->findOrFail($requestInfo['payment_request_id']);
+        $approvalFlow = ApprovalFlow::where('role_id', auth()->user()->role_id)
+        ->where('order', $paymentRequest->approval->order)
+        ->first();
+
+        foreach($requestInfo['installments'] as $installment)
+        {
+            if(array_key_exists('extension_date', $installment))
+            {
+                if($approvalFlow->extension == false)
+                {
+                    $permissionChange = false;
+                    break;
+                }
+            }
+            if(array_key_exists('competence_date', $installment))
+            {
+                if($approvalFlow->competency == false)
+                {
+                    $permissionChange = false;
+                    break;
+                }
+            }
+        }
+
+        if(!$permissionChange){
+            return response()->json([
+                'erro' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
+            ], 422);
+        }
+
+        foreach($requestInfo['installments'] as $installment)
+        {
+            $paymentRequestHasInstallments = PaymentRequestHasInstallments::findOrFail($installment['id']);
+            $paymentRequestHasInstallments->fill($installment)->save();
+        }
+
+        return response()->json([
+            'sucesso' => 'Os dados foram atualizados com sucesso.'
+        ], 200);
     }
 }
