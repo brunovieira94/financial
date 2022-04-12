@@ -39,4 +39,8 @@ class ApprovalFlowSupplyByUserController extends Controller
         return response('Conta cancelada');
     }
 
+    public function approvedPurchaseOrder(Request $request)
+    {
+        return $this->supplyApprovalFlowService->getAllApprovedPurchaseOrder($request->all());
+    }
 }
