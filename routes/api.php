@@ -328,6 +328,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('supply-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowSupplyByUserController::class, 'accountsApproveUser']);
+        Route::get('/approved-purchase-order', [ApprovalFlowSupplyByUserController::class, 'approvedPurchaseOrder']);
         Route::put('/approve/{id}', [ApprovalFlowSupplyByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowSupplyByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowSupplyByUserController::class, 'cancelAccount']);
