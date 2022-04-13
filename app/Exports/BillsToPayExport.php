@@ -92,17 +92,17 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
         if(array_key_exists('extension_date', $infoRequest)){
             if(array_key_exists('from', $infoRequest['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($infoRequest){
-                    $query->where('extension_date', '>=', $infoRequest['extension_date']['from']);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '>=', $infoRequest['extension_date']['from']);
                 });
             }
             if(array_key_exists('to', $infoRequest['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($infoRequest){
-                    $query->where('extension_date', '<=', $infoRequest['extension_date']['to']);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '<=', $infoRequest['extension_date']['to']);
                 });
             }
             if(!array_key_exists('to', $infoRequest['extension_date']) && !array_key_exists('from', $infoRequest['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($infoRequest){
-                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
                 });
             }
         }

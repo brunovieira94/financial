@@ -253,17 +253,17 @@ class ReportService
         if(array_key_exists('extension_date', $requestInfo)){
             if(array_key_exists('from', $requestInfo['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($requestInfo){
-                    $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                 });
             }
             if(array_key_exists('to', $requestInfo['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($requestInfo){
-                    $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                 });
             }
             if(!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($requestInfo){
-                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
                 });
             }
         }
