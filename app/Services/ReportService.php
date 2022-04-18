@@ -5,19 +5,22 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
 use App\Models\FormPayment;
 use App\Models\PaymentRequest;
+use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
 
 class ReportService
 {
     private $accountsPayableApprovalFlow;
+    private $supplyApprovalFlow;
     private $approvalFlow;
     private $filterCanceled = false;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest)
+    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->paymentRequest = $paymentRequest;
+        $this->supplyApprovalFlow = $supplyApprovalFlow;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -244,6 +247,15 @@ class ReportService
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
         ->where('status', 7),$requestInfo);
+    }
+
+    public function getAllApprovedPurchaseOrder($requestInfo)
+    {
+        $accountApproval = Utils::search($this->supplyApprovalFlow,$requestInfo);
+        return Utils::pagination($accountApproval
+        ->with('purchase_order')
+        ->whereRelation('purchase_order', 'deleted_at', '=', null)
+        ->where('status', 1),$requestInfo);
     }
 }
 
