@@ -5,19 +5,22 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
 use App\Models\FormPayment;
 use App\Models\PaymentRequest;
+use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
 
 class ReportService
 {
     private $accountsPayableApprovalFlow;
+    private $supplyApprovalFlow;
     private $approvalFlow;
     private $filterCanceled = false;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest)
+    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->paymentRequest = $paymentRequest;
+        $this->supplyApprovalFlow = $supplyApprovalFlow;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -253,17 +256,17 @@ class ReportService
         if(array_key_exists('extension_date', $requestInfo)){
             if(array_key_exists('from', $requestInfo['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($requestInfo){
-                    $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                 });
             }
             if(array_key_exists('to', $requestInfo['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($requestInfo){
-                    $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                 });
             }
             if(!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])){
                 $query->whereHas('installments', function ($query) use ($requestInfo){
-                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                    $query->where('status', '<>', 'BD')->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
                 });
             }
         }
@@ -288,6 +291,15 @@ class ReportService
         return Utils::pagination($accountsPayableApprovalFlow
         ->with('payment_request')
         ->where('status', 7),$requestInfo);
+    }
+
+    public function getAllApprovedPurchaseOrder($requestInfo)
+    {
+        $accountApproval = Utils::search($this->supplyApprovalFlow,$requestInfo);
+        return Utils::pagination($accountApproval
+        ->with('purchase_order')
+        ->whereRelation('purchase_order', 'deleted_at', '=', null)
+        ->where('status', 1),$requestInfo);
     }
 }
 

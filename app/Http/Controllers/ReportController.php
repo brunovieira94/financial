@@ -159,4 +159,9 @@ class ReportController extends Controller
         }
         return (new AllPaymentRequestFinishedExport($request->all()))->download('contasFinalizadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
+
+    public function approvedPurchaseOrder(Request $request)
+    {
+        return $this->reportService->getAllApprovedPurchaseOrder($request->all());
+    }
 }

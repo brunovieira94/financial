@@ -251,6 +251,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
+        Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
         Route::post('/due-bills/export', [ReportController::class, 'duePaymentRequestExport']);
         Route::post('/approved-payment-request/export', [ReportController::class, 'approvedPaymentRequestExport']);
         Route::post('/disapproved-payment-request/export', [ReportController::class, 'disapprovedPaymentRequestExport']);
@@ -328,7 +329,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('supply-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowSupplyByUserController::class, 'accountsApproveUser']);
-        Route::get('/approved-purchase-order', [ApprovalFlowSupplyByUserController::class, 'approvedPurchaseOrder']);
         Route::put('/approve/{id}', [ApprovalFlowSupplyByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowSupplyByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowSupplyByUserController::class, 'cancelAccount']);

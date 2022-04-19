@@ -75,13 +75,4 @@ class ApprovalFlowSupplyByUserService
         $accountApproval->reason = $request->reason;
         return $accountApproval->save();
     }
-
-    public function getAllApprovedPurchaseOrder($requestInfo)
-    {
-        $accountApproval = Utils::search($this->supplyApprovalFlow,$requestInfo);
-        return Utils::pagination($accountApproval
-        ->with('purchase_order')
-        ->whereRelation('purchase_order', 'deleted_at', '=', null)
-        ->where('status', 1),$requestInfo);
-    }
 }
