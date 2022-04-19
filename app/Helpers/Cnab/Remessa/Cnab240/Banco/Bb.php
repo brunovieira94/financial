@@ -546,12 +546,8 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->iniciaTrailerLote();
 
         $quantidadeBoleto = count($this->boletos);
-        if($this->tipoSeguimento == 1){
-            $quantidadeBoleto += 3;
-        } else {
-            $quantidadeBoleto = $quantidadeBoleto * 2;
-            $quantidadeBoleto += 2;
-        }
+        $quantidadeBoleto = $quantidadeBoleto * 2;
+        $quantidadeBoleto += 2;
 
         $valor = array_reduce($this->boletos, function($valor, $boleto) {
             return $valor + $boleto->getValor();
