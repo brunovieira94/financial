@@ -24,4 +24,9 @@ class ItauCNABController extends Controller
     {
         return $this->cnabService->receiveCNAB240($request);
     }
+
+    public function cnabParse(Request $request)
+    {
+        return $this->cnabService->cnabParse($request->all());
+    }
 }
