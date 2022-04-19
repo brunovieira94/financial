@@ -19,6 +19,7 @@ class ProviderCategoryImport implements ToModel, WithValidation, WithHeadingRow
         return new ProviderCategory([
             'title'     => $row['titulo'],
             'payment_before_weekends'    => $row['antecipar_pagamento_nos_fins_de_semana'] == 'Sim' ? true : false,
+            'advance'    => $row['postergar'] == 'Sim' ? true : false,
         ]);
     }
 
@@ -27,6 +28,7 @@ class ProviderCategoryImport implements ToModel, WithValidation, WithHeadingRow
         return [
             'titulo' => 'required|max:150|unique:provider_categories,title,NULL,id,deleted_at,NULL',
             'antecipar_pagamento_nos_fins_de_semana' => 'required|in:Sim,Não',
+            'postergar' => 'required|in:Sim,Não',
         ];
     }
 }
