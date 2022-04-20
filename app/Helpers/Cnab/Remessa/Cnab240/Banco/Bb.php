@@ -302,8 +302,8 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->add(20, 20, strlen(Util::onlyNumbers($boleto->getPagador()->getDocumento())) == 14 ? 2 : 1);
         $this->add(21, 35, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 15));
         $this->add(36, 75, '');
-        $this->add(76, 76, strlen(Util::onlyNumbers($boleto->getPagador()->getDocumento())) == 14 ? 2 : 1);
-        $this->add(77, 91, Util::formatCnab('9', Util::onlyNumbers($boleto->getPagador()->getDocumento()), 15));
+        $this->add(76, 76, strlen(Util::onlyNumbers($boleto->getBeneficiario()->getDocumento())) == 14 ? 2 : 1);
+        $this->add(77, 91, Util::formatCnab('9', Util::onlyNumbers($boleto->getBeneficiario()->getDocumento()), 15));
         $this->add(92, 131, '');
         $this->add(132, 132, '0');
         $this->add(132, 132, '0');
@@ -546,12 +546,8 @@ class Bb extends AbstractRemessa implements RemessaContract
         $this->iniciaTrailerLote();
 
         $quantidadeBoleto = count($this->boletos);
-        if($this->tipoSeguimento == 1){
-            $quantidadeBoleto += 3;
-        } else {
-            $quantidadeBoleto = $quantidadeBoleto * 2;
-            $quantidadeBoleto += 2;
-        }
+        $quantidadeBoleto = $quantidadeBoleto * 2;
+        $quantidadeBoleto += 2;
 
         $valor = array_reduce($this->boletos, function($valor, $boleto) {
             return $valor + $boleto->getValor();
