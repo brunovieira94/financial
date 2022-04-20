@@ -6,7 +6,7 @@
 #
 # ALINHAMENTO DE CAMPOS
 # - Campos Numéricos (9) = Sempre à direita e preenchidos com zeros à esquerda.
-# - Campos Alfanuméricos (X) = Sempre à esquerda e preenchidos com brancos à direita. 
+# - Campos Alfanuméricos (X) = Sempre à esquerda e preenchidos com brancos à direita.
 #
 servico: 'cobranca'
 
@@ -23,7 +23,7 @@ remessa:
     lote_servico:
       pos: [4,7]
       picture: '9(4)'
-      default: '0000'
+      default: 1
     tipo_registro:
       pos: [8,8]
       picture: '9(1)'
@@ -32,10 +32,10 @@ remessa:
       pos: [9,17]
       picture: 'X(9)'
       default: ''
-    tipo_inscricao_empresa:
+    tipo_inscricao:
       pos: [18,18]
       picture: '9(1)'
-    numero_inscricao_empresa:
+    inscricao_numero:
       pos: [19,32]
       picture: '9(14)'
     numero_convenio:
@@ -44,22 +44,22 @@ remessa:
     cobranca_cedente:
       pos: [42,45]
       picture: '9(4)'
-    numero_carteira_cobranca:
-      pos: [46,47]
-      picture: '9(2)'
-    variacao_carteira_cobranca:
-      pos: [48,50]
-      picture: '9(3)'
+      default: '0126'
+    uso_reservado_banco:
+      pos: [46,50]
+      picture: 'X(5)'
+      default: ''
     campo_reservado_bb:
       pos: [51,52]
       picture: 'X(2)'
-    agencia_mantenedora_conta:
+      default: ''
+    agencia:
       pos: [53,57]
       picture: '9(5)'
     digito_verificador_agencia:
       pos: [58,58]
       picture: 'X(1)'
-    numero_conta_corrente:
+    conta:
       pos: [59,70]
       picture: '9(12)'
     digito_verificador_conta:
@@ -68,6 +68,7 @@ remessa:
     digito_verificador_agencia_conta:
       pos: [72,72]
       picture: 'X(1)'
+      default: '0'
     nome_empresa:
       pos: [73,102]
       picture: 'X(30)'
@@ -82,15 +83,17 @@ remessa:
     codigo_remessa_retorno:
       pos: [143,143]
       picture: '9(1)'
-    data_geracao_arquivo:
+      default: '1'
+    data_geracao:
       pos: [144,151]
       picture: '9(8)'
-    hora_geracao_arquivo:
+    hora_geracao:
       pos: [152,157]
       picture: '9(6)'
     numero_sequencial_arquivo:
       pos: [158,163]
       picture: '9(6)'
+      default: '1'
     versao_layout_arquivo:
       pos: [164,166]
       picture: '9(3)'
@@ -120,7 +123,7 @@ remessa:
     lote_servico:
       pos: [4,7]
       picture: '9(4)'
-      default: '9999'
+      default: 1
     tipo_registro:
       pos: [8,8]
       picture: '9(1)'
@@ -130,11 +133,11 @@ remessa:
       picture: 'X(9)'
       default: ''
     # Informar quantos lotes o arquivo possui.
-    quantidade_lotes_arquivo:
+    total_lotes:
       pos: [18,23]
       picture: '9(6)'
     # Quantidade igual ao número total de registros (linhas) do arquivo.
-    quantidade_registros_arquivo:
+    total_registros:
       pos: [24,29]
       picture: '9(6)'
     quantidade_contas_conciliacao_lotes:
@@ -161,88 +164,100 @@ remessa:
     tipo_operacao:
       pos: [9,9]
       picture: 'X(1)'
-      default: 'R'
     tipo_servico:
       pos: [10,11]
       picture: '9(2)'
-      default: 1
-    exclusivo_febraban_01:
+    forma_lancamento:
       pos: [12,13]
-      picture: 'X(2)'
-      default: ''
+      picture: '9(2)'
     versao_layout_lote:
       pos: [14,16]
       picture: '9(3)'
-      default: '043'
+      default: '042'
     exclusivo_febraban_02:
       pos: [17,17]
       picture: 'X(1)'
       default: ''
-    tipo_inscricao_empresa:
+    tipo_inscricao:
       pos: [18,18]
       picture: '9(1)'
-    numero_inscricao_empresa:
-      pos: [19,33]
+    inscricao_numero:
+      pos: [19,32]
       picture: '9(14)'
     numero_convenio:
-      pos: [34,42]
+      pos: [33,41]
       picture: '9(9)'
-    cobranca_cedente:
-      pos: [43,46]
+    codigo:
+      pos: [42,45]
       picture: '9(4)'
-    numero_carteira_cobranca:
-      pos: [47, 48]
-      picture: '9(2)'
-    variacao_carteira_cobranca:
-      pos: [49,51]
-      picture: '9(3)'
-    remessa_teste:
-      pos: [52,53]
+      default: '0126'
+    uso_reservado_banco:
+      pos: [46,50]
+      picture: 'X(5)'
+      default: ''
+    campo_reservado_bb:
+      pos: [51,52]
       picture: 'X(2)'
       default: ''
-    agencia_mantenedora_conta:
-      pos: [54,58]
+    agencia:
+      pos: [53,57]
       picture: '9(5)'
     digito_verificador_agencia:
-      pos: [59,59]
+      pos: [58,58]
       picture: 'X(1)'
-    numero_conta_corrente:
-      pos: [60,71]
+    conta:
+      pos: [59,70]
       picture: '9(12)'
     digito_verificador_conta:
-      pos: [72,72]
+      pos: [71,71]
       picture: 'X(1)'
     digito_verificador_agencia_conta:
-      pos: [73,73]
+      pos: [72,72]
       picture: 'X(1)'
-      default: ''
+      default: '0'
     nome_empresa:
-      pos: [74,103]
+      pos: [73,102]
       picture: 'X(30)'
     mensagem_01:
-      pos: [104,143]
+      pos: [103,142]
       picture: 'X(40)'
       default: ''
-    mensagem_02:
-      pos: [144,183]
-      picture: 'X(40)'
+    logradouro:
+      pos: [143,172]
+      picture: 'X(30)'
       default: ''
-    #Informação a cargo da empresa. Sugerimos informar número sequencial para controle. Campo não é criticado pelo Banco do Brasil.
-    numero_remessa_retorno:
-      pos: [184,191]
-      picture: '9(8)'
-    data_gravacao:
-      pos: [192,199]
-      picture: '9(8)'
-      default: 0
-    data_credito:
-      pos: [200,207]
-      picture: '9(8)'
-      default: 0
+    numero:
+      pos: [173,177]
+      picture: '9(5)'
+      default: '00000'
+    complemento:
+      pos: [178,192]
+      picture: 'X(15)'
+      default: ''
+    cidade:
+      pos: [193,212]
+      picture: 'X(20)'
+      default: ''
+    cep:
+      pos: [213,217]
+      picture: '9(5)'
+      default: '00000'
+    complemento_cep:
+      pos: [218,220]
+      picture: 'X(3)'
+      default: ''
+    estado:
+      pos: [221,222]
+      picture: 'X(2)'
+      default: ''
     exclusivo_febraban_03:
-      pos: [208,240]
-      picture: 'X(33)'
+      pos: [223,230]
+      picture: 'X(8)'
       default: ''
+    ocorrencia:
+      pos: [231,240]
+      picture: 'X(10)'
+      default: '0000000000'
 
   trailer_lote:
     codigo_banco:
@@ -264,14 +279,12 @@ remessa:
     quantidade_registros_lote:
       pos: [18,23]
       picture: '9(6)'
-    exclusivo_febraban_01:
+    exclusivo_febraban_02:
       pos: [24,240]
       picture: 'X(217)'
       default: ''
 
-
   detalhes:
-
     segmento_p:
       codigo_banco:
         pos: [1,3]
@@ -280,6 +293,7 @@ remessa:
       lote_servico:
         pos: [4,7]
         picture: '9(4)'
+        default: 0000
       tipo_registro:
         pos: [8,8]
         picture: '9(1)'
@@ -299,13 +313,13 @@ remessa:
         pos: [16,17]
         picture: '9(2)'
         default: '01'
-      agencia_conta:
+      agencia:
         pos: [18,22]
         picture: '9(5)'
       verificador_agencia:
         pos: [23,23]
         picture: 'X(1)'
-      numero_conta:
+      conta:
         pos: [24,35]
         picture: '9(12)'
       verificador_conta:
@@ -320,13 +334,14 @@ remessa:
       identificacao_titulo:
         pos: [38,57]
         picture: 'X(20)'
-      # Informar 1 – para carteira 11/12 na modalidade Simples; 
+      # Informar 1 – para carteira 11/12 na modalidade Simples;
       # 2 ou 3 – para carteira 11/17 modalidade Vinculada/Caucionada e carteira 31;
-      # 4 – para carteira 11/17 modalidade Descontada e carteira 51; 
+      # 4 – para carteira 11/17 modalidade Descontada e carteira 51;
       # e 7 – para carteira 17 modalidade Simples.
       codigo_carteira:
         pos: [58,58]
         picture: '9(1)'
+        default: 1
       # Pode ser informado 'branco', Zero
       # 1 – com cadastramento (Cobrança registrada)
       # ou 2 – sem cadastramento (Cobrança sem registro).
@@ -352,7 +367,7 @@ remessa:
       numero_documento:
         pos: [63,77]
         picture: 'X(15)'
-      data_vencimento:
+      vencimento:
         pos: [78,85]
         picture: '9(8)'
       valor_nominal:
@@ -410,19 +425,19 @@ remessa:
         pos: [196,220]
         picture: 'X(25)'
         default: ''
-      # O Banco do Brasil trata somente os códigos 
-      # '1' – Protestar dias corridos, 
-      # '2' – Protestar dias úteis, 
-      # e '3' – Não protestar. 
-      # No caso de carteira 31 ou carteira 11/17 modalidade Vinculada, se não informado nenhum código, 
+      # O Banco do Brasil trata somente os códigos
+      # '1' – Protestar dias corridos,
+      # '2' – Protestar dias úteis,
+      # e '3' – Não protestar.
+      # No caso de carteira 31 ou carteira 11/17 modalidade Vinculada, se não informado nenhum código,
       # o sistema assume automaticamente Protesto em 3 dias úteis.
       codigo_protesto:
         pos: [221,221]
         picture: '9(1)'
         default: 3
-      # Preencher de acordo com o código informado na posição 221. 
-      # Para código '1' – é possível, de 6 a 29 dias, 35º, 40º, dia corrido. 
-      # Para código '2' – é possível, 3º, 4º ou 5º dia útil. 
+      # Preencher de acordo com o código informado na posição 221.
+      # Para código '1' – é possível, de 6 a 29 dias, 35º, 40º, dia corrido.
+      # Para código '2' – é possível, 3º, 4º ou 5º dia útil.
       # Para código '3' preencher com Zeros.
       dias_protesto:
         pos: [222,223]
@@ -449,10 +464,10 @@ remessa:
         picture: 'X(1)'
         default: ''
 
-    segmento_q:
+    segmento_j:
       codigo_banco:
         pos: [1,3]
-        picture: '9(3)'
+        picture: '9(1)'
         default: 1
       lote_servico:
         pos: [4,7]
@@ -467,605 +482,67 @@ remessa:
       codigo_segmento:
         pos: [14,14]
         picture: 'X(1)'
-        default: 'Q'
-      exclusivo_febraban_01:
+        default: 'J'
+      tipo_movimento:
         pos: [15,15]
         picture: 'X(1)'
-        default: ''
-      # repetir codigo informado no segmento P
+        default: '0'
       codigo_movimento_remessa:
         pos: [16,17]
         picture: '9(2)'
-        default:
-      tipo_inscricao:
-        pos: [18,18]
-        picture: '9(1)'
-      numero_inscricao:
-        pos: [19,33]
+        default: '00'
+      codigo_barras:
+        pos: [18,61]
+        picture: '9(44)'
+      nome_pagador:
+        pos: [62,91]
+        picture: 'X(30)'
+        default: ''
+      vencimento:
+        pos: [92,99]
+        picture: '9(8)'
+      valor:
+        pos: [100,114]
         picture: '9(15)'
-      nome:
-        pos: [34,73]
-        picture: 'X(40)'
-      endereco:
-        pos: [74,113]
-        picture: 'X(40)'
-      bairro:
-        pos: [114,128]
-        picture: 'X(15)'
-      cep:
-        pos: [129,133]
-        picture: '9(5)'
-      sufixo_cep:
-        pos: [134,136]
-        picture: '9(3)'
-      cidade:
-        pos: [137,151]
-        picture: 'X(15)'
-      uf:
-        pos: [152,153]
-        picture: 'X(2)'
-      tipo_inscricao_cedente:
-        pos: [154,154]
-        picture: '9(1)'
-        default: 0
-      numero_inscricao_cedente:
-        pos: [155,169]
+      valor_desconto:
+        pos: [63,77]
         picture: '9(15)'
-        default: 0
-      nome_sacador_avalista:
-        pos: [170,209]
-        picture: 'X(40)'
-        default: ''
-      codigo_banco_correspondente_compensacao:
-        pos: [210,212]
-        picture: '9(3)'
-        default: 0
-      nosso_numero_banco_correspondente:
-        pos: [213,232]
-        picture: 'X(20)'
-        default: ''
-      exclusivo_febraban_02:
-        pos: [233,240]
-        picture: 'X(8)'
-        default: ''
-
-    segmento_r:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
-        default:
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'R'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      # repetir codigo informado no segmento P
-      codigo_movimento_remessa:
-        pos: [16,17]
-        picture: '9(2)'
-      codigo_desconto_02:
-        pos: [18,18]
-        picture: '9(1)'
-        default: 0
-      data_desconto_02:
-        pos: [19,26]
-        picture: '9(8)'
-        default: 0
-      valor_desconto_02:
-        pos: [27,41]
-        picture: '9(13)V9(2)'
-        default: 0
-      codigo_desconto_03:
-        pos: [42,42]
-        picture: '9(1)'
-        default: 0
-      data_desconto_03:
-        pos: [43,50]
-        picture: '9(8)'
-        default: 0
-      valor_desconto_03:
-        pos: [51,65]
-        picture: '9(13)V9(2)'
-        default: 0
-      codigo_multa:
-        pos: [66,66]
-        picture: '9(1)'
-        default: 0
-      data_multa:
-        pos: [67,74]
-        picture: '9(8)'
         default: 0
       valor_multa:
-        pos: [75,89]
-        picture: '9(13)V9(2)'
-        default: 0
-      informacao_sacado:
-        pos: [90,99]
-        picture: 'X(10)'
-        default: ''
-      mensagem_03:
-        pos: [100,139]
-        picture: 'X(40)'
-        default: ''
-      mensagem_04:
-        pos: [140,179]
-        picture: 'X(40)'
-        default: ''
-      exclusivo_febraban_02:
-        pos: [180,199]
-        picture: 'X(20)'
-        default: ''
-      codigo_ocorrencia_sacado:
-        pos: [200,207]
-        picture: '9(8)'
-        default: 0
-      codigo_banco_conta_debito:
-        pos: [208,210]
-        picture: '9(3)'
-        default: 0
-      codigo_agencia_debito:
-        pos: [211,215]
-        picture: '9(5)'
-        default: 0
-      verificador_agencia_debito:
-        pos: [216,216]
-        picture: '9(1)'
-        default: 0
-      conta_debito:
-        pos: [217,228]
-        picture: 'X(1)'
-        default: ''
-      verificador_conta_debito:
-        pos: [229,229]
-        picture: 'X(1)'
-        default: ''
-      verificador_agencia_conta_debito:
-        pos: [230,230]
-        picture: 'X(1)'
-        default: ''
-      aviso_debito_automatico:
-        pos: [231,231]
-        picture: '9(1)'
-        default: 0
-      exclusivo_febraban_03:
-        pos: [232,240]
-        picture: 'X(9)'
-        default: ''
-
-    segmento_s:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'S'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      # repetir codigo informado no segmento P
-      codigo_movimento_remessa:
-        pos: [16,17]
-        picture: '9(2)'
-      identificacao_impressao:
-        pos: [18,18]
-        picture: '9(1)'
-        default: 0
-      mensagem_05:
-        pos: [19,58]
-        picture: 'X(40)'
-        default: ''
-      mensagem_06:
-        pos: [59,98]
-        picture: 'X(40)'
-        default: ''
-      mensagem_07:
-        pos: [99,138]
-        picture: 'X(40)'
-        default: ''
-      mensagem_08:
-        pos: [139,178]
-        picture: 'X(40)'
-        default: ''
-      mensagem_09:
-        pos: [179,218]
-        picture: 'X(40)'
-        default: ''
-      exclusivo_febraban_03:
-        pos: [219,240]
-        picture: 'X(22)'
-        default: ''
-
-    # segmento não utilizado pelo BB
-    segmento_y01:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(5)'
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'Y'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      codigo_movimento_remessa:
-        pos: [16,17]
-        picture: '9(2)'
-      identificacao_registro:
-        pos: [18,19]
-        picture: '9(2)'
-        default: 1
-      tipo_inscricao:
-        pos: [20,20]
-        picture: '9(1)'
-      numero_inscricao:
-        pos: [21,35]
+        pos: [130,144]
         picture: '9(15)'
-      nome_sacador_avalista:
-        pos: [36,75]
-        picture: 'X(40)'
-        default: ''
-      endereco:
-        pos: [76,115]
-        picture: 'X(40)'
-        default: ''
-      bairro:
-        pos: [116,130]
-        picture: 'X(15)'
-        default: ''
-      cep:
-        pos: [131,135]
-        picture: '9(5)'
         default: 0
-      sufixo_cep:
-        pos: [136,138]
-        picture: '9(3)'
-        default: 0
-      cidade:
-        pos: [139,153]
-        picture: 'X(15)'
-        default: ''
-      uf:
-        pos: [154,155]
-        picture: 'X(2)'
-        default: ''
-      exclusivo_febraban_02:
-        pos: [156,240]
-        picture: 'X(85)'
-        default: ''
-
-    # segmento não utilizado pelo BB
-    segmento_y04:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'Y'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      codigo_movimento:
-        pos: [16,17]
-        picture: '9(2)'
-      identificacao_registro:
-        pos: [18,19]
-        picture: '9(2)'
-        default: 3
-      email:
-        pos: [20,69]
-        picture: 'X(50)'
-      codigo_ddd:
-        pos: [70,71]
-        picture: '9(2)'
-      numero_celular:
-        pos: [72,79]
+      data_pagamento:
+        pos: [145,152]
         picture: '9(8)'
-      exclusivo_febraban_02:
-        pos: [80,240]
-        picture: 'X(161)'
-        default: ''
-
-    segmento_y05:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'Y'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      codigo_movimento:
-        pos: [16,17]
-        picture: '9(2)'
-      identificacao_registro:
-        pos: [18,19]
-        picture: '9(2)'
-        default: 4
-      identificacao_cheque_01:
-        pos: [20,53]
-        picture: 'X(34)'
-      identificacao_cheque_02:
-        pos: [54,87]
-        picture: 'X(34)'
-        default: ''
-      identificacao_cheque_03:
-        pos: [88,121]
-        picture: 'X(34)'
-        default: ''
-      identificacao_cheque_04:
-        pos: [122,155]
-        picture: 'X(34)'
-        default: ''
-      identificacao_cheque_05:
-        pos: [156,189]
-        picture: 'X(34)'
-        default: ''
-      identificacao_cheque_06:
-        pos: [190,223]
-        picture: '9(34)'
-        default: 0
-      exclusivo_febraban_02:
-        pos: [224,240]
-        picture: 'X(17)'
-        default: ''
-
-    # Não utilizado pelo BB
-    segmento_y50:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'Y'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      codigo_movimento:
-        pos: [16,17]
-        picture: '9(2)'
-      identificacao_registro:
-        pos: [18,19]
-        picture: '9(2)'
-        default: 50
-      agencia_mantenedora:
-        pos: [20,24]
-        picture: '9(5)'
-      verificador_agencia_mantenedora:
-        pos: [25,25]
-        picture: 'X(1)'
-      numero_conta:
-        pos: [26,37]
-        picture: '9(12)'
-      verificador_conta:
-        pos: [38,38]
-        picture: 'X(1)'
-      verificador_agencia_conta:
-        pos: [39,39]
-        picture: 'X(1)'
-      numero_identificacao_titulo:
-        pos: [40,59]
+      valor_pagamento:
+        pos: [153,167]
+        picture: '9(15)'
+        default: 17
+      quantidade_moeda:
+        pos: [168,182]
+        picture: '9(15)'
+        default: '000000000000000'
+      identificacao_titulo_empresa:
+        pos: [183,202]
         picture: 'X(20)'
-      codigo_calculo_rateio:
-        pos: [60,60]
-        picture: '9(1)'
-      tipo_valor:
-        pos: [61,61]
-        picture: '9(1)'
-      valor:
-        pos: [62,76]
-        picture: '9(13)V9(2)'
-      codigo_banco_credito_benef:
-        pos: [77,79]
-        picture: '9(3)'
-      codigo_agencia_credito_benef:
-        pos: [80,84]
-        picture: '9(5)'
-      digito_agencia_credito_benef:
-        pos: [85,85]
-        picture: 'X(1)'
-      conta_credito_beneficiario:
-        pos: [86,97]
-        picture: '9(12)'
-      digito_conta_credito_benef:
-        pos: [98,98]
-        picture: 'X(1)'
-      digito_agencia_conta_benef:
-        pos: [99,99]
-        picture: 'X(1)'
-      nome_beneficiario:
-        pos: [100,139]
-        picture: 'X(40)'
-      identificacao_parcela_rateio:
-        pos: [140,145]
+      identificacao_titulo_banco:
+        pos: [203,222]
+        picture: 'X(20)'
+        default: ''
+      codigo_moeda:
+        pos: [223,224]
+        picture: '9(2)'
+        default: '09'
+      cnab:
+        pos: [225,230]
         picture: 'X(6)'
-      qtde_dias_credito_benef:
-        pos: [146,148]
-        picture: '9(3)'
-      data_credito_beneficiario:
-        pos: [149,156]
-        picture: '9(8)'
-      identificacao_rejeicoes:
-        pos: [157,166]
-        picture: '9(10)'
-      exclusivo_febraban_02:
-        pos: [167,240]
-        picture: 'X(74)'
         default: ''
-
-    # segmento não utilizado pelo BB
-    segmento_y51:
-      codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
-        default: 1
-      lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
-      tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
-        default: 3
-      numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
-      codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'Y'
-      exclusivo_febraban_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
-      codigo_movimento:
-        pos: [16,17]
-        picture: '9(2)'
-      identificacao_registro:
-        pos: [18,19]
-        picture: '9(2)'
-        default: 51
-      numero_nf_01:
-        pos: [20,34]
-        picture: 'X(15)'
-      valor_nf_01:
-        pos: [35,49]
-        picture: '9(13)V9(2)'
-      data_emissao_nf_01:
-        pos: [50,57]
-        picture: '9(8)'
-      numero_nf_02:
-        pos: [58,72]
-        picture: 'X(15)'
-        default: ''
-      valor_nf_02:
-        pos: [73,87]
-        picture: '9(13)V9(2)'
-        default: 0
-      data_emissao_nf_02:
-        pos: [88,95]
-        picture: '9(8)'
-        default: 0
-      numero_nf_03:
-        pos: [96,110]
-        picture: 'X(15)'
-        default: ''
-      valor_nf_03:
-        pos: [111,125]
-        picture: '9(13)V9(2)'
-        default: 0
-      data_emissao_nf_03:
-        pos: [126,133]
-        picture: '9(8)'
-        default: 0
-      numero_nf_04:
-        pos: [134,148]
-        picture: 'X(15)'
-        default: ''
-      valor_nf_04:
-        pos: [149,163]
-        picture: '9(13)V9(2)'
-        default: 0
-      data_emissao_nf_04:
-        pos: [164,171]
-        picture: '9(8)'
-        default: 0
-      numero_nf_05:
-        pos: [172,186]
-        picture: 'X(15)'
-        default: ''
-      valor_nf_05:
-        pos: [187,201]
-        picture: '9(13)V9(2)'
-        default: 0
-      data_emissao_nf_05:
-        pos: [202,209]
-        picture: '9(8)'
-        default: 0
-      exclusivo_febraban_02:
-        pos: [210,240]
-        picture: 'X(31)'
-        default: ''
-
+      codigo_ocorrencia:
+        pos: [231,240]
+        picture: 'X(10)'
+        default: '0000000000'
 retorno:
-
   header_arquivo:
     codigo_banco:
       pos: [1,3]
@@ -1315,7 +792,7 @@ retorno:
     quantidade_registros_lote:
       pos: [18,23]
       picture: '9(6)'
-    exclusivo_febraban_01:
+    exclusivo_febraban_02:
       pos: [24,240]
       picture: 'X(217)'
       default: ''
@@ -1478,7 +955,7 @@ retorno:
       codigo_ocorrencia:
         pos: [154,157]
         picture: '9(4)'
-      data_ocorrencia:
+      data_ocorrencia02:
         pos: [158,165]
         picture: '9(8)'
       valor_ocorrencia:

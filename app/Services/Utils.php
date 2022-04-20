@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\FormPayment;
+
 class Utils
 {
     const defaultPerPage = 20;
@@ -68,5 +70,49 @@ class Utils
             }
         }
         return $query;
+    }
+
+    public static function groupPayments($paymentRequests, $bankCode){
+
+        //$formPayment = FormPayment::where('bank_code', $bankCode)->get();
+
+        $groupPayment = [];
+
+
+        foreach($paymentRequests as $paymentRequest)
+        {
+            $cont = 0;
+            foreach($paymentRequest->group_payment->form_payment as $payment_form)
+            {
+                if($payment_form->bank_code == $bankCode)
+                {
+                    if($payment_form->group_form_payment_id == 2) //Default PIX group 2
+                    {
+                        if(array_key_exists('45', $groupPayment))
+                        {
+                            array_push($groupPayment['45'], [$paymentRequest]);
+                            break;
+                        } else
+                        {
+                            $groupPayment = array('45' => [$paymentRequest] );
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        dd($groupPayment);
+
+
+
+        $count = 1;
+        foreach($groupPayment['45'] as $teste)
+        {
+            $count += 1;
+        }
+        dd($count);
+    return $groupPayment;
+
     }
 }
