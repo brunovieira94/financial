@@ -6,7 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\ProviderCitySubscription;
 use App\Rules\ProviderStateSubscription;
 use App\Rules\ProviderCNPJ;
-use App\Rules\ProviderUniqueCNPJ;
+use App\Rules\ProviderCPF;
+use App\Rules\ProviderRG;
 use Illuminate\Validation\Rule;
 
 class PutProviderRequest extends FormRequest
@@ -57,8 +58,20 @@ class PutProviderRequest extends FormRequest
             'bank_accounts.*.pix_key_type' => 'integer|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id|min:0|max:4',
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
             //validation physical person
-            'cpf' => 'numeric|digits:11|prohibited_if:provider_type,==,J',
-            'rg' => 'string|prohibited_if:provider_type,==,J',
+            'cpf' => [new ProviderCPF(request()->input('international'),request()->input('provider_type')), 'numeric', 'digits:11', 'prohibited_if:provider_type,==,J',
+            Rule::unique('providers', 'cpf')
+            ->where(static function ($query) {
+                return $query->whereNotNull('cpf')->whereNull('deleted_at');
+            })
+            ->ignore($this->id),
+            ],
+            'rg' => [new ProviderRG(request()->input('international'),request()->input('provider_type')), 'string', 'prohibited_if:provider_type,==,J',
+            Rule::unique('providers', 'rg')
+            ->where(static function ($query) {
+                return $query->whereNotNull('rg')->whereNull('deleted_at');
+            })
+            ->ignore($this->id),
+            ],
             'full_name' => 'string|max:255|prohibited_if:provider_type,==,J',
             'birth_date' => 'date|max:255|prohibited_if:provider_type,==,J',
             'international' => 'boolean',
