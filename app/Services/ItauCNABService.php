@@ -129,13 +129,34 @@ class ItauCNABService
         $shipping->addBoletos($billets);
         $shipping->save();
 
-        DB::table('accounts_payable_approval_flows')
-        ->whereIn('payment_request_id', $requestInfo['payment_request_ids'])
+        DB::table('payment_requests_installments')
+        ->whereIn('id', $requestInfo['installments_ids'])
         ->update(
             array(
                 'status' => Config::get('constants.status.cnab generated')
             )
         );
+
+        foreach($allPaymentRequest as $paymentRequest)
+        {
+            $billsPaid = true;
+            foreach ($paymentRequest->installments as $installment)
+            {
+                if($installment->status != 6)
+                {
+                    $billsPaid = false;
+                }
+            }
+            if($billsPaid)
+            {
+                DB::table('accounts_payable_approval_flows')
+                ->where('payment_request_id', $paymentRequest->id)
+                ->update(
+                array(
+                'status' => Config::get('constants.status.cnab generated')
+                ));
+            }
+        }
 
 
         return response()->json([
