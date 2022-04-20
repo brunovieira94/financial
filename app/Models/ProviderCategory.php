@@ -22,6 +22,6 @@ class ProviderCategory extends Model
     }
 
     use SoftDeletes;
-    protected $fillable = ['title','payment_before_weekends'];
+    protected $fillable = ['title','payment_before_weekends', 'advance'];
     protected $table='provider_categories';
 }

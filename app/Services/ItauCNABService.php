@@ -76,7 +76,7 @@ class ItauCNABService
             );
 
             foreach($paymentRequest->installments as $installment) {
-                if($installment->codBank != 'BD') {
+                if(in_array($installment->id, $requestInfo['installments_ids'])) {
                     $billet =
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
@@ -92,7 +92,7 @@ class ItauCNABService
                             'desconto'               => 0,
                             'multa '                 => 0,
                             'dataPagamento'          => new Carbon($paymentRequest->pay_date),
-                            'valorPagamento'         => $paymentRequest->amount,
+                            'valorPagamento'         => $installment->portion_amount,
                             'tipoDocumento'          => $paymentRequest->payment_type,
                             'convenio'               => '1111', //Validar
                             'agenciaDv'              => $paymentRequest->bank_account_provider->agency_check_number ?? '',
