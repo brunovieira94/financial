@@ -236,7 +236,7 @@ class ReportService
                 $query->where('created_at', '>=', $requestInfo['created_at']['from']);
             }
             if(array_key_exists('to', $requestInfo['created_at'])){
-                $query->where('created_at', '<=', $requestInfo['created_at']['to']);
+                $query->where('created_at', '<=', date("Y-m-d",strtotime("+1 days" ,strtotime($requestInfo['created_at']['to']))));
             }
             if(!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])){
                 $query->whereBetween('created_at', [now()->addMonths(-1), now()]);
