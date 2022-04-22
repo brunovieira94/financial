@@ -43,7 +43,15 @@ class ReportService
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
 
-        if(!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0){
+        if((!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $requestInfo))
+        {
+            return Utils::pagination($accountsPayableApprovalFlow
+            ->with('payment_request')
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+            ->where('status', 1),$requestInfo);
+        }elseif (!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0)
+        {
             return Utils::pagination($accountsPayableApprovalFlow
             ->with('payment_request')
             ->whereRelation('payment_request', 'deleted_at', '=', null)
@@ -52,28 +60,64 @@ class ReportService
 
         $formPayment = FormPayment::findOrFail($requestInfo['form_payment_id']);
 
-        if($formPayment->group_form_payment_id == 1) {
-            if($formPayment->same_ownership){
-                return Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
-                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                ->where('status', 1),$requestInfo);
+        if($formPayment->group_form_payment_id == 1)
+        {
+            if($formPayment->same_ownership)
+            {
+                if(!array_key_exists('company_id', $requestInfo))
+                {
+                    return Utils::pagination($accountsPayableApprovalFlow
+                    ->with('payment_request')
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                    ->where('status', 1),$requestInfo);
+                } else {
+                    return Utils::pagination($accountsPayableApprovalFlow
+                    ->with('payment_request')
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                    ->where('status', 1),$requestInfo);
+                }
             } else {
-                return Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
-                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                ->where('status', 1),$requestInfo);
+                if(!array_key_exists('company_id', $requestInfo))
+                {
+                    return Utils::pagination($accountsPayableApprovalFlow
+                    ->with('payment_request')
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                    ->where('status', 1),$requestInfo);
+
+                }else {
+                    return Utils::pagination($accountsPayableApprovalFlow
+                    ->with('payment_request')
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                    ->where('status', 1),$requestInfo);
+                }
             }
         } else {
-            return Utils::pagination($accountsPayableApprovalFlow
-            ->with('payment_request')
-            ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-            ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->where('status', 1),$requestInfo);
+            if(!array_key_exists('company_id', $requestInfo))
+            {
+                return Utils::pagination($accountsPayableApprovalFlow
+                ->with('payment_request')
+                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->where('status', 1),$requestInfo);
+            }else {
+                return Utils::pagination($accountsPayableApprovalFlow
+                ->with('payment_request')
+                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                ->where('status', 1),$requestInfo);
+            }
+
         }
     }
 

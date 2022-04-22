@@ -29,6 +29,7 @@ class CheckUserHasPermission
             'module',
             'cnab',
             'update-user',
+            'update-date-installment',
         ];
 
         $unverifiedSubRoutes = [
