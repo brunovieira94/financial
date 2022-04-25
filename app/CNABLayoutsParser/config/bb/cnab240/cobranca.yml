@@ -23,7 +23,7 @@ remessa:
     lote_servico:
       pos: [4,7]
       picture: '9(4)'
-      default: 1
+      default: 0000
     tipo_registro:
       pos: [8,8]
       picture: '9(1)'
@@ -119,11 +119,11 @@ remessa:
     codigo_banco:
       pos: [1,3]
       picture: '9(3)'
-      default: 1
+      default: 001
     lote_servico:
       pos: [4,7]
       picture: '9(4)'
-      default: 1
+      default: 9999
     tipo_registro:
       pos: [8,8]
       picture: '9(1)'
@@ -136,6 +136,7 @@ remessa:
     total_lotes:
       pos: [18,23]
       picture: '9(6)'
+      default: '1'
     # Quantidade igual ao número total de registros (linhas) do arquivo.
     total_registros:
       pos: [24,29]
@@ -143,7 +144,7 @@ remessa:
     quantidade_contas_conciliacao_lotes:
       pos: [30,35]
       picture: '9(6)'
-      default: 0
+      default: 000000
     exclusivo_febraban_02:
       pos: [36,240]
       picture: 'X(205)'
@@ -279,6 +280,9 @@ remessa:
     quantidade_registros_lote:
       pos: [18,23]
       picture: '9(6)'
+    somatoria_lote:
+      pos: [24,41]
+      picture: '9(18)'
     exclusivo_febraban_02:
       pos: [24,240]
       picture: 'X(217)'
@@ -467,8 +471,8 @@ remessa:
     segmento_j:
       codigo_banco:
         pos: [1,3]
-        picture: '9(1)'
-        default: 1
+        picture: '9(3)'
+        default: 001
       lote_servico:
         pos: [4,7]
         picture: '9(4)'
@@ -494,7 +498,7 @@ remessa:
       codigo_barras:
         pos: [18,61]
         picture: '9(44)'
-      nome_pagador:
+      nome_beneficiario:
         pos: [62,91]
         picture: 'X(30)'
         default: ''
@@ -542,6 +546,77 @@ remessa:
         pos: [231,240]
         picture: 'X(10)'
         default: '0000000000'
+
+    #segmento_j52 obrigatório
+    segmento_j52:
+      codigo_banco:
+        pos: [1,3]
+        picture: '9(3)'
+        default: 001
+      lote_servico:
+        pos: [4,7]
+        picture: '9(4)'
+      tipo_registro:
+        pos: [8,8]
+        picture: '9(1)'
+        default: 3
+      numero_registro:
+        pos: [9,13]
+        picture: '9(5)'
+      codigo_segmento:
+        pos: [14,14]
+        picture: 'X(1)'
+        default: 'J'
+      tipo_movimento:
+        pos: [15,15]
+        picture: 'X(1)'
+        default: '0'
+      codigo_movimento_remessa:
+        pos: [16,17]
+        picture: '9(2)'
+        default: '00'
+      identificacao_registro_pcional:
+        pos: [18,19]
+        picture: '9(2)'
+        default: '52'
+      tipo_inscricao_pagador:
+        pos: [20,20]
+        picture: '9(1)'
+        default: '2'
+      numero_inscricao_pagador:
+        pos: [21,35]
+        picture: '9(15)'
+      nome_inscricao_pagador:
+        pos: [36,76]
+        picture: 'X(40)'
+        default: ''
+      tipo_inscricao_beneficiario:
+        pos: [76,76]
+        picture: '9(1)'
+      numero_inscricao_beneficiario:
+        pos: [77,91]
+        picture: '9(15)'
+      nome_inscricao_beneficiario:
+        pos: [92,131]
+        picture: 'X(40)'
+        default: ''
+      sacador_avalista:
+        pos: [132,132]
+        picture: '9(1)'
+        default: '0'
+      numero_inscricao_avalista:
+        pos: [133,147]
+        picture: '9(15)'
+        default: '000000000000000'
+      nome_inscricao_avalista:
+        pos: [148,187]
+        picture: 'X(40)'
+        default: ''
+      uso_exclusivo_FEBRABAN:
+        pos: [188,240]
+        picture: 'X(53)'
+        default: ''
+
 retorno:
   header_arquivo:
     codigo_banco:

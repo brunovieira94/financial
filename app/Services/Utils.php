@@ -74,14 +74,10 @@ class Utils
 
     public static function groupPayments($paymentRequests, $bankCode){
 
-        //$formPayment = FormPayment::where('bank_code', $bankCode)->get();
-
         $groupPayment = [];
-
 
         foreach($paymentRequests as $paymentRequest)
         {
-            $cont = 0;
             foreach($paymentRequest->group_payment->form_payment as $payment_form)
             {
                 if($payment_form->bank_code == $bankCode)
@@ -90,29 +86,138 @@ class Utils
                     {
                         if(array_key_exists('45', $groupPayment))
                         {
-                            array_push($groupPayment['45'], [$paymentRequest]);
+                            array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
                             break;
                         } else
                         {
-                            $groupPayment = array('45' => [$paymentRequest] );
+                            $groupPayment['45'] = [$paymentRequest];
                             break;
+                        }
+                    }
+                    elseif($payment_form->group_form_payment_id == 1)
+                    {
+                        if(substr($paymentRequest->bar_code, 0, 3) == $bankCode)
+                        {
+                            if($payment_form->same_ownership)
+                            {
+                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                {
+                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    break;
+                                } else
+                                {
+                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    break;
+                                }
+
+                            }
+                        }else
+                        {
+                            if(!$payment_form->same_ownership)
+                            {
+                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                {
+                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    break;
+                                } else
+                                {
+                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    break;
+                                }
+
+                            }
+                        }
+                    }else
+                    {
+                        if($paymentRequest->bank_account_provider->bank->bank_code == $bankCode)
+                        {
+                            if($payment_form->same_ownership)
+                            {
+                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                {
+                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    break;
+                                } else
+                                {
+                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    break;
+                                }
+                            }
+                        }else
+                        {
+                            if(!$payment_form->same_ownership)
+                            {
+                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                {
+                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    break;
+                                } else
+                                {
+                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    break;
+                                }
+
+                            }
                         }
                     }
                 }
             }
         }
-
-        dd($groupPayment);
-
-
-
-        $count = 1;
-        foreach($groupPayment['45'] as $teste)
-        {
-            $count += 1;
-        }
-        dd($count);
     return $groupPayment;
+    }
 
+    public static function formatCnab($tipo, $valor, $tamanho, $dec = 0, $sFill = '')
+    {
+        $tipo = self::upper($tipo);
+        $valor = self::upper(self::normalizeChars($valor));
+        if (in_array($tipo, array('9', 9, 'N', '9L', 'NL'))) {
+            if ($tipo == '9L' || $tipo == 'NL') {
+                $valor = self::onlyNumbers($valor);
+            }
+            $left = '';
+            $sFill = 0;
+            $type = 's';
+            $valor = ($dec > 0) ? sprintf("%.{$dec}f", $valor) : $valor;
+            $valor = str_replace(array(',', '.'), '', $valor);
+        } elseif (in_array($tipo, array('A', 'X'))) {
+            $left = '-';
+            $type = 's';
+        } else {
+            throw new \Exception('Tipo inválido');
+        }
+        return sprintf("%{$left}{$sFill}{$tamanho}{$type}", mb_substr($valor, 0, $tamanho));
+    }
+
+    public static function upper($string)
+    {
+        return strtr(mb_strtoupper($string), "àáâãäåæçèéêëìíîïðñòóôõö÷øùüúþÿ", "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÜÚÞß");
+    }
+
+    public static function normalizeChars($string)
+    {
+        $normalizeChars = array(
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A', 'Ä' => 'A', 'Æ' => 'AE', 'Ç' => 'C',
+            'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Í' => 'I', 'Ì' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ð' => 'Eth',
+            'Ñ' => 'N', 'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y', 'Ŕ' => 'R',
+
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'å' => 'a', 'ä' => 'a', 'æ' => 'ae', 'ç' => 'c',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'eth',
+            'ñ' => 'n', 'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'ŕ' => 'r', 'ÿ' => 'y',
+
+            'ß' => 'sz', 'þ' => 'thorn', 'º' => '', 'ª' => '', '°' => '',
+        );
+        return preg_replace('/[^0-9a-zA-Z !*\-$\(\)\[\]\{\},.;:\/\\#%&@+=]/', '', strtr($string, $normalizeChars));
+    }
+
+    public static function onlyNumbers($string)
+    {
+        return self::numbersOnly($string);
+    }
+
+    public static function numbersOnly($string)
+    {
+        return preg_replace('/[^[:digit:]]/', '', $string);
     }
 }
