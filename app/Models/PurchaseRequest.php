@@ -12,7 +12,7 @@ class PurchaseRequest extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['cost_centers', 'attachments', 'services', 'products', '*'];
+    protected static $logAttributes = ['cost_centers', 'companies', 'attachments', 'services', 'products', '*'];
     protected static $logName = 'purchase_requests';
     public function tapActivity(Activity $activity, string $eventName)
     {
