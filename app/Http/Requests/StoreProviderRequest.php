@@ -65,7 +65,7 @@ class StoreProviderRequest extends FormRequest
             })
             ->ignore($this->id),
             ],
-            'rg' => [new ProviderRG(request()->input('international'),request()->input('provider_type')), 'string', 'prohibited_if:provider_type,==,J',
+            'rg' => [new ProviderRG(request()->input('international'),request()->input('provider_type')), 'prohibited_if:provider_type,==,J',
             Rule::unique('providers', 'rg')
             ->where(static function ($query) {
                 return $query->whereNotNull('rg')->whereNull('deleted_at');
@@ -89,9 +89,11 @@ class StoreProviderRequest extends FormRequest
         if (!$this->has('cnpj') && $this->provider_type == 'J' && !$this->international){
             $this->merge(['cnpj'=>null]);
         }
-
-        if (!$this->has('cnpj') && $this->provider_type == 'J' && !$this->international){
-            $this->merge(['cnpj'=>null]);
+        if ((!$this->has('cpf') && $this->provider_type == 'F' && !$this->international)){
+            $this->merge(['cpf'=>null]);
+        }
+        if (!$this->has('rg') && $this->provider_type == 'F' && !$this->international){
+            $this->merge(['rg'=>null]);
         }
     }
 }
