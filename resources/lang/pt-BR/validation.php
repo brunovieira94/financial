@@ -263,7 +263,9 @@ return [
         'products' => 'produtos',
         'services' => 'serviços',
         'attachments' => 'anexos',
-        'cost_centers' => 'centros de custo'
+        'cost_centers' => 'centros de custo',
+        'billing_date' => 'data de pagamento',
+        'payment_condition' => 'condição de pagamento',
     ],
 
 ];

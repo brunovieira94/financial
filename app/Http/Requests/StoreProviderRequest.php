@@ -6,6 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use App\Rules\ProviderCitySubscription;
 use App\Rules\ProviderStateSubscription;
 use App\Rules\ProviderCNPJ;
+use App\Rules\ProviderCPF;
+use App\Rules\ProviderRG;
 use Illuminate\Validation\Rule;
 
 class StoreProviderRequest extends FormRequest
@@ -56,8 +58,20 @@ class StoreProviderRequest extends FormRequest
             'bank_accounts.*.pix_key_type' => 'integer|required_without_all:bank_accounts.*.agency_number,bank_accounts.*.agency_check_number,bank_accounts.*.account_number,bank_accounts.*.account_check_number,bank_accounts.*.account_type,bank_accounts.*.bank_id|min:0|max:4',
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
             //validation physical person
-            'cpf' => 'required_if:provider_type,==,F|numeric|digits:11|prohibited_if:provider_type,==,J|unique:providers,cpf,NULL,id,deleted_at,NULL',
-            'rg' => 'required_if:provider_type,==,F|string|prohibited_if:provider_type,==,J',
+            'cpf' => [new ProviderCPF(request()->input('international'),request()->input('provider_type')), 'prohibited_if:provider_type,==,J',
+            Rule::unique('providers', 'cpf')
+            ->where(static function ($query) {
+                return $query->whereNotNull('cpf')->whereNull('deleted_at');
+            })
+            ->ignore($this->id),
+            ],
+            'rg' => [new ProviderRG(request()->input('international'),request()->input('provider_type')), 'prohibited_if:provider_type,==,J',
+            Rule::unique('providers', 'rg')
+            ->where(static function ($query) {
+                return $query->whereNotNull('rg')->whereNull('deleted_at');
+            })
+            ->ignore($this->id),
+            ],
             'full_name' => 'required_if:provider_type,==,F|string|max:255|prohibited_if:provider_type,==,J',
             'birth_date' => 'required_if:provider_type,==,F|date|max:255|prohibited_if:provider_type,==,J',
             'international' => 'boolean',
@@ -75,9 +89,11 @@ class StoreProviderRequest extends FormRequest
         if (!$this->has('cnpj') && $this->provider_type == 'J' && !$this->international){
             $this->merge(['cnpj'=>null]);
         }
-
-        if (!$this->has('cnpj') && $this->provider_type == 'J' && !$this->international){
-            $this->merge(['cnpj'=>null]);
+        if ((!$this->has('cpf') && $this->provider_type == 'F' && !$this->international)){
+            $this->merge(['cpf'=>null]);
+        }
+        if (!$this->has('rg') && $this->provider_type == 'F' && !$this->international){
+            $this->merge(['rg'=>null]);
         }
     }
 }

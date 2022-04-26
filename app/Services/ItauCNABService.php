@@ -79,8 +79,8 @@ class ItauCNABService
                 ]
             );
 
-            foreach ($paymentRequest->installments as $installment) {
-                if ($installment->codBank != 'BD') {
+            foreach($paymentRequest->installments as $installment) {
+                if(in_array($installment->id, $requestInfo['installments_ids'])) {
                     $billet =
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
@@ -96,7 +96,7 @@ class ItauCNABService
                             'desconto'               => 0,
                             'multa '                 => 0,
                             'dataPagamento'          => new Carbon($paymentRequest->pay_date),
-                            'valorPagamento'         => $paymentRequest->amount,
+                            'valorPagamento'         => $installment->portion_amount,
                             'tipoDocumento'          => $paymentRequest->payment_type,
                             'convenio'               => '1111', //Validar
                             'agenciaDv'              => $paymentRequest->bank_account_provider->agency_check_number ?? '',
@@ -133,13 +133,34 @@ class ItauCNABService
         $shipping->addBoletos($billets);
         $shipping->save();
 
-        DB::table('accounts_payable_approval_flows')
-            ->whereIn('payment_request_id', $requestInfo['payment_request_ids'])
-            ->update(
+        DB::table('payment_requests_installments')
+        ->whereIn('id', $requestInfo['installments_ids'])
+        ->update(
+            array(
+                'status' => Config::get('constants.status.cnab generated')
+            )
+        );
+
+        foreach($allPaymentRequest as $paymentRequest)
+        {
+            $billsPaid = true;
+            foreach ($paymentRequest->installments as $installment)
+            {
+                if($installment->status != 6)
+                {
+                    $billsPaid = false;
+                }
+            }
+            if($billsPaid)
+            {
+                DB::table('accounts_payable_approval_flows')
+                ->where('payment_request_id', $paymentRequest->id)
+                ->update(
                 array(
-                    'status' => Config::get('constants.status.cnab generated')
-                )
-            );
+                'status' => Config::get('constants.status.cnab generated')
+                ));
+            }
+        }
 
 
         return response()->json([
@@ -252,14 +273,42 @@ class ItauCNABService
                 ], 422);
         }
 
-
-
-
-
-
         // gera arquivo
         $remessaFile = new RemessaFile($remessa);
         $remessaFile->generate(app_path() . 'CNABLayoutsParser/tests/out/bbcobranca240.rem');
+
+
+        DB::table('payment_requests_installments')
+        ->whereIn('id', $requestInfo['installments_ids'])
+        ->update(
+            array(
+                'status' => Config::get('constants.status.cnab generated')
+            )
+        );
+
+        foreach($this->paymentRequest
+        ->with($this->withPaymentRequest)
+        ->whereIn('id', $requestInfo['payment_request_ids'])
+        ->get() as $paymentRequest)
+        {
+            $billsPaid = true;
+            foreach ($paymentRequest->installments as $installment)
+            {
+                if($installment->status != 6)
+                {
+                    $billsPaid = false;
+                }
+            }
+            if($billsPaid)
+            {
+                DB::table('accounts_payable_approval_flows')
+                ->where('payment_request_id', $paymentRequest->id)
+                ->update(
+                array(
+                'status' => Config::get('constants.status.cnab generated')
+                ));
+            }
+        }
 
         return response()->json([
             'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5))
