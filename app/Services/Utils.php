@@ -220,4 +220,80 @@ class Utils
     {
         return preg_replace('/[^[:digit:]]/', '', $string);
     }
+
+    public static function centralizadoraBB($codeBank)
+    {
+        switch ($codeBank) {
+            case 43:
+                return '018';
+                break;
+            case 41:
+                return '018';
+                break;
+            case 45:
+                return '009';
+                break;
+            case 03:
+                return '700';
+                break;
+            default:
+                return '000';
+        }
+    }
+
+    public static function codigoBarrasBB($linhaDigitavel)
+    {
+        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 9, 6) . substr($linhaDigitavel, 16, 4) . substr($linhaDigitavel, 21, 10);
+    }
+
+    public static function identificacaoTipoTransferencia($tipoConta)
+    {
+        switch ($tipoConta) {
+            case 0:
+                return '03'; // POUPANÇA
+                break;
+            case 1:
+                return '01'; // C CORRENTE
+                break;
+            case 2:
+                return 'PG'; // C SALÁRIO
+                break;
+            case 3:
+                return '04'; // PIX
+                break;
+        }
+    }
+
+    public static function codigoBancoFavorecidoBoleto($boleto)
+    {
+        return substr($boleto, 0, 3);
+    }
+
+    public static function codigoMoedaBoleto($boleto)
+    {
+        return substr($boleto, 3, 1);
+    }
+
+    public static function dvBoleto($boleto)
+    {
+        return substr($boleto, 32, 1);
+    }
+
+    public static function valorBoleto($boleto)
+    {
+        return substr($boleto, 37, 10);
+    }
+
+    public static function campoLivreBoleto($boleto)
+    {
+        $primeiroCampoLivre = substr($boleto, 4, 5);
+        $segundoCampoLivre = substr($boleto, 10, 10);
+        $terceiroCampoLivre = substr($boleto, 21, 10);
+        return "{$primeiroCampoLivre}{$segundoCampoLivre}{$terceiroCampoLivre}";
+    }
+
+    public static function fatorVencimentoBoleto($boleto)
+    {
+        return substr($boleto, 33, 4);
+    }
 }

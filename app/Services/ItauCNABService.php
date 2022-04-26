@@ -16,7 +16,7 @@ use Config;
 use App\CNABLayoutsParser\CnabParser\Parser\Layout;
 use App\CNABLayoutsParser\CnabParser\Model\Remessa;
 use App\CNABLayoutsParser\CnabParser\Output\RemessaFile;
-use App\CNABLayoutsParser\CnabParser\Util;
+use App\CNABLayoutsParser\CnabParser\Remessa\Remessa as GerarRemessa;
 
 class ItauCNABService
 {
@@ -226,26 +226,7 @@ class ItauCNABService
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = BankAccount::with('bank')->findOrFail($requestInfo['bank_account_id']);
 
-        $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/bb/cnab240/cobranca.yml');
-        $remessa = new Remessa($remessaLayout);
-
-        // header arquivo
-        $remessa->header->codigo_banco = $bankAccount->bank->bank_code;
-        $remessa->header->tipo_inscricao = 2; // CNPJ
-        $remessa->header->inscricao_numero = Util::onlyNumbers($company->cnpj);
-        $remessa->header->numero_convenio = $bankAccount->covenant;
-        $remessa->header->agencia = $bankAccount->agency_number;
-        $remessa->header->digito_verificador_agencia = $bankAccount->agency_check_number;
-        $remessa->header->conta = $bankAccount->account_number;
-        $remessa->header->digito_verificador_conta = $bankAccount->account_check_number;
-        $remessa->header->dac = 9;
-        $remessa->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
-        $remessa->header->data_geracao = date('dmY');
-        $remessa->header->hora_geracao = date('His');
-        $remessa->header->numero_sequencial_arquivo_retorno = 1;
-
-        //obter todos pagamentos
-
+        //agrupar todos os pagamentos
         $allGroupedPaymentRequest = Utils::groupPayments(
             $this->paymentRequest
                 ->with($this->withPaymentRequest)
@@ -254,92 +235,27 @@ class ItauCNABService
             $bankAccount->bank->bank_code
         );
 
-        $lotQuantity = 0;
-        $sumDetails = 0;
-
-        foreach ($allGroupedPaymentRequest as $key => $groupedPaymentRequest) {
-
-            $lotQuantity += 1;
-
-            $lotQuantityDetails = 0;
-            $lotValue = 0;
-
-            $lote = $remessa->novoLote($lotQuantity);
-
-            $lote->header->agencia = $bankAccount->agency_number;
-            $lote->header->digito_verificador_agencia = $bankAccount->agency_check_number;
-            $lote->header->conta = $bankAccount->account_number;
-            $lote->header->digito_verificador_conta = $bankAccount->account_check_number;
-            $lote->header->numero_convenio = $bankAccount->covenant;
-            $lote->header->codigo_banco = $bankAccount->bank->bank_code;
-            $lote->header->lote_servico = $lote->sequencial;
-            $lote->header->tipo_registro = 1;
-            $lote->header->tipo_operacao = 'C';
-            $lote->header->tipo_servico = '98';
-            $lote->header->inscricao_numero = Util::onlyNumbers($company->cnpj);
-            $lote->header->numero_convenio = $bankAccount->covenant;
-            $lote->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
-            $lote->header->tipo_inscricao = 2;
-            $lote->header->data_gravacao = date('dmY');
-            $lote->header->data_credito = date('dmY');
-            $lote->header->forma_lancamento  = $key;
-
-            foreach ($groupedPaymentRequest as $paymentRequest) {
-                foreach ($paymentRequest->installments as $installment) {
-
-                    $detalhe = $lote->novoDetalhe();
-
-                    $lotQuantityDetails += 1;
-                    $lotValue += $installment->portion_amount;
-
-                    if ($paymentRequest->group_form_payment_id == 1)
-                    {
-                        $detalhe->segmento_j->lote_servico = $lote->sequencial;
-                        $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-                        $detalhe->segmento_j->codigo_barras = Util::codigoBarrasBB($paymentRequest->bar_code);
-                        $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $paymentRequest->provider->provider_type == 'J' ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name, '30');
-                        $dataVencimento = new Carbon($installment->due_date); // data vendimento
-                        $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
-                        $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
-                        $dataPagamento = new Carbon($paymentRequest->pay_date);
-                        $detalhe->segmento_j->data_pagamento = $dataPagamento;
-                        $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
-                        $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
-
-                        //segmento j52 detalhe
-                        $lotQuantityDetails += 1;
-                        $detalhe->segmento_j52->lote_servico = $lotQuantity;
-                        $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
-                        $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                        $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($paymentRequest->provider->cnpj)) == 14 ? 2 : 1;
-                        $detalhe->segmento_j52->numero_inscricao_beneficiario = $paymentRequest->provider->provider_type == 'J' ? Utils::onlyNumbers($paymentRequest->provider->cnpj) : Utils::onlyNumbers($paymentRequest->provider->cpf);
-                        unset($detalhe->segmento_p);
-
-                        $lote->inserirDetalhe($detalhe);
-                    }else
-                    {
-
-                    }
-                }
-            }
-
-            $lotQuantityDetails + 2;
-            $lote->trailer->lote_servico = $lote->sequencial;
-            $lote->trailer->quantidade_registros_lote = $lotQuantityDetails; // quantidade de Registros do Lote correspondente à soma da quantidade dos registros tipo 1 (header_lote), 3(detalhes) e 5(trailer_lote)
-            $lote->trailer->quantidade_cobranca_simples = 1;
-            //$lote->trailer->valor_total_cobranca_simples = ;
-            $lote->trailer->quantidade_cobranca_vinculada = 0;
-            $lote->trailer->valor_total_cobranca_vinculada = 0;
-            $lote->trailer->aviso_bancario = '00000000';
-            $lote->trailer->somatoria_lote = Utils::formatCnab('9', number_format($lotValue, 2), 15);
-
-            $sumDetails +=  $lotQuantityDetails; //somar todos registros
-
-            $remessa->inserirLote($lote);
+        switch ($bankAccount->bank->bank_code) {
+            case '001':
+                $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/bb/cnab240/cobranca.yml');
+                $remessa = new Remessa($remessaLayout);
+                $remessa = GerarRemessa::gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedPaymentRequest, $requestInfo['installments_ids']);
+                break;
+            case '341':
+                $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/itau/cnab240/cobranca.yml');
+                $remessa = new Remessa($remessaLayout);
+                $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedPaymentRequest, $requestInfo['installments_ids']);
+                break;
+            default:
+                return Response()->json([
+                    'erro' => 'banco selecionado pela empresa inválido.'
+                ], 422);
         }
 
-        $remessa->trailer->total_lotes = $lotQuantity;
-        $remessa->trailer->total_registros = $sumDetails;
+
+
+
+
 
         // gera arquivo
         $remessaFile = new RemessaFile($remessa);
