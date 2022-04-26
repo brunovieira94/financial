@@ -37,18 +37,22 @@ class ApprovalFlowSupplyByUserService
 
     public function approveAccount($id)
     {
-        $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
+        $accountApproval = $this->supplyApprovalFlow->with('purchase_order')->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
 
-        if ($accountApproval->order == $maxOrder) {
+        if ($accountApproval->order >= $maxOrder) {
             $accountApproval->status = Config::get('constants.status.approved');
+            $accountApproval->order += 1;
         } else {
             $accountApproval->order += 1;
         }
 
         $accountApproval->reason = null;
-        return $accountApproval->save();
+        $accountApproval->save();
+        return response()->json([
+            'Sucesso' => 'Pedido aprovado',
+        ], 200);
     }
 
     public function reproveAccount($id, Request $request)
