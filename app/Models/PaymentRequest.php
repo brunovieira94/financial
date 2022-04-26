@@ -60,7 +60,7 @@ class PaymentRequest extends Model
 
     public function group_payment()
     {
-        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id');
+        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id')->with('form_payment');
     }
 
     public function attachments(){
