@@ -55,8 +55,8 @@ class PaymentRequestController extends Controller
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor'.
-                    PaymentRequest::with('business')
+                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta '.
+                    PaymentRequest::with('provider')
                     ->where($attribute, $value)
                     ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                     '.'
@@ -69,7 +69,7 @@ class PaymentRequestController extends Controller
                     return $this->paymentRequestService->postPaymentRequest($request);
                 }
             return response()->json([
-                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor'.
+                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta '.
                 PaymentRequest::where($attribute, $value)
                 ->first()->id .
                 ', tem certeza que deseja cadastrar mesmo assim?'
@@ -83,7 +83,7 @@ class PaymentRequestController extends Controller
     public function update(PutPaymentRequestRequest $request, $id)
     {
         $attribute = null;
-        $business_id = null;
+        $provider_id = null;
 
         if(array_key_exists('bar_code', $request->all())){
             $attribute = 'bar_code';
@@ -95,7 +95,7 @@ class PaymentRequestController extends Controller
 
         if($attribute != null){
 
-            $paymentRequest = PaymentRequest::with('business')->findOrFail($id);
+            $paymentRequest = PaymentRequest::with('provider')->findOrFail($id);
             $columnValidation = '';
 
             if ($paymentRequest->bar_code == null) {
@@ -108,24 +108,24 @@ class PaymentRequestController extends Controller
                 return $this->paymentRequestService->putPaymentRequest($id, $request);
             }
 
-            if(array_key_exists('business_id', $request->all())){
-                $business_id = $request->business_id;
+            if(array_key_exists('provider_id', $request->all())){
+                $provider_id = $request->business_id;
             }else{
-                $business_id = $paymentRequest->business_id;
+                $provider_id = $paymentRequest->business_id;
             }
 
             if(PaymentRequest::with('business')
             ->where($attribute, $value)
-            ->whereRelation('business', 'id', '=', $business_id)
+            ->whereRelation('provider', 'id', '=', $provider_id)
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este negócio na conta '.
+                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta '.
                     PaymentRequest::with('business')
                     ->where($attribute, $value)
-                    ->whereRelation('business', 'id', '=', $business_id)
+                    ->whereRelation('business', 'id', '=', $provider_id)
                     ->first()
-                    ->id + 1000 .
+                    ->id .
                     '.'
                 ], 409);
             }
@@ -139,7 +139,7 @@ class PaymentRequestController extends Controller
                     'erro' => 'Já existe a nota fiscal, boleto ou invoice cadastrado no sistema na conta'.
                     PaymentRequest::where($attribute, $value)
                     ->first()
-                    ->id + 1000 .
+                    ->id .
                     '.'
                 ], 424);
             }
