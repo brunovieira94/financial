@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Config;
 
+use App\CNABLayoutsParser\CnabParser\Parser\Layout;
+use App\CNABLayoutsParser\CnabParser\Model\Remessa;
+use App\CNABLayoutsParser\CnabParser\Output\RemessaFile;
+use App\CNABLayoutsParser\CnabParser\Remessa\Remessa as GerarRemessa;
 
 class ItauCNABService
 {
@@ -20,7 +24,7 @@ class ItauCNABService
     private $installments;
     private $company;
     private $withCompany = ['bank_account', 'managers', 'city'];
-    private $withPaymentRequest = ['approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $withPaymentRequest = ['group_payment', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(PaymentRequest $paymentRequest, Company $company, PaymentRequestHasInstallments $installments)
     {
@@ -61,7 +65,7 @@ class ItauCNABService
         $allPaymentRequest = $this->paymentRequest->with($this->withPaymentRequest)->whereIn('id', $requestInfo['payment_request_ids'])->get();
         $billets = [];
 
-        foreach($allPaymentRequest as $paymentRequest) {
+        foreach ($allPaymentRequest as $paymentRequest) {
             $payer = new \App\Helpers\Pessoa(
                 [
                     'nome'      => $paymentRequest->provider->provider_type == 'F' ? $paymentRequest->provider->full_name : $paymentRequest->provider->company_name,
@@ -98,16 +102,16 @@ class ItauCNABService
                             'agenciaDv'              => $paymentRequest->bank_account_provider->agency_check_number ?? '',
                         ];
 
-                        switch ($bankAccount->bank->bank_code) {
-                            case '341':
-                                $billetData = new \App\Helpers\Boleto\Banco\Itau($billet);
-                                break;
-                            case '001':
-                                $billetData = new \App\Helpers\Boleto\Banco\Bb($billet);
-                                break;
-                            default:
-                                return Response('Não é possível gerar CNAB com este código bancário.', 422);
-                        }
+                    switch ($bankAccount->bank->bank_code) {
+                        case '341':
+                            $billetData = new \App\Helpers\Boleto\Banco\Itau($billet);
+                            break;
+                        case '001':
+                            $billetData = new \App\Helpers\Boleto\Banco\Bb($billet);
+                            break;
+                        default:
+                            return Response('Não é possível gerar CNAB com este código bancário.', 422);
+                    }
                     array_push($billets, $billetData);
                 }
             };
@@ -161,7 +165,7 @@ class ItauCNABService
 
         return response()->json([
             'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5))
-        ],200);
+        ], 200);
 
         //$filename = 'cnab.txt';
         //$tempImage = tempnam(sys_get_temp_dir(), $filename);
@@ -169,7 +173,8 @@ class ItauCNABService
         //return response()->download($tempImage, $filename);
     }
 
-    public function receiveCNAB240($requestInfo) {
+    public function receiveCNAB240($requestInfo)
+    {
 
         $returnFile = $requestInfo->file('return-file');
 
@@ -178,7 +183,7 @@ class ItauCNABService
 
         $returnArray = $processArchive->getDetalhes();
 
-        foreach($returnArray as $batch){
+        foreach ($returnArray as $batch) {
             $installments =  $this->installments->findOrFail($batch->numeroDocumento);
             $installments->status = $batch->ocorrencia;
             $installments->codBank = $batch->nossoNumero;
@@ -191,19 +196,19 @@ class ItauCNABService
         $idPaidPayment = [];
         $idPaymentFinished = [];
 
-        foreach($returnArray as $batch){
+        foreach ($returnArray as $batch) {
 
-            if(!in_array($batch->numeroDocumento, $idParcelsAlreadyVerified)){
+            if (!in_array($batch->numeroDocumento, $idParcelsAlreadyVerified)) {
                 $paymentRequest = PaymentRequest::with('installments')
-                ->whereRelation('installments', 'id', '=', $batch->numeroDocumento)
-                ->first();
+                    ->whereRelation('installments', 'id', '=', $batch->numeroDocumento)
+                    ->first();
 
                 $thePaymentHasBeenPaid = true;
 
-                foreach($paymentRequest->installments as $installment){
+                foreach ($paymentRequest->installments as $installment) {
                     array_push($idParcelsAlreadyVerified, $installment->id);
 
-                    if($installment->status != 'BD'){
+                    if ($installment->status != 'BD') {
                         $thePaymentHasBeenPaid = false;
                         if (!in_array($paymentRequest->id, $idUnpaidPayment)) {
                             array_push($idUnpaidPayment, $paymentRequest->id);
@@ -211,10 +216,10 @@ class ItauCNABService
                     }
                 }
 
-                if($thePaymentHasBeenPaid == true){
-                    if($paymentRequest->payment_type == 0){
+                if ($thePaymentHasBeenPaid == true) {
+                    if ($paymentRequest->payment_type == 0) {
                         array_push($idPaymentFinished, $paymentRequest->id);
-                    }else {
+                    } else {
                         array_push($idPaidPayment, $paymentRequest->id);
                     }
                 }
@@ -222,16 +227,91 @@ class ItauCNABService
         }
 
         AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaidPayment)
-        ->update(['status' => Config::get('constants.status.paid out')]);
+            ->update(['status' => Config::get('constants.status.paid out')]);
 
         AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaymentFinished)
-        ->update(['status' => Config::get('constants.status.finished')]);
+            ->update(['status' => Config::get('constants.status.finished')]);
 
         AccountsPayableApprovalFlow::whereIn('payment_request_id', $idUnpaidPayment)
-        ->update(['status' => Config::get('constants.status.approved')]);
+            ->update(['status' => Config::get('constants.status.approved')]);
 
         return response()->json([
             'Sucesso' => 'Processo finalizado.',
+        ], 200);
+    }
+
+
+    public function cnabParse($requestInfo)
+    {
+
+        $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
+        $bankAccount = BankAccount::with('bank')->findOrFail($requestInfo['bank_account_id']);
+
+        //agrupar todos os pagamentos
+        $allGroupedPaymentRequest = Utils::groupPayments(
+            $this->paymentRequest
+                ->with($this->withPaymentRequest)
+                ->whereIn('id', $requestInfo['payment_request_ids'])
+                ->get(),
+            $bankAccount->bank->bank_code
+        );
+
+        switch ($bankAccount->bank->bank_code) {
+            case '001':
+                $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/bb/cnab240/cobranca.yml');
+                $remessa = new Remessa($remessaLayout);
+                $remessa = GerarRemessa::gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedPaymentRequest, $requestInfo['installments_ids']);
+                break;
+            case '341':
+                $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/itau/cnab240/cobranca.yml');
+                $remessa = new Remessa($remessaLayout);
+                $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedPaymentRequest, $requestInfo['installments_ids']);
+                break;
+            default:
+                return Response()->json([
+                    'erro' => 'banco selecionado pela empresa inválido.'
+                ], 422);
+        }
+
+        // gera arquivo
+        $remessaFile = new RemessaFile($remessa);
+        $remessaFile->generate(app_path() . 'CNABLayoutsParser/tests/out/bbcobranca240.rem');
+
+
+        DB::table('payment_requests_installments')
+        ->whereIn('id', $requestInfo['installments_ids'])
+        ->update(
+            array(
+                'status' => Config::get('constants.status.cnab generated')
+            )
+        );
+
+        foreach($this->paymentRequest
+        ->with($this->withPaymentRequest)
+        ->whereIn('id', $requestInfo['payment_request_ids'])
+        ->get() as $paymentRequest)
+        {
+            $billsPaid = true;
+            foreach ($paymentRequest->installments as $installment)
+            {
+                if($installment->status != 6)
+                {
+                    $billsPaid = false;
+                }
+            }
+            if($billsPaid)
+            {
+                DB::table('accounts_payable_approval_flows')
+                ->where('payment_request_id', $paymentRequest->id)
+                ->update(
+                array(
+                'status' => Config::get('constants.status.cnab generated')
+                ));
+            }
+        }
+
+        return response()->json([
+            'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5))
         ], 200);
     }
 }

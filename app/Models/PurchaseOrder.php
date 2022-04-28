@@ -12,11 +12,12 @@ class PurchaseOrder extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['cost_centers', 'attachments', 'services', 'products', '*'];
+    protected static $logAttributes = ['cost_centers', 'attachments', 'services', 'products', 'purchase_requests', 'companies', 'currency', 'provider', '*'];
     protected static $logName = 'purchase_orders';
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
+        $user->role = Role::findOrFail($user->role_id);
         $activity->causer_id = $user->id;
         $activity->causer_object = $user;
     }
