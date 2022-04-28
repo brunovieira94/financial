@@ -49,16 +49,16 @@ class PaymentRequestController extends Controller
         }
 
         if($attribute != null){
-            if (PaymentRequest::with('business')
+            if (PaymentRequest::with('provider')
             ->where($attribute, $value)
-            ->whereRelation('business', 'id', '=', $request->business_id)
+            ->whereRelation('provider', 'id', '=', $request->provider_id)
             ->exists())
             {
                 return response()->json([
-                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este negócio na conta '.
+                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor'.
                     PaymentRequest::with('business')
                     ->where($attribute, $value)
-                    ->whereRelation('business', 'id', '=', $request->business_id)->first()->id + 1000 .
+                    ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                     '.'
                 ], 409);
             }
@@ -69,9 +69,9 @@ class PaymentRequestController extends Controller
                     return $this->paymentRequestService->postPaymentRequest($request);
                 }
             return response()->json([
-                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro negócio na conta '.
+                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor'.
                 PaymentRequest::where($attribute, $value)
-                ->first()->id + 1000 .
+                ->first()->id .
                 ', tem certeza que deseja cadastrar mesmo assim?'
             ], 424);
         }
