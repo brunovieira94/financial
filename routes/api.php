@@ -193,6 +193,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [UserController::class, 'update']);
         Route::delete('/{id}', [UserController::class, 'destroy']);
         Route::post('/import', [UserController::class, '']);
+        Route::post('/export', [UserController::class, 'export']);
     });
 
     Route::put('update-user/', [UserController::class, 'updateMyUser']);

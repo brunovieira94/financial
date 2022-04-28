@@ -61,11 +61,11 @@ class Remessa
 
                         $lotValue += $installment->portion_amount;
 
-                        if ($paymentRequest->group_form_payment_id == 1) {
+                        if ($paymentRequest->group_form_payment_id == 1 && $paymentRequest->bar_code != null) {
                             $lotQuantityDetails++;
                             $detalhe->segmento_j->lote_servico = $lote->sequencial;
                             $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-                            $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB($paymentRequest->bar_code);
+                            $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($paymentRequest->bar_code));
                             $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $paymentRequest->provider->provider_type == 'J' ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name, '30');
                             $dataVencimento = new Carbon($installment->due_date); // data vendimento
                             $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
@@ -201,7 +201,7 @@ class Remessa
 
                         $lotValue += $installment->portion_amount;
 
-                        if ($paymentRequest->group_form_payment_id == 1) {
+                        if ($paymentRequest->group_form_payment_id == 1 && $paymentRequest->bar_code != null) {
                             $lotQuantityDetails++;
                             $detalhe->segmento_j->lote_servico = $lote->sequencial;
                             $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
