@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\CostCentersImport;
+use App\Exports\CostCentersExport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreCostCenterRequest;
 use App\Http\Requests\PutCostCenterRequest;
@@ -49,5 +50,18 @@ class CostCenterController extends Controller
     {
         (new CostCentersImport)->import(request()->file('import_file'));
         return response('');
+    }
+
+
+    public function export(Request $request)
+    {
+        if(array_key_exists('exportFormat', $request->all()))
+        {
+            if($request->all()['exportFormat'] == 'csv')
+            {
+                return (new CostCentersExport($request->all()))->download('centrosDeCusto.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new CostCentersExport($request->all()))->download('centrosDeCusto.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

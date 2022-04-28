@@ -46,6 +46,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [CostCenterController::class, 'update']);
         Route::delete('/{id}', [CostCenterController::class, 'destroy']);
         Route::post('/import', [CostCenterController::class, 'import']);
+        Route::post('/export', [CostCenterController::class, 'export']);
     });
 
     Route::prefix('currency')->group(function () {
