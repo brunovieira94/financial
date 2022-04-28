@@ -61,7 +61,7 @@ class Remessa
 
                         $lotValue += $installment->portion_amount;
 
-                        if ($paymentRequest->group_form_payment_id == 1) {
+                        if ($paymentRequest->group_form_payment_id == 1 && $paymentRequest->bar_code != null) {
                             $lotQuantityDetails++;
                             $detalhe->segmento_j->lote_servico = $lote->sequencial;
                             $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
@@ -201,7 +201,7 @@ class Remessa
 
                         $lotValue += $installment->portion_amount;
 
-                        if ($paymentRequest->group_form_payment_id == 1) {
+                        if ($paymentRequest->group_form_payment_id == 1 && $paymentRequest->bar_code != null) {
                             $lotQuantityDetails++;
                             $detalhe->segmento_j->lote_servico = $lote->sequencial;
                             $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
