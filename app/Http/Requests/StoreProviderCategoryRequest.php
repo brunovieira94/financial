@@ -16,6 +16,7 @@ class StoreProviderCategoryRequest extends FormRequest
         return [
             'title' => 'required|max:255|unique:provider_categories,title,' . $this->id . ',id,deleted_at,NULL',
             'payment_before_weekends' => 'required|boolean',
+            'advance' => 'required|boolean',
         ];
     }
 

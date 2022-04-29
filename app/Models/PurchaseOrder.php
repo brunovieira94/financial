@@ -12,11 +12,12 @@ class PurchaseOrder extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['cost_centers', 'attachments', 'services', 'products', '*'];
+    protected static $logAttributes = ['cost_centers', 'attachments', 'services', 'products', 'purchase_requests', 'companies', 'currency', 'provider', '*'];
     protected static $logName = 'purchase_orders';
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
+        $user->role = Role::findOrFail($user->role_id);
         $activity->causer_id = $user->id;
         $activity->causer_object = $user;
     }
@@ -25,6 +26,7 @@ class PurchaseOrder extends Model
     protected $table='purchase_orders';
     protected $fillable = ['order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount'];
     protected $hidden = ['currency_id', 'provider_id'];
+    protected $appends = ['applicant_can_edit'];
 
     public function attachments(){
         return $this->hasMany(PurchaseOrderHasAttachments::class, 'purchase_order_id', 'id');
@@ -75,5 +77,19 @@ class PurchaseOrder extends Model
         self::deleting(function($attachments) {
             $attachments->attachments()->delete();
         });
+    }
+
+    public function getApplicantCanEditAttribute()
+    {
+        if (isset($this->approval)) {
+            if ($this->approval->order == 1 && $this->approval->status == 0) {
+                return true;
+            } else if ($this->approval->order == 0) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return false;
     }
 }
