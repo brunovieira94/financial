@@ -14,9 +14,9 @@ class Remessa
         $remessa->header->inscricao_numero = Utils::onlyNumbers($company->cnpj);
         $remessa->header->numero_convenio = $bankAccount->covenant;
         $remessa->header->agencia = $bankAccount->agency_number;
-        $remessa->header->digito_verificador_agencia = $bankAccount->agency_check_number;
+        $remessa->header->digito_verificador_agencia = $bankAccount->agency_check_number ?? '';
         $remessa->header->conta = $bankAccount->account_number;
-        $remessa->header->digito_verificador_conta = $bankAccount->account_check_number;
+        $remessa->header->digito_verificador_conta = $bankAccount->account_check_number ?? '';
         $remessa->header->dac = 9;
         $remessa->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
         $remessa->header->data_geracao = date('dmY');
@@ -36,9 +36,9 @@ class Remessa
             $lote = $remessa->novoLote($lotQuantity);
 
             $lote->header->agencia = $bankAccount->agency_number;
-            $lote->header->digito_verificador_agencia = $bankAccount->agency_check_number;
+            $lote->header->digito_verificador_agencia = $bankAccount->agency_check_number ?? '';
             $lote->header->conta = $bankAccount->account_number;
-            $lote->header->digito_verificador_conta = $bankAccount->account_check_number;
+            $lote->header->digito_verificador_conta = $bankAccount->account_check_number ?? '';
             $lote->header->numero_convenio = $bankAccount->covenant;
             $lote->header->codigo_banco = $bankAccount->bank->bank_code;
             $lote->header->lote_servico = $lote->sequencial;
@@ -97,9 +97,9 @@ class Remessa
                             $detalhe->segmento_a->numero_registro = $lotQuantityDetails;
                             $detalhe->segmento_a->codigo_banco_favorecido = $paymentRequest->bank_account_provider->bank->bank_code;
                             $detalhe->segmento_a->agencia_favorecido = $paymentRequest->bank_account_provider->agency_number;
-                            $detalhe->segmento_a->verificador_agencia_favorecido = $paymentRequest->bank_account_provider->agency_check_number;
+                            $detalhe->segmento_a->verificador_agencia_favorecido = $paymentRequest->bank_account_provider->agency_check_number ?? '';
                             $detalhe->segmento_a->conta_favorecido = $paymentRequest->bank_account_provider->account_number;
-                            $detalhe->segmento_a->verificador_conta_favorecido = $paymentRequest->bank_account_provider->account_check_number;
+                            $detalhe->segmento_a->verificador_conta_favorecido = $paymentRequest->bank_account_provider->account_check_number ?? '';
                             $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $paymentRequest->provider->provider_type == 'J' ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name, '30');
                             $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
                             $dataPagamento = new Carbon($paymentRequest->pay_date);
