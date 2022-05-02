@@ -10,6 +10,7 @@ use App\Models\PurchaseOrderHasCostCenters;
 use App\Models\PurchaseOrderHasPurchaseRequests;
 use App\Models\PurchaseOrderHasAttachments;
 use App\Models\PurchaseOrderServicesHasInstallments;
+use App\Models\PurchaseOrderHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestHasProducts;
@@ -27,11 +28,12 @@ class PurchaseOrderService
     private $purchaseOrderHasCostCenters;
     private $purchaseOrderHasPurchaseRequests;
     private $purchaseOrderServicesHasInstallments;
+    private $purchaseOrderHasInstallments;
     private $attachments;
 
-    private $with = ['user', 'approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests'];
+    private $with = ['user','installments', 'approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests)
+    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments)
     {
         $this->purchaseOrder = $purchaseOrder;
         $this->purchaseRequest = $purchaseRequest;
@@ -43,6 +45,7 @@ class PurchaseOrderService
         $this->purchaseOrderHasPurchaseRequests = $purchaseOrderHasPurchaseRequests;
         $this->attachments = $attachments;
         $this->purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments;
+        $this->purchaseOrderHasInstallments = $purchaseOrderHasInstallments;
     }
 
     public function getAllPurchaseOrder($requestInfo)
@@ -76,6 +79,7 @@ class PurchaseOrderService
             'status' => 0,
         ]);
         activity()->enableLogging();
+        $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
@@ -106,6 +110,7 @@ class PurchaseOrderService
         $this->putCompanies($id, $purchaseOrderInfo);
         $this->putCostCenters($id, $purchaseOrderInfo);
         $this->putAttachments($id, $purchaseOrderInfo, $request);
+        $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
@@ -177,13 +182,10 @@ class PurchaseOrderService
                     'notice_time_to_renew' => $service['notice_time_to_renew'],
                     'percentage_discount' => $service['percentage_discount'],
                     'money_discount' => $service['money_discount'],
-                    'frequency_of_installments' => $service['frequency_of_installments'],
-                    'installments_quantity' => $service['installments_quantity'],
-                    'unique_discount' => $service['unique_discount'],
                     'contract_time' => $service['contract_time'],
                     'contract_frequency' => $service['contract_frequency'],
                 ]);
-                $this->syncInstallments($purchaseOrderHasServices, $service);
+                // $this->syncInstallments($purchaseOrderHasServices, $service);
             }
         }
     }
@@ -211,15 +213,12 @@ class PurchaseOrderService
                         'notice_time_to_renew' => $service['notice_time_to_renew'],
                         'percentage_discount' => $service['percentage_discount'],
                         'money_discount' => $service['money_discount'],
-                        'frequency_of_installments' => $service['frequency_of_installments'],
-                        'installments_quantity' => $service['installments_quantity'],
-                        'unique_discount' => $service['unique_discount'],
                         'contract_time' => $service['contract_time'],
                         'contract_frequency' => $service['contract_frequency'],
                     ]);
                     $createdServices[] = $purchaseOrderHasServices->id;
                 }
-                $this->syncInstallments($purchaseOrderHasServices, $service);
+                // $this->syncInstallments($purchaseOrderHasServices, $service);
             }
         }
 
@@ -227,29 +226,54 @@ class PurchaseOrderService
         $this->purchaseOrderHasServices->destroy($collection->makeHidden(['end_contract_date'])->toArray());
     }
 
-    public function destroyInstallments($purchaseOrderHasServices)
-    {
-        $collection = $this->purchaseOrderServicesHasInstallments->where('po_services_id', $purchaseOrderHasServices['id'])->get(['id']);
-        $this->purchaseOrderServicesHasInstallments->destroy($collection->toArray());
-    }
+    // public function destroyInstallments($purchaseOrderHasServices)
+    // {
+    //     $collection = $this->purchaseOrderServicesHasInstallments->where('po_services_id', $purchaseOrderHasServices['id'])->get(['id']);
+    //     $this->purchaseOrderServicesHasInstallments->destroy($collection->toArray());
+    // }
 
-    public function syncInstallments($purchaseOrderHasServices, $service)
+    // public function syncInstallments($purchaseOrderHasServices, $service)
+    // {
+    //     if (array_key_exists('installments', $service)) {
+    //         $this->destroyInstallments($purchaseOrderHasServices);
+    //         foreach ($service['installments'] as $key => $installments) {
+    //             $purchaseOrderServicesHasInstallments = new PurchaseOrderServicesHasInstallments;
+    //             $installments['po_services_id'] = $purchaseOrderHasServices['id'];
+    //             $installments['parcel_number'] = $key + 1;
+    //             try {
+    //                 $purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments->create($installments);
+    //             } catch (\Exception $e) {
+    //                 $this->destroyInstallments($purchaseOrderHasServices);
+    //                 $this->purchaseOrderHasServices->findOrFail($purchaseOrderHasServices->id)->delete();
+    //                 return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
+    //             }
+    //         }
+    //     }
+    // }
+
+    public function syncInstallments($purchaseOrder, $purchaseOrderInfo)
     {
-        if (array_key_exists('installments', $service)) {
-            $this->destroyInstallments($purchaseOrderHasServices);
-            foreach ($service['installments'] as $key => $installments) {
-                $purchaseOrderServicesHasInstallments = new PurchaseOrderServicesHasInstallments;
-                $installments['po_services_id'] = $purchaseOrderHasServices['id'];
+        if (array_key_exists('installments', $purchaseOrderInfo)) {
+            $this->destroyInstallments($purchaseOrder);
+            foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
+                $purchaseOrderHasInstallments = new PurchaseOrderHasInstallments;
+                $installments['purchase_order_id'] = $purchaseOrder['id'];
                 $installments['parcel_number'] = $key + 1;
                 try {
-                    $purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments->create($installments);
+                    $purchaseOrderHasInstallments = $purchaseOrderHasInstallments->create($installments);
                 } catch (\Exception $e) {
-                    $this->destroyInstallments($purchaseOrderHasServices);
-                    $this->purchaseOrderHasServices->findOrFail($purchaseOrderHasServices->id)->delete();
+                    $this->destroyInstallments($purchaseOrder);
+                    $this->purchaseOrder->findOrFail($purchaseOrder->id)->delete();
                     return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
                 }
             }
         }
+    }
+
+    public function destroyInstallments($purchaseOrder)
+    {
+        $collection = $this->purchaseOrderHasInstallments->where('purchase_order_id', $purchaseOrder['id'])->get(['id']);
+        $this->purchaseOrderHasInstallments->destroy($collection->toArray());
     }
 
     public function syncCostCenters($purchaseOrder, $purchaseOrderInfo)
