@@ -325,7 +325,7 @@ class ItauCNABService
     public function syncCnabGenerate($cnabGenerated, $allPaymentRequest, $installments)
     {
         foreach ($allPaymentRequest as $paymentRequest) {
-            CnabGeneratedHasPaymentRequests::create(
+            $cnabGeneratedHasPaymentRequests = CnabGeneratedHasPaymentRequests::create(
                 [
                     'payment_request_id' => $paymentRequest->id,
                     'cnab_generated_id' => $cnabGenerated->id
@@ -338,7 +338,8 @@ class ItauCNABService
                         [
                             'payment_request_id' => $paymentRequest->id,
                             'cnab_generated_id' => $cnabGenerated->id,
-                            'installment_id' => $installment->id
+                            'installment_id' => $installment->id,
+                            'cnab_generated_has_payment_requests_id' => $cnabGeneratedHasPaymentRequests->id
                         ]
                     );
                 }

@@ -255,6 +255,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
         Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
         Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
+        Route::get('/payment-requests-cnab-generated-list/{id}', [ReportController::class, 'getCnabGenerate']);
         Route::post('/due-bills/export', [ReportController::class, 'duePaymentRequestExport']);
         Route::post('/approved-payment-request/export', [ReportController::class, 'approvedPaymentRequestExport']);
         Route::post('/disapproved-payment-request/export', [ReportController::class, 'disapprovedPaymentRequestExport']);

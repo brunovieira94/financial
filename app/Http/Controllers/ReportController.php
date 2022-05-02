@@ -169,4 +169,9 @@ class ReportController extends Controller
     {
         return $this->reportService->getAllCnabGenerate($request->all());
     }
+
+    public function getCnabGenerate(Request $request, $id)
+    {
+        return $this->reportService->getCnabGenerate($request->all(), $id);
+    }
 }

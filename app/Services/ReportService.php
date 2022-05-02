@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
 use App\Models\CnabGenerated;
@@ -28,163 +29,160 @@ class ReportService
 
     public function getAllDuePaymentRequest($requestInfo)
     {
-        $result = Utils::search($this->paymentRequest,$requestInfo);
-        $result = $result->with(['attachments', 'group_payment', 'company','tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
-        if(array_key_exists('from', $requestInfo)){
+        $result = Utils::search($this->paymentRequest, $requestInfo);
+        $result = $result->with(['attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        if (array_key_exists('from', $requestInfo)) {
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
-        if(array_key_exists('to', $requestInfo)){
+        if (array_key_exists('to', $requestInfo)) {
             $result = $result->where('pay_date', '<=', $requestInfo['to']);
         }
-        if(!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)){
+        if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
             $result = $result->whereBetween('pay_date', [now(), now()->addMonths(1)]);
         }
-        return Utils::pagination($result,$requestInfo);
+        return Utils::pagination($result, $requestInfo);
     }
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
 
-        if((!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $requestInfo))
-        {
+        if ((!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $requestInfo)) {
             return Utils::pagination($accountsPayableApprovalFlow
-            ->with('payment_request')
-            ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-            ->where('status', 1),$requestInfo);
-        }elseif (!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0)
-        {
+                ->with('payment_request')
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                ->where('status', 1), $requestInfo);
+        } elseif (!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) {
             return Utils::pagination($accountsPayableApprovalFlow
-            ->with('payment_request')
-            ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->where('status', 1),$requestInfo);
+                ->with('payment_request')
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->where('status', 1), $requestInfo);
         }
 
         $formPayment = FormPayment::findOrFail($requestInfo['form_payment_id']);
 
-        if($formPayment->group_form_payment_id == 1)
-        {
-            if($formPayment->same_ownership)
-            {
-                if(!array_key_exists('company_id', $requestInfo))
-                {
+        if ($formPayment->group_form_payment_id == 1) {
+            if ($formPayment->same_ownership) {
+                if (!array_key_exists('company_id', $requestInfo)) {
                     return Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                    ->where('status', 1),$requestInfo);
+                        ->with('payment_request')
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                        ->where('status', 1), $requestInfo);
                 } else {
                     return Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                    ->where('status', 1),$requestInfo);
+                        ->with('payment_request')
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                        ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                        ->where('status', 1), $requestInfo);
                 }
             } else {
-                if(!array_key_exists('company_id', $requestInfo))
-                {
+                if (!array_key_exists('company_id', $requestInfo)) {
                     return Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                    ->where('status', 1),$requestInfo);
-
-                }else {
+                        ->with('payment_request')
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                        ->where('status', 1), $requestInfo);
+                } else {
                     return Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                    ->where('status', 1),$requestInfo);
+                        ->with('payment_request')
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                        ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                        ->where('status', 1), $requestInfo);
                 }
             }
         } else {
-            if(!array_key_exists('company_id', $requestInfo))
-            {
+            if (!array_key_exists('company_id', $requestInfo)) {
                 return Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
-                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->where('status', 1),$requestInfo);
-            }else {
+                    ->with('payment_request')
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->where('status', 1), $requestInfo);
+            } else {
                 return Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
-                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                ->where('status', 1),$requestInfo);
+                    ->with('payment_request')
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                    ->where('status', 1), $requestInfo);
             }
-
         }
     }
 
     public function getAllGeneratedCNABPaymentRequest($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
-        ->with('payment_request')
-        ->where('status', 6),$requestInfo);
+            ->with('payment_request')
+            ->where('status', 6), $requestInfo);
     }
 
     public function getAllPaymentRequestPaid($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
-        ->with('payment_request')
-        ->where('status', 4),$requestInfo);
+            ->with('payment_request')
+            ->where('status', 4), $requestInfo);
     }
 
-    public function getAllDisapprovedPaymentRequest($requestInfo){
+    public function getAllDisapprovedPaymentRequest($requestInfo)
+    {
 
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id);
 
-        $userCostCenter = auth()->user()->cost_center->map(function($e) {
+        $userCostCenter = auth()->user()->cost_center->map(function ($e) {
             return $e->id;
         });
 
-        if (!$approvalFlowUserOrder){
+        if (!$approvalFlowUserOrder) {
             return response([], 404);
         }
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo,['order']);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
-        return Utils::pagination($accountsPayableApprovalFlow
-        ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
-        ->select(['accounts_payable_approval_flows.*'])
-        ->join("payment_requests", function($join) use ($userCostCenter) {
-            $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
-            ->where(function($q) use ($userCostCenter) {
-                if(!$userCostCenter->isEmpty()){
-                    $q->where(function($query) use ($userCostCenter) {
-                        $query->where("approval_flow.filter_cost_center", true)
-                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                    })
-                    ->orWhere(function($query) {
-                        $query->where("approval_flow.filter_cost_center", false);
-                    });
-                }
-            });
-        })
-        ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
-        ->where('status', 2)
-        ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->with(['payment_request', 'reason_to_reject'])
-        ->distinct(['accounts_payable_approval_flows.id']),
-        $requestInfo);
+        return Utils::pagination(
+            $accountsPayableApprovalFlow
+                ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
+                ->select(['accounts_payable_approval_flows.*'])
+                ->join("payment_requests", function ($join) use ($userCostCenter) {
+                    $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
+                        ->where(function ($q) use ($userCostCenter) {
+                            if (!$userCostCenter->isEmpty()) {
+                                $q->where(function ($query) use ($userCostCenter) {
+                                    $query->where("approval_flow.filter_cost_center", true)
+                                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                                })
+                                    ->orWhere(function ($query) {
+                                        $query->where("approval_flow.filter_cost_center", false);
+                                    });
+                            }
+                        });
+                })
+                ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
+                ->where('status', 2)
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->with(['payment_request', 'reason_to_reject'])
+                ->distinct(['accounts_payable_approval_flows.id']),
+            $requestInfo
+        );
     }
 
-    public function getAllPaymentRequestsDeleted($requestInfo){
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
-        return Utils::pagination($accountsPayableApprovalFlow
-        ->with('payment_request_trashed')
-        ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null),
-        $requestInfo);
+    public function getAllPaymentRequestsDeleted($requestInfo)
+    {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
+        return Utils::pagination(
+            $accountsPayableApprovalFlow
+                ->with('payment_request_trashed')
+                ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null),
+            $requestInfo
+        );
     }
 
     public function getBillsToPay($requestInfo)
@@ -193,124 +191,128 @@ class ReportService
         $query = $query->with(['attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
 
-        if(array_key_exists('cpfcnpj', $requestInfo)){
-            $query->whereHas('provider', function ($query) use ($requestInfo){
+        if (array_key_exists('cpfcnpj', $requestInfo)) {
+            $query->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
             });
         }
-        if(array_key_exists('provider', $requestInfo)){
-            $query->whereHas('provider', function ($query) use ($requestInfo){
+        if (array_key_exists('provider', $requestInfo)) {
+            $query->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('id', $requestInfo['provider']);
             });
         }
-        if(array_key_exists('chart_of_accounts', $requestInfo)){
-            $query->whereHas('chart_of_accounts', function ($query) use ($requestInfo){
+        if (array_key_exists('chart_of_accounts', $requestInfo)) {
+            $query->whereHas('chart_of_accounts', function ($query) use ($requestInfo) {
                 $query->where('id', $requestInfo['chart_of_accounts']);
             });
         }
-        if(array_key_exists('cost_center', $requestInfo)){
-            $query->whereHas('cost_center', function ($query) use ($requestInfo){
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $query->whereHas('cost_center', function ($query) use ($requestInfo) {
                 $query->where('id', $requestInfo['cost_center']);
             });
         }
-        if(array_key_exists('payment_request', $requestInfo)){
+        if (array_key_exists('payment_request', $requestInfo)) {
             $query->where('id', $requestInfo['payment_request']);
         }
-        if(array_key_exists('user', $requestInfo)){
-            $query->whereHas('user', function ($query) use ($requestInfo){
+        if (array_key_exists('user', $requestInfo)) {
+            $query->whereHas('user', function ($query) use ($requestInfo) {
                 $query->where('id', $requestInfo['user']);
             });
         }
-        if(array_key_exists('status', $requestInfo)){
-            $query->whereHas('approval', function ($query) use ($requestInfo){
+        if (array_key_exists('status', $requestInfo)) {
+            $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', $requestInfo['status']);
-                if($requestInfo['status'] == 3){
+                if ($requestInfo['status'] == 3) {
                     $this->filterCanceled = true;
                 }
             });
         }
-        if(array_key_exists('approval_order', $requestInfo)){
-            $query->whereHas('approval', function ($query) use ($requestInfo){
+        if (array_key_exists('approval_order', $requestInfo)) {
+            $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('order', $requestInfo['approval_order']);
             });
         }
-        if(array_key_exists('created_at', $requestInfo)){
-            if(array_key_exists('from', $requestInfo['created_at'])){
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
                 $query->where('created_at', '>=', $requestInfo['created_at']['from']);
             }
-            if(array_key_exists('to', $requestInfo['created_at'])){
-                $query->where('created_at', '<=', date("Y-m-d",strtotime("+1 days" ,strtotime($requestInfo['created_at']['to']))));
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $query->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
             }
-            if(!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])){
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
                 $query->whereBetween('created_at', [now()->addMonths(-1), now()]);
             }
         }
-        if(array_key_exists('pay_date', $requestInfo)){
-            if(array_key_exists('from', $requestInfo['pay_date'])){
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
                 $query->where('pay_date', '>=', $requestInfo['pay_date']['from']);
             }
-            if(array_key_exists('to', $requestInfo['pay_date'])){
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
                 $query->where('pay_date', '<=', $requestInfo['pay_date']['to']);
             }
-            if(!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])){
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
                 $query->whereBetween('pay_date', [now(), now()->addMonths(1)]);
             }
         }
-        if(array_key_exists('extension_date', $requestInfo)){
-            if(array_key_exists('from', $requestInfo['extension_date'])){
-                $query->whereHas('installments', function ($query) use ($requestInfo){
+        if (array_key_exists('extension_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['extension_date'])) {
+                $query->whereHas('installments', function ($query) use ($requestInfo) {
                     $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                 });
             }
-            if(array_key_exists('to', $requestInfo['extension_date'])){
-                $query->whereHas('installments', function ($query) use ($requestInfo){
+            if (array_key_exists('to', $requestInfo['extension_date'])) {
+                $query->whereHas('installments', function ($query) use ($requestInfo) {
                     $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                 });
             }
-            if(!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])){
-                $query->whereHas('installments', function ($query) use ($requestInfo){
+            if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                $query->whereHas('installments', function ($query) use ($requestInfo) {
                     $query->where('status', '<>', 'BD')->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
                 });
             }
         }
-        if(array_key_exists('days_late', $requestInfo)){
-            $query->whereHas('installments', function ($query) use ($requestInfo){
+        if (array_key_exists('days_late', $requestInfo)) {
+            $query->whereHas('installments', function ($query) use ($requestInfo) {
                 $query->where('status', '!=', 'BD')->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
             });
         }
 
-        if($this->filterCanceled){
+        if ($this->filterCanceled) {
             $query->withTrashed();
-            $query->where('deleted_at', '!=',NULL);
+            $query->where('deleted_at', '!=', NULL);
         }
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
-        return Utils::pagination($query,$requestInfo);
+        return Utils::pagination($query, $requestInfo);
     }
 
     public function getAllPaymentRequestFinished($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow,$requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
         return Utils::pagination($accountsPayableApprovalFlow
-        ->with('payment_request')
-        ->where('status', 7),$requestInfo);
+            ->with('payment_request')
+            ->where('status', 7), $requestInfo);
     }
 
     public function getAllApprovedPurchaseOrder($requestInfo)
     {
-        $accountApproval = Utils::search($this->supplyApprovalFlow,$requestInfo);
+        $accountApproval = Utils::search($this->supplyApprovalFlow, $requestInfo);
         return Utils::pagination($accountApproval
-        ->with('purchase_order')
-        ->whereRelation('purchase_order', 'deleted_at', '=', null)
-        ->where('status', 1),$requestInfo);
+            ->with('purchase_order')
+            ->whereRelation('purchase_order', 'deleted_at', '=', null)
+            ->where('status', 1), $requestInfo);
     }
 
     public function getAllCnabGenerate($requestInfo)
     {
-        $cnabGenerated = Utils::search($this->cnabGenerated,$requestInfo);
-        return Utils::pagination($cnabGenerated
-        ->with(['payment_requests']),
-        $requestInfo);
+        return Utils::pagination(
+            Utils::search($this->cnabGenerated, $requestInfo),
+            $requestInfo
+        );
+    }
+
+    public function getCnabGenerate($requestInfo, $id)
+    {
+        return $this->cnabGenerated->with('payment_requests')->findOrFail($id);
     }
 }
-
