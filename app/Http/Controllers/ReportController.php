@@ -164,4 +164,9 @@ class ReportController extends Controller
     {
         return $this->reportService->getAllApprovedPurchaseOrder($request->all());
     }
+
+    public function getAllCnabGenerate(Request $request)
+    {
+        return $this->reportService->getAllCnabGenerate($request->all());
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
+use App\Models\CnabGenerated;
 use App\Models\FormPayment;
 use App\Models\PaymentRequest;
 use App\Models\SupplyApprovalFlow;
@@ -14,13 +15,15 @@ class ReportService
     private $supplyApprovalFlow;
     private $approvalFlow;
     private $filterCanceled = false;
+    private $cnabGenerated;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow)
+    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->paymentRequest = $paymentRequest;
         $this->supplyApprovalFlow = $supplyApprovalFlow;
+        $this->cnabGenerated = $cnabGenerated;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -300,6 +303,14 @@ class ReportService
         ->with('purchase_order')
         ->whereRelation('purchase_order', 'deleted_at', '=', null)
         ->where('status', 1),$requestInfo);
+    }
+
+    public function getAllCnabGenerate($requestInfo)
+    {
+        $cnabGenerated = Utils::search($this->cnabGenerated,$requestInfo);
+        return Utils::pagination($cnabGenerated
+        ->with(['payment_requests']),
+        $requestInfo);
     }
 }
 
