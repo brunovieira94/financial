@@ -31,7 +31,7 @@ class PurchaseOrderService
     private $purchaseOrderHasInstallments;
     private $attachments;
 
-    private $with = ['installments', 'approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests'];
+    private $with = ['user','installments', 'approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests'];
 
     public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments)
     {
@@ -62,6 +62,7 @@ class PurchaseOrderService
     public function postPurchaseOrder($purchaseOrderInfo, Request $request)
     {
         $purchaseOrder = new PurchaseOrder;
+        $purchaseOrderInfo['user_id'] = auth()->user()->id;
         $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
         $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
         $this->syncServices($purchaseOrder, $purchaseOrderInfo);
@@ -71,11 +72,13 @@ class PurchaseOrderService
         $this->syncPurchaseRequests($purchaseOrder, $purchaseOrderInfo);
 
         $supplyApprovalFlow = new SupplyApprovalFlow;
+        activity()->disableLogging();
         $supplyApprovalFlow = $supplyApprovalFlow->create([
             'id_purchase_order' => $purchaseOrder->id,
-            'order' => 0,
+            'order' => 1,
             'status' => 0,
         ]);
+        activity()->enableLogging();
         $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }

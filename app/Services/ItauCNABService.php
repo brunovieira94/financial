@@ -17,6 +17,9 @@ use App\CNABLayoutsParser\CnabParser\Parser\Layout;
 use App\CNABLayoutsParser\CnabParser\Model\Remessa;
 use App\CNABLayoutsParser\CnabParser\Output\RemessaFile;
 use App\CNABLayoutsParser\CnabParser\Remessa\Remessa as GerarRemessa;
+use App\Models\CnabGenerated;
+use App\Models\CnabGeneratedHasPaymentRequests;
+use App\Models\CnabPaymentRequestsHasInstallments;
 
 class ItauCNABService
 {
@@ -79,8 +82,8 @@ class ItauCNABService
                 ]
             );
 
-            foreach($paymentRequest->installments as $installment) {
-                if(in_array($installment->id, $requestInfo['installments_ids'])) {
+            foreach ($paymentRequest->installments as $installment) {
+                if (in_array($installment->id, $requestInfo['installments_ids'])) {
                     $billet =
                         [
                             'dataVencimento'         => new Carbon($installment->due_date),
@@ -134,31 +137,28 @@ class ItauCNABService
         $shipping->save();
 
         DB::table('payment_requests_installments')
-        ->whereIn('id', $requestInfo['installments_ids'])
-        ->update(
-            array(
-                'status' => Config::get('constants.status.cnab generated')
-            )
-        );
+            ->whereIn('id', $requestInfo['installments_ids'])
+            ->update(
+                array(
+                    'status' => Config::get('constants.status.cnab generated')
+                )
+            );
 
-        foreach($allPaymentRequest as $paymentRequest)
-        {
+        foreach ($allPaymentRequest as $paymentRequest) {
             $billsPaid = true;
-            foreach ($paymentRequest->installments as $installment)
-            {
-                if($installment->status != 6)
-                {
+            foreach ($paymentRequest->installments as $installment) {
+                if ($installment->status != 6) {
                     $billsPaid = false;
                 }
             }
-            if($billsPaid)
-            {
+            if ($billsPaid) {
                 DB::table('accounts_payable_approval_flows')
-                ->where('payment_request_id', $paymentRequest->id)
-                ->update(
-                array(
-                'status' => Config::get('constants.status.cnab generated')
-                ));
+                    ->where('payment_request_id', $paymentRequest->id)
+                    ->update(
+                        array(
+                            'status' => Config::get('constants.status.cnab generated')
+                        )
+                    );
             }
         }
 
@@ -246,13 +246,14 @@ class ItauCNABService
 
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = BankAccount::with('bank')->findOrFail($requestInfo['bank_account_id']);
+        $allPaymentRequest = $this->paymentRequest
+            ->with($this->withPaymentRequest)
+            ->whereIn('id', $requestInfo['payment_request_ids'])
+            ->get();
 
         //agrupar todos os pagamentos
         $allGroupedPaymentRequest = Utils::groupPayments(
-            $this->paymentRequest
-                ->with($this->withPaymentRequest)
-                ->whereIn('id', $requestInfo['payment_request_ids'])
-                ->get(),
+            $allPaymentRequest,
             $bankAccount->bank->bank_code
         );
 
@@ -275,43 +276,74 @@ class ItauCNABService
 
         // gera arquivo
         $remessaFile = new RemessaFile($remessa);
-        $remessaFile->generate(app_path() . 'CNABLayoutsParser/tests/out/bbcobranca240.rem');
-
+        $archiveName = $remessaFile->generate(app_path() . 'CNABLayoutsParser/tests/out/bbcobranca240.rem');
 
         DB::table('payment_requests_installments')
-        ->whereIn('id', $requestInfo['installments_ids'])
-        ->update(
-            array(
-                'status' => Config::get('constants.status.cnab generated')
-            )
-        );
+            ->whereIn('id', $requestInfo['installments_ids'])
+            ->update(
+                array(
+                    'status' => Config::get('constants.status.cnab generated')
+                )
+            );
 
-        foreach($this->paymentRequest
-        ->with($this->withPaymentRequest)
-        ->whereIn('id', $requestInfo['payment_request_ids'])
-        ->get() as $paymentRequest)
-        {
+        foreach ($this->paymentRequest
+            ->with($this->withPaymentRequest)
+            ->whereIn('id', $requestInfo['payment_request_ids'])
+            ->get() as $paymentRequest) {
             $billsPaid = true;
-            foreach ($paymentRequest->installments as $installment)
-            {
-                if($installment->status != 6)
-                {
+            foreach ($paymentRequest->installments as $installment) {
+                if ($installment->status != 6) {
                     $billsPaid = false;
                 }
             }
-            if($billsPaid)
-            {
+            if ($billsPaid) {
                 DB::table('accounts_payable_approval_flows')
-                ->where('payment_request_id', $paymentRequest->id)
-                ->update(
-                array(
-                'status' => Config::get('constants.status.cnab generated')
-                ));
+                    ->where('payment_request_id', $paymentRequest->id)
+                    ->update(
+                        array(
+                            'status' => Config::get('constants.status.cnab generated')
+                        )
+                    );
             }
         }
 
+        $cnabGenerated = CnabGenerated::create(
+            [
+                'user_id' => auth()->user()->id,
+                'file_date' => Carbon::now()->format('Y/m/d H:i:s'),
+                'file_name' => $archiveName
+            ]
+        );
+
+        self::syncCnabGenerate($cnabGenerated, $allPaymentRequest, $requestInfo['installments_ids']);
+
         return response()->json([
-            'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5))
+            'linkArchive' => Storage::disk('s3')->temporaryUrl("tempCNAB/{$archiveName}", now()->addMinutes(5))
         ], 200);
+    }
+
+    public function syncCnabGenerate($cnabGenerated, $allPaymentRequest, $installments)
+    {
+        foreach ($allPaymentRequest as $paymentRequest) {
+            $cnabGeneratedHasPaymentRequests = CnabGeneratedHasPaymentRequests::create(
+                [
+                    'payment_request_id' => $paymentRequest->id,
+                    'cnab_generated_id' => $cnabGenerated->id
+                ]
+            );
+
+            foreach ($paymentRequest->installments as $installment) {
+                if (in_array($installment->id, $installments)) {
+                    CnabPaymentRequestsHasInstallments::create(
+                        [
+                            'payment_request_id' => $paymentRequest->id,
+                            'cnab_generated_id' => $cnabGenerated->id,
+                            'installment_id' => $installment->id,
+                            'cnab_generated_has_payment_requests_id' => $cnabGeneratedHasPaymentRequests->id
+                        ]
+                    );
+                }
+            }
+        }
     }
 }
