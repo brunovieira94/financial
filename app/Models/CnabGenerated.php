@@ -26,4 +26,9 @@ class CnabGenerated extends Model
     {
         return $this->hasMany(CnabGeneratedHasPaymentRequests::class, 'cnab_generated_id', 'id')->with(['installments_cnab', 'payment_request']);
     }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
 }
