@@ -22,6 +22,7 @@ class StorePurchaseOrderRequest extends FormRequest
             'frequency_of_installments' => 'required|integer',
             'installments_quantity' => 'required|integer',
             'unique_discount' => 'required|boolean',
+            'initial_date' => 'required|date',
             'billing_date' => 'required_without:payment_condition|Date',
             'payment_condition' => 'required_without:billing_date|integer',
             'cost_centers' => 'array',
