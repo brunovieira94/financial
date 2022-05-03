@@ -305,14 +305,15 @@ class ReportService
 
     public function getAllCnabGenerate($requestInfo)
     {
-        return Utils::pagination(
-            Utils::search($this->cnabGenerated, $requestInfo),
-            $requestInfo
-        );
+        $cnabGenerated = Utils::search($this->cnabGenerated, $requestInfo);
+
+        return Utils::pagination($cnabGenerated
+        ->with('user')
+        , $requestInfo);
     }
 
     public function getCnabGenerate($requestInfo, $id)
     {
-        return $this->cnabGenerated->with('payment_requests')->findOrFail($id);
+        return $this->cnabGenerated->with(['payment_requests'])->findOrFail($id);
     }
 }
