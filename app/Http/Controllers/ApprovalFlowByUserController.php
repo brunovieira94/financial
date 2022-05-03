@@ -38,6 +38,11 @@ class ApprovalFlowByUserController extends Controller
         return $this->accountsPayableApprovalFlowService->approveAccount($id);
     }
 
+    public function approveManyAccounts(Request $request)
+    {
+        return $this->accountsPayableApprovalFlowService->approveManyAccounts($request->all());
+    }
+
     public function reproveAccount($id, PutAccountsPayableApprovalFlowRequest $request)
     {
         return $this->accountsPayableApprovalFlowService->reproveAccount($id, $request);
