@@ -177,7 +177,7 @@ remessa:
       picture: 'X(30)'
     numero:
       pos: [173,177]
-      picture: '9(5)'
+      picture: 'X(5)'
     complemento:
       pos: [178,192]
       picture: 'X(15)'
@@ -721,7 +721,7 @@ retorno:
       picture: 'X(30)'
     numero:
       pos: [173,177]
-      picture: '9(5)'
+      picture: 'X(5)'
     complemento:
       pos: [178,192]
       picture: 'X(15)'
