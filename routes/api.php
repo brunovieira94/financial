@@ -230,6 +230,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('account-payable-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowByUserController::class, 'accountsApproveUser']);
+        Route::put('/approve-many', [ApprovalFlowByUserController::class, 'approveManyAccounts']);
         Route::put('/approve/{id}', [ApprovalFlowByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowByUserController::class, 'cancelAccount']);
