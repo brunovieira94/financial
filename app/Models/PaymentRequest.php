@@ -30,6 +30,7 @@ class PaymentRequest extends Model
     ];
 
     protected $fillable = [
+        'purchase_order_id',
         'company_id',
         'group_form_payment_id',
         'other_files',
@@ -57,6 +58,16 @@ class PaymentRequest extends Model
         'form_payment',
         'payment_type',
     ];
+
+    public function purchase_order()
+    {
+        return $this->hasOne(PurchaseOrder::class, 'id', 'purchase_order_id');
+    }
+
+    public function installments_purchase_order()
+    {
+        return $this->hasMany(PaymentRequestHasPurchaseOrderInstallments::class, 'payment_request_id', 'id')->with('installment_purchase');
+    }
 
     public function group_payment()
     {
