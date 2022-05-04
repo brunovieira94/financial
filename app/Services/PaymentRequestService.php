@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
+use App\Models\PaymentRequestHasPurchaseOrderInstallments;
+use App\Models\PurchaseOrderHasInstallments;
 use AWS\CRT\HTTP\Response;
 use Config;
 use ZipStream\Option\Archive;
@@ -29,9 +31,9 @@ class PaymentRequestService
     private $attachments;
 
 
-    private $with = ['company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['purchase_order', 'installments_purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(PaymentRequestHasAttachments $attachments,ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
+    public function __construct(PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
@@ -61,7 +63,6 @@ class PaymentRequestService
 
     public function postPaymentRequest(Request $request)
     {
-
         $paymentRequestInfo = $request->all();
         $paymentRequestInfo['user_id'] = auth()->user()->id;
 
@@ -94,11 +95,11 @@ class PaymentRequestService
             $bankProviderDefault = null;
 
             $bankProviderDefault = ProviderHasBankAccounts::with('bank_account')
-            ->where('provider_id', $paymentRequestInfo['provider_id'])
-            ->where('default_bank', true)
-            ->get('bank_account_id')->first();
+                ->where('provider_id', $paymentRequestInfo['provider_id'])
+                ->where('default_bank', true)
+                ->get('bank_account_id')->first();
 
-            if($bankProviderDefault != null){
+            if ($bankProviderDefault != null) {
                 $paymentRequestInfo['bank_account_provider_id'] = $bankProviderDefault->bank_account_id;
             }
         }
@@ -119,6 +120,21 @@ class PaymentRequestService
             'status' => 0,
         ]);
         activity()->enableLogging();
+
+        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
+            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
+                PaymentRequestHasPurchaseOrderInstallments::create(
+                    [
+                        'payment_request_id' => $paymentRequest->id,
+                        'purchase_order_has_installments_id' => $purchaseOrders['installment'],
+                    ]
+                );
+
+                $purchase = PurchaseOrderHasInstallments::findOrFail($purchaseOrders['installment']);
+                $purchase->payment_request_id = $paymentRequest->id;
+                $purchase->save();
+            }
+        }
 
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true);
@@ -174,13 +190,13 @@ class PaymentRequestService
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-             $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
         }
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $this->putAttachments($id, $paymentRequestInfo, $request);
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-             $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
         }
 
 
@@ -189,6 +205,25 @@ class PaymentRequestService
 
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
+
+        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
+
+            DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
+            DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
+
+            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
+                PaymentRequestHasPurchaseOrderInstallments::create(
+                    [
+                        'payment_request_id' => $paymentRequest->id,
+                        'purchase_order_has_installments_id' => $purchaseOrders['installment'],
+                    ]
+                );
+
+                $purchase = PurchaseOrderHasInstallments::findOrFail($purchaseOrders['installment']);
+                $purchase->payment_request_id = $paymentRequest->id;
+                $purchase->save();
+            }
+        }
 
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
@@ -228,7 +263,7 @@ class PaymentRequestService
             $generatedName = null;
             $data = uniqid(date('HisYmd'));
 
-            if(is_array($archive)){
+            if (is_array($archive)) {
                 $archive = $archive['attachment'];
             }
             $originalName  = explode('.', $archive->getClientOriginalName());
@@ -339,8 +374,7 @@ class PaymentRequestService
 
     public function syncAttachments($arrayAttachments, $paymentRequest)
     {
-        foreach($arrayAttachments as $attachment)
-        {
+        foreach ($arrayAttachments as $attachment) {
             PaymentRequestHasAttachments::create([
                 'payment_request_id' => $paymentRequest->id,
                 'attachment' => $attachment,
@@ -354,13 +388,11 @@ class PaymentRequestService
         $createdAttachments = [];
         $destroyCollection = [];
 
-        if (array_key_exists('attachments_ids', $paymentRequestInfo))
-        {
+        if (array_key_exists('attachments_ids', $paymentRequestInfo)) {
             $updateAttachments[] = $paymentRequestInfo['attachments_ids'];
         }
 
-        foreach ($paymentRequestInfo['attachments'] as $key => $attachment)
-        {
+        foreach ($paymentRequestInfo['attachments'] as $key => $attachment) {
             $paymentRequestHasAttachment = new PaymentRequestHasAttachments;
             $attachment['attachment'] = $this->storeArchive($request->attachments[$key], 'attachment-payment-request')[0];
             $paymentRequestHasAttachment = $paymentRequestHasAttachment->create([
@@ -371,8 +403,7 @@ class PaymentRequestService
         }
 
         $collection = $this->attachments->where('payment_request_id', $id)->whereNotIn('id', $updateAttachments)->whereNotIn('id', $createdAttachments)->get();
-        foreach ($collection as $value)
-        {
+        foreach ($collection as $value) {
             $pushObject = [];
             $pushObject['id'] = $value['id'];
             array_push($destroyCollection, $pushObject);
@@ -385,37 +416,31 @@ class PaymentRequestService
         $permissionChange = true;
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($requestInfo['payment_request_id']);
         $approvalFlow = ApprovalFlow::where('role_id', auth()->user()->role_id)
-        ->where('order', $paymentRequest->approval->order)
-        ->first();
+            ->where('order', $paymentRequest->approval->order)
+            ->first();
 
-        foreach($requestInfo['installments'] as $installment)
-        {
-            if(array_key_exists('extension_date', $installment))
-            {
-                if($approvalFlow->extension == false)
-                {
+        foreach ($requestInfo['installments'] as $installment) {
+            if (array_key_exists('extension_date', $installment)) {
+                if ($approvalFlow->extension == false) {
                     $permissionChange = false;
                     break;
                 }
             }
-            if(array_key_exists('competence_date', $installment))
-            {
-                if($approvalFlow->competency == false)
-                {
+            if (array_key_exists('competence_date', $installment)) {
+                if ($approvalFlow->competency == false) {
                     $permissionChange = false;
                     break;
                 }
             }
         }
 
-        if(!$permissionChange){
+        if (!$permissionChange) {
             return response()->json([
                 'erro' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
             ], 422);
         }
 
-        foreach($requestInfo['installments'] as $installment)
-        {
+        foreach ($requestInfo['installments'] as $installment) {
             $paymentRequestHasInstallments = PaymentRequestHasInstallments::findOrFail($installment['id']);
             $paymentRequestHasInstallments->fill($installment)->save();
         }
