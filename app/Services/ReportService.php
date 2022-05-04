@@ -154,15 +154,13 @@ class ReportService
                 ->join("payment_requests", function ($join) use ($userCostCenter) {
                     $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
                         ->where(function ($q) use ($userCostCenter) {
-                            if (!$userCostCenter->isEmpty()) {
-                                $q->where(function ($query) use ($userCostCenter) {
-                                    $query->where("approval_flow.filter_cost_center", true)
-                                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                                })
-                                    ->orWhere(function ($query) {
-                                        $query->where("approval_flow.filter_cost_center", false);
-                                    });
-                            }
+                            $q->where(function ($query) use ($userCostCenter) {
+                                $query->where("approval_flow.filter_cost_center", true)
+                                     ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                            })
+                                ->orWhere(function ($query) {
+                                    $query->where("approval_flow.filter_cost_center", false);
+                                });
                         });
                 })
                 ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
@@ -314,6 +312,6 @@ class ReportService
 
     public function getCnabGenerate($requestInfo, $id)
     {
-        return $this->cnabGenerated->with(['payment_requests'])->findOrFail($id);
+        return $this->cnabGenerated->with(['payment_requests', 'user'])->findOrFail($id);
     }
 }

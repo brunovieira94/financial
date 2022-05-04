@@ -23,7 +23,7 @@ class Role extends Model
     }
 
     use SoftDeletes;
-    protected $fillable = ['title'];
+    protected $fillable = ['title', 'filter_cost_center'];
     protected $table='role';
 
     public function modules()
