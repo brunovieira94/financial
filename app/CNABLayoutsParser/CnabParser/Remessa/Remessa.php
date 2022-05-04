@@ -187,7 +187,7 @@ class Remessa
             $lote->header->data_credito = date('dmY');
             $lote->header->forma_pagamento  = $key;
             $lote->header->endereco = Utils::formatCnab('X', $company->address, 30);
-            $lote->header->numero = Utils::formatCnab('9', $company->number, 5);
+            $lote->header->numero = Utils::formatCnab('9', Utils::onlyNumbers($company->number) == '' ? 0 : Utils::onlyNumbers($company->number), 5);
             $lote->header->complemento = Utils::formatCnab('X', $company->complement, 15);
             $lote->header->cidade = Utils::formatCnab('X', $company->city->title, 15);
             $lote->header->cep = Utils::onlyNumbers($company->cep);

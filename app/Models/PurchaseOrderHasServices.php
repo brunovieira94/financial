@@ -9,7 +9,7 @@ class PurchaseOrderHasServices extends Model
 {
     protected $table='purchase_order_has_services';
     public $timestamps = false;
-    protected $fillable = ['purchase_order_id', 'service_id', 'unitary_value', 'initial_date', 'end_date', 'automatic_renovation', 'notice_time_to_renew', 'percentage_discount', 'money_discount', 'contract_time', 'contract_frequency'];
+    protected $fillable = ['purchase_order_id', 'service_id', 'unitary_value', 'initial_date', 'end_date', 'automatic_renovation', 'notice_time_to_renew', 'percentage_discount', 'money_discount', 'contract_time', 'contract_frequency', 'quantity'];
     protected $hidden = ['purchase_order_id', 'service_id'];
     protected $appends = ['end_contract_date'];
 

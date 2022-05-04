@@ -12,7 +12,7 @@ class PurchaseOrder extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['installments', 'cost_centers', 'attachments', 'services', 'products', 'purchase_requests', 'companies', 'currency', 'provider', '*'];
+    protected static $logAttributes = ['installments', 'cost_centers', 'attachments', 'services', 'products', 'purchase_requests', 'companies', 'currency', 'provider', 'user', '*'];
     protected static $logName = 'purchase_orders';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -24,8 +24,8 @@ class PurchaseOrder extends Model
 
     use SoftDeletes;
     protected $table='purchase_orders';
-    protected $fillable = ['order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount'];
-    protected $hidden = ['currency_id', 'provider_id'];
+    protected $fillable = ['user_id','order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount', 'initial_date'];
+    protected $hidden = ['currency_id', 'provider_id', 'user_id'];
     protected $appends = ['applicant_can_edit'];
 
     public function attachments(){
@@ -70,6 +70,11 @@ class PurchaseOrder extends Model
     public function approval()
     {
         return $this->hasOne(SupplyApprovalFlow::class, 'id_purchase_order', 'id')->with('approval_flow');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
     }
 
     public function installments()

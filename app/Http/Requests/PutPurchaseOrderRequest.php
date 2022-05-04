@@ -23,6 +23,7 @@ class PutPurchaseOrderRequest extends FormRequest
             'installments_quantity' => 'required|integer',
             'unique_discount' => 'required|boolean',
             'billing_date' => 'required_without:payment_condition|Date',
+            'initial_date' => 'required|date',
             'payment_condition' => 'required_without:billing_date|integer',
             'cost_centers' => 'array',
             'attachments' => 'array',
