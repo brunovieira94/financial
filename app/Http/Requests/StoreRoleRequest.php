@@ -24,7 +24,7 @@ class StoreRoleRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255',
+            'title' => 'required|max:255|unique:role,title,' . $this->id . ',id,deleted_at,NULL',
             'modules' => 'array',
         ];
     }

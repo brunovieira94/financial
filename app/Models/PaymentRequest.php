@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Storage;
+use App\Scopes\ProfileCostCenterScope;
 
 class PaymentRequest extends Model
 {
@@ -193,4 +194,11 @@ class PaymentRequest extends Model
         }
         return false;
     }
+
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ProfileCostCenterScope);
+    }
+
 }
