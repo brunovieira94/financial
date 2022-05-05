@@ -25,6 +25,7 @@ class AccountsPayableApprovalFlow extends Model
     protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
+    protected $appends = ['approver_stage'];
 
     public function payment_request()
     {
@@ -44,5 +45,18 @@ class AccountsPayableApprovalFlow extends Model
     public function reason_to_reject()
     {
         return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
+    }
+
+    public function getApproverStageAttribute()
+    {
+        $roleIds = [];
+        $approverStage = [];
+        $roles = ApprovalFlow::where('order', $this->order)->with('role')->get();
+        foreach ($roles as $key => $role) {
+            $approverStage[$key] = [];
+            $approverStage[$key]['title'] = $role->role->title;
+            $approverStage[$key]['name'] = User::where('role_id', $role->role->id)->first()->name;
+        }
+        return $approverStage;
     }
 }

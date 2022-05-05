@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Storage;
+use App\Scopes\ProfileCostCenterScope;
 
 class PaymentRequest extends Model
 {
@@ -30,6 +31,7 @@ class PaymentRequest extends Model
     ];
 
     protected $fillable = [
+        'purchase_order_id',
         'company_id',
         'group_form_payment_id',
         'other_files',
@@ -58,12 +60,23 @@ class PaymentRequest extends Model
         'payment_type',
     ];
 
+    public function purchase_order()
+    {
+        return $this->hasOne(PurchaseOrder::class, 'id', 'purchase_order_id');
+    }
+
+    public function installments_purchase_order()
+    {
+        return $this->hasMany(PaymentRequestHasPurchaseOrderInstallments::class, 'payment_request_id', 'id')->with('installment_purchase');
+    }
+
     public function group_payment()
     {
         return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id')->with('form_payment');
     }
 
-    public function attachments(){
+    public function attachments()
+    {
         return $this->hasMany(PaymentRequestHasAttachments::class, 'payment_request_id', 'id');
     }
 
@@ -181,4 +194,11 @@ class PaymentRequest extends Model
         }
         return false;
     }
+
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ProfileCostCenterScope);
+    }
+
 }
