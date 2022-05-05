@@ -95,6 +95,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
         Route::delete('/{id}', [ChartOfAccountsController::class, 'destroy']);
         Route::post('/import', [ChartOfAccountsController::class, 'import']);
+        Route::post('/export', [ChartOfAccountsController::class, 'export']);
     });
 
 //Restful route -> Bank Accounts
