@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\ChartOfAccountsImport;
+use App\Exports\ChartOfAccountsExport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreChartOfAccountsRequest;
 use App\Http\Requests\PutChartOfAccountsRequest;
@@ -49,5 +50,17 @@ class ChartOfAccountsController extends Controller
     {
         (new ChartOfAccountsImport)->import(request()->file('import_file'));
         return response('');
+    }
+
+    public function export(Request $request)
+    {
+        if(array_key_exists('exportFormat', $request->all()))
+        {
+            if($request->all()['exportFormat'] == 'csv')
+            {
+                return (new ChartOfAccountsExport($request->all()))->download('planoDeContas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new ChartOfAccountsExport($request->all()))->download('planoDeContas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }
