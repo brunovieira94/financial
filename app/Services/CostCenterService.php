@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\CostCenter;
 use App\Models\ChartOfAccounts;
 
@@ -16,8 +17,8 @@ class CostCenterService
 
     public function getAllCostCenter($requestInfo)
     {
-        $costCenter = Utils::search($this->costCenter,$requestInfo);
-        $costCenters = Utils::pagination($costCenter->where('parent', null),$requestInfo);
+        $costCenter = Utils::search($this->costCenter, $requestInfo);
+        $costCenters = Utils::pagination($costCenter->where('parent', null), $requestInfo);
         //$costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
         return $nestable;
@@ -30,10 +31,30 @@ class CostCenterService
         return $nestable;
     }
 
+    public function costCenterFilterUser($requestInfo)
+    {
+        if (auth()->user()->role->filter_cost_center) {
+
+            $costCenterID = auth()->user()->cost_center->pluck('id');
+
+            $costCenter = Utils::search($this->costCenter, $requestInfo);
+            $costCenters = Utils::pagination($costCenter
+            ->where('parent', null)
+            ->whereIn('id', $costCenterID)
+            , $requestInfo);
+            $nestable = $this->costCenter->nestable($costCenters);
+            return $nestable;
+        }else
+        {
+            return self::getAllCostCenter($requestInfo);
+        }
+    }
+
+
     public function postCostCenter($costCenterInfo)
     {
         $costCenter = new CostCenter;
-        if(array_key_exists('parent', $costCenterInfo) && is_numeric($costCenterInfo['parent'])){
+        if (array_key_exists('parent', $costCenterInfo) && is_numeric($costCenterInfo['parent'])) {
             $this->costCenter->findOrFail($costCenterInfo['parent'])->get();
         }
         return $costCenter->create($costCenterInfo);
@@ -42,11 +63,11 @@ class CostCenterService
     public function putCostCenter($id, $costCenterInfo)
     {
         $costCenter = $this->costCenter->findOrFail($id);
-        if(array_key_exists('parent', $costCenterInfo)){
-            if(is_numeric($costCenterInfo['parent'])){
+        if (array_key_exists('parent', $costCenterInfo)) {
+            if (is_numeric($costCenterInfo['parent'])) {
                 $this->costCenter->findOrFail($costCenterInfo['parent'])->get();
             }
-            if($costCenterInfo['parent'] == $id){
+            if ($costCenterInfo['parent'] == $id) {
                 abort(500);
             }
         }
@@ -65,4 +86,3 @@ class CostCenterService
         return true;
     }
 }
-
