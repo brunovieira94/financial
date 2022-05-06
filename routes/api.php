@@ -41,6 +41,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('cost-center')->group(function () {
         Route::get('/', [CostCenterController::class, 'index']);
+        Route::get('filter-user/', [CostCenterController::class, 'costCenterFilterUser']);
         Route::get('/{id}', [CostCenterController::class, 'show']);
         Route::post('/', [CostCenterController::class, 'store']);
         Route::put('/{id}', [CostCenterController::class, 'update']);
@@ -95,6 +96,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
         Route::delete('/{id}', [ChartOfAccountsController::class, 'destroy']);
         Route::post('/import', [ChartOfAccountsController::class, 'import']);
+        Route::post('/export', [ChartOfAccountsController::class, 'export']);
     });
 
 //Restful route -> Bank Accounts

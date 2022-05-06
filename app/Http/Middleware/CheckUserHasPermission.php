@@ -38,6 +38,7 @@ class CheckUserHasPermission
             'cancel',
             'group-form-payment',
             'all',
+            'filter-user',
         ];
 
         $routeAccessed = null;
