@@ -166,6 +166,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
         Route::post('/import', [ProviderController::class, 'import']);
+        Route::post('/export', [ProviderController::class, 'export']);
     });
 
 //Restful route -> Company
