@@ -20,15 +20,15 @@ class StorePaymentRequestRequest extends FormRequest
             'provider_id' => [
                 'required',
                 'integer',
-                function ($attribute, $value, $fail) {
-                    if($this->purchase_order_id == null)
-                    {
-                        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
-                        {
-                            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
-                        }
-                    }
-                },
+                //function ($attribute, $value, $fail) {
+                //    if($this->purchase_order_id == null)
+                //    {
+                //        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
+                //        {
+                //            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
+                //        }
+                //    }
+                //},
             ],
             'form_payment' => 'max:2',
             'emission_date' => 'required|Date',
