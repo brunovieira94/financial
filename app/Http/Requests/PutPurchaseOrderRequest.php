@@ -21,7 +21,7 @@ class PutPurchaseOrderRequest extends FormRequest
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'required|integer',
             'installments_quantity' => 'required|integer',
-            'unique_discount' => 'required|boolean',
+            'unique_discount' => 'boolean',
             'billing_date' => 'required_without:payment_condition|Date',
             'initial_date' => 'required|date',
             'payment_condition' => 'required_without:billing_date|integer',
