@@ -21,7 +21,7 @@ class StorePurchaseRequestRequest extends FormRequest
             'attachments' => 'array',
             'services' => 'array',
             'products' => 'array',
-            'companies' => 'array',
+            'company_id' => 'required|integer',
         ];
     }
 
