@@ -91,6 +91,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('chart-of-accounts')->group(function () {
         Route::get('/', [ChartOfAccountsController::class, 'index']);
+        Route::get('/all', [ChartOfAccountsController::class, 'allChartOfAccounts']);
         Route::get('/{id}', [ChartOfAccountsController::class, 'show']);
         Route::post('/', [ChartOfAccountsController::class, 'store']);
         Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
