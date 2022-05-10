@@ -164,7 +164,7 @@ class ItauCNABService
 
 
         return response()->json([
-            'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(5))
+            'linkArchive' => Storage::disk('s3')->temporaryUrl('tempCNAB/cnab-remessa.txt', now()->addMinutes(30))
         ], 200);
 
         //$filename = 'cnab.txt';
@@ -318,7 +318,7 @@ class ItauCNABService
         self::syncCnabGenerate($cnabGenerated, $allPaymentRequest, $requestInfo['installments_ids']);
 
         return response()->json([
-            'linkArchive' => Storage::disk('s3')->temporaryUrl("tempCNAB/{$archiveName}", now()->addMinutes(5))
+            'linkArchive' => Storage::disk('s3')->temporaryUrl("tempCNAB/{$archiveName}", now()->addMinutes(30))
         ], 200);
     }
 
