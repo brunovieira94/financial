@@ -59,9 +59,9 @@ class PaymentRequest extends Model
         'payment_type',
     ];
 
-    public function installments_purchase_order()
+    public function purchase_order()
     {
-        return $this->hasMany(PaymentRequestHasPurchaseOrderInstallments::class, 'payment_request_id', 'id')->with('installment_purchase');
+        return $this->hasMany(PaymentRequestHasPurchaseOrders::class, 'payment_request_id', 'id')->with(['purchase_order', 'purchase_order_installments']);
     }
 
     public function group_payment()

@@ -33,7 +33,7 @@ class PaymentRequestService
     private $attachments;
 
 
-    private $with = ['installments_purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
@@ -118,45 +118,12 @@ class PaymentRequestService
         ]);
         activity()->enableLogging();
 
-        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
-            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
-
-                $paymentRequestHasPurchaseOrders = PaymentRequestHasPurchaseOrders::create(
-                    [
-                        'payment_request_id' => $paymentRequest->id,
-                        'purchase_order_id' => $purchaseOrders['order'],
-                    ]
-                );
-                $purchaseOrder = PurchaseOrder::with('installments')
-                    ->findOrFail($purchaseOrders['order']);
-
-                $purchaseInstallmentsIDs = $purchaseOrder->installments->pluck('id')->toArray();
-
-                foreach ($paymentRequestInfo['installment_purchase_order'] as $purchaseInstallment) {
-
-                    if(in_array((int) $purchaseInstallment['installment'], $purchaseInstallmentsIDs))
-                    {
-                        PaymentRequestHasPurchaseOrderInstallments::create(
-                            [
-                                'payment_request_id' => $paymentRequest->id,
-                                'purchase_order_has_installments_id' => $purchaseInstallment['installment'],
-                                'payment_request_has_purchase_order_id' => $paymentRequestHasPurchaseOrders->id,
-                            ]
-                        );
-
-                        $purchase = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
-                        $purchase->payment_request_id = $paymentRequest->id;
-                        $purchase->save();
-                    }
-                }
-            }
-        }
-
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request');
             $this->syncAttachments($arrayAttachments, $paymentRequest);
         }
 
+        $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
@@ -227,25 +194,7 @@ class PaymentRequestService
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
 
-        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
-
-            DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
-            DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
-
-            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
-                PaymentRequestHasPurchaseOrderInstallments::create(
-                    [
-                        'payment_request_id' => $paymentRequest->id,
-                        'purchase_order_has_installments_id' => $purchaseOrders['installment'],
-                    ]
-                );
-
-                $purchase = PurchaseOrderHasInstallments::findOrFail($purchaseOrders['installment']);
-                $purchase->payment_request_id = $paymentRequest->id;
-                $purchase->save();
-            }
-        }
-
+        $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
@@ -469,5 +418,47 @@ class PaymentRequestService
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
         ], 200);
+    }
+
+    public function syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id = null)
+    {
+        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
+
+            if (!isNull($id)) {
+                DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
+                DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
+                DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
+            }
+
+            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
+
+                $paymentRequestHasPurchaseOrders = PaymentRequestHasPurchaseOrders::create(
+                    [
+                        'payment_request_id' => $paymentRequest->id,
+                        'purchase_order_id' => $purchaseOrders['order'],
+                    ]
+                );
+
+                $purchaseOrder = PurchaseOrder::with('installments')
+                    ->findOrFail($purchaseOrders['order']);
+
+                $purchaseInstallmentsIDs = $purchaseOrder->installments->pluck('id')->toArray();
+
+                foreach ($paymentRequestInfo['installment_purchase_order'] as $purchaseInstallment) {
+                    if (in_array((int) $purchaseInstallment['installment'], $purchaseInstallmentsIDs)) {
+                        PaymentRequestHasPurchaseOrderInstallments::create(
+                            [
+                                'payment_request_id' => $paymentRequest->id,
+                                'purchase_order_has_installments_id' => $purchaseInstallment['installment'],
+                                'payment_request_has_purchase_order_id' => $paymentRequestHasPurchaseOrders->id,
+                            ]
+                        );
+                        $purchaseInstallment = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
+                        $purchaseInstallment->payment_request_id = $paymentRequest->id;
+                        $purchaseInstallment->save();
+                    }
+                }
+            }
+        }
     }
 }
