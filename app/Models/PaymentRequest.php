@@ -31,7 +31,6 @@ class PaymentRequest extends Model
     ];
 
     protected $fillable = [
-        'purchase_order_id',
         'company_id',
         'group_form_payment_id',
         'other_files',
@@ -62,12 +61,7 @@ class PaymentRequest extends Model
 
     public function purchase_order()
     {
-        return $this->hasOne(PurchaseOrder::class, 'id', 'purchase_order_id');
-    }
-
-    public function installments_purchase_order()
-    {
-        return $this->hasMany(PaymentRequestHasPurchaseOrderInstallments::class, 'payment_request_id', 'id')->with('installment_purchase');
+        return $this->hasMany(PaymentRequestHasPurchaseOrders::class, 'payment_request_id', 'id')->with(['purchase_order', 'purchase_order_installments']);
     }
 
     public function group_payment()
@@ -84,7 +78,7 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['xml_file'])) {
             $XML = $this->attributes['xml_file'];
-            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(30));
         }
     }
 
@@ -92,14 +86,14 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['billet_file'])) {
             $billet = $this->attributes['billet_file'];
-            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(30));
         }
     }
     public function getInvoiceLinkAttribute()
     {
         if (!is_null($this->attributes['invoice_file'])) {
             $invoice = $this->attributes['invoice_file'];
-            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(30));
         }
     }
 
