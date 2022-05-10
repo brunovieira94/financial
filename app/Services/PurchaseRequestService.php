@@ -21,7 +21,7 @@ class PurchaseRequestService
     private $purchaseRequestHasCostCenters;
     private $attachments;
 
-    private $with = ['cost_centers', 'attachments', 'services', 'products', 'companies'];
+    private $with = ['cost_centers', 'attachments', 'services', 'products', 'company'];
 
     public function __construct(PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseRequestHasCompanies $purchaseRequestHasCompanies, PurchaseRequestHasServices $purchaseRequestHasServices, PurchaseRequestHasCostCenters $purchaseRequestHasCostCenters, PurchaseRequestHasAttachments $attachments)
     {
