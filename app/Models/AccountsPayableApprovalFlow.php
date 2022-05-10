@@ -55,7 +55,8 @@ class AccountsPayableApprovalFlow extends Model
         foreach ($roles as $key => $role) {
             $approverStage[$key] = [];
             $approverStage[$key]['title'] = $role->role->title;
-            $approverStage[$key]['name'] = User::where('role_id', $role->role->id)->first()->name;
+            $checkUser = User::where('role_id', $role->role->id)->first();
+            $approverStage[$key]['name'] = isset($checkUser) ? $checkUser->name : '';
         }
         return $approverStage;
     }
