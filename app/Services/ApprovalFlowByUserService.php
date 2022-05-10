@@ -39,15 +39,13 @@ class ApprovalFlowByUserService
         ->join("payment_requests", function($join) use ($userCostCenter) {
             $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
             ->where(function($q) use ($userCostCenter) {
-                if(!$userCostCenter->isEmpty()){
-                    $q->where(function($query) use ($userCostCenter) {
-                        $query->where("approval_flow.filter_cost_center", true)
-                        ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                    })
-                    ->orWhere(function($query) {
-                        $query->where("approval_flow.filter_cost_center", false);
-                    });
-                }
+                $q->where(function($query) use ($userCostCenter) {
+                    $query->where("approval_flow.filter_cost_center", true)
+                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                })
+                ->orWhere(function($query) {
+                    $query->where("approval_flow.filter_cost_center", false);
+                });
             });
 
             // ->orWhere(function($query) {
@@ -116,6 +114,67 @@ class ApprovalFlowByUserService
         return response()->json([
             'Sucesso' => 'Conta aprovada',
         ], 200);
+    }
+
+    public function approveManyAccounts($requestInfo)
+    {
+        if(array_key_exists('ids', $requestInfo)){
+            if(array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true){
+                foreach ($requestInfo['ids'] as $value) {
+                    $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($value);
+                    $maxOrder = $this->approvalFlow->max('order');
+                    $accountApproval->status = Config::get('constants.status.disapproved');
+
+                    if ($accountApproval->order > $maxOrder) {
+                        $accountApproval->order = Config::get('constants.status.open');
+                    } else if ($accountApproval->order != 0){
+                        $accountApproval->order -= 1;
+                    }
+                    $accountApproval->fill($requestInfo)->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Contas reprovadas',
+                ], 200);
+            }
+            else{
+                foreach ($requestInfo['ids'] as $value) {
+                    $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($value);
+                    $maxOrder = $this->approvalFlow->max('order');
+                    $accountApproval->status = 0;
+
+                    if($accountApproval->order >= $maxOrder) {
+                        if ($accountApproval->payment_request->group_form_payment_id != 1){
+                            if($accountApproval->payment_request->bank_account_provider_id == null){
+                                return response()->json([
+                                    'error' => 'O banco do fornecedor não foi informado. Id: '.$value,
+                                ], 422);
+                            }
+                        }else if ($accountApproval->payment_request->group_form_payment_id == 1){
+                            if($accountApproval->payment_request->bar_code == null){
+                                return response()->json([
+                                    'error' => 'O código de barras não foi informado. Id: '.$value,
+                                ], 422);
+                        }
+                        }
+                        $accountApproval->status = Config::get('constants.status.approved');
+                        $accountApproval->order += 1;
+                    } else {
+                        $accountApproval->order += 1;
+                    }
+                    $accountApproval->reason = null;
+                    $accountApproval->reason_to_reject_id = null;
+                    $accountApproval->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Contas aprovadas',
+                ], 200);
+            }
+        }
+        else{
+            return response()->json([
+                'Erro' => 'Nenhuma Conta Selecionada',
+            ], 422);
+        }
     }
 
     public function reproveAccount($id, Request $request)

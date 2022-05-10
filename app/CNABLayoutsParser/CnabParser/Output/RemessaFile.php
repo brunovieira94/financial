@@ -50,10 +50,14 @@ class RemessaFile extends IntercambioBancarioRemessaFileAbstract
 		$data = implode(self::CNAB_EOL, $data);
 		$data .= self::CNAB_EOL;
 
-        Storage::disk('s3')->put('tempCNAB/cnab-remessa.txt', $data);
-        return true;
+        $uniqid = uniqid(date('HisYmd'));
+        $generatedName = "cnab-remessa-{$uniqid}.txt";
 
-		//file_put_contents($path, $data);
+
+
+        Storage::disk('s3')->put("tempCNAB/{$generatedName}", $data);
+
+        return $generatedName;
 	}
 
 	protected function encodeHeaderArquivo()

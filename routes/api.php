@@ -41,6 +41,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('cost-center')->group(function () {
         Route::get('/', [CostCenterController::class, 'index']);
+        Route::get('filter-user/', [CostCenterController::class, 'costCenterFilterUser']);
         Route::get('/{id}', [CostCenterController::class, 'show']);
         Route::post('/', [CostCenterController::class, 'store']);
         Route::put('/{id}', [CostCenterController::class, 'update']);
@@ -90,11 +91,13 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('chart-of-accounts')->group(function () {
         Route::get('/', [ChartOfAccountsController::class, 'index']);
+        Route::get('/all', [ChartOfAccountsController::class, 'allChartOfAccounts']);
         Route::get('/{id}', [ChartOfAccountsController::class, 'show']);
         Route::post('/', [ChartOfAccountsController::class, 'store']);
         Route::put('/{id}', [ChartOfAccountsController::class, 'update']);
         Route::delete('/{id}', [ChartOfAccountsController::class, 'destroy']);
         Route::post('/import', [ChartOfAccountsController::class, 'import']);
+        Route::post('/export', [ChartOfAccountsController::class, 'export']);
     });
 
 //Restful route -> Bank Accounts
@@ -164,6 +167,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
         Route::post('/import', [ProviderController::class, 'import']);
+        Route::post('/export', [ProviderController::class, 'export']);
     });
 
 //Restful route -> Company
@@ -230,6 +234,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('account-payable-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowByUserController::class, 'accountsApproveUser']);
+        Route::put('/approve-many', [ApprovalFlowByUserController::class, 'approveManyAccounts']);
         Route::put('/approve/{id}', [ApprovalFlowByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowByUserController::class, 'cancelAccount']);
@@ -254,6 +259,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
         Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
+        Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
+        Route::get('/payment-requests-cnab-generated-list/{id}', [ReportController::class, 'getCnabGenerate']);
         Route::post('/due-bills/export', [ReportController::class, 'duePaymentRequestExport']);
         Route::post('/approved-payment-request/export', [ReportController::class, 'approvedPaymentRequestExport']);
         Route::post('/disapproved-payment-request/export', [ReportController::class, 'disapprovedPaymentRequestExport']);

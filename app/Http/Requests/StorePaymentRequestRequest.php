@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Provider;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePaymentRequestRequest extends FormRequest
@@ -16,7 +17,19 @@ class StorePaymentRequestRequest extends FormRequest
     {
         return [
             'company_id' => 'required|integer',
-            'provider_id' => 'required|integer',
+            'provider_id' => [
+                'required',
+                'integer',
+                //function ($attribute, $value, $fail) {
+                //    if($this->purchase_order_id == null)
+                //    {
+                //        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
+                //        {
+                //            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
+                //        }
+                //    }
+                //},
+            ],
             'form_payment' => 'max:2',
             'emission_date' => 'required|Date',
             'pay_date'  => 'required|Date',
