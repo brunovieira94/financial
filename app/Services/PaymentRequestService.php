@@ -14,6 +14,8 @@ use App\Models\ApprovalFlow;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
+use App\Models\PaymentRequestHasPurchaseOrders;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
 use AWS\CRT\HTTP\Response;
 use Config;
@@ -31,7 +33,7 @@ class PaymentRequestService
     private $attachments;
 
 
-    private $with = ['purchase_order', 'installments_purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['installments_purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
@@ -118,16 +120,35 @@ class PaymentRequestService
 
         if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
             foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
-                PaymentRequestHasPurchaseOrderInstallments::create(
+
+                $paymentRequestHasPurchaseOrders = PaymentRequestHasPurchaseOrders::create(
                     [
                         'payment_request_id' => $paymentRequest->id,
-                        'purchase_order_has_installments_id' => $purchaseOrders['installment'],
+                        'purchase_order_id' => $purchaseOrders['order'],
                     ]
                 );
+                $purchaseOrder = PurchaseOrder::with('installments')
+                    ->findOrFail($purchaseOrders['order']);
 
-                $purchase = PurchaseOrderHasInstallments::findOrFail($purchaseOrders['installment']);
-                $purchase->payment_request_id = $paymentRequest->id;
-                $purchase->save();
+                $purchaseInstallmentsIDs = $purchaseOrder->installments->pluck('id')->toArray();
+
+                foreach ($paymentRequestInfo['installment_purchase_order'] as $purchaseInstallment) {
+
+                    if(in_array((int) $purchaseInstallment['installment'], $purchaseInstallmentsIDs))
+                    {
+                        PaymentRequestHasPurchaseOrderInstallments::create(
+                            [
+                                'payment_request_id' => $paymentRequest->id,
+                                'purchase_order_has_installments_id' => $purchaseInstallment['installment'],
+                                'payment_request_has_purchase_order_id' => $paymentRequestHasPurchaseOrders->id,
+                            ]
+                        );
+
+                        $purchase = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
+                        $purchase->payment_request_id = $paymentRequest->id;
+                        $purchase->save();
+                    }
+                }
             }
         }
 
