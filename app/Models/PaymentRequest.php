@@ -84,7 +84,7 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['xml_file'])) {
             $XML = $this->attributes['xml_file'];
-            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(30));
         }
     }
 
@@ -92,14 +92,14 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['billet_file'])) {
             $billet = $this->attributes['billet_file'];
-            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(30));
         }
     }
     public function getInvoiceLinkAttribute()
     {
         if (!is_null($this->attributes['invoice_file'])) {
             $invoice = $this->attributes['invoice_file'];
-            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(30));
         }
     }
 
