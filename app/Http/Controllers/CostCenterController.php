@@ -70,4 +70,9 @@ class CostCenterController extends Controller
         }
         return (new CostCentersExport($request->all()))->download('centrosDeCusto.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
+
+    public function allCostCenters(Request $request)
+    {
+        return $this->costCenterService->allCostCenters($request->all());
+    }
 }
