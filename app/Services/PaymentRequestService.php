@@ -107,11 +107,6 @@ class PaymentRequestService
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
 
-        if (array_key_exists('attachments', $paymentRequestInfo)) {
-            $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request');
-            $this->syncAttachments($arrayAttachments, $paymentRequest);
-        }
-
         $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
         activity()->disableLogging();
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
@@ -134,6 +129,11 @@ class PaymentRequestService
                 $purchase->payment_request_id = $paymentRequest->id;
                 $purchase->save();
             }
+        }
+
+        if (array_key_exists('attachments', $paymentRequestInfo)) {
+            $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request');
+            $this->syncAttachments($arrayAttachments, $paymentRequest);
         }
 
         $this->syncTax($paymentRequest, $paymentRequestInfo);

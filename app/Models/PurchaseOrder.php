@@ -12,7 +12,7 @@ class PurchaseOrder extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['installments', 'cost_centers', 'attachments', 'services', 'products', 'purchase_requests', 'companies', 'currency', 'provider', 'user', '*'];
+    protected static $logAttributes = ['installments', 'cost_centers', 'attachments', 'services', 'products', 'purchase_requests', 'company', 'currency', 'provider', 'user', '*'];
     protected static $logName = 'purchase_orders';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -24,8 +24,8 @@ class PurchaseOrder extends Model
 
     use SoftDeletes;
     protected $table='purchase_orders';
-    protected $fillable = ['user_id','order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount', 'initial_date'];
-    protected $hidden = ['currency_id', 'provider_id', 'user_id'];
+    protected $fillable = ['user_id','order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount', 'initial_date', 'company_id'];
+    protected $hidden = ['currency_id', 'provider_id', 'user_id', 'company_id'];
     protected $appends = ['applicant_can_edit'];
 
     public function attachments(){
@@ -60,6 +60,11 @@ class PurchaseOrder extends Model
     public function currency()
     {
         return $this->hasOne(Currency::class, 'id', 'currency_id');
+    }
+
+    public function company()
+    {
+        return $this->hasOne(Currency::class, 'id', 'company_id');
     }
 
     public function provider()

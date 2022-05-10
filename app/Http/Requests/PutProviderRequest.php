@@ -23,15 +23,15 @@ class PutProviderRequest extends FormRequest
         return [
             'provider_id' => [
                 'integer',
-                function ($attribute, $value, $fail) {
-                    if($this->purchase_order_id == null)
-                    {
-                        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
-                        {
-                            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
-                        }
-                    }
-                },
+                //function ($attribute, $value, $fail) {
+                //    if($this->purchase_order_id == null)
+                //    {
+                //        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
+                //        {
+                //            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
+                //        }
+                //    }
+                //},
             ],
             'provider_type' => 'max:1|in:F,J',
             'company_name' => 'max:250',

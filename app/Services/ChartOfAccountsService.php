@@ -64,5 +64,12 @@ class ChartOfAccountsService
         $this->chartOfAccounts->destroy($arrayIds);
         return true;
     }
+
+    public function allChartOfAccounts($chartOfAccountsInfo)
+    {
+        $chartOfAccounts = Utils::search($this->chartOfAccounts, $chartOfAccountsInfo);
+        return Utils::pagination($chartOfAccounts, $chartOfAccountsInfo);
+    }
+
 }
 

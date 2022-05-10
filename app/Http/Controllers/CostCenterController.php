@@ -24,6 +24,12 @@ class CostCenterController extends Controller
         return $this->costCenterService->getAllCostCenter($request->all());
     }
 
+    public function costCenterFilterUser(Request $request)
+    {
+        return $this->costCenterService->costCenterFilterUser($request->all());
+    }
+
+
     public function show($id)
     {
         return $this->costCenterService->getCostCenter($id);
