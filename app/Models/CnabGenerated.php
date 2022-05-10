@@ -18,7 +18,7 @@ class CnabGenerated extends Model
     {
         if (!is_null($this->attributes['file_name'])) {
             $fileName = $this->attributes['file_name'];
-            return Storage::disk('s3')->temporaryUrl("tempCNAB/{$fileName}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("tempCNAB/{$fileName}", now()->addMinutes(30));
         }
     }
 
