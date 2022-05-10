@@ -85,4 +85,10 @@ class CostCenterService
         // $this->chartOfAccounts->destroy($collection->toArray());
         return true;
     }
+
+    public function allCostCenters($costCenterInfo)
+    {
+        $costCenters = Utils::search($this->costCenter, $costCenterInfo);
+        return Utils::pagination($costCenters, $costCenterInfo);
+    }
 }

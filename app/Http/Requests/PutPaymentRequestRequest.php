@@ -16,7 +16,7 @@ class PutPaymentRequestRequest extends FormRequest
     {
         return [
             'company_id' => 'integer',
-            'provider_id' => ['integer',]
+            'provider_id' => ['integer'],
             'initial_value' => 'numeric',
             'fees' => 'numeric',
             'discount' => 'numeric',

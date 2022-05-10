@@ -94,7 +94,6 @@ class PaymentRequestController extends Controller
         }
 
         if($attribute != null){
-
             $paymentRequest = PaymentRequest::with('provider')->findOrFail($id);
             $columnValidation = '';
 
@@ -105,13 +104,14 @@ class PaymentRequestController extends Controller
             }
             if ($columnValidation == $value)
             {
+                dd('value');
                 return $this->paymentRequestService->putPaymentRequest($id, $request);
             }
 
             if(array_key_exists('provider_id', $request->all())){
-                $provider_id = $request->business_id;
+                $provider_id = $request->provider_id;
             }else{
-                $provider_id = $paymentRequest->business_id;
+                $provider_id = $paymentRequest->provider_id;
             }
 
             if(PaymentRequest::with('business')
@@ -123,9 +123,7 @@ class PaymentRequestController extends Controller
                     'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta '.
                     PaymentRequest::with('business')
                     ->where($attribute, $value)
-                    ->whereRelation('business', 'id', '=', $provider_id)
-                    ->first()
-                    ->id .
+                    ->whereRelation('provider', 'id', '=', $provider_id)->first()->id .
                     '.'
                 ], 409);
             }
@@ -136,7 +134,7 @@ class PaymentRequestController extends Controller
                     return $this->paymentRequestService->putPaymentRequest($id, $request);
                 }
                 return response()->json([
-                    'erro' => 'Já existe a nota fiscal, boleto ou invoice cadastrado no sistema na conta'.
+                    'erro' => 'Já existe a nota fiscal, boleto ou invoice cadastrado no sistema na conta '.
                     PaymentRequest::where($attribute, $value)
                     ->first()
                     ->id .
