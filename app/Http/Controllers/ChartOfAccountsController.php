@@ -63,4 +63,11 @@ class ChartOfAccountsController extends Controller
         }
         return (new ChartOfAccountsExport($request->all()))->download('planoDeContas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
+
+
+    public function allChartOfAccounts(Request $request)
+    {
+        return $this->chartOfAccountsService->allChartOfAccounts($request->all());
+    }
+
 }
