@@ -7,6 +7,7 @@ use App\Exports\CostCentersExport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreCostCenterRequest;
 use App\Http\Requests\PutCostCenterRequest;
+use App\Models\CostCenter;
 use App\Services\CostCenterService as CostCenterService;
 
 class CostCenterController extends Controller
@@ -48,6 +49,13 @@ class CostCenterController extends Controller
 
     public function destroy($id)
     {
+        if(CostCenter::where('parent', $id)->exists())
+        {
+            return response()->json([
+                'erro' => 'Este centro de custo está associado a outros centro de custos é necessário apagar e/ou alterar suas dependências antes de apagá lo.'
+            ], 422);
+        }
+
         $costCenter = $this->costCenterService->deleteCostCenter($id);
         return response('');
     }
