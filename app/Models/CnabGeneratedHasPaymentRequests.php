@@ -16,7 +16,7 @@ class CnabGeneratedHasPaymentRequests extends Model
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with('provider')->withoutGlobalScope(ProfileCostCenterScope::class);
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['provider', 'company', 'bank_account_provider', ])->withoutGlobalScope(ProfileCostCenterScope::class);
     }
 
     public function installments_cnab()
