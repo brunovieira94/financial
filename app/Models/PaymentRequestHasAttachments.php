@@ -18,7 +18,7 @@ class PaymentRequestHasAttachments extends Model
     {
         if (!is_null($this->attributes['attachment'])) {
             $attachment = $this->attributes['attachment'];
-            return Storage::disk('s3')->temporaryUrl("attachment-payment-request/{$attachment}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("attachment-payment-request/{$attachment}", now()->addMinutes(30));
         }
     }
 }
