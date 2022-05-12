@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\ApprovalFlowSupply;
 
 class ApprovalFlowSupplyService
@@ -22,15 +23,13 @@ class ApprovalFlowSupplyService
         ApprovalFlowSupply::truncate();
         $approvalFlowSupply = new ApprovalFlowSupply;
         $info = [];
-        foreach($approvalFlowSupplyInfo['order'] as $key=>$roles){
+        foreach ($approvalFlowSupplyInfo['order'] as $key => $roles) {
             $info['order'] = $key;
-            foreach($roles as $role){
+            foreach ($roles as $role) {
                 $info['role_id'] = $role;
                 $approvalFlowSupply->create($info);
             }
         }
         return true;
     }
-
 }
-
