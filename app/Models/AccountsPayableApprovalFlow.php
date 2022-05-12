@@ -49,14 +49,22 @@ class AccountsPayableApprovalFlow extends Model
 
     public function getApproverStageAttribute()
     {
-        $roleIds = [];
         $approverStage = [];
         $roles = ApprovalFlow::where('order', $this->order)->with('role')->get();
-        foreach ($roles as $key => $role) {
-            $approverStage[$key] = [];
-            $approverStage[$key]['title'] = $role->role->title;
-            $checkUser = User::where('role_id', $role->role->id)->first();
-            $approverStage[$key]['name'] = isset($checkUser) ? $checkUser->name : '';
+        foreach ($roles as $role) {
+            if($role->role->id != 1)
+            {
+                $checkUser = User::where('role_id', $role->role->id)->get();
+                $names = [];
+                foreach ($checkUser as $user) {
+                    $names[] = $user->name;
+                }
+                $approverStage[] = [
+                    'title' => $role->role->title,
+                    'name' => count($names) > 0 ? $names[0]: '',
+                    'names' => $names,
+                ];
+            }
         }
         return $approverStage;
     }

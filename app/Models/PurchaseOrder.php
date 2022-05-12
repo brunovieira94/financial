@@ -64,7 +64,7 @@ class PurchaseOrder extends Model
 
     public function company()
     {
-        return $this->hasOne(Currency::class, 'id', 'company_id');
+        return $this->hasOne(Company::class, 'id', 'company_id');
     }
 
     public function provider()

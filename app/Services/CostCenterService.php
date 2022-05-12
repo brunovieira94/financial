@@ -5,6 +5,9 @@ namespace App\Services;
 use App\Models\CostCenter;
 use App\Models\ChartOfAccounts;
 
+use function PHPSTORM_META\map;
+use function PHPUnit\Framework\isNull;
+
 class CostCenterService
 {
     private $costCenter;
@@ -84,5 +87,20 @@ class CostCenterService
         $this->costCenter->destroy($arrayIds);
         // $this->chartOfAccounts->destroy($collection->toArray());
         return true;
+    }
+
+    public function allCostCenters($costCenterInfo)
+    {
+        $costCenters = Utils::search($this->costCenter, $costCenterInfo);
+        $costCenters = Utils::pagination($costCenters, $costCenterInfo);
+
+        foreach ($costCenters as $costCenter)
+        {
+            if($costCenter->parent != NULL)
+            {
+                $costCenter->code = CostCenter::findOrFail($costCenter->parent)->code .'.' . $costCenter->code;
+            }
+        }
+        return $costCenters;
     }
 }

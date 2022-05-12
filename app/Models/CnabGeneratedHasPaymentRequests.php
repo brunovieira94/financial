@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\ProfileCostCenterScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,7 +16,7 @@ class CnabGeneratedHasPaymentRequests extends Model
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with('provider');
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['provider', 'company', 'bank_account_provider', ])->withoutGlobalScope(ProfileCostCenterScope::class);
     }
 
     public function installments_cnab()
