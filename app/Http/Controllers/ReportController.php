@@ -30,10 +30,8 @@ class ReportController extends Controller
 
     public function duePaymentRequestExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new AllDuePaymentRequestExport($request->all()))->download('contasVencidas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
@@ -47,10 +45,8 @@ class ReportController extends Controller
 
     public function approvedPaymentRequestExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new AllApprovedPaymentRequestExport($request->all()))->download('contasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
@@ -64,10 +60,8 @@ class ReportController extends Controller
 
     public function disapprovedPaymentRequestExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new AllDisapprovedPaymentRequestExport($request->all()))->download('contasRejeitadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
@@ -81,10 +75,8 @@ class ReportController extends Controller
 
     public function paymentRequestsDeletedExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new AllPaymentRequestsDeletedExport($request->all()))->download('contasDeletadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
@@ -98,10 +90,8 @@ class ReportController extends Controller
 
     public function generatedCNABPaymentRequestCNABExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
 
                 return (new AllGeneratedCNABPaymentRequestExport($request->all()))->download('CNABgerados.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
@@ -116,10 +106,8 @@ class ReportController extends Controller
 
     public function billsToPayExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new BillsToPayExport($request->all()))->download('contasAPagar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
@@ -133,10 +121,8 @@ class ReportController extends Controller
 
     public function paymentRequestPaidExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new AllPaymentRequestPaidExport($request->all()))->download('contasPagas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
@@ -150,10 +136,8 @@ class ReportController extends Controller
 
     public function paymentRequestFinishedExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
                 return (new AllPaymentRequestFinishedExport($request->all()))->download('contasFinalizadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
