@@ -104,7 +104,6 @@ class PaymentRequestController extends Controller
             }
             if ($columnValidation == $value)
             {
-                dd('value');
                 return $this->paymentRequestService->putPaymentRequest($id, $request);
             }
 

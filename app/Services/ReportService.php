@@ -156,7 +156,7 @@ class ReportService
                         ->where(function ($q) use ($userCostCenter) {
                             $q->where(function ($query) use ($userCostCenter) {
                                 $query->where("approval_flow.filter_cost_center", true)
-                                     ->whereIn("payment_requests.cost_center_id", $userCostCenter);
+                                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
                             })
                                 ->orWhere(function ($query) {
                                     $query->where("approval_flow.filter_cost_center", false);
@@ -297,6 +297,7 @@ class ReportService
         $accountApproval = Utils::search($this->supplyApprovalFlow, $requestInfo);
         return Utils::pagination($accountApproval
             ->with('purchase_order')
+            ->with('purchase_order.installments')
             ->whereRelation('purchase_order', 'deleted_at', '=', null)
             ->where('status', 1), $requestInfo);
     }
@@ -305,9 +306,11 @@ class ReportService
     {
         $cnabGenerated = Utils::search($this->cnabGenerated, $requestInfo);
 
-        return Utils::pagination($cnabGenerated
-        ->with('user')
-        , $requestInfo);
+        return Utils::pagination(
+            $cnabGenerated
+                ->with('user'),
+            $requestInfo
+        );
     }
 
     public function getCnabGenerate($requestInfo, $id)

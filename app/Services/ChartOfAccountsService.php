@@ -68,8 +68,16 @@ class ChartOfAccountsService
     public function allChartOfAccounts($chartOfAccountsInfo)
     {
         $chartOfAccounts = Utils::search($this->chartOfAccounts, $chartOfAccountsInfo);
-        return Utils::pagination($chartOfAccounts, $chartOfAccountsInfo);
-    }
+        $chartOfAccounts = Utils::pagination($chartOfAccounts, $chartOfAccountsInfo);
 
+        foreach ($chartOfAccounts as $chartOfAccount)
+        {
+            if($chartOfAccount->parent != NULL)
+            {
+                $chartOfAccount->code = ChartOfAccounts::findOrFail($chartOfAccount->parent)->code .'.' . $chartOfAccount->code;
+            }
+        }
+        return $chartOfAccounts;
+    }
 }
 

@@ -26,14 +26,10 @@ class PaymentRequest extends Model
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
     protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
-    protected $casts = [
-        'other_files' => 'array',
-    ];
 
     protected $fillable = [
         'company_id',
         'group_form_payment_id',
-        'other_files',
         'note',
         'percentage_discount',
         'provider_id',
