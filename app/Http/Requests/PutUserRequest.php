@@ -18,7 +18,7 @@ class PutUserRequest extends FormRequest
             'role_id' => 'integer',
             'phone' => 'string',
             'extension' => 'string',
-            'email' => 'email|max:150',
+            'email' => 'email|max:150|unique:users,email,' . $this->id . ',id,deleted_at,NULL',
             'password' => 'max:250|min:8',
         ];
     }
