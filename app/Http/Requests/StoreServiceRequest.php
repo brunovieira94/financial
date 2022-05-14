@@ -16,7 +16,7 @@ class StoreServiceRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255|unique:services,title,NULL,id,deleted_at,NULL',
-            'chart_of_accounts_id' => 'integer|required',
+            'chart_of_accounts_id' => 'integer|required|exists:chart_of_accounts,id',
             'description' => 'required',
         ];
     }

@@ -26,7 +26,7 @@ class StoreCostCenterRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255' ,
-            'parent' => 'nullable|integer',
+            'parent' => 'nullable|integer|exists:cost_center,id',
             'code' => new DuplicateRoleCostCenter(request()->input('parent')),
         ];
     }
