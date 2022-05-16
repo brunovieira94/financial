@@ -14,7 +14,7 @@ class PutMyUserRequest extends FormRequest
     public function rules()
     {
         return [
-            'role_id' => 'prohibited',
+            'role_id' => 'prohibited|exists:role,id',
             'email' => 'prohibited',
             'password' => 'required',
             'name' => 'max:150',

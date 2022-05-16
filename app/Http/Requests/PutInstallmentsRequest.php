@@ -14,7 +14,7 @@ class PutInstallmentsRequest extends FormRequest
     public function rules()
     {
         return [
-            'payment_request_id' => 'required|integer',
+            'payment_request_id' => 'required|integer|exists:payment_requests,id',
             'installments.*.id' => 'integer|required',
             'installments.*.extension_date' => 'date',
             'installments.*.competence_date' => 'date',

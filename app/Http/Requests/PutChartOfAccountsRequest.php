@@ -17,7 +17,7 @@ class PutChartOfAccountsRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255',
-            'parent' => 'nullable|integer',
+            'parent' => 'nullable|integer|exists:chart_of_accounts,id',
             'code' => new PutDuplicateRoleChartOfAccounts(request()->input('parent'), Request::instance()->id),
             'managerial_code' => 'nullable|max:255',
             'group_title' => 'nullable|max:255',
