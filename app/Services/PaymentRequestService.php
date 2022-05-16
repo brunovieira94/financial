@@ -396,12 +396,12 @@ class PaymentRequestService
                     break;
                 }
             }
-            if (array_key_exists('competence_date', $installment)) {
-                if ($approvalFlow->competency == false) {
-                    $permissionChange = false;
-                    break;
-                }
-            }
+            // if (array_key_exists('competence_date', $installment)) {
+            //     if ($approvalFlow->competency == false) {
+            //         $permissionChange = false;
+            //         break;
+            //     }
+            // }
         }
 
         if (!$permissionChange) {
