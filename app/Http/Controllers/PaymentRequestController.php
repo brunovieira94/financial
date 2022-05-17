@@ -178,6 +178,8 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->updateDateInstallment($request->all());
     }
+<<<<<<< HEAD
+=======
 
     public function checkInstallmentsPurchaseOrder($requestInfo)
     {
@@ -203,4 +205,5 @@ class PaymentRequestController extends Controller
             return true;
         }
     }
+>>>>>>> develop
 }
