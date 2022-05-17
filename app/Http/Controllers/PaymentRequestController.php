@@ -178,12 +178,9 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->updateDateInstallment($request->all());
     }
-<<<<<<< HEAD
-=======
 
     public function checkInstallmentsPurchaseOrder($requestInfo)
     {
-
         if (array_key_exists('purchase_orders', $requestInfo)) {
             $idInstallments = [];
             if (array_key_exists('installment_purchase_order', $requestInfo)) {
@@ -205,5 +202,4 @@ class PaymentRequestController extends Controller
             return true;
         }
     }
->>>>>>> develop
 }
