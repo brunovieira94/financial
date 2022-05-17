@@ -136,42 +136,19 @@ class ReportService
 
     public function getAllDisapprovedPaymentRequest($requestInfo)
     {
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
 
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id);
-
-        $userCostCenter = auth()->user()->cost_center->map(function ($e) {
-            return $e->id;
-        });
-
-        if (!$approvalFlowUserOrder) {
+        if (!$approvalFlowUserOrder)
             return response([], 404);
-        }
 
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
-        return Utils::pagination(
-            $accountsPayableApprovalFlow
-                ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
-                ->select(['accounts_payable_approval_flows.*'])
-                ->join("payment_requests", function ($join) use ($userCostCenter) {
-                    $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
-                        ->where(function ($q) use ($userCostCenter) {
-                            $q->where(function ($query) use ($userCostCenter) {
-                                $query->where("approval_flow.filter_cost_center", true)
-                                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                            })
-                                ->orWhere(function ($query) {
-                                    $query->where("approval_flow.filter_cost_center", false);
-                                });
-                        });
-                })
-                ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
-                ->where('status', 2)
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request', 'reason_to_reject'])
-                ->distinct(['accounts_payable_approval_flows.id']),
-            $requestInfo
-        );
+
+        return Utils::pagination($accountsPayableApprovalFlow
+            ->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->where('status', 2)
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->with(['payment_request', 'approval_flow', 'reason_to_reject']), $requestInfo);
     }
 
     public function getAllPaymentRequestsDeleted($requestInfo)
@@ -260,13 +237,13 @@ class ReportService
                 $paymentIds = [];
                 $paymentIdsToReturn = [];
                 foreach ($installments as $installment) {
-                    if(!in_array($installment->payment_request_id, $paymentIds)){
+                    if (!in_array($installment->payment_request_id, $paymentIds)) {
                         array_push($paymentIds, $installment->payment_request_id);
                     }
                 }
                 foreach ($paymentIds as $id) {
                     $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
-                    if($payment->extension_date >= $requestInfo['extension_date']['from']){
+                    if ($payment->extension_date >= $requestInfo['extension_date']['from']) {
                         array_push($paymentIdsToReturn, $payment->payment_request_id);
                     }
                 }
@@ -280,13 +257,13 @@ class ReportService
                 $paymentIds = [];
                 $paymentIdsToReturn = [];
                 foreach ($installments as $installment) {
-                    if(!in_array($installment->payment_request_id, $paymentIds)){
+                    if (!in_array($installment->payment_request_id, $paymentIds)) {
                         array_push($paymentIds, $installment->payment_request_id);
                     }
                 }
                 foreach ($paymentIds as $id) {
                     $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
-                    if($payment->extension_date <= $requestInfo['extension_date']['to']){
+                    if ($payment->extension_date <= $requestInfo['extension_date']['to']) {
                         array_push($paymentIdsToReturn, $payment->payment_request_id);
                     }
                 }
@@ -300,13 +277,13 @@ class ReportService
                 $paymentIds = [];
                 $paymentIdsToReturn = [];
                 foreach ($installments as $installment) {
-                    if(!in_array($installment->payment_request_id, $paymentIds)){
+                    if (!in_array($installment->payment_request_id, $paymentIds)) {
                         array_push($paymentIds, $installment->payment_request_id);
                     }
                 }
                 foreach ($paymentIds as $id) {
                     $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
-                    if($payment->extension_date <= now()->addMonths(1) && now() <= $payment->extension_date){
+                    if ($payment->extension_date <= now()->addMonths(1) && now() <= $payment->extension_date) {
                         array_push($paymentIdsToReturn, $payment->payment_request_id);
                     }
                 }

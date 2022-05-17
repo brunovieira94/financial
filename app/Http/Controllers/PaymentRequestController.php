@@ -199,7 +199,7 @@ class PaymentRequestController extends Controller
                     break;
                 }
             }
-            return true;
         }
+        return true;
     }
 }
