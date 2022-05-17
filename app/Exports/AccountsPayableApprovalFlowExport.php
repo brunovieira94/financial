@@ -23,7 +23,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
 
     public function collection()
     {
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
+        $approvalFlowUserOrder = ApprovalFlow::where('role_id', auth()->user()->role_id)->get(['order']);
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
