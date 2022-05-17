@@ -23,39 +23,15 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
 
     public function collection()
     {
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
 
-        $approvalFlowUserOrder = ApprovalFlow::where('role_id', auth()->user()->role_id);
-
-        $userCostCenter = auth()->user()->cost_center->map(function($e) {
-            return $e->id;
-        });
-
-        if (!$approvalFlowUserOrder){
+        if (!$approvalFlowUserOrder)
             return response([], 404);
-        }
 
-        return AccountsPayableApprovalFlow::join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
-        ->select(['accounts_payable_approval_flows.*'])
-        ->join("payment_requests", function($join) use ($userCostCenter) {
-            $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
-            ->where(function($q) use ($userCostCenter) {
-                if(!$userCostCenter->isEmpty()){
-                $q->where(function($query) use ($userCostCenter) {
-                    $query->where("approval_flow.filter_cost_center", true)
-                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                })
-                ->orWhere(function($query) {
-                    $query->where("approval_flow.filter_cost_center", false);
-                });
-            }
-            });
-        })
-        ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
-        ->where('status', 2)
-        ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->with(['payment_request', 'reason_to_reject'])
-        ->distinct(['accounts_payable_approval_flows.id'])
-        ->get();
+        return AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
+            ->where('status', 2)
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->with(['payment_request', 'approval_flow', 'reason_to_reject'])->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
