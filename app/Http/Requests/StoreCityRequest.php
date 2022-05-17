@@ -16,7 +16,7 @@ class StoreCityRequest extends FormRequest
     {
         return [
             'title' => ['required', 'max:250', new DuplicateCity(request()->input('states_id'))],
-            'states_id' => 'required|integer',
+            'states_id' => 'required|integer|exists:states,id',
         ];
     }
 

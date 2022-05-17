@@ -15,7 +15,7 @@ class PutUserRequest extends FormRequest
     {
         return [
             'name' => 'max:150',
-            'role_id' => 'integer',
+            'role_id' => 'integer|exists:role,id',
             'phone' => 'string',
             'extension' => 'string',
             'email' => 'email|max:150|unique:users,email,' . $this->id . ',id,deleted_at,NULL',
