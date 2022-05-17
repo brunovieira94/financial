@@ -9,6 +9,7 @@ use App\Services\PaymentRequestService as PaymentRequestService;
 use App\Http\Requests\PutPaymentRequestRequest;
 use App\Imports\PaymentRequestsImport;
 use App\Models\PaymentRequest;
+use App\Models\PurchaseOrderHasInstallments;
 
 class PaymentRequestController extends Controller
 {
@@ -76,6 +77,13 @@ class PaymentRequestController extends Controller
                 ], 424);
             }
         }
+
+        if (!self::checkInstallmentsPurchaseOrder($request->all())) {
+            return response()->json([
+                'erro' => 'É necessário que informa ao menos parcela para cada pedido de compra.'
+            ], 422);
+        }
+
         return $this->paymentRequestService->postPaymentRequest($request);
     }
 
@@ -139,6 +147,13 @@ class PaymentRequestController extends Controller
                 ], 424);
             }
         }
+
+        if (!self::checkInstallmentsPurchaseOrder($request->all())) {
+            return response()->json([
+                'erro' => 'É necessário que informa ao menos parcela para cada pedido de compra.'
+            ], 422);
+        }
+
         return $this->paymentRequestService->putPaymentRequest($id, $request);
     }
 
@@ -163,4 +178,32 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->updateDateInstallment($request->all());
     }
+<<<<<<< HEAD
+=======
+
+    public function checkInstallmentsPurchaseOrder($requestInfo)
+    {
+
+        if (array_key_exists('purchase_orders', $requestInfo)) {
+            $idInstallments = [];
+            if (array_key_exists('installment_purchase_order', $requestInfo)) {
+                foreach ($requestInfo['installment_purchase_order'] as $installment) {
+                    array_push($idInstallments, $installment['installment']);
+                }
+            }
+
+            foreach ($requestInfo['purchase_orders'] as $purchaseOrder) {
+                $informedInstallment  = PurchaseOrderHasInstallments::where('purchase_order_id', $purchaseOrder['order'])
+                    ->whereIn('id', $idInstallments)
+                    ->exists();
+
+                if (!$informedInstallment) {
+                    return false;
+                    break;
+                }
+            }
+            return true;
+        }
+    }
+>>>>>>> develop
 }

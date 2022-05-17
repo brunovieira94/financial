@@ -3,12 +3,14 @@
 namespace App\Exports;
 
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasInstallments;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
+use Config;
 
 class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
@@ -91,24 +93,69 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
         }
         if(array_key_exists('extension_date', $infoRequest)){
             if(array_key_exists('from', $infoRequest['extension_date'])){
-                $query->whereHas('installments', function ($query) use ($infoRequest){
-                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '>=', $infoRequest['extension_date']['from']);
-                });
+                $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '>=', $infoRequest['extension_date']['from'])->get('payment_request_id');
+                $paymentIds = [];
+                $paymentIdsToReturn = [];
+                foreach ($installments as $installment) {
+                    if(!in_array($installment->payment_request_id, $paymentIds)){
+                        array_push($paymentIds, $installment->payment_request_id);
+                    }
+                }
+                foreach ($paymentIds as $id) {
+                    $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
+                    if($payment->extension_date >= $infoRequest['extension_date']['from']){
+                        array_push($paymentIdsToReturn, $payment->payment_request_id);
+                    }
+                }
+                $query->whereIn('id', $paymentIdsToReturn);
+                // $query->whereHas('installments', function ($query) use ($infoRequest){
+                //     $query->where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '>=', $infoRequest['extension_date']['from']);
+                // });
             }
             if(array_key_exists('to', $infoRequest['extension_date'])){
-                $query->whereHas('installments', function ($query) use ($infoRequest){
-                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '<=', $infoRequest['extension_date']['to']);
-                });
+                $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '<=', $infoRequest['extension_date']['to'])->get('payment_request_id');
+                $paymentIds = [];
+                $paymentIdsToReturn = [];
+                foreach ($installments as $installment) {
+                    if(!in_array($installment->payment_request_id, $paymentIds)){
+                        array_push($paymentIds, $installment->payment_request_id);
+                    }
+                }
+                foreach ($paymentIds as $id) {
+                    $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
+                    if($payment->extension_date <= $infoRequest['extension_date']['to']){
+                        array_push($paymentIdsToReturn, $payment->payment_request_id);
+                    }
+                }
+                $query->whereIn('id', $paymentIdsToReturn);
+                // $query->whereHas('installments', function ($query) use ($infoRequest){
+                //     $query->where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '<=', $infoRequest['extension_date']['to']);
+                // });
             }
             if(!array_key_exists('to', $infoRequest['extension_date']) && !array_key_exists('from', $infoRequest['extension_date'])){
-                $query->whereHas('installments', function ($query) use ($infoRequest){
-                    $query->where('status', '<>', 'BD')->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
-                });
+                $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)])->get('payment_request_id');
+                $paymentIds = [];
+                $paymentIdsToReturn = [];
+                foreach ($installments as $installment) {
+                    if(!in_array($installment->payment_request_id, $paymentIds)){
+                        array_push($paymentIds, $installment->payment_request_id);
+                    }
+                }
+                foreach ($paymentIds as $id) {
+                    $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
+                    if($payment->extension_date <= now()->addMonths(1) && now() <= $payment->extension_date){
+                        array_push($paymentIdsToReturn, $payment->payment_request_id);
+                    }
+                }
+                $query->whereIn('id', $paymentIdsToReturn);
+                // $query->whereHas('installments', function ($query) use ($infoRequest){
+                //     $query->where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                // });
             }
         }
         if(array_key_exists('days_late', $infoRequest)){
             $query->whereHas('installments', function ($query) use ($infoRequest){
-                $query->where('status', '!=', 'BD')->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($infoRequest['days_late']));
+                $query->where('status', '!=', Config::get('constants.status.paid out'))->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($infoRequest['days_late']));
             });
         }
 

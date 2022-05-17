@@ -16,7 +16,7 @@ class StorePaymentRequestRequest extends FormRequest
     public function rules()
     {
         return [
-            'company_id' => 'required|integer',
+            'company_id' => 'required|integer|exists:companies,id',
             'provider_id' => [
                 'required',
                 'integer',
@@ -29,18 +29,19 @@ class StorePaymentRequestRequest extends FormRequest
                 //        }
                 //    }
                 //},
+                'exists:providers,id',
             ],
             'form_payment' => 'max:2',
             'emission_date' => 'required|Date',
             'pay_date'  => 'required|Date',
-            'bank_account_provider_id' => 'integer',
+            'bank_account_provider_id' => 'integer|exists:bank_accounts,id',
             'discount' => 'numeric',
             'percentage_discount' => 'numeric',
             'amount' => 'required|numeric',
-            'business_id' => 'required|integer',
-            'cost_center_id' => 'required|integer',
-            'chart_of_account_id' => 'required|integer',
-            'currency_id' => 'required|integer',
+            'business_id' => 'required|integer|exists:business,id',
+            'cost_center_id' => 'required|integer|exists:cost_center,id',
+            'chart_of_account_id' => 'required|integer|exists:chart_of_accounts,id',
+            'currency_id' => 'required|integer|exists:currency,id',
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
             'net_value' => 'numeric',
@@ -57,7 +58,7 @@ class StorePaymentRequestRequest extends FormRequest
             //NF
             'invoice_file' => 'file|required_with_all:invoice_number,type_of_tax,net_value,tax_amount',
             'invoice_number' => ['max:150', 'required_with_all:invoice_file,type_of_tax,net_value,tax_amount'],
-            'tax.*.type_of_tax_id' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount',
+            'tax.*.type_of_tax_id' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount|exists:type_of_tax,id',
             'tax.*.tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,tax.*.id_type_of_tax,net_value',
             //Boleto
             'bar_code' => ['max:150', 'required_if:payment_type,==,1'],
