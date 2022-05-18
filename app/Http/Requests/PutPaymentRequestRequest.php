@@ -16,7 +16,19 @@ class PutPaymentRequestRequest extends FormRequest
     {
         return [
             'company_id' => 'integer|exists:companies,id',
-            'provider_id' => 'integer|exists:providers,id',
+            'provider_id' => [
+                'integer',
+                //function ($attribute, $value, $fail) {
+                //    if($this->purchase_order_id == null)
+                //    {
+                //        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
+                //        {
+                //            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
+                //        }
+                //    }
+                //},
+                'exists:providers,id',
+            ],
             'initial_value' => 'numeric',
             'fees' => 'numeric',
             'discount' => 'numeric',
