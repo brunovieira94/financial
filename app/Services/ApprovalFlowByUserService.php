@@ -27,13 +27,43 @@ class ApprovalFlowByUserService
             return response([], 404);
 
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
-        $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
 
-        return Utils::pagination($accountsPayableApprovalFlow
-            ->whereIn('order', $approvalFlowUserOrder->toArray())
+        $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 0)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->with(['payment_request', 'approval_flow', 'reason_to_reject']), $requestInfo);
+            ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
+
+
+        if (array_key_exists('provider', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('provider', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('company', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('company_id', $requestInfo['company']);
+            });
+        }
+
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('cost_center_id', $requestInfo['cost_center']);
+            });
+        }
+
+        if (array_key_exists('approval_order', $requestInfo)) {
+            $accountsPayableApprovalFlow->where('order', $requestInfo['approval_order']);
+        }
+
+        $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
+        return Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
     }
 
     public function approveAccount($id)

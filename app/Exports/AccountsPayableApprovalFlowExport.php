@@ -15,7 +15,8 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     private $requestInfo;
     private $totalTax;
 
-    public function __construct($requestInfo){
+    public function __construct($requestInfo)
+    {
         $this->requestInfo = $requestInfo;
     }
 
@@ -23,15 +24,45 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
 
     public function collection()
     {
+        $requestInfo = $this->requestInfo;
         $approvalFlowUserOrder = ApprovalFlow::where('role_id', auth()->user()->role_id)->get(['order']);
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        return AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 0)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->with(['payment_request', 'approval_flow', 'reason_to_reject'])->get();
+
+        if (array_key_exists('provider', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('provider', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('company', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('company_id', $requestInfo['company']);
+            });
+        }
+
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('cost_center_id', $requestInfo['cost_center']);
+            });
+        }
+
+        if (array_key_exists('approval_order', $requestInfo)) {
+            $accountsPayableApprovalFlow->where('order', $requestInfo['approval_order']);
+        }
+        return $accountsPayableApprovalFlow;
     }
 
     public function map($accountsPayableApprovalFlow): array
@@ -43,7 +74,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
 
         return [
             $accountsPayableApprovalFlow->payment_request->id,
-            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: '. $accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: '.$accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: ' . $accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: ' . $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->emission_date,
             $accountsPayableApprovalFlow->payment_request->pay_date,
