@@ -255,7 +255,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/approved-payment-request', [ReportController::class, 'approvedPaymentRequest']);
         Route::get('/disapproved-payment-request', [ReportController::class, 'disapprovedPaymentRequest']);
         Route::get('/payment-requests-deleted', [ReportController::class, 'paymentRequestsDeleted']);
-        Route::get('/bills-to-pay', [ReportController::class, 'billsToPayExport']);
+        Route::get('/bills-to-pay', [ReportController::class, 'billsToPay']);
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
