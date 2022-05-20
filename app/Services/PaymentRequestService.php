@@ -424,7 +424,7 @@ class PaymentRequestService
     {
         if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
 
-            if (!isNull($id)) {
+            if ($id != null) {
                 DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
                 DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
                 DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
