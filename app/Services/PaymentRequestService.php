@@ -205,7 +205,7 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)) {
-            $this->destroyInstallments($paymentRequest);
+            //$this->destroyInstallments($paymentRequest);
             $this->paymentRequest->findOrFail($id)->delete();
             activity()->disableLogging();
             $approval->status = 3;
@@ -424,7 +424,7 @@ class PaymentRequestService
     {
         if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
 
-            if (!isNull($id)) {
+            if ($id != null) {
                 DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
                 DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
                 DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
