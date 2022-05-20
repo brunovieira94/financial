@@ -75,10 +75,11 @@ class CheckUserHasPermission
         // }
         foreach($roles as $role){
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);
-
+            $role = $this->role->where('role_id', $user->role_id)->where('module_id', $role->module_id)->first();
+            if ($request->isMethod('GET') && $routeAccessed == 'approved-purchase-order' && $routesAllowedByUser[0]->route == 'payment-request' && ($role->update || $role->create)) {
+                return $next($request);
+            }
             if($routeAccessed == $routesAllowedByUser[0]->route){
-                $role = $this->role->where('role_id', $user->role_id)->where('module_id', $role->module_id)->first();
-
                 if ($request->isMethod('GET')) {
                     if ($role->read == true){
                         return $next($request);

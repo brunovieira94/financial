@@ -94,13 +94,13 @@ class CostCenterService
         $costCenters = Utils::search($this->costCenter, $costCenterInfo);
         $costCenters = Utils::pagination($costCenters, $costCenterInfo);
 
-        foreach ($costCenters as $costCenter)
-        {
-            if($costCenter->parent != NULL)
-            {
-                $costCenter->code = CostCenter::findOrFail($costCenter->parent)->code .'.' . $costCenter->code;
-            }
-        }
+        //foreach ($costCenters as $costCenter)
+        //{
+        //    if($costCenter->parent != NULL)
+        //    {
+        //        $costCenter->code = CostCenter::findOrFail($costCenter->parent)->code .'.' . $costCenter->code;
+        //    }
+        //}
         return $costCenters;
     }
 }
