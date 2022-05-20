@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
@@ -49,15 +50,21 @@ class AccountsPayableApprovalFlow extends Model
 
     public function getApproverStageAttribute()
     {
+
         $approverStage = [];
         $roles = ApprovalFlow::where('order', $this->order)->with('role')->get();
+        $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->first()->cost_center_id;
         foreach ($roles as $role) {
             if($role->role->id != 1)
             {
-                $checkUser = User::where('role_id', $role->role->id)->get();
+                $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->get();
                 $names = [];
                 foreach ($checkUser as $user) {
-                    $names[] = $user->name;
+                    foreach ($user->cost_center as $userCostCenter){
+                        if($userCostCenter->id == $costCenterId){
+                            $names[] = $user->name;
+                        }
+                    }
                 }
                 $approverStage[] = [
                     'title' => $role->role->title,

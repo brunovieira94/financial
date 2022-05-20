@@ -15,7 +15,7 @@ class PutBusinessRequest extends FormRequest
     {
         return [
             'name' => 'max:150|unique:business,name,' . $this->id . ',id,deleted_at,NULL',
-            'company_id' => 'integer',
+            'company_id' => 'integer|exists:companies,id',
             'cost_user.*.id' => 'integer',
             'cost_user.*.cost_center_id' => 'integer',
             'cost_user.*.user_id' => 'integer',

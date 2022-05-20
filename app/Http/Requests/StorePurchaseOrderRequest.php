@@ -16,9 +16,9 @@ class StorePurchaseOrderRequest extends FormRequest
     {
         return [
             'order_type' => 'required|integer|min:0|max:2',
-            'provider_id' => 'required|integer',
-            'currency_id' => 'required|integer',
-            'company_id' => 'required|integer',
+            'provider_id' => 'required|integer|exists:providers,id',
+            'currency_id' => 'required|integer|exists:currency,id',
+            'company_id' => 'required|integer|exists:companies,id',
             'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'required|integer',
             'installments_quantity' => 'required|integer',
