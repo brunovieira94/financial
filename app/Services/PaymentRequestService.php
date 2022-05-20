@@ -205,7 +205,7 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)) {
-            $this->destroyInstallments($paymentRequest);
+            //$this->destroyInstallments($paymentRequest);
             $this->paymentRequest->findOrFail($id)->delete();
             activity()->disableLogging();
             $approval->status = 3;
