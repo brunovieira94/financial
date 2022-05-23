@@ -33,7 +33,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 0)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->with(['payment_request', 'approval_flow', 'reason_to_reject'])->get();
+            ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
 
         if (array_key_exists('provider', $requestInfo)) {
             $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
@@ -62,7 +62,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         if (array_key_exists('approval_order', $requestInfo)) {
             $accountsPayableApprovalFlow->where('order', $requestInfo['approval_order']);
         }
-        return $accountsPayableApprovalFlow;
+        return $accountsPayableApprovalFlow->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
