@@ -16,7 +16,7 @@ class PutHotelRequest extends FormRequest
     {
         return [
             'id_hotel_cangooroo' => 'required|max:150',
-            'id_hotel_cangooroo' => 'max:150',
+            'id_hotel_omnibees' => 'max:150',
             'hotel_name' => 'required|max:150',
             'chain' => 'max:150',
             'email' => 'required|max:150',
