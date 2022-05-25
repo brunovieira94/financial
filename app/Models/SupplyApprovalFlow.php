@@ -16,6 +16,7 @@ class SupplyApprovalFlow extends Model
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
+        $user->role = Role::findOrFail($user->role_id);
         $activity->causer_id = $user->id;
         $activity->causer_object = $user;
     }
