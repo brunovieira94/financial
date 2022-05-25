@@ -29,7 +29,7 @@ class Hotel extends Model
 
     public function bank_account()
     {
-        return $this->belongsToMany(BankAccount::class, 'hotel_has_bank_accounts', 'hotel_id', 'bank_account_id')->with(['bank', 'bank_account_default']);
+        return $this->belongsToMany(BankAccount::class, 'hotel_has_bank_accounts', 'hotel_id', 'bank_account_id')->with(['bank', 'hotel_bank_account_default']);
     }
 
     public function payment_type()
