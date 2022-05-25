@@ -36,6 +36,7 @@ use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
 use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
+use App\Http\Controllers\HotelController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -169,6 +170,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
         Route::post('/import', [ProviderController::class, 'import']);
         Route::post('/export', [ProviderController::class, 'export']);
+    });
+
+    Route::prefix('hotel')->group(function () {
+        Route::get('/', [HotelController::class, 'index']);
+        Route::get('/{id}', [HotelController::class, 'show']);
+        Route::post('/', [HotelController::class, 'store']);
+        Route::put('/{id}', [HotelController::class, 'update']);
+        Route::delete('/{id}', [HotelController::class, 'destroy']);
+        // Route::post('/import', [HotelController::class, 'import']);
     });
 
 //Restful route -> Company
