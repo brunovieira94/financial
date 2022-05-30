@@ -19,14 +19,16 @@ class ReportService
     private $approvalFlow;
     private $filterCanceled = false;
     private $cnabGenerated;
+    private $installment;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
+    public function __construct(PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->paymentRequest = $paymentRequest;
         $this->supplyApprovalFlow = $supplyApprovalFlow;
         $this->cnabGenerated = $cnabGenerated;
+        $this->installment = $installment;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -41,6 +43,23 @@ class ReportService
         }
         if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
             $result = $result->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+        }
+        return Utils::pagination($result, $requestInfo);
+    }
+
+    public function getAllDueInstallment($requestInfo)
+    {
+        $result = Utils::search($this->installment, $requestInfo);
+        $result = $result->with(['payment_request'])->has('payment_request');
+
+        if (array_key_exists('from', $requestInfo)) {
+            $result = $result->where('extension_date', '>=', $requestInfo['from']);
+        }
+        if (array_key_exists('to', $requestInfo)) {
+            $result = $result->where('extension_date', '<=', $requestInfo['to']);
+        }
+        if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
+            $result = $result->whereBetween('extension_date', [now(), now()->addMonths(1)]);
         }
         return Utils::pagination($result, $requestInfo);
     }

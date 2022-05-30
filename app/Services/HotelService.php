@@ -66,10 +66,10 @@ class HotelService
 
             foreach ($hotelInfo['bank_accounts'] as $bank) {
                 if (array_key_exists('id', $bank)) {
-                    $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
+                    $bankAccount = $this->bankAccount->with('hotel_bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
-                    $hotelHasBankAccount = HotelHasBankAccounts::findOrFail($bankAccount->bank_account_default->id);
+                    $hotelHasBankAccount = HotelHasBankAccounts::findOrFail($bankAccount->hotel_bank_account_default->id);
                     $hotelHasBankAccount->fill($bank)->save();
                 } else {
                     $bankAccount = new BankAccount;
