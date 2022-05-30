@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\Hotel;
 use App\Models\BankAccount;
 use App\Models\HotelHasBankAccounts;
@@ -20,13 +21,13 @@ class HotelService
 
     public function getAllHotel($requestInfo)
     {
-        $hotel = Utils::search($this->hotel,$requestInfo);
-        return Utils::pagination($hotel->with($this->with),$requestInfo);
+        $hotel = Utils::search($this->hotel, $requestInfo);
+        return Utils::pagination($hotel->with($this->with), $requestInfo);
     }
 
     public function getHotel($id)
     {
-      return $this->hotel->with($this->with)->findOrFail($id);
+        return $this->hotel->with($this->with)->findOrFail($id);
     }
 
     public function postHotel($hotelInfo)
@@ -54,16 +55,17 @@ class HotelService
         return true;
     }
 
-    public function putBankAccounts($id, $hotelInfo){
+    public function putBankAccounts($id, $hotelInfo)
+    {
 
         $updateBankAccounts = [];
         $createdBankAccounts = [];
 
-        if(array_key_exists('bank_accounts', $hotelInfo)){
+        if (array_key_exists('bank_accounts', $hotelInfo)) {
             $attachArray = [];
 
-            foreach($hotelInfo['bank_accounts'] as $bank){
-                if (array_key_exists('id', $bank)){
+            foreach ($hotelInfo['bank_accounts'] as $bank) {
+                if (array_key_exists('id', $bank)) {
                     $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
@@ -81,10 +83,10 @@ class HotelService
             }
 
             $collection = $this->hotelHasBankAccounts
-            ->where('hotel_id', $id)
-            ->whereNotIn('bank_account_id', $updateBankAccounts)
-            ->whereNotIn('bank_account_id', $createdBankAccounts)
-            ->get(['bank_account_id']);
+                ->where('hotel_id', $id)
+                ->whereNotIn('bank_account_id', $updateBankAccounts)
+                ->whereNotIn('bank_account_id', $createdBankAccounts)
+                ->get(['bank_account_id']);
             $this->bankAccount->destroy($collection->toArray());
 
             $hotel = $this->hotel->findOrFail($id);
@@ -92,10 +94,11 @@ class HotelService
         }
     }
 
-    public function syncBankAccounts($hotel, $hotelInfo){
+    public function syncBankAccounts($hotel, $hotelInfo)
+    {
         $syncArray = [];
-        if(array_key_exists('bank_accounts', $hotelInfo)){
-            foreach($hotelInfo['bank_accounts'] as $bank){
+        if (array_key_exists('bank_accounts', $hotelInfo)) {
+            foreach ($hotelInfo['bank_accounts'] as $bank) {
                 $bankAccount = new BankAccount;
                 $bankAccount = $bankAccount->create($bank);
                 $syncArray[] = [
@@ -106,5 +109,4 @@ class HotelService
             $hotel->bank_account()->sync($syncArray);
         }
     }
-
 }
