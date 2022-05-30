@@ -28,6 +28,11 @@ class ReportController extends Controller
         return $this->reportService->getAllDuePaymentRequest($request->all());
     }
 
+    public function dueInstallment(Request $request)
+    {
+        return $this->reportService->getAllDueInstallment($request->all());
+    }
+
     public function duePaymentRequestExport(Request $request)
     {
         if (array_key_exists('exportFormat', $request->all())) {
