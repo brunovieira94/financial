@@ -23,4 +23,5 @@ class Billing extends Model
     // Model attributes
     use SoftDeletes;
     protected $table = 'billing';
+    protected $fillable = ['reserve', 'partner_value', 'pay_date', 'boleto_value', 'boleto_code', 'recipient_name', 'remark', 'oracle_protocol', 'cnpj'];
 }

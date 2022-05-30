@@ -26,8 +26,7 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $cagooroo = json_encode($this->getCangoorooData($billing['bookingId'])->expose());
-        $billing['cangooroo'] = $cagooroo;
+        $this->getCangoorooData($billing['reserve']);
         return $billing;
     }
 
@@ -41,26 +40,29 @@ class BillingService
             'BookingId' => $bookingId,
         ])->throw()->json()['BookingDetail']['Rooms'][0];
 
-        return new Cangooroo(
-            guests: array_map(
+        $cangooroo = $this->billing->findOrFail($bookingId);
+        $cangooroo->fill([
+            "bookingId" => $bookingId,
+            "guests" => array_map(
                 fn ($e) => $e['Name'] . ' ' . $e['Surname'],
                 $response['Paxs']
             ),
-            serviceId: $response['ServiceId'],
-            supplierReservationCode: $response['SupplierReservationCode'],
-            status: $response['Status'],
-            reservationDate: $response['ReservationDate'],
-            checkIn: $response['CheckIn'],
-            checkOut: $response['CheckOut'],
-            numberOfNights: $response['NumberOfNights'],
-            supplierHotelId: $response['SupplierHotelId'],
-            hotelId: $response['HotelId'],
-            hotelName: $response['HotelName'],
-            cityName: $response['CityName'],
-            agencyName: $response['CreationUserDetail']['AgencyName'],
-            creation_user: $response['CreationUserDetail']['Name'],
-            sellingPrice: $response['SellingPrice']['Value'],
-        );
+            "service_id" => $response['ServiceId'],
+            "supplier_reservation_code" => $response['SupplierReservationCode'],
+            "status" => $response['Status'],
+            "reservation_date" => $response['ReservationDate'],
+            "check_in" => $response['CheckIn'],
+            "check_out" => $response['CheckOut'],
+            "number_of_nights" => $response['NumberOfNights'],
+            "supplier_hotel_id" => $response['SupplierHotelId'],
+            "hotel_id" => $response['HotelId'],
+            "hotel_name" => $response['HotelName'],
+            "city_name" => $response['CityName'],
+            "agency_name" => $response['CreationUserDetail']['AgencyName'],
+            "creation_user" => $response['CreationUserDetail']['Name'],
+            "selling_price" => $response['SellingPrice']['Value'],
+        ])->save();
+        return $cangooroo;
     }
 
     public function postBilling($billingInfo)
