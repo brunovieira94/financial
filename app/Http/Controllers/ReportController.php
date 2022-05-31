@@ -124,6 +124,11 @@ class ReportController extends Controller
         return (new BillsToPayExport($request->all()))->download('contasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
+    public function installmentsPayable(Request $request)
+    {
+        return $this->reportService->getInstallmentsPayable($request->all());
+    }
+
     public function paymentRequestPaid(Request $request)
     {
         return $this->reportService->getAllPaymentRequestPaid($request->all());
