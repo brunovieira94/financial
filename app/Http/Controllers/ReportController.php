@@ -58,6 +58,11 @@ class ReportController extends Controller
         return (new AllApprovedPaymentRequestExport($request->all()))->download('contasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
+    public function approvedInstallment(Request $request)
+    {
+        return $this->reportService->getAllApprovedInstallment($request->all());
+    }
+
     public function disapprovedPaymentRequest(Request $request)
     {
         return $this->reportService->getAllDisapprovedPaymentRequest($request->all());

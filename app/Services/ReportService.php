@@ -137,6 +137,32 @@ class ReportService
         }
     }
 
+    public function getAllApprovedInstallment($requestInfo)
+    {
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
+
+        if (!array_key_exists('company_id', $requestInfo)) {
+            return Utils::pagination($accountsPayableApprovalFlow
+                ->with('installment_payment_request')
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->where('status', 1), $requestInfo);
+        } else {
+
+            $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('installment_payment_request', function ($query) use ($requestInfo) {
+                $query->whereHas('payment_request', function ($query) use ($requestInfo) {
+                    $query->whereHas('company', function ($query) use ($requestInfo) {
+                        $query->where('id', $requestInfo['company_id']);
+                    });
+                });
+            });
+
+            return Utils::pagination($accountsPayableApprovalFlow
+                ->with('installment_payment_request')
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->where('status', 1), $requestInfo);
+        }
+    }
+
     public function getAllGeneratedCNABPaymentRequest($requestInfo)
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
