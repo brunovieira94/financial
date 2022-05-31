@@ -4,78 +4,54 @@ namespace App\Services;
 
 
 use App\Models\Billing;
-use Illuminate\Support\Facades\Http;
 use App\Models\Cangooroo;
 
 class BillingService
 {
 
     private $billing;
+    private $cangoorooService;
+    private $cangooroo;
 
-    public function __construct(Billing $billing)
+    private $with = ['user', 'cangooroo'];
+
+    public function __construct(Billing $billing, CangoorooService $cangoorooService, Cangooroo $cangooroo)
     {
         $this->billing = $billing;
+        $this->cangooroo = $cangooroo;
+        $this->cangoorooService = $cangoorooService;
     }
 
     public function getAllBilling($requestInfo)
     {
         $billing = Utils::search($this->billing, $requestInfo);
-        return Utils::pagination($billing, $requestInfo);
+        return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $this->getCangoorooData($billing['reserve']);
-        return $billing;
-    }
-
-    public function getCangoorooData(String $bookingId): Cangooroo
-    {
-        $response = Http::post(env('CANGOOROO_URL'), [
-            'Credential' => [
-                "Username" => env('CANGOOROO_USERNAME'),
-                "Password" => env('CANGOOROO_PASSWORD'),
-            ],
-            'BookingId' => $bookingId,
-        ])->throw()->json()['BookingDetail']['Rooms'][0];
-
-        $cangooroo = $this->billing->findOrFail($bookingId);
-        $cangooroo->fill([
-            "bookingId" => $bookingId,
-            "guests" => array_map(
-                fn ($e) => $e['Name'] . ' ' . $e['Surname'],
-                $response['Paxs']
-            ),
-            "service_id" => $response['ServiceId'],
-            "supplier_reservation_code" => $response['SupplierReservationCode'],
-            "status" => $response['Status'],
-            "reservation_date" => $response['ReservationDate'],
-            "check_in" => $response['CheckIn'],
-            "check_out" => $response['CheckOut'],
-            "number_of_nights" => $response['NumberOfNights'],
-            "supplier_hotel_id" => $response['SupplierHotelId'],
-            "hotel_id" => $response['HotelId'],
-            "hotel_name" => $response['HotelName'],
-            "city_name" => $response['CityName'],
-            "agency_name" => $response['CreationUserDetail']['AgencyName'],
-            "creation_user" => $response['CreationUserDetail']['Name'],
-            "selling_price" => $response['SellingPrice']['Value'],
-        ])->save();
-        return $cangooroo;
+        $this->cangoorooService->updateCangoorooData($billing['cangooroo_booking_id']);
+        return $this->billing->with($this->with)->findOrFail($id);
     }
 
     public function postBilling($billingInfo)
     {
         $billing = new Billing;
-        return $billing->create($billingInfo);
+        $billingInfo['user_id'] = auth()->user()->id;
+        $cangooroo = new Cangooroo();
+        $cangooroo = $cangooroo->create(["booking_id" => $billingInfo['cangooroo_booking_id']]);
+        $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id']);
+        $billing = $billing->create($billingInfo);
+        return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
     public function putBilling($id, $billingInfo)
     {
         $billing = $this->billing->findOrFail($id);
         $billing->fill($billingInfo)->save();
-        return $billing;
+        $this->cangoorooService->updateCangoorooData($billing['cangooroo_booking_id']);
+        return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
     public function deleteBilling($id)
