@@ -6,7 +6,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
-class AddedRouteDuePaymentInstallment extends Migration
+class AddedRouteApprovalInstallmentReports extends Migration
 {
     public function up()
     {
@@ -14,8 +14,8 @@ class AddedRouteDuePaymentInstallment extends Migration
 
         DB::table('module')->insert([
             [
-                'title'     => 'Parcelas a vencer',
-                'route' => 'due-installments',
+                'title'     => 'Parcelas aprovadas',
+                'route' => 'approved-installments',
                 'parent' => $module->id,
             ]
         ]);
