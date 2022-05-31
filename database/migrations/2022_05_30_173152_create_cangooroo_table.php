@@ -10,7 +10,7 @@ class CreateCangoorooTable extends Migration
     {
         Schema::create('cangooroo', function (Blueprint $table) {
             $table->string('booking_id');
-            $table->array('guests');
+            $table->string('guests');
             $table->string('service_id');
             $table->string('supplier_reservation_code');
             $table->string('status');

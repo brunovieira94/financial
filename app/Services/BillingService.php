@@ -43,10 +43,10 @@ class BillingService
         $cangooroo = $this->billing->findOrFail($bookingId);
         $cangooroo->fill([
             "bookingId" => $bookingId,
-            "guests" => array_map(
+            "guests" => join(", ", array_map(
                 fn ($e) => $e['Name'] . ' ' . $e['Surname'],
                 $response['Paxs']
-            ),
+            )),
             "service_id" => $response['ServiceId'],
             "supplier_reservation_code" => $response['SupplierReservationCode'],
             "status" => $response['Status'],
