@@ -11,7 +11,7 @@ class Billing extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['*'];
+    protected static $logAttributes = ['user', 'cangooroo', '*'];
     protected static $logName = 'billing';
     public function tapActivity(Activity $activity)
     {
@@ -23,15 +23,24 @@ class Billing extends Model
     // Model attributes
     use SoftDeletes;
     protected $table = 'billing';
-    protected $fillable = [
-        'reserve',
-        'partner_value',
-        'pay_date',
-        'boleto_value',
-        'boleto_code',
-        'recipient_name',
-        'remark',
-        'oracle_protocol',
-        'cnpj',
-    ];
+    protected $fillable = ['cangooroo_booking_id', 'reserve', 'supplier_value', 'pay_date', 'boleto_value', 'boleto_code', 'recipient_name', 'remark', 'oracle_protocol', 'user_id', 'payment_status', 'status_123', 'cnpj'];
+    protected $hidden = ['user_id', 'cangooroo_booking_id'];
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'id', 'user_id');
+    }
+
+    public function cangooroo()
+    {
+        return $this->hasOne(Cangooroo::class, 'booking_id', 'cangooroo_booking_id')->with('hotel');
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function ($billing) {
+            $billing->cangooroo()->delete();
+        });
+    }
 }

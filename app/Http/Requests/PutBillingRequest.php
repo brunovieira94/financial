@@ -15,7 +15,10 @@ class PutBillingRequest extends FormRequest
     {
         return [
             'reserve' => 'required|max:150',
-            'partner_value' => 'required|max:150',
+            'cangooroo_booking_id' => 'required|integer',
+            'payment_status' => 'max:150',
+            'status_123' => 'max:150',
+            'supplier_value' => 'required|max:150',
             'pay_date' => 'required|date',
             'boleto_value' => 'max:150',
             'boleto_code' => 'max:150',
