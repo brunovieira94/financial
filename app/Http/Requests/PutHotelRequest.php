@@ -23,7 +23,7 @@ class PutHotelRequest extends FormRequest
             'email_omnibees' => 'max:150',
             'phone' => 'max:150',
             'billing_type' => 'required|integer|min:0|max:2',
-            'payment_type_id' => 'integer|exists:payment_types,id',
+            'group_form_payment_id' => 'integer',
             'holder_full_name' => 'max:150',
             'cpf_cnpj' => 'required|max:150',
             'isValid' => 'boolean',
