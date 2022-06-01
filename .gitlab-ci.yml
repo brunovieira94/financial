@@ -39,17 +39,14 @@ deploy_testing:
 
 
 deploy_staging:
-  environment: develop
   stage: staging
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
-    - aws s3 cp s3://back-staging-s3/financeiro-develop.pem /tmp/financeiro-develop.pem
-    - aws s3 cp s3://back-staging-s3/autoscaling-deploy-dev.sh /tmp/autoscaling-deploy-dev.sh
-    - chmod 0400 /tmp/financeiro-develop.pem
+    - aws s3 cp s3://fincanc-staging-s3/financ-staging.pem /tmp/financ-staging.pem
+    - aws s3 cp s3://fincanc-staging-s3/autoscaling-deploy-dev.sh /tmp/autoscaling-deploy-dev.sh
+    - chmod 0400 /tmp/financ-staging.pem
     - chmod 755 /tmp/autoscaling-deploy-dev.sh
-    - bash /tmp/autoscaling-deploy-dev.sh staging-financ-ASG staging /tmp/financeiro-develop.pem 0 80 /var/www/html/dev-api
-  tags:
-    - financ-homolog
+    - bash /tmp/autoscaling-deploy-dev.sh staging-financ staging /tmp/financ-staging.pem 0 80 /var/www/html/dev-api
   only:
     - staging
 
