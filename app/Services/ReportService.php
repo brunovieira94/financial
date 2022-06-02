@@ -139,27 +139,24 @@ class ReportService
 
     public function getAllApprovedInstallment($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
+        $installment = Utils::search($this->installment, $requestInfo);
+        $installment = $installment->with(['payment_request']);
+
+        $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query->whereHas('approval', function ($query) use ($requestInfo) {
+                $query->where('status', 1);
+            });
+        });
 
         if (!array_key_exists('company_id', $requestInfo)) {
-            return Utils::pagination($accountsPayableApprovalFlow
-                ->with('installment_payment_request')
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->where('status', 1), $requestInfo);
+            return Utils::pagination($installment
+                ->with('payment_request'), $requestInfo);
         } else {
-
-            $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('installment_payment_request', function ($query) use ($requestInfo) {
-                $query->whereHas('payment_request', function ($query) use ($requestInfo) {
-                    $query->whereHas('company', function ($query) use ($requestInfo) {
-                        $query->where('id', $requestInfo['company_id']);
-                    });
-                });
+            $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('company_id', $requestInfo['company_id']);
             });
 
-            return Utils::pagination($accountsPayableApprovalFlow
-                ->with('installment_payment_request')
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->where('status', 1), $requestInfo);
+            return Utils::pagination($installment, $requestInfo);
         }
     }
 
