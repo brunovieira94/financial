@@ -8,7 +8,7 @@ class PaymentRequestHasInstallments extends Model
 {
     protected $table='payment_requests_installments';
     public $timestamps = false;
-    protected $fillable = ['percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'status', 'amount_received'];
+    protected $fillable = ['fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'status', 'amount_received'];
 
     public function payment_request()
     {
