@@ -79,7 +79,7 @@ class Remessa
                     $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
                     $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
                     $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($installment->payment_request->provider->cnpj)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($paymentRequest->provider->cpf);
+                    $detalhe->segmento_j52->numero_inscricao_beneficiario = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
                     unset($detalhe->segmento_a);
                     unset($detalhe->segmento_b);
 
