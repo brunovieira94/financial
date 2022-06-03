@@ -18,6 +18,16 @@ class PaymentRequestHasInstallments extends Model
         return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['provider', 'company', 'purchase_order', 'group_payment', 'attachments', 'approval', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax']);
     }
 
+    public function group_payment()
+    {
+        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id')->with(['form_payment']);
+    }
+
+    public function bank_account_provider()
+    {
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_provider_id')->with('bank');
+    }
+
     public function getBilletLinkAttribute()
     {
         if (!is_null($this->attributes['billet_file'])) {
