@@ -31,7 +31,7 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $this->cangoorooService->updateCangoorooData($billing['cangooroo_booking_id']);
+        $this->cangoorooService->updateCangoorooData($billing['cangooroo_booking_id'], $billing['reserve']);
         return $this->billing->with($this->with)->findOrFail($id);
     }
 
@@ -39,9 +39,12 @@ class BillingService
     {
         $billing = new Billing;
         $billingInfo['user_id'] = auth()->user()->id;
-        $cangooroo = new Cangooroo();
-        $cangooroo = $cangooroo->create(["booking_id" => $billingInfo['cangooroo_booking_id']]);
-        $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id']);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'],$billingInfo['reserve']);
+        if(is_array($cangooroo) && array_key_exists('error', $cangooroo)){
+            return response()->json([
+                'erro' => $cangooroo['error'],
+            ], 422);
+        }
         $billing = $billing->create($billingInfo);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -49,8 +52,13 @@ class BillingService
     public function putBilling($id, $billingInfo)
     {
         $billing = $this->billing->findOrFail($id);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'],$billingInfo['reserve']);
+        if(is_array($cangooroo) && array_key_exists('error', $cangooroo)){
+            return response()->json([
+                'erro' => $cangooroo['error'],
+            ], 422);
+        }
         $billing->fill($billingInfo)->save();
-        $this->cangoorooService->updateCangoorooData($billing['cangooroo_booking_id']);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
