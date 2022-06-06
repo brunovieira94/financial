@@ -58,6 +58,11 @@ class ReportController extends Controller
         return (new AllApprovedPaymentRequestExport($request->all()))->download('contasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
+    public function approvedInstallment(Request $request)
+    {
+        return $this->reportService->getAllApprovedInstallment($request->all());
+    }
+
     public function disapprovedPaymentRequest(Request $request)
     {
         return $this->reportService->getAllDisapprovedPaymentRequest($request->all());
@@ -117,6 +122,11 @@ class ReportController extends Controller
             }
         }
         return (new BillsToPayExport($request->all()))->download('contasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function installmentsPayable(Request $request)
+    {
+        return $this->reportService->getInstallmentsPayable($request->all());
     }
 
     public function paymentRequestPaid(Request $request)
