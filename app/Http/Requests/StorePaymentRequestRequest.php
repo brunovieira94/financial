@@ -73,6 +73,11 @@ class StorePaymentRequestRequest extends FormRequest
             'installments.*.initial_value' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
             'installments.*.discount' => 'numeric',
             'installments.*.fees' => 'numeric',
+            'installments.*.bar_code' => 'max:150',
+            'installments.*.bank_account_provider_id' => 'integer|exists:bank_accounts,id',
+            'installments.*.group_form_payment_id' => 'integer|exists:group_form_payment,id',
+            'installments.*.billet_number' => 'max:150',
+            'installments.*.fine' => 'numeric',
         ];
     }
 }
