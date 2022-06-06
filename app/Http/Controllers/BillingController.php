@@ -4,16 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\BillingService as BillingService;
+use App\Services\CangoorooService as CangoorooService;
 use App\Http\Requests\StoreBillingRequest;
 use App\Http\Requests\PutBillingRequest;
 
 class BillingController extends Controller
 {
     private $billingService;
+    private $cangoorooService;
 
-    public function __construct(BillingService $billingService)
+    public function __construct(BillingService $billingService, CangoorooService $cangoorooService)
     {
         $this->billingService = $billingService;
+        $this->cangoorooService = $cangoorooService;
     }
 
     public function index(Request $request)
@@ -40,5 +43,10 @@ class BillingController extends Controller
     {
         $this->billingService->deleteBilling($id);
         return response('');
+    }
+
+    public function getCangoorooData(Request $request)
+    {
+        return $this->cangoorooService->updateCangoorooData($request->booking_id,$request->reserve);
     }
 }

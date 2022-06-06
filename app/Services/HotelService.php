@@ -11,7 +11,7 @@ class HotelService
     private $hotel;
     private $bankAccount;
     private $hotelHasBankAccounts;
-    private $with = ['bank_account', 'payment_type'];
+    private $with = ['bank_account', 'group_payment'];
     public function __construct(Hotel $hotel, BankAccount $bankAccount, HotelHasBankAccounts $hotelHasBankAccounts)
     {
         $this->hotel = $hotel;

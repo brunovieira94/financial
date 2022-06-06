@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use App\Models\Cangooroo;
+use App\Models\Hotel;
 
 class CangoorooService
 {
@@ -15,7 +16,7 @@ class CangoorooService
         $this->cangooroo = $cangooroo;
     }
 
-    public function updateCangoorooData($bookingId)
+    public function updateCangoorooData($bookingId, $reserve)
     {
         $response = Http::post(env('CANGOOROO_URL'), [
             'Credential' => [
@@ -25,7 +26,17 @@ class CangoorooService
             'BookingId' => $bookingId,
         ])->throw()->json()['BookingDetail'];
 
-        $room = $response['Rooms'][0];
+        $roomIndex = null;
+        foreach ($response['Rooms'] as $key => $room) {
+            if(strpos($room['SupplierReservationCode'], $reserve ) !== false && strlen($reserve) > 4){
+                $roomIndex = $key;
+            }
+        }
+        if($roomIndex === null){
+            return ['error' => 'Dados de reserva inválidos'];
+        }
+
+        $room = $response['Rooms'][$roomIndex];
 
         $supplierName = null;
         foreach ($room['CustomFields'] as $customField) {
@@ -55,12 +66,24 @@ class CangoorooService
             "city_name" => $room['CityName'],
             "123_id" => $response['ControlNumber'],
             "supplier_name" => $supplierName,
-            "agency_name" => $room['CreationUserDetail']['AgencyName'],
+            "agency_name" => array_key_exists('AgencyName', $room['CreationUserDetail']) ? $room['CreationUserDetail']['AgencyName'] : $room['CreationUserDetail']['Name'],
             "creation_user" => $room['CreationUserDetail']['Name'],
             "selling_price" => $room['SellingPrice']['Value'],
         ];
 
+        if(!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()){
+            return ['error' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: '.$data['hotel_id']];
+        }
+
         $cangooroo = $this->cangooroo->where('booking_id',$bookingId)->first('id');
-        $this->cangooroo->findOrFail($cangooroo['id'])->fill($data)->save();
+        if($cangooroo)
+        {
+            $updatedCangooroo = $this->cangooroo->findOrFail($cangooroo['id']);
+            $updatedCangooroo->fill($data)->save();
+            return $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
+        }
+        $cangooroo = new Cangooroo();
+        $cangooroo = $cangooroo->create($data);
+        return $cangooroo;
     }
 }
