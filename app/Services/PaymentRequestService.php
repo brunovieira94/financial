@@ -19,6 +19,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
 use AWS\CRT\HTTP\Response;
 use Config;
+use Exception;
 use ZipStream\Option\Archive;
 
 use function PHPUnit\Framework\isNull;
@@ -92,19 +93,7 @@ class PaymentRequestService
             }
         }
 
-        if (!array_key_exists('bank_account_provider_id', $paymentRequestInfo)) {
 
-            $bankProviderDefault = null;
-
-            $bankProviderDefault = ProviderHasBankAccounts::with('bank_account')
-                ->where('provider_id', $paymentRequestInfo['provider_id'])
-                ->where('default_bank', true)
-                ->get('bank_account_id')->first();
-
-            if ($bankProviderDefault != null) {
-                $paymentRequestInfo['bank_account_provider_id'] = $bankProviderDefault->bank_account_id;
-            }
-        }
 
         $paymentRequest = new PaymentRequest;
         $paymentRequest = $paymentRequest->create($paymentRequestInfo);
@@ -125,7 +114,7 @@ class PaymentRequestService
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
         $this->syncTax($paymentRequest, $paymentRequestInfo);
-        $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true);
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -159,17 +148,6 @@ class PaymentRequestService
             $approval->reason_to_reject_id = null;
             $approval->reason = null;
         }
-        /*if ($approval->order != 0) {
-            if ($paymentRequestInfo['approve'] == "true") {
-                if ($approval->order >= $maxOrder) {
-                    $approval->status = 1;
-                } else {
-                    $approval->order += 1;
-                }
-                $approval->reason_to_reject_id = null;
-                $approval->reason = null;
-            }
-        }*/
 
         $approval->save();
         activity()->enableLogging();
@@ -177,9 +155,9 @@ class PaymentRequestService
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
         }
-        if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
-        }
+        //if (array_key_exists('billet_file', $paymentRequestInfo)) {
+        //    $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+        //}
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $this->putAttachments($id, $paymentRequestInfo, $request);
         }
@@ -195,7 +173,7 @@ class PaymentRequestService
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
-        $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension);
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -251,44 +229,65 @@ class PaymentRequestService
         return $nameFiles;
     }
 
-    public function syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension)
+    public function syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, Request $request)
     {
         if (array_key_exists('installments', $paymentRequestInfo)) {
-            $this->destroyInstallments($paymentRequest);
+            $notDeleteInstallmentsID = [];
             foreach ($paymentRequestInfo['installments'] as $key => $installments) {
-                $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
-                $installments['payment_request_id'] = $paymentRequest['id'];
-                $installments['parcel_number'] = $key + 1;
 
-                if ($updateCompetence) {
-                    if (!array_key_exists('competence_date', $installments)) {
-                        $date = new Carbon($installments['due_date']);
-                        $date->subMonths(1);
-                        $installments['competence_date'] = $date;
+                if (array_key_exists('id', $installments)) {
+                    $installments['parcel_number'] = $key + 1;
+                    $installmentBD = PaymentRequestHasInstallments::findOrFail($installments['id']);
+                    $installmentBD->fill($installments)->save();
+                    if (array_key_exists('billet_file', $installments)) {
+                        $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
                     }
-                }
+                    $notDeleteInstallmentsID[] = $installments['id'];
+                } else {
 
-                if ($updateExtension) {
-                    if (!array_key_exists('extension_date', $installments)) {
-                        $installments['extension_date'] = $installments['due_date'];
+                    try {
+
+                    } catch (Exception $e) {
+                        dd('erro aqui');
                     }
-                }
+                    if (array_key_exists('billet_file', $installments)) {
+                        $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
+                    }
 
-                try {
+                    $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
+                    $installments['payment_request_id'] = $paymentRequest['id'];
+                    $installments['parcel_number'] = $key + 1;
+
+                    if ($updateCompetence) {
+                        if (!array_key_exists('competence_date', $installments)) {
+                            $date = new Carbon($installments['due_date']);
+                            $date->subMonths(1);
+                            $installments['competence_date'] = $date;
+                        }
+                    }
+
+                    if ($updateExtension) {
+                        if (!array_key_exists('extension_date', $installments)) {
+                            $installments['extension_date'] = $installments['due_date'];
+                        }
+                    }
+
                     $paymentRequestHasInstallments = $paymentRequestHasInstallments->create($installments);
-                } catch (\Exception $e) {
-                    $this->destroyInstallments($paymentRequest);
-                    $this->paymentRequest->findOrFail($paymentRequest->id)->delete();
-                    return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
+                    $notDeleteInstallmentsID[] = $paymentRequestHasInstallments->id;
                 }
             }
+            self::destroyInstallments($notDeleteInstallmentsID, $paymentRequest['id']);
         }
     }
 
-    public function destroyInstallments($paymentRequest)
+    public function destroyInstallments($notDeleteInstallmentsID, $paymentRequestID)
     {
-        $collection = $this->installments->where('payment_request_id', $paymentRequest['id'])->get(['id']);
-        $this->installments->destroy($collection->toArray());
+        $collection = $this->installments
+            ->whereNotIn('id', $notDeleteInstallmentsID)
+            ->where('payment_request_id', $paymentRequestID)
+            ->get(['id']);
+
+        $this->installments->destroy($collection->pluck('id'));
     }
 
     public function syncTax($paymentRequest, $paymentRequestInfo)
