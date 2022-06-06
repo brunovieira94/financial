@@ -244,12 +244,6 @@ class PaymentRequestService
                     }
                     $notDeleteInstallmentsID[] = $installments['id'];
                 } else {
-
-                    try {
-
-                    } catch (Exception $e) {
-                        dd('erro aqui');
-                    }
                     if (array_key_exists('billet_file', $installments)) {
                         $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
                     }
