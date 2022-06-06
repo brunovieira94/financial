@@ -47,6 +47,6 @@ class BillingController extends Controller
 
     public function getCangoorooData(Request $request)
     {
-        return $this->cangoorooService->updateCangoorooData($request->booking_id,$request->reserve);
+        return $this->cangoorooService->updateCangoorooData($request->booking_id, $request->reserve);
     }
 }

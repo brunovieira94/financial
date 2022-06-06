@@ -7,17 +7,17 @@ use App\Services\HotelService as HotelService;
 use App\Http\Requests\StoreHotelRequest;
 use App\Http\Requests\PutHotelRequest;
 use App\Imports\HotelsImport;
-//use App\Imports\HotelsExport;
+use App\Exports\HotelsExport;
 
 class HotelController extends Controller
 {
     private $hotelService;
-    // private $hotelImport;
+    private $hotelImport;
 
-    public function __construct(HotelService $hotelService) //, HotelsImport $hotelImport
+    public function __construct(HotelService $hotelService, HotelsImport $hotelImport)
     {
         $this->hotelService = $hotelService;
-        // $this->hotelImport = $hotelImport;
+        $this->hotelImport = $hotelImport;
     }
 
     public function index(Request $request)
@@ -42,25 +42,21 @@ class HotelController extends Controller
 
     public function destroy($id)
     {
-        $hotel = $this->hotelService->deleteHotel($id);
+        $this->hotelService->deleteHotel($id);
         return response('');
     }
 
-    // public function import()
-    // {
-    //     $this->hotelImport->import(request()->file('import_file'));
-    //     return response('');
-    // }
+    public function import()
+    {
+        $this->hotelImport->import(request()->file('import_file'));
+        return response('');
+    }
 
-    // public function export(Request $request)
-    // {
-    //     if(array_key_exists('exportFormat', $request->all()))
-    //     {
-    //         if($request->all()['exportFormat'] == 'csv')
-    //         {
-    //             return (new HotelsExport($request->all()))->download('hoteis.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-    //         }
-    //     }
-    //     return (new HotelsExport($request->all()))->download('hoteis.xlsx', \Maatwebsite\Excel\Excel::XLSX);
-    // }
+    public function export(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
+            return (new HotelsExport($request->all()))->download('hotéis.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        }
+        return (new HotelsExport($request->all()))->download('hotéis.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
 }

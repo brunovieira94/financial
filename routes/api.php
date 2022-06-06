@@ -179,6 +179,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [HotelController::class, 'update']);
         Route::delete('/{id}', [HotelController::class, 'destroy']);
         // Route::post('/import', [HotelController::class, 'import']);
+        Route::post('/export', [HotelController::class, 'export']);
     });
 
     Route::prefix('billing')->group(function () {

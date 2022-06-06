@@ -23,8 +23,22 @@ class Hotel extends Model
     }
 
     use SoftDeletes;
-    protected $table='hotels';
-    protected $fillable = ['id_hotel_cangooroo', 'id_hotel_omnibees', 'hotel_name', 'chain', 'email', 'email_omnibees', 'phone', 'billing_type', 'group_form_payment_id', 'holder_full_name', 'cpf_cnpj', 'bank_account_id', 'is_valid'];
+    protected $table = 'hotels';
+    protected $fillable = [
+        'id_hotel_cangooroo',
+        'id_hotel_omnibees',
+        'hotel_name',
+        'chain',
+        'email',
+        'email_omnibees',
+        'phone',
+        'billing_type',
+        'group_form_payment_id',
+        'holder_full_name',
+        'cpf_cnpj',
+        'bank_account_id',
+        'is_valid',
+    ];
     protected $hidden = ['bank_account_id', 'group_form_payment_id'];
 
     public function bank_account()
