@@ -42,7 +42,7 @@ class BillingService
         $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'],$billingInfo['reserve']);
         if(is_array($cangooroo) && array_key_exists('error', $cangooroo)){
             return response()->json([
-                'erro' => $cangooroo['error'],
+                'error' => $cangooroo['error'],
             ], 422);
         }
         $billing = $billing->create($billingInfo);
@@ -55,7 +55,7 @@ class BillingService
         $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'],$billingInfo['reserve']);
         if(is_array($cangooroo) && array_key_exists('error', $cangooroo)){
             return response()->json([
-                'erro' => $cangooroo['error'],
+                'error' => $cangooroo['error'],
             ], 422);
         }
         $billing->fill($billingInfo)->save();
