@@ -61,8 +61,8 @@ class StorePaymentRequestRequest extends FormRequest
             'tax.*.type_of_tax_id' => 'integer|required_with_all:invoice_file,invoice_number,net_value,tax.*.tax_amount|exists:type_of_tax,id',
             'tax.*.tax_amount' => 'numeric|required_with_all:invoice_file,invoice_number,tax.*.id_type_of_tax,net_value',
             //Boleto
-            'bar_code' => ['max:150', 'required_if:payment_type,==,1'],
-            'billet_file' => ['file', 'required_if:payment_type,==,1'],
+            //'bar_code' => ['max:150', 'required_if:payment_type,==,1'],
+            //'billet_file' => ['file', 'required_if:payment_type,==,1'],
             //installments
             'installments.*.portion_amount' => 'required_with:installments.*.due_date,installments.*.note,installments.*.pay|numeric',
             'installments.*.due_date' => 'required_with:installments.*.portion_amount,installments.*.note,installments.*.pay|date',
