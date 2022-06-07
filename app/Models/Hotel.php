@@ -13,9 +13,8 @@ class Hotel extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['bank_account', 'payment_type', '*'];
+    protected static $logAttributes = ['bank_account', 'group_payment', '*'];
     protected static $logName = 'hotels';
-    protected $hidden = ['payment_type_id'];
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
@@ -24,16 +23,31 @@ class Hotel extends Model
     }
 
     use SoftDeletes;
-    protected $table='hotels';
-    protected $fillable = ['id_hotel_cangooroo', 'id_hotel_omnibees', 'hotel_name', 'chain', 'email', 'email_omnibees', 'phone', 'billing_type', 'payment_type_id', 'holder_full_name', 'cpf_cnpj', 'bank_account_id', 'is_valid'];
+    protected $table = 'hotels';
+    protected $fillable = [
+        'id_hotel_cangooroo',
+        'id_hotel_omnibees',
+        'hotel_name',
+        'chain',
+        'email',
+        'email_omnibees',
+        'phone',
+        'billing_type',
+        'group_form_payment_id',
+        'holder_full_name',
+        'cpf_cnpj',
+        'bank_account_id',
+        'is_valid',
+    ];
+    protected $hidden = ['bank_account_id', 'group_form_payment_id'];
 
     public function bank_account()
     {
         return $this->belongsToMany(BankAccount::class, 'hotel_has_bank_accounts', 'hotel_id', 'bank_account_id')->with(['bank', 'hotel_bank_account_default']);
     }
 
-    public function payment_type()
+    public function group_payment()
     {
-        return $this->hasOne(PaymentType::class, 'id', 'payment_type_id');
+        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id')->with('form_payment');
     }
 }

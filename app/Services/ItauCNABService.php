@@ -246,14 +246,14 @@ class ItauCNABService
 
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = BankAccount::with('bank')->findOrFail($requestInfo['bank_account_id']);
-        $allPaymentRequest = $this->paymentRequest
-            ->with($this->withPaymentRequest)
-            ->whereIn('id', $requestInfo['payment_request_ids'])
+        $allInstallments = $this->installments
+            ->with(['payment_request', 'group_payment', 'bank_account_provider'])
+            ->whereIn('id', $requestInfo['installments_ids'])
             ->get();
 
         //agrupar todos os pagamentos
-        $allGroupedPaymentRequest = Utils::groupPayments(
-            $allPaymentRequest,
+        $allGroupedInstallment = Utils::groupInstallments(
+            $allInstallments,
             $bankAccount->bank->bank_code
         );
 
@@ -261,12 +261,12 @@ class ItauCNABService
             case '001':
                 $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/bb/cnab240/cobranca.yml');
                 $remessa = new Remessa($remessaLayout);
-                $remessa = GerarRemessa::gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedPaymentRequest, $requestInfo['installments_ids']);
+                $remessa = GerarRemessa::gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
                 break;
             case '341':
                 $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/itau/cnab240/cobranca.yml');
                 $remessa = new Remessa($remessaLayout);
-                $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedPaymentRequest, $requestInfo['installments_ids']);
+                $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
                 break;
             default:
                 return Response()->json([
@@ -315,15 +315,16 @@ class ItauCNABService
             ]
         );
 
-        self::syncCnabGenerate($cnabGenerated, $allPaymentRequest, $requestInfo['installments_ids']);
+        self::syncCnabGenerate($cnabGenerated, $requestInfo['payment_request_ids'], $requestInfo['installments_ids']);
 
         return response()->json([
             'linkArchive' => Storage::disk('s3')->temporaryUrl("tempCNAB/{$archiveName}", now()->addMinutes(30))
         ], 200);
     }
 
-    public function syncCnabGenerate($cnabGenerated, $allPaymentRequest, $installments)
+    public function syncCnabGenerate($cnabGenerated, $allPaymentRequestID, $installments)
     {
+        $allPaymentRequest = PaymentRequest::with('installments')->whereIn('id', $allPaymentRequestID)->get();
         foreach ($allPaymentRequest as $paymentRequest) {
             $cnabGeneratedHasPaymentRequests = CnabGeneratedHasPaymentRequests::create(
                 [

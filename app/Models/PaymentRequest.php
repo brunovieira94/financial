@@ -101,7 +101,7 @@ class PaymentRequest extends Model
 
     public function installments()
     {
-        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id');
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id')->with(['group_payment', 'bank_account_provider']);
     }
 
     public function provider()
