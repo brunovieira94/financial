@@ -235,18 +235,17 @@ class PaymentRequestService
             $notDeleteInstallmentsID = [];
             foreach ($paymentRequestInfo['installments'] as $key => $installments) {
 
+                if (array_key_exists('billet_file', $installments)) {
+                    $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
+                }
+
                 if (array_key_exists('id', $installments)) {
                     $installments['parcel_number'] = $key + 1;
                     $installmentBD = PaymentRequestHasInstallments::findOrFail($installments['id']);
                     $installmentBD->fill($installments)->save();
-                    if (array_key_exists('billet_file', $installments)) {
-                        $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
-                    }
                     $notDeleteInstallmentsID[] = $installments['id'];
                 } else {
-                    if (array_key_exists('billet_file', $installments)) {
-                        $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
-                    }
+
 
                     $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
                     $installments['payment_request_id'] = $paymentRequest['id'];
