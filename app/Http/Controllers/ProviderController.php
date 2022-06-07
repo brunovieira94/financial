@@ -8,6 +8,7 @@ use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\PutProviderRequest;
 use App\Imports\ProvidersImport;
 use App\Exports\ProvidersExport;
+use App\Models\Provider;
 
 class ProviderController extends Controller
 {
@@ -42,6 +43,13 @@ class ProviderController extends Controller
 
     public function destroy($id)
     {
+        if(Provider::where('cost_center_id', $id)->exists())
+        {
+            return response()->json([
+                'erro' => 'Este centro de custo está associado a uma ou várias solicitações de pagamento.'
+            ], 422);
+        }
+
         $provider = $this->providerService->deleteProvider($id);
         return response('');
     }
