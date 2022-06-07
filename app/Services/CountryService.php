@@ -47,6 +47,4 @@ class CountryService
         $this->country->findOrFail($id)->delete();
         return true;
     }
-
-
 }

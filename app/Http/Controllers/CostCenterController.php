@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreCostCenterRequest;
 use App\Http\Requests\PutCostCenterRequest;
 use App\Models\CostCenter;
+use App\Models\PaymentRequest;
 use App\Services\CostCenterService as CostCenterService;
 
 class CostCenterController extends Controller
@@ -53,6 +54,13 @@ class CostCenterController extends Controller
         {
             return response()->json([
                 'erro' => 'Este centro de custo está associado a outros centro de custos é necessário apagar e/ou alterar suas dependências antes de apagá lo.'
+            ], 422);
+        }
+
+        if(PaymentRequest::where('cost_center_id', $id)->exists())
+        {
+            return response()->json([
+                'erro' => 'Este centro de custo está associado a uma ou várias solicitações de pagamento.'
             ], 422);
         }
 
