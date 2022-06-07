@@ -31,7 +31,6 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             $Billing->recipient_name,
             $Billing->remark,
             $Billing->oracle_protocol,
-            $Billing->user_id,
             $Billing->user ? $Billing->user->name : $Billing->user,
             $Billing->payment_status,
             $Billing->status_123,
