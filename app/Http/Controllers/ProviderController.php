@@ -43,10 +43,10 @@ class ProviderController extends Controller
 
     public function destroy($id)
     {
-        if(Provider::where('cost_center_id', $id)->exists())
+        if(Provider::where('provider_id', $id)->exists())
         {
             return response()->json([
-                'erro' => 'Este centro de custo está associado a uma ou várias solicitações de pagamento.'
+                'erro' => 'Este fornecedor está associado a uma ou várias solicitações de pagamento.'
             ], 422);
         }
 
