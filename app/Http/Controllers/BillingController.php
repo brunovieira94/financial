@@ -7,6 +7,7 @@ use App\Services\BillingService as BillingService;
 use App\Services\CangoorooService as CangoorooService;
 use App\Http\Requests\StoreBillingRequest;
 use App\Http\Requests\PutBillingRequest;
+use App\Exports\BillingExport;
 
 class BillingController extends Controller
 {
@@ -54,5 +55,13 @@ class BillingController extends Controller
             ], 422);
         }
         return $cangooroo;
+    }
+
+    public function export(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
+            return (new BillingExport($request->all()))->download('faturamento.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        }
+        return (new BillingExport($request->all()))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

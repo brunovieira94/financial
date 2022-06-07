@@ -23,7 +23,21 @@ class Billing extends Model
     // Model attributes
     use SoftDeletes;
     protected $table = 'billing';
-    protected $fillable = ['cangooroo_booking_id', 'reserve', 'supplier_value', 'pay_date', 'boleto_value', 'boleto_code', 'recipient_name', 'remark', 'oracle_protocol', 'user_id', 'payment_status', 'status_123', 'cnpj'];
+    protected $fillable = [
+        'cangooroo_booking_id',
+        'reserve',
+        'supplier_value',
+        'pay_date',
+        'boleto_value',
+        'boleto_code',
+        'recipient_name',
+        'remark',
+        'oracle_protocol',
+        'user_id',
+        'payment_status',
+        'status_123',
+        'cnpj',
+    ];
     protected $hidden = ['user_id', 'cangooroo_booking_id'];
 
     public function user()
