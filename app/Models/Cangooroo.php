@@ -48,6 +48,6 @@ class Cangooroo extends Model
 
     public function hotel()
     {
-        return $this->hasOne(Hotel::class, 'id_hotel_cangooroo', 'hotel_id')->with('bank_account', 'group_payment');
+        return $this->hasOne(Hotel::class, 'id_hotel_cangooroo', 'hotel_id')->with('bank_account');
     }
 }

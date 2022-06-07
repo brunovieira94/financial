@@ -13,7 +13,7 @@ class Hotel extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['bank_account', 'group_payment', '*'];
+    protected static $logAttributes = ['bank_account', '*'];
     protected static $logName = 'hotels';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -33,21 +33,18 @@ class Hotel extends Model
         'email_omnibees',
         'phone',
         'billing_type',
-        'group_form_payment_id',
         'holder_full_name',
         'cpf_cnpj',
         'bank_account_id',
         'is_valid',
+        'cnpj_hotel',
+        'observations',
+        'form_of_payment'
     ];
     protected $hidden = ['bank_account_id', 'group_form_payment_id'];
 
     public function bank_account()
     {
         return $this->belongsToMany(BankAccount::class, 'hotel_has_bank_accounts', 'hotel_id', 'bank_account_id')->with(['bank', 'hotel_bank_account_default']);
-    }
-
-    public function group_payment()
-    {
-        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id')->with('form_payment');
     }
 }
