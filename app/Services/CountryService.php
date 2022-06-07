@@ -1,32 +1,27 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\Country;
-use App\Models\City;
-use App\Models\State;
 
 class CountryService
 {
     private $country;
-    private $city;
-    private $state;
 
-    public function __construct(Country $country, City $city, State $state)
+    public function __construct(Country $country)
     {
         $this->country = $country;
-        $this->city = $city;
-        $this->state = $state;
     }
 
     public function getAllCountry($requestInfo)
     {
-        $country = Utils::search($this->country,$requestInfo);
-        return Utils::pagination($country,$requestInfo);
+        $country = Utils::search($this->country, $requestInfo);
+        return Utils::pagination($country, $requestInfo);
     }
 
     public function getCountry($id)
     {
-      return $this->country->findOrFail($id);
+        return $this->country->findOrFail($id);
     }
 
     public function postCountry($countryInfo)
@@ -47,6 +42,4 @@ class CountryService
         $this->country->findOrFail($id)->delete();
         return true;
     }
-
-
 }

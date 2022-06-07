@@ -189,6 +189,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
+        Route::post('/export', [BillingController::class, 'export']);
     });
 
     //Restful route -> Company
