@@ -13,7 +13,7 @@ class Country extends Model
     use LogsActivity;
     protected static $logAttributes = ['*'];
     protected static $logName = 'country';
-    public function tapActivity(Activity $activity, string $eventName)
+    public function tapActivity(Activity $activity)
     {
         $user = auth()->user();
         $activity->causer_id = $user->id;
@@ -22,18 +22,20 @@ class Country extends Model
 
     // Model attributes
     use SoftDeletes;
-    protected $table='countries';
+    protected $table = 'countries';
     protected $fillable = ['title'];
 
-    public function state(){
+    public function state()
+    {
         return $this->hasMany(State::class, 'country_id', 'id');
     }
 
     //delete relationship
-    public static function boot() {
+    public static function boot()
+    {
         parent::boot();
-        self::deleting(function($country) {
-            $country->state->each(function($state) {
+        self::deleting(function ($country) {
+            $country->state->each(function ($state) {
                 $state->cities()->delete();
             });
             $country->state()->delete();
