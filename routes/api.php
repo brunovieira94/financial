@@ -249,6 +249,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{id}', [PaymentRequestController::class, 'show']);
         Route::post('/', [PaymentRequestController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
         Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice']);
+        Route::post('update-installment/{id}', [PaymentRequestController::class, 'updateInstallment']);
         Route::delete('/{id}', [PaymentRequestController::class, 'destroy']);
     });
 

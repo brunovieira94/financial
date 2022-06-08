@@ -245,8 +245,6 @@ class PaymentRequestService
                     $installmentBD->fill($installments)->save();
                     $notDeleteInstallmentsID[] = $installments['id'];
                 } else {
-
-
                     $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
                     $installments['payment_request_id'] = $paymentRequest['id'];
                     $installments['parcel_number'] = $key + 1;
@@ -452,5 +450,16 @@ class PaymentRequestService
                 }
             }
         }
+    }
+
+    public function updateInstallment($id, $request)
+    {
+        $requestInfo = $request->all();
+        $installment = $this->installments->findOrFail($id);
+        if (array_key_exists('billet_file', $requestInfo)) {
+            $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+        }
+        $installment->fill($requestInfo)->save();
+        return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
 }

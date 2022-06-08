@@ -39,7 +39,8 @@ class CheckUserHasPermission
             'group-form-payment',
             'all',
             'filter-user',
-            'approve-many'
+            'approve-many',
+            'update-installment'
         ];
 
         $routeAccessed = null;
