@@ -50,7 +50,7 @@ class ReportService
     public function getAllDueInstallment($requestInfo)
     {
         $result = Utils::search($this->installment, $requestInfo);
-        $result = $result->with(['payment_request'])->has('payment_request');
+        $result = $result->with(['payment_request', 'group_payment', 'bank_account_provider'])->has('payment_request');
 
         if (array_key_exists('from', $requestInfo)) {
             $result = $result->where('extension_date', '>=', $requestInfo['from']);
@@ -140,7 +140,7 @@ class ReportService
     public function getAllApprovedInstallment($requestInfo)
     {
         $installment = Utils::search($this->installment, $requestInfo);
-        $installment = $installment->with(['payment_request']);
+        $installment = $installment->with(['payment_request', 'group_payment', 'bank_account_provider']);
 
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {
@@ -353,7 +353,7 @@ class ReportService
     public function getInstallmentsPayable($requestInfo)
     {
         $query = $this->installment->query();
-        $query = $query->with(['payment_request']);
+        $query = $query->with(['payment_request', 'group_payment', 'bank_account_provider']);
 
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
