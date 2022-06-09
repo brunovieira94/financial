@@ -56,7 +56,6 @@ class Remessa
             foreach ($groupedInstallment as $installment) {
                 $detalhe = $lote->novoDetalhe();
 
-                dd($installment->id);
                 $lotValue += $installment->portion_amount;
 
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {

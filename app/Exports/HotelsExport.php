@@ -16,29 +16,30 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
 
     public function collection()
     {
-        return Hotel::get();
+        return Hotel::with(['bank_account'])->get();
     }
 
-    public function map($Hotel): array
+    public function map($hotel): array
     {
+        $bankAccount = $hotel->bank_account->first();
         return [
-            $Hotel->id_hotel_cangooroo,
-            $Hotel->id_hotel_omnibees,
-            $Hotel->hotel_name,
-            $Hotel->chain,
-            $Hotel->email,
-            $Hotel->email_omnibees,
-            $Hotel->phone,
-            $Hotel->billing_type,
-            // $Hotel->group_form_payment() ? $Hotel->group_form_payment()->title : $Hotel->group_form_payment(),
-            // $Hotel->bank_account() ? $Hotel->bank_account()->title : $Hotel->bank_account(),
-            // $Hotel->bank_account() ? $Hotel->bank_account()->title : $Hotel->bank_account(),
-            // $Hotel->bank_account() ? $Hotel->bank_account()->agency_number->bank()->bank_code : $Hotel->bank_account(),
-            // $Hotel->bank_account() ? $Hotel->bank_account()->account_type : $Hotel->bank_account(),
-            $Hotel->holder_full_name,
-            $Hotel->cpf_cnpj,
-            $Hotel->is_valid,
-            $Hotel->created_at,
+            $hotel->id_hotel_cangooroo,
+            $hotel->id_hotel_omnibees,
+            $hotel->hotel_name,
+            $hotel->chain,
+            $hotel->email,
+            $hotel->email_omnibees,
+            $hotel->phone,
+            !is_null($hotel->billing_type) ? $hotel->billingTypes[$hotel->billing_type] : '',
+            !is_null($hotel->form_of_payment) ? $hotel->formsOfPayment[$hotel->form_of_payment] : '',
+            !is_null($bankAccount) ? $bankAccount->bank->title : '',
+            !is_null($bankAccount) ? $bankAccount->bank->bank_code : '',
+            !is_null($bankAccount) ? $bankAccount->agency_number : '',
+            !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypes[$bankAccount->account_type] : '',
+            $hotel->holder_full_name,
+            $hotel->cpf_cnpj,
+            $hotel->is_valid ? 'Sim' : 'Não',
+            $hotel->created_at,
         ];
     }
 
@@ -49,18 +50,18 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
             'Id Omnibees',
             'Royalty',
             'Rede',
-            'E-mail respondido',
-            'E-mail cadastro Ominibees',
+            'E-mail Respondido',
+            'E-mail Cdastro Ominibees',
             'Telefone',
-            'Tipo de faturamento',
-            // 'Forma de pagamento',
-            // 'Banco',
-            // 'Código do Banco',
-            // 'Agência',
-            // 'Tipo de Conta',
+            'Tipo de Faturamento',
+            'Forma de Pagamento',
+            'Banco',
+            'Código do Banco',
+            'Agência',
+            'Tipo de Conta',
             'Nome Completo do Titular',
             'CPF/CNPJ',
-            'Validação CNPJ',
+            'CNPJ Válido?',
             'Data de Criação',
         ];
     }
