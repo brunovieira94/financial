@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreHotelRequest extends FormRequest
 {
@@ -23,11 +22,12 @@ class StoreHotelRequest extends FormRequest
             'email_omnibees' => 'max:150',
             'phone' => 'max:150',
             'billing_type' => 'required|integer|min:0|max:2',
-            'form_of_payment' => 'integer|min:0|max:2',
+            'form_of_payment' => 'required_unless:billing_type,2|prohibited_if:billing_type,2|integer|min:0|max:2',
             'holder_full_name' => 'max:150',
             'cpf_cnpj' => 'required|max:150',
             'is_valid' => 'boolean',
             'cnpj_hotel' => 'max:150',
+            'bank_accounts.*' => 'required_unless:billing_type,2|required_unless:form_of_payment,0|prohibited_if:billing_type,2|prohibited_if:form_of_payment,0',
             'bank_accounts.*.agency_number' => 'required_without_all:bank_accounts.*.pix_key|numeric',
             'bank_accounts.*.account_number' => 'numeric|required_without_all:bank_accounts.*.pix_key',
             'bank_accounts.*.bank_id' => 'integer|required_without_all:bank_accounts.*.pix_key|exists:banks,id',

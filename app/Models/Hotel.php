@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\Pivot;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 
@@ -47,4 +45,16 @@ class Hotel extends Model
     {
         return $this->belongsToMany(BankAccount::class, 'hotel_has_bank_accounts', 'hotel_id', 'bank_account_id')->with(['bank', 'hotel_bank_account_default']);
     }
+
+    public array $formsOfPayment = [
+        "Boleto",
+        "Pix",
+        "Ted",
+    ];
+
+    public array $billingTypes = [
+        "Faturado",
+        "Pré-pagamento",
+        "VCN",
+    ];
 }

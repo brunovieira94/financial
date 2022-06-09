@@ -3,6 +3,9 @@
 namespace App\Exports;
 
 use App\Models\Billing;
+use App\Models\Cangooroo;
+use App\Models\Hotel;
+use App\Models\BankAccount;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -16,44 +19,84 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
 
     public function collection()
     {
-        return Billing::get();
+        return Billing::with(['cangooroo.hotel.bank_account', 'user'])->get();
     }
 
-    public function map($Billing): array
+    public function map($billing): array
     {
+        /** @var Cangooroo*/
+        $cangooroo = $billing->cangooroo;
+        /** @var Hotel*/
+        $hotel = $cangooroo->hotel;
+        /** @var BankAccount*/
+        $bankAccount = $hotel->bank_account->first();
         return [
-            $Billing->cangooroo_booking_id,
-            $Billing->reserve,
-            $Billing->supplier_value,
-            $Billing->pay_date,
-            $Billing->boleto_value,
-            $Billing->boleto_code,
-            $Billing->recipient_name,
-            $Billing->remark,
-            $Billing->oracle_protocol,
-            $Billing->user ? $Billing->user->name : $Billing->user,
-            $Billing->payment_status,
-            $Billing->status_123,
-            $Billing->cnpj,
+            $billing->user->name,
+            $billing->reserve,
+            $billing->payment_status,
+            $cangooroo->status,
+            $billing->status_123,
+            $billing->supplier_value,
+            $billing->boleto_value,
+            $billing->pay_date,
+            $billing->boleto_code,
+            $billing->remark,
+            $billing->oracle_protocol,
+            $cangooroo['123_id'],
+            $cangooroo->supplier_name,
+            $cangooroo->reservation_date,
+            $cangooroo->check_in,
+            $cangooroo->check_out,
+            $cangooroo->hotel_id,
+            $cangooroo->supplier_hotel_id,
+            $cangooroo->hotel_name,
+            !is_null($hotel->billing_type) ? $hotel->billingTypes[$hotel->billing_type] : '',
+            !is_null($bankAccount) ? $bankAccount->bank->title : '',
+            !is_null($bankAccount) ? $bankAccount->bank->bank_code : '',
+            !is_null($bankAccount) ? $bankAccount->agency_number : '',
+            !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypes[$bankAccount->account_type] : '',
+            !is_null($hotel->form_of_payment) ? $hotel->formsOfPayment[$hotel->form_of_payment] : '',
+            $hotel->holder_full_name,
+            $hotel->cpf_cnpj,
+            $hotel->is_valid ? 'Sim' : 'Não',
+            $cangooroo->selling_price,
+            $billing->created_at,
         ];
     }
 
     public function headings(): array
     {
         return [
-            'Id Reserva Cangooroo',
+            'Operador',
             'Reserva',
-            'Valor do Fornecedor',
-            'Data de Pagamento',
+            'Status do Pagamento',
+            'Status do Cangooroo',
+            'Status 123',
+            'Valor do Parceiro',
             'Valor do Boleto',
+            'Data de pagamento',
             'Código do Boleto',
-            'Nome do Beneficiário Final',
             'Observação',
             'Protocolo Oracle',
-            'Usuário',
-            'Status do Pagamento',
-            'Status 123',
-            'Cnpj',
+            'ID 123',
+            'Parceiro',
+            'Data da Reserva',
+            'Data Check-in',
+            'Data do Check-out',
+            'ID Hotel - Cangooroo',
+            'ID Hotel - Parceiro',
+            'Nome do Hotel',
+            'Tipo de Faturamento',
+            'Banco',
+            'Código do Banco',
+            'Agência',
+            'Tipo de Conta',
+            'Forma de pagamento',
+            'Nome Completo do Titular',
+            'CPF/CNPJ',
+            'CNPJ Válido?',
+            'Valor Cangooroo',
+            'Data de Criação',
         ];
     }
 }
