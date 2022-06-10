@@ -271,7 +271,7 @@ class PaymentRequestController extends Controller
 
     public function checkInvoiceOrBilletProviderExists($attribute, $value, $requestInfo)
     {
-        if ($attribute == 'bar_code') {
+        if ($attribute == 'bar_code' or $attribute == 'billet_number') {
             if (PaymentRequest::with(['provider', 'installments'])
                 ->whereRelation('installments', $attribute, '=', $value)
                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
