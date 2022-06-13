@@ -12,7 +12,7 @@ class Remessa
         $remessa->header->codigo_banco = $bankAccount->bank->bank_code;
         $remessa->header->tipo_inscricao = 2; // CNPJ
         $remessa->header->inscricao_numero = Utils::onlyNumbers($company->cnpj);
-        $remessa->header->numero_convenio = $bankAccount->covenant;
+        $remessa->header->numero_convenio = Utils::formatCnab('9', $bankAccount->covenant, 9);
         $remessa->header->agencia = $bankAccount->agency_number;
         $remessa->header->digito_verificador_agencia = $bankAccount->agency_check_number ?? '';
         $remessa->header->conta = $bankAccount->account_number;
