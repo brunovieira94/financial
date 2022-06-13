@@ -78,6 +78,7 @@ class StorePaymentRequestRequest extends FormRequest
             'installments.*.group_form_payment_id' => 'integer|exists:group_form_payment,id',
             'installments.*.billet_number' => 'max:150',
             'installments.*.fine' => 'numeric',
+            'installments.*.billet_file' => 'file',
         ];
     }
 }
