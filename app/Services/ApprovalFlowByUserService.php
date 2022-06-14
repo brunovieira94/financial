@@ -170,6 +170,7 @@ class ApprovalFlowByUserService
     public function approveAccount($id)
     {
         $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
+
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
 
