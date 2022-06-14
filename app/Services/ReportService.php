@@ -34,7 +34,7 @@ class ReportService
     public function getAllDuePaymentRequest($requestInfo)
     {
         $result = Utils::search($this->paymentRequest, $requestInfo);
-        $result = $result->with(['attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = $result->with(['purchase_order', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if (array_key_exists('from', $requestInfo)) {
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
@@ -207,7 +207,7 @@ class ReportService
     public function getBillsToPay($requestInfo)
     {
         $query = $this->paymentRequest->query();
-        $query = $query->with(['attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $query = $query->with(['purchase_order', 'cnab_payment_request', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
 
         if (array_key_exists('cpfcnpj', $requestInfo)) {
@@ -335,9 +335,19 @@ class ReportService
                 // });
             }
         }
-        if (array_key_exists('days_late', $requestInfo)) {
-            $query->whereHas('installments', function ($query) use ($requestInfo) {
-                $query->where('status', '!=', Config::get('constants.status.paid out'))->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
+        if (array_key_exists('cnab_date', $requestInfo)) {
+            $query->whereHas('cnab_payment_request', function ($cnabPaymentRequest) use ($requestInfo) {
+                $cnabPaymentRequest->whereHas('cnab_generated', function ($cnabGenerated) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '>=', $requestInfo['cnab_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '<=', $requestInfo['cnab_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['cnab_date']) && !array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->whereBetween('file_date', [now(), now()->addMonths(1)]);
+                    }
+                });
             });
         }
 
@@ -353,8 +363,7 @@ class ReportService
     public function getInstallmentsPayable($requestInfo)
     {
         $query = $this->installment->query();
-        $query = $query->with(['payment_request', 'group_payment', 'bank_account_provider']);
-
+        $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('cpfcnpj', $requestInfo)) {
@@ -493,6 +502,22 @@ class ReportService
                 $query->where('deleted_at', '!=', NULL);
             }
         });
+
+        if (array_key_exists('cnab_date', $requestInfo)) {
+            $query->whereHas('cnab_generated_installment', function ($cnabInstallment) use ($requestInfo) {
+                $cnabInstallment->whereHas('generated_cnab', function ($cnabGenerated) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '>=', $requestInfo['cnab_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '<=', $requestInfo['cnab_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['cnab_date']) && !array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->whereBetween('file_date', [now(), now()->addMonths(1)]);
+                    }
+                });
+            });
+        }
 
 
 
