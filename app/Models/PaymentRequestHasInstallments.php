@@ -28,6 +28,11 @@ class PaymentRequestHasInstallments extends Model
         return $this->hasOne(BankAccount::class, 'id', 'bank_account_provider_id')->with('bank');
     }
 
+    public function cnab_generated_installment()
+    {
+        return $this->hasOne(CnabPaymentRequestsHasInstallments::class, 'installment_id', 'id')->with('generated_cnab')->orderBy('id', 'asc');
+    }
+
     public function getBilletLinkAttribute()
     {
         if (!is_null($this->attributes['billet_file'])) {
