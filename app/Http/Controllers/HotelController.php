@@ -12,12 +12,12 @@ use App\Imports\HotelsImport;
 class HotelController extends Controller
 {
     private $hotelService;
-    // private $hotelImport;
+    private $hotelImport;
 
-    public function __construct(HotelService $hotelService) //, HotelsImport $hotelImport
+    public function __construct(HotelService $hotelService, HotelsImport $hotelImport)
     {
         $this->hotelService = $hotelService;
-        // $this->hotelImport = $hotelImport;
+        $this->hotelImport = $hotelImport;
     }
 
     public function index(Request $request)
@@ -46,11 +46,11 @@ class HotelController extends Controller
         return response('');
     }
 
-    // public function import()
-    // {
-    //     $this->hotelImport->import(request()->file('import_file'));
-    //     return response('');
-    // }
+    public function import()
+    {
+        $this->hotelImport->import(request()->file('import_file'));
+        return response('');
+    }
 
     // public function export(Request $request)
     // {
