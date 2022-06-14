@@ -36,63 +36,31 @@ class ApprovalFlowByUserService
             ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
 
 
-        if (array_key_exists('provider', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+        $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
-            });
-        }
-
-        if (array_key_exists('company', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            }
+            if (array_key_exists('company', $requestInfo)) {
                 $query->where('company_id', $requestInfo['company']);
-            });
-        }
-
-        if (array_key_exists('cost_center', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            }
+            if (array_key_exists('cost_center', $requestInfo)) {
                 $query->where('cost_center_id', $requestInfo['cost_center']);
-            });
-        }
-
-        if (array_key_exists('approval_order', $requestInfo)) {
-            $accountsPayableApprovalFlow->where('order', $requestInfo['approval_order']);
-        }
-
-        if (array_key_exists('cpfcnpj', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($paymentRequest) use ($requestInfo) {
-                $paymentRequest->whereHas('provider', function ($query) use ($requestInfo) {
+            }
+            if (array_key_exists('cpfcnpj', $requestInfo)) {
+                $query->whereHas('provider', function ($query) use ($requestInfo) {
                     $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
                 });
-            });
-        }
-
-        if (array_key_exists('chart_of_accounts', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->where('chart_of_account_id', $requestInfo['chart_of_accounts']);
-            });
-        }
-
-        if (array_key_exists('payment_request', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->where('id', $requestInfo['payment_request']);
-            });
-        }
-
-        if (array_key_exists('user', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->where('user_id', $requestInfo['user']);
-            });
-        }
-
-        if (array_key_exists('status', $requestInfo)) {
-            $accountsPayableApprovalFlow->where('status', $requestInfo['status']);
-            if ($requestInfo['status'] == 3) {
-                $this->filterCanceled = true;
             }
-        }
-
-        if (array_key_exists('created_at', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            if (array_key_exists('chart_of_accounts', $requestInfo)) {
+                $query->where('chart_of_account_id', $requestInfo['chart_of_accounts']);
+            }
+            if (array_key_exists('payment_request', $requestInfo)) {
+                $query->where('id', $requestInfo['payment_request']);
+            }
+            if (array_key_exists('user', $requestInfo)) {
+                $query->where('user_id', $requestInfo['user']);
+            }
+            if (array_key_exists('created_at', $requestInfo)) {
                 if (array_key_exists('from', $requestInfo['created_at'])) {
                     $query->where('created_at', '>=', $requestInfo['created_at']['from']);
                 }
@@ -102,11 +70,8 @@ class ApprovalFlowByUserService
                 if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
                     $query->whereBetween('created_at', [now()->addMonths(-1), now()]);
                 }
-            });
-        }
-
-        if (array_key_exists('pay_date', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            }
+            if (array_key_exists('pay_date', $requestInfo)) {
                 if (array_key_exists('from', $requestInfo['pay_date'])) {
                     $query->where('pay_date', '>=', $requestInfo['pay_date']['from']);
                 }
@@ -116,11 +81,8 @@ class ApprovalFlowByUserService
                 if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
                     $query->whereBetween('pay_date', [now(), now()->addMonths(1)]);
                 }
-            });
-        }
-
-        if (array_key_exists('extension_date', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            }
+            if (array_key_exists('extension_date', $requestInfo)) {
                 if (array_key_exists('from', $requestInfo['extension_date'])) {
                     $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from'])->get('payment_request_id');
                     $paymentIds = [];
@@ -175,14 +137,23 @@ class ApprovalFlowByUserService
                     }
                     $query->whereIn('id', $paymentIdsToReturn);
                 }
-            });
-        }
-        if (array_key_exists('days_late', $requestInfo)) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            }
+            if (array_key_exists('days_late', $requestInfo)) {
                 $query->whereHas('installments', function ($query) use ($requestInfo) {
                     $query->where('status', '!=', Config::get('constants.status.paid out'))->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
                 });
-            });
+            }
+        });
+
+        if (array_key_exists('approval_order', $requestInfo)) {
+            $accountsPayableApprovalFlow->where('order', $requestInfo['approval_order']);
+        }
+
+        if (array_key_exists('status', $requestInfo)) {
+            $accountsPayableApprovalFlow->where('status', $requestInfo['status']);
+            if ($requestInfo['status'] == 3) {
+                $this->filterCanceled = true;
+            }
         }
 
         if ($this->filterCanceled) {
