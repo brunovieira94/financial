@@ -77,7 +77,6 @@ class HotelsImport implements ToCollection, WithValidation, WithHeadingRow
                 'holder_full_name'=> $row['nome_completo_do_titular'],
                 'cpf_cnpj'=> $row['cpfcnpj'],
                 'cnpj_hotel'=> $row['cnpj_omnibees'],
-                'observations'=> $row['observacoes'],
                 'is_valid'=> $this->isValid,
             ]);
 
@@ -125,7 +124,7 @@ class HotelsImport implements ToCollection, WithValidation, WithHeadingRow
     public function rules(): array
     {
         return [
-            'id_hotel_cangooroo' => 'required|unique|max:150',
+            'id_hotel_cangooroo' => 'required|unique:hotels,id_hotel_cangooroo,NULL,id,deleted_at,NULL|max:150',
             'id_hotel_ominibees' => 'max:150',
             'royalty' => 'required|max:150',
             'rede' => 'max:150',
