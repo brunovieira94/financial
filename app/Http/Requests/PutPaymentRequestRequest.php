@@ -68,6 +68,12 @@ class PutPaymentRequestRequest extends FormRequest
             'installments.*.pay' => 'boolean',
             'installments.*.extension_date' => 'date',
             'installments.*.competence_date' => 'date',
+            'installments.*.bar_code' => 'max:150',
+            'installments.*.bank_account_provider_id' => 'integer|exists:bank_accounts,id',
+            'installments.*.group_form_payment_id' => 'integer|exists:group_form_payment,id',
+            'installments.*.billet_number' => 'max:150',
+            'installments.*.fine' => 'numeric',
+            'installments.*.billet_file' => 'file',
         ];
     }
 }
