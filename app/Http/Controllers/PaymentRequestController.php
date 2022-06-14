@@ -9,6 +9,7 @@ use App\Services\PaymentRequestService as PaymentRequestService;
 use App\Http\Requests\PutPaymentRequestRequest;
 use App\Imports\PaymentRequestsImport;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasInstallments;
 use App\Models\PurchaseOrderHasInstallments;
 
 class PaymentRequestController extends Controller
@@ -39,42 +40,78 @@ class PaymentRequestController extends Controller
 
     public function store(StorePaymentRequestRequest $request)
     {
-        $attribute = null;
+        $requestInfo = $request->all();
 
-        if (array_key_exists('bar_code', $request->all())) {
-            $attribute = 'bar_code';
-            $value = $request->bar_code;
-        } else if (array_key_exists('invoice_number', $request->all())) {
-            $attribute = 'invoice_number';
-            $value = $request->invoice_number;
-        }
-
-        if ($attribute != null) {
-            if (PaymentRequest::with('provider')
-                ->where($attribute, $value)
-                ->whereRelation('provider', 'id', '=', $request->provider_id)
-                ->exists()
-            ) {
+        if (array_key_exists('invoice_number', $requestInfo)) {
+            if (!self::checkInvoiceOrBilletProviderExists('invoice_number', $request->invoice_number, $requestInfo)) {
                 return response()->json([
                     'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
                         PaymentRequest::with('provider')
-                        ->where($attribute, $value)
+                        ->where('invoice_number', $request->invoice_number)
                         ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                         '.'
                 ], 409);
             }
-            if (PaymentRequest::where($attribute, $value)
-                ->exists()
-            ) {
-                if ($request->force_registration) {
-                    return $this->paymentRequestService->postPaymentRequest($request);
+            if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
+                if (!$requestInfo['force_registration']) {
+                    return response()->json([
+                        'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                            PaymentRequest::where('invoice_number', $request->invoice_number)
+                            ->first()->id .
+                            ', tem certeza que deseja cadastrar mesmo assim?'
+                    ], 424);
                 }
-                return response()->json([
-                    'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                        PaymentRequest::where($attribute, $value)
-                        ->first()->id .
-                        ', tem certeza que deseja cadastrar mesmo assim?'
-                ], 424);
+            }
+        }
+
+        foreach ($requestInfo['installments'] as $installment) {
+            if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
+                if (!self::checkInvoiceOrBilletProviderExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                    return response()->json([
+                        'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                            PaymentRequest::with(['provider', 'installments'])
+                            ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
+                            ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
+                            '.'
+                    ], 409);
+                    break;
+                }
+                if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                    if (!$requestInfo['force_registration']) {
+                        return response()->json([
+                            'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                PaymentRequest::with('installments')
+                                ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
+                                ->first()->id .
+                                ', tem certeza que deseja cadastrar mesmo assim?'
+                        ], 424);
+                        break;
+                    }
+                }
+            }
+            if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
+                if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                    return response()->json([
+                        'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                            PaymentRequest::with(['provider', 'installments'])
+                            ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
+                            ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
+                            '.'
+                    ], 409);
+                    break;
+                }
+                if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                    if (!$requestInfo['force_registration']) {
+                        return response()->json([
+                            'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                PaymentRequest::with('installments')
+                                ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
+                                ->first()->id .
+                                ', tem certeza que deseja cadastrar mesmo assim?'
+                        ], 424);
+                        break;
+                    }
+                }
             }
         }
 
@@ -89,62 +126,91 @@ class PaymentRequestController extends Controller
 
     public function update(PutPaymentRequestRequest $request, $id)
     {
-        $attribute = null;
-        $provider_id = null;
+        $requestInfo = $request->all();
+        $paymentRequest = PaymentRequest::with(['provider', 'installments'])->findOrFail($id);
 
-        if (array_key_exists('bar_code', $request->all())) {
-            $attribute = 'bar_code';
-            $value = $request->bar_code;
-        } else if (array_key_exists('invoice_number', $request->all())) {
-            $attribute = 'invoice_number';
-            $value = $request->invoice_number;
+        if (array_key_exists('invoice_number', $requestInfo)) {
+            if ($paymentRequest->invoice_number != $requestInfo['invoice_number']) {
+                if (array_key_exists('invoice_number', $requestInfo)) {
+                    if (!self::checkInvoiceOrBilletProviderExists('invoice_number', $request->invoice_number, $requestInfo)) {
+                        return response()->json([
+                            'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                                PaymentRequest::with('provider')
+                                ->where('invoice_number', $request->invoice_number)
+                                ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
+                                '.'
+                        ], 409);
+                    }
+                    if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
+                        if (!$requestInfo['force_registration']) {
+                            return response()->json([
+                                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                    PaymentRequest::where('invoice_number', $request->invoice_number)
+                                    ->first()->id .
+                                    ', tem certeza que deseja cadastrar mesmo assim?'
+                            ], 424);
+                        }
+                    }
+                }
+            }
         }
 
-        if ($attribute != null) {
-            $paymentRequest = PaymentRequest::with('provider')->findOrFail($id);
-            $columnValidation = '';
-
-            if ($paymentRequest->bar_code == null) {
-                $columnValidation = $paymentRequest->invoice_number;
-            } else {
-                $columnValidation = $paymentRequest->bar_code;
-            }
-            if ($columnValidation == $value) {
-                return $this->paymentRequestService->putPaymentRequest($id, $request);
-            }
-
-            if (array_key_exists('provider_id', $request->all())) {
-                $provider_id = $request->provider_id;
-            } else {
-                $provider_id = $paymentRequest->provider_id;
-            }
-
-            if (PaymentRequest::with('business')
-                ->where($attribute, $value)
-                ->whereRelation('provider', 'id', '=', $provider_id)
-                ->exists()
-            ) {
-                return response()->json([
-                    'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
-                        PaymentRequest::with('business')
-                        ->where($attribute, $value)
-                        ->whereRelation('provider', 'id', '=', $provider_id)->first()->id .
-                        '.'
-                ], 409);
-            }
-            if (PaymentRequest::where($attribute, $value)
-                ->exists()
-            ) {
-                if ($request->force_registration) {
-                    return $this->paymentRequestService->putPaymentRequest($id, $request);
+        foreach ($requestInfo['installments'] as $installment) {
+            if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
+                if (!PaymentRequestHasInstallments::where('bar_code', $installment['bar_code'])
+                    ->where('payment_request_id', $id)
+                    ->exists()) {
+                    if (!self::checkInvoiceOrBilletProviderExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                        return response()->json([
+                            'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                                PaymentRequest::with('provider')
+                                ->where('bar_code', $installment['bar_code'])
+                                ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
+                                '.'
+                        ], 409);
+                        break;
+                    }
+                    if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                        if (!$requestInfo['force_registration']) {
+                            return response()->json([
+                                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                    PaymentRequest::with('installments')
+                                    ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
+                                    ->first()->id .
+                                    ', tem certeza que deseja cadastrar mesmo assim?'
+                            ], 424);
+                            break;
+                        }
+                    }
                 }
-                return response()->json([
-                    'erro' => 'Já existe a nota fiscal, boleto ou invoice cadastrado no sistema na conta ' .
-                        PaymentRequest::where($attribute, $value)
-                        ->first()
-                        ->id .
-                        '.'
-                ], 424);
+            }
+            if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
+                if (!PaymentRequestHasInstallments::where('billet_number', $installment['billet_number'])
+                    ->where('payment_request_id', $id)
+                    ->exists()) {
+                    if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                        return response()->json([
+                            'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                                PaymentRequest::with('provider')
+                                ->where('billet_number', $installment['billet_number'])
+                                ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
+                                '.'
+                        ], 409);
+                        break;
+                    }
+                    if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                        if (!$requestInfo['force_registration']) {
+                            return response()->json([
+                                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                    PaymentRequest::with('installments')
+                                    ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
+                                    ->first()->id .
+                                    ', tem certeza que deseja cadastrar mesmo assim?'
+                            ], 424);
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -201,5 +267,49 @@ class PaymentRequestController extends Controller
             }
         }
         return true;
+    }
+
+    public function checkInvoiceOrBilletProviderExists($attribute, $value, $requestInfo)
+    {
+        if ($attribute == 'bar_code' or $attribute == 'billet_number') {
+            if (PaymentRequest::with(['provider', 'installments'])
+                ->whereRelation('installments', $attribute, '=', $value)
+                ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
+                ->exists()
+            ) {
+                return false;
+            }
+        } else if (PaymentRequest::with('provider')
+            ->where($attribute, $value)
+            ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
+            ->exists()
+        ) {
+            return false;
+        }
+        return true;
+    }
+    public function checkInvoiceOrBilletExists($attribute, $value, $requestInfo)
+    {
+        if ($attribute == 'bar_code' or $attribute == 'billet_number') {
+            if (PaymentRequest::with(['provider', 'installments'])
+                ->whereRelation('installments', $attribute, '=', $value)
+                ->exists()
+            ) {
+                if ($requestInfo['force_registration']) {
+                    return true;
+                }
+                return false;
+            }
+        } else if (PaymentRequest::where($attribute, $value)
+            ->exists()
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    public function updateInstallment(Request $request, $id)
+    {
+        return $this->paymentRequestService->updateInstallment($id, $request);
     }
 }

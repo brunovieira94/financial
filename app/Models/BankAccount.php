@@ -14,7 +14,7 @@ class BankAccount extends Model
     use LogsActivity;
     protected static $logAttributes = ['bank', '*'];
     protected static $logName = 'bank_accounts';
-    public function tapActivity(Activity $activity, string $eventName)
+    public function tapActivity(Activity $activity)
     {
         $user = auth()->user();
         $activity->causer_id = $user->id;
@@ -23,7 +23,7 @@ class BankAccount extends Model
 
     use SoftDeletes;
     protected $hidden = ['pivot', 'bank_id'];
-    protected $table='bank_accounts';
+    protected $table = 'bank_accounts';
     protected $fillable = ['covenant', 'agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
 
     public function bank()
@@ -45,4 +45,10 @@ class BankAccount extends Model
     {
         return $this->hasOne(CompanyHasBankAccount::class, 'bank_account_id', 'id');
     }
+
+    public array $accountTypes = [
+        "Poupança",
+        "Conta Corrente",
+        "Conta Salário",
+    ];
 }

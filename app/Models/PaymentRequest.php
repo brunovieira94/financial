@@ -101,7 +101,7 @@ class PaymentRequest extends Model
 
     public function installments()
     {
-        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id');
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id')->with(['group_payment', 'bank_account_provider', 'cnab_generated_installment'])->orderBy('parcel_number','asc');
     }
 
     public function provider()
@@ -147,6 +147,11 @@ class PaymentRequest extends Model
     public function tax()
     {
         return $this->hasMany(PaymentRequestHasTax::class, 'payment_request_id', 'id')->with('typeOfTax');
+    }
+
+    public function cnab_payment_request()
+    {
+        return $this->hasOne(CnabGeneratedHasPaymentRequests::class, 'payment_request_id', 'id')->with('cnab_generated')->orderBy('id', 'asc');
     }
 
     public function getDaysLateAttribute()

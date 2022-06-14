@@ -8,6 +8,7 @@ use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\PutProviderRequest;
 use App\Imports\ProvidersImport;
 use App\Exports\ProvidersExport;
+use App\Models\Provider;
 
 class ProviderController extends Controller
 {
@@ -42,6 +43,13 @@ class ProviderController extends Controller
 
     public function destroy($id)
     {
+        if(Provider::where('provider_id', $id)->exists())
+        {
+            return response()->json([
+                'erro' => 'Este fornecedor está associado a uma ou várias solicitações de pagamento.'
+            ], 422);
+        }
+
         $provider = $this->providerService->deleteProvider($id);
         return response('');
     }
