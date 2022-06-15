@@ -84,58 +84,17 @@ class ApprovalFlowByUserService
             }
             if (array_key_exists('extension_date', $requestInfo)) {
                 if (array_key_exists('from', $requestInfo['extension_date'])) {
-                    $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from'])->get('payment_request_id');
-                    $paymentIds = [];
-                    $paymentIdsToReturn = [];
-                    foreach ($installments as $installment) {
-                        if (!in_array($installment->payment_request_id, $paymentIds)) {
-                            array_push($paymentIds, $installment->payment_request_id);
+                    $query->whereHas('installments', function ($installments) use ($requestInfo) {
+                        if (array_key_exists('from', $requestInfo['extension_date'])) {
+                            $installments->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                         }
-                    }
-                    foreach ($paymentIds as $id) {
-                        $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
-                        if ($payment->extension_date >= $requestInfo['extension_date']['from']) {
-                            array_push($paymentIdsToReturn, $payment->payment_request_id);
+                        if (array_key_exists('to', $requestInfo['pay_date'])) {
+                            $installments->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                         }
-                    }
-                    $query->whereIn('id', $paymentIdsToReturn);
-                    // $query->whereHas('installments', function ($query) use ($requestInfo) {
-                    //     $query->where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from']);
-                    // });
-                }
-                if (array_key_exists('to', $requestInfo['extension_date'])) {
-                    $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('extension_date', '<=', $requestInfo['extension_date']['to'])->get('payment_request_id');
-                    $paymentIds = [];
-                    $paymentIdsToReturn = [];
-                    foreach ($installments as $installment) {
-                        if (!in_array($installment->payment_request_id, $paymentIds)) {
-                            array_push($paymentIds, $installment->payment_request_id);
+                        if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                            $installments->whereBetween('extension_date', [now(), now()->addMonths(1)]);
                         }
-                    }
-                    foreach ($paymentIds as $id) {
-                        $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
-                        if ($payment->extension_date <= $requestInfo['extension_date']['to']) {
-                            array_push($paymentIdsToReturn, $payment->payment_request_id);
-                        }
-                    }
-                    $query->whereIn('id', $paymentIdsToReturn);
-                }
-                if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
-                    $installments = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)])->get('payment_request_id');
-                    $paymentIds = [];
-                    $paymentIdsToReturn = [];
-                    foreach ($installments as $installment) {
-                        if (!in_array($installment->payment_request_id, $paymentIds)) {
-                            array_push($paymentIds, $installment->payment_request_id);
-                        }
-                    }
-                    foreach ($paymentIds as $id) {
-                        $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
-                        if ($payment->extension_date <= now()->addMonths(1) && now() <= $payment->extension_date) {
-                            array_push($paymentIdsToReturn, $payment->payment_request_id);
-                        }
-                    }
-                    $query->whereIn('id', $paymentIdsToReturn);
+                    });
                 }
             }
             if (array_key_exists('days_late', $requestInfo)) {
@@ -174,7 +133,8 @@ class ApprovalFlowByUserService
         if ($this->approvalFlow
             ->where('order', $accountApproval->order)
             ->where('role_id', auth()->user()->role_id)
-            ->doesntExist()) {
+            ->doesntExist()
+        ) {
             return response()->json([
                 'erro' => 'Não é permitido a esse usuário aprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
             ], 422);
@@ -225,7 +185,8 @@ class ApprovalFlowByUserService
                     if ($this->approvalFlow
                         ->where('order', $accountApproval->order)
                         ->where('role_id', auth()->user()->role_id)
-                        ->doesntExist()) {
+                        ->doesntExist()
+                    ) {
                         return response()->json([
                             'erro' => 'Não é permitido a esse usuário aprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
