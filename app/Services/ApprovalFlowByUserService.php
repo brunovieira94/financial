@@ -88,7 +88,7 @@ class ApprovalFlowByUserService
                         if (array_key_exists('from', $requestInfo['extension_date'])) {
                             $installments->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                         }
-                        if (array_key_exists('to', $requestInfo['pay_date'])) {
+                        if (array_key_exists('to', $requestInfo['extension_date'])) {
                             $installments->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                         }
                         if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {

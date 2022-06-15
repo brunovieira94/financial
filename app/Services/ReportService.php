@@ -219,6 +219,11 @@ class ReportService
                 $query->where('id', $requestInfo['provider']);
             });
         }
+        if (array_key_exists('company', $requestInfo)) {
+            $query->whereHas('company', function ($query) use ($requestInfo) {
+                $query->where('id', $requestInfo['company']);
+            });
+        }
         if (array_key_exists('chart_of_accounts', $requestInfo)) {
             $query->whereHas('chart_of_accounts', function ($query) use ($requestInfo) {
                 $query->where('id', $requestInfo['chart_of_accounts']);
@@ -278,7 +283,7 @@ class ReportService
                     if (array_key_exists('from', $requestInfo['extension_date'])) {
                         $installments->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                     }
-                    if (array_key_exists('to', $requestInfo['pay_date'])) {
+                    if (array_key_exists('to', $requestInfo['extension_date'])) {
                         $installments->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                     }
                     if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
@@ -414,7 +419,7 @@ class ReportService
                 if (array_key_exists('from', $requestInfo['extension_date'])) {
                     $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                 }
-                if (array_key_exists('to', $requestInfo['pay_date'])) {
+                if (array_key_exists('to', $requestInfo['extension_date'])) {
                     $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
                 }
                 if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
