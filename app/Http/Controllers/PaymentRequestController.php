@@ -89,6 +89,30 @@ class PaymentRequestController extends Controller
                     }
                 }
             }
+            if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
+                if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                    return response()->json([
+                        'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                            PaymentRequest::with(['provider', 'installments'])
+                            ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
+                            ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
+                            '.'
+                    ], 409);
+                    break;
+                }
+                if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                    if (!$requestInfo['force_registration']) {
+                        return response()->json([
+                            'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                PaymentRequest::with('installments')
+                                ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
+                                ->first()->id .
+                                ', tem certeza que deseja cadastrar mesmo assim?'
+                        ], 424);
+                        break;
+                    }
+                }
+            }
         }
 
         if (!self::checkInstallmentsPurchaseOrder($request->all())) {
@@ -160,6 +184,34 @@ class PaymentRequestController extends Controller
                     }
                 }
             }
+            if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
+                if (!PaymentRequestHasInstallments::where('billet_number', $installment['billet_number'])
+                    ->where('payment_request_id', $id)
+                    ->exists()) {
+                    if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                        return response()->json([
+                            'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
+                                PaymentRequest::with('provider')
+                                ->where('billet_number', $installment['billet_number'])
+                                ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
+                                '.'
+                        ], 409);
+                        break;
+                    }
+                    if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                        if (!$requestInfo['force_registration']) {
+                            return response()->json([
+                                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
+                                    PaymentRequest::with('installments')
+                                    ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
+                                    ->first()->id .
+                                    ', tem certeza que deseja cadastrar mesmo assim?'
+                            ], 424);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         if (!self::checkInstallmentsPurchaseOrder($request->all())) {
@@ -219,7 +271,7 @@ class PaymentRequestController extends Controller
 
     public function checkInvoiceOrBilletProviderExists($attribute, $value, $requestInfo)
     {
-        if ($attribute == 'bar_code') {
+        if ($attribute == 'bar_code' or $attribute == 'billet_number') {
             if (PaymentRequest::with(['provider', 'installments'])
                 ->whereRelation('installments', $attribute, '=', $value)
                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
@@ -238,7 +290,7 @@ class PaymentRequestController extends Controller
     }
     public function checkInvoiceOrBilletExists($attribute, $value, $requestInfo)
     {
-        if ($attribute == 'bar_code') {
+        if ($attribute == 'bar_code' or $attribute == 'billet_number') {
             if (PaymentRequest::with(['provider', 'installments'])
                 ->whereRelation('installments', $attribute, '=', $value)
                 ->exists()
@@ -260,5 +312,4 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->updateInstallment($id, $request);
     }
-
 }
