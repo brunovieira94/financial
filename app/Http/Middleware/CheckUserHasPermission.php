@@ -56,7 +56,7 @@ class CheckUserHasPermission
             $routeAccessed = $route[count($route) - 2];
         } else {
             $routeAccessed = $route[count($route) - 1];
-            if ($routeAccessed == 'export') {
+            if ($routeAccessed == 'export' || $routeAccessed == 'import') {
                 $routeAccessed = $route[count($route) - 2];
             }
         }
@@ -85,6 +85,9 @@ class CheckUserHasPermission
                 break;
             case 'due-installments':
                 $routeAccessed = 'due-bills';
+                break;
+            case 'cangooroo':
+                $routeAccessed = 'billing';
                 break;
         }
 
