@@ -392,6 +392,12 @@ class ReportService
                 });
             }
 
+            if (array_key_exists('company', $requestInfo)) {
+                $query->whereHas('company', function ($query) use ($requestInfo) {
+                    $query->where('id', $requestInfo['company']);
+                });
+            }
+
             if ($this->filterCanceled) {
                 $query->withTrashed();
                 $query->where('deleted_at', '!=', NULL);
