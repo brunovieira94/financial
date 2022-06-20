@@ -64,7 +64,8 @@ class HotelsImport implements ToCollection, WithValidation, WithHeadingRow
                     $this->formOfPayment = null;
             }
 
-            $hotel = Hotel::create([
+            $hotel = Hotel::withTrashed()->where('id_hotel_cangooroo', $row['id_hotel_cangooroo'])->first();
+            $hotelData = [
                 'id_hotel_cangooroo'=> $row['id_hotel_cangooroo'],
                 'id_hotel_omnibees'=> $row['id_hotel_ominibees'],
                 'hotel_name'=> $row['royalty'],
@@ -78,7 +79,14 @@ class HotelsImport implements ToCollection, WithValidation, WithHeadingRow
                 'cpf_cnpj'=> $row['cpfcnpj'],
                 'cnpj_hotel'=> $row['cnpj_omnibees'],
                 'is_valid'=> $this->isValid,
-            ]);
+            ];
+            if($hotel){
+                $hotel['deleted_at'] = null;
+                $hotel->fill($hotelData)->save();
+            }
+            else{
+                $hotel = Hotel::create($hotelData);
+            }
 
             if($row['banco'] && $row['codigo_banco'] && $row['agencia'] && $row['conta'] && $row['tipo_de_conta']){
                 switch (strtolower($row['tipo_de_conta'])) {
