@@ -66,27 +66,15 @@ class PaymentRequestController extends Controller
 
         foreach ($requestInfo['installments'] as $installment) {
             if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
-                if (!self::checkInvoiceOrBilletProviderExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                     return response()->json([
-                        'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
-                            PaymentRequest::with(['provider', 'installments'])
+                        'erro' => 'O código do boleto ou sistema na conta' .
+                            PaymentRequest::with('installments')
                             ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
-                            ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
-                            '.'
+                            ->first()->id .
+                            ', para cadastrar essa conta deve ser apagada.'
                     ], 409);
                     break;
-                }
-                if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
-                    if (!$requestInfo['force_registration']) {
-                        return response()->json([
-                            'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                PaymentRequest::with('installments')
-                                ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
-                                ->first()->id .
-                                ', tem certeza que deseja cadastrar mesmo assim?'
-                        ], 424);
-                        break;
-                    }
                 }
             }
             if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
@@ -160,27 +148,15 @@ class PaymentRequestController extends Controller
                 if (!PaymentRequestHasInstallments::where('bar_code', $installment['bar_code'])
                     ->where('payment_request_id', $id)
                     ->exists()) {
-                    if (!self::checkInvoiceOrBilletProviderExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                    if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                         return response()->json([
-                            'erro' => 'Este número de nota fiscal, boleto ou invoice já foi cadastrado para este fornecedor na conta ' .
-                                PaymentRequest::with('provider')
-                                ->where('bar_code', $installment['bar_code'])
-                                ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
-                                '.'
+                            'erro' => 'O código do boleto ou sistema na conta' .
+                                PaymentRequest::with('installments')
+                                ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
+                                ->first()->id .
+                                ', para cadastrar essa conta deve ser apagada.'
                         ], 409);
                         break;
-                    }
-                    if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
-                        if (!$requestInfo['force_registration']) {
-                            return response()->json([
-                                'erro' => 'O número da nota fiscal, boleto ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                    PaymentRequest::with('installments')
-                                    ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
-                                    ->first()->id .
-                                    ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 424);
-                            break;
-                        }
                     }
                 }
             }
