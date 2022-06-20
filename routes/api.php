@@ -188,6 +188,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{id}', [BillingController::class, 'show']);
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
+        Route::put('/approve/{id}', [BillingController::class, 'approve']);
+        Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
         Route::post('/export', [BillingController::class, 'export']);
     });

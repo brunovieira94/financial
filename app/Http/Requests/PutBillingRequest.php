@@ -25,6 +25,7 @@ class PutBillingRequest extends FormRequest
             'recipient_name' => 'required|max:150 ',
             'oracle_protocol' => 'required|max:150 ',
             'cnpj' => 'required|max:150 ',
+            'reason' => 'max:255'
         ];
     }
 }
