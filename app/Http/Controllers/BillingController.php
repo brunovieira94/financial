@@ -40,6 +40,16 @@ class BillingController extends Controller
         return $this->billingService->putBilling($id, $request->all());
     }
 
+    public function approve($id)
+    {
+        return $this->billingService->approve($id);
+    }
+
+    public function reprove($id, Request $request)
+    {
+        return $this->billingService->reprove($id, $request);
+    }
+
     public function destroy($id)
     {
         $this->billingService->deleteBilling($id);
