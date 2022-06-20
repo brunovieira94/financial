@@ -4,21 +4,20 @@ namespace App\Services;
 
 
 use App\Models\Billing;
-use App\Models\Cangooroo;
+use Config;
+use Illuminate\Http\Request;
 
 class BillingService
 {
 
     private $billing;
     private $cangoorooService;
-    private $cangooroo;
 
-    private $with = ['user', 'cangooroo'];
+    private $with = ['user', 'cangooroo', 'reason_to_reject'];
 
-    public function __construct(Billing $billing, CangoorooService $cangoorooService, Cangooroo $cangooroo)
+    public function __construct(Billing $billing, CangoorooService $cangoorooService)
     {
         $this->billing = $billing;
-        $this->cangooroo = $cangooroo;
         $this->cangoorooService = $cangoorooService;
     }
 
@@ -26,6 +25,30 @@ class BillingService
     {
         $billing = Utils::search($this->billing, $requestInfo);
         return Utils::pagination($billing->with($this->with), $requestInfo);
+    }
+
+    public function approve($id)
+    {
+        $billing = $this->billing->findOrFail($id);
+        $billing->approval_status = Config::get('constants.status.approved');
+        $billing->reason = null;
+        $billing->reason_to_reject_id = null;
+        $billing->save();
+        return response()->json([
+            'Sucesso' => 'Pedido aprovado',
+        ], 200);
+    }
+
+    public function reprove($id, Request $request)
+    {
+        $billing = $this->billing->findOrFail($id);
+        $billing->approval_status = Config::get('constants.status.disapproved');
+        $billing->reason = $request->reason;
+        $billing->reason_to_reject_id = $request->reason_to_reject_id;
+        $billing->save();
+        return response()->json([
+            'Sucesso' => 'Pedido reprovado',
+        ], 200);
     }
 
     public function getBilling($id)
@@ -39,8 +62,8 @@ class BillingService
     {
         $billing = new Billing;
         $billingInfo['user_id'] = auth()->user()->id;
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'],$billingInfo['reserve']);
-        if(is_array($cangooroo) && array_key_exists('error', $cangooroo)){
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
+        if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
                 'error' => $cangooroo['error'],
             ], 422);
@@ -52,8 +75,8 @@ class BillingService
     public function putBilling($id, $billingInfo)
     {
         $billing = $this->billing->findOrFail($id);
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'],$billingInfo['reserve']);
-        if(is_array($cangooroo) && array_key_exists('error', $cangooroo)){
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
+        if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
                 'error' => $cangooroo['error'],
             ], 422);
