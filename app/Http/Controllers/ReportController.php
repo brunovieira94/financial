@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AllApprovedInstallment;
 use Illuminate\Http\Request;
 use App\Services\ReportService;
 use App\Exports\AllDuePaymentRequestExport;
@@ -12,6 +13,7 @@ use App\Exports\AllGeneratedCNABPaymentRequestExport;
 use App\Exports\BillsToPayExport;
 use App\Exports\AllPaymentRequestPaidExport;
 use App\Exports\AllPaymentRequestFinishedExport;
+use App\Exports\InstallmentsPayableExport;
 
 class ReportController extends Controller
 {
@@ -70,6 +72,16 @@ class ReportController extends Controller
     public function approvedInstallment(Request $request)
     {
         return $this->reportService->getAllApprovedInstallment($request->all());
+    }
+
+    public function approvedInstallmentExport(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new AllApprovedInstallment($request->all()))->download('parcelasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new AllApprovedInstallment($request->all()))->download('parcelasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function disapprovedPaymentRequest(Request $request)
@@ -137,6 +149,16 @@ class ReportController extends Controller
     public function installmentsPayable(Request $request)
     {
         return $this->reportService->getInstallmentsPayable($request->all());
+    }
+
+    public function installmentsPayableExport(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new InstallmentsPayableExport($request->all()))->download('parcelasAPagar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new InstallmentsPayableExport($request->all()))->download('parcelasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function paymentRequestPaid(Request $request)
