@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -114,44 +115,48 @@ class PurchaseOrder extends Model
     public function getApproverStageAttribute()
     {
         $approverStage = [];
-        $approvalId = SupplyApprovalFlow::where('id_purchase_order', $this->id)->first();
-        $roles = ApprovalFlowSupply::where('order', $approvalId->order)->with('role')->get();
-        $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $this->id)->get();
-        $costCenterId = null;
-        $maxPercentage = 0;
-        $constCenterEqual = false;
-        foreach ($costCenters as $costCenter) {
-            if ($costCenter->percentage > $maxPercentage) {
-                $costCenterId = $costCenter->cost_center_id;
-                $maxPercentage = $costCenter->percentage;
-            } else if ($costCenter->percentage == $maxPercentage) {
-                $constCenterEqual = true;
-                $maxPercentage = $costCenter->percentage;
-            }
-        }
-
-        foreach ($roles as $role) {
-            if ($role->role->id != 1) {
-                $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->orderby('name')->get();
-                $names = [];
-                foreach ($checkUser as $user) {
-                    if ($constCenterEqual == false) {
-                        foreach ($user->cost_center as $userCostCenter) {
-                            if ($userCostCenter->id == $costCenterId) {
-                                $names[] = $user->name;
-                            }
-                        }
-                    } else {
-                        $names[] = $user->name;
-                    }
+        if (SupplyApprovalFlow::where('id_purchase_order', $this->id)->exists()) {
+            $approvalId = SupplyApprovalFlow::where('id_purchase_order', $this->id)->firstOrFail();
+            $roles = ApprovalFlowSupply::where('order', $approvalId->order)->with('role')->get();
+            $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $this->id)->get();
+            $costCenterId = null;
+            $maxPercentage = 0;
+            $constCenterEqual = false;
+            foreach ($costCenters as $costCenter) {
+                if ($costCenter->percentage > $maxPercentage) {
+                    $costCenterId = $costCenter->cost_center_id;
+                    $maxPercentage = $costCenter->percentage;
+                } else if ($costCenter->percentage == $maxPercentage) {
+                    $constCenterEqual = true;
+                    $maxPercentage = $costCenter->percentage;
                 }
-                $approverStage[] = [
-                    'title' => $role->role->title,
-                    'name' => count($names) > 0 ? $names[0] : '',
-                    'names' => $names,
-                ];
             }
+
+            foreach ($roles as $role) {
+                if ($role->role->id != 1) {
+                    $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->orderby('name')->get();
+                    $names = [];
+                    foreach ($checkUser as $user) {
+                        if ($constCenterEqual == false) {
+                            foreach ($user->cost_center as $userCostCenter) {
+                                if ($userCostCenter->id == $costCenterId) {
+                                    $names[] = $user->name;
+                                }
+                            }
+                        } else {
+                            $names[] = $user->name;
+                        }
+                    }
+                    $approverStage[] = [
+                        'title' => $role->role->title,
+                        'name' => count($names) > 0 ? $names[0] : '',
+                        'names' => $names,
+                    ];
+                }
+            }
+            return $approverStage;
+        } else {
+            return $approverStage;
         }
-        return $approverStage;
     }
 }

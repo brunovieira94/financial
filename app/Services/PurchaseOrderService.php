@@ -66,13 +66,13 @@ class PurchaseOrderService
 
         if (array_key_exists('service', $requestInfo)) {
             $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
-                $query->where('id', $requestInfo['service']);
+                $query->where('service_id', $requestInfo['service']);
             });
         }
 
         if (array_key_exists('product', $requestInfo)) {
             $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
-                $query->where('id', $requestInfo['product']);
+                $query->where('product_id', $requestInfo['product']);
             });
         }
 
