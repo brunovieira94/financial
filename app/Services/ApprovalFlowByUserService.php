@@ -188,7 +188,7 @@ class ApprovalFlowByUserService
                         ->doesntExist()
                     ) {
                         return response()->json([
-                            'erro' => 'Não é permitido a esse usuário aprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                            'erro' => 'Não é permitido a esse usuário aprovar/reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
@@ -216,6 +216,17 @@ class ApprovalFlowByUserService
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
+
+        if ($this->approvalFlow
+            ->where('order', $accountApproval->order)
+            ->where('role_id', auth()->user()->role_id)
+            ->doesntExist()
+        ) {
+            return response()->json([
+                'erro' => 'Não é permitido a esse usuário aprovar/reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+            ], 422);
+        }
+
         $accountApproval->status = Config::get('constants.status.disapproved');
 
         if ($accountApproval->order > $maxOrder) {
