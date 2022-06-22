@@ -209,6 +209,12 @@ class ReportService
         $query = $query->with(['purchase_order', 'cnab_payment_request', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
 
+        if (array_key_exists('amount', $requestInfo)) {
+            $query->where('amount', $requestInfo['amount']);
+        }
+        if (array_key_exists('net_value', $requestInfo)) {
+            $query->where('net_value', $requestInfo['net_value']);
+        }
         if (array_key_exists('cpfcnpj', $requestInfo)) {
             $query->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
@@ -323,6 +329,12 @@ class ReportService
         $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
+            if (array_key_exists('net_value', $requestInfo)) {
+                $query->where('net_value', $requestInfo['net_value']);
+            }
+            if (array_key_exists('amount', $requestInfo)) {
+                $query->where('amount', $requestInfo['amount']);
+            }
             if (array_key_exists('cpfcnpj', $requestInfo)) {
                 $query->whereHas('provider', function ($query) use ($requestInfo) {
                     $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
