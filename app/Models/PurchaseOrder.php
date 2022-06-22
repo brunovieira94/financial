@@ -116,7 +116,7 @@ class PurchaseOrder extends Model
     {
         $approverStage = [];
         if (SupplyApprovalFlow::where('id_purchase_order', $this->id)->exists()) {
-            $approvalId = SupplyApprovalFlow::where('id_purchase_order', $this->id)->first();
+            $approvalId = SupplyApprovalFlow::where('id_purchase_order', $this->id)->firstOrFail();
             $roles = ApprovalFlowSupply::where('order', $approvalId->order)->with('role')->get();
             $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $this->id)->get();
             $costCenterId = null;
