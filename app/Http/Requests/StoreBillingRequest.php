@@ -25,6 +25,10 @@ class StoreBillingRequest extends FormRequest
             'recipient_name' => 'required|max:150 ',
             'oracle_protocol' => 'required|max:150 ',
             'cnpj' => 'required|max:150 ',
+            'reason' => 'max:255',
+            'reason_to_reject_id' => 'prohibited',
+            'approval_status' => 'prohibited',
+            'reason' => 'prohibited',
         ];
     }
 }

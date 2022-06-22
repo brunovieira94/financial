@@ -356,18 +356,68 @@ class PurchaseOrderService
     public function syncPurchaseRequests($purchaseOrder, $purchaseOrderInfo)
     {
         if (array_key_exists('purchase_requests', $purchaseOrderInfo)) {
+            $productQuantityInOrder = [];
+            foreach ($this->purchaseOrderHasProducts->where('purchase_order_id', $purchaseOrder->id)->get() as $purchaseOrderHasProducts) {
+                $productQuantityInOrder[$purchaseOrderHasProducts['product_id']] = $productQuantityInOrder[$purchaseOrderHasProducts['product_id']] ?? 0;
+                $productQuantityInOrder[$purchaseOrderHasProducts['product_id']] += $purchaseOrderHasProducts['quantity'];
+            }
             foreach ($purchaseOrderInfo['purchase_requests'] as $purchaseRequest) {
                 $purchaseOrderHasPurchaseRequests = new PurchaseOrderHasPurchaseRequests;
                 $purchaseOrderHasPurchaseRequests = $purchaseOrderHasPurchaseRequests->create([
                     'purchase_order_id' => $purchaseOrder->id,
                     'purchase_request_id' => $purchaseRequest['purchase_request_id'],
                 ]);
-                $purchaseRequest = $this->purchaseRequest->findOrFail($purchaseRequest['purchase_request_id']);
-                $purchaseRequest->status = 1;
-                $purchaseRequest->save();
+                $purchaseRequestToUpdate = $this->purchaseRequest->find($purchaseRequest['purchase_request_id']);
+                if($purchaseRequestToUpdate){
+                    $purchaseRequestToUpdate->status = 1;
+                    $isPartial = false;
+                    foreach ($this->purchaseRequestHasProducts->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->get() as $purchaseRequestHasProducts) {
+                        if(array_key_exists($purchaseRequestHasProducts['product_id'], $productQuantityInOrder)){
+                            if($productQuantityInOrder[$purchaseRequestHasProducts['product_id']] >= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order'])){
+                                $productQuantityInOrder[$purchaseRequestHasProducts['product_id']] -= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order']);
+                                $purchaseRequestHasProducts->in_order = $purchaseRequestHasProducts['quantity'];
+                                $purchaseRequestHasProducts->save();
+                            }
+                            else{
+                                $isPartial = true;
+                                $purchaseRequestHasProducts->in_order += $productQuantityInOrder[$purchaseRequestHasProducts['product_id']];
+                                $productQuantityInOrder[$purchaseRequestHasProducts['product_id']] = 0;
+                                $purchaseRequestHasProducts->save();
+                            }
+                        }
+                    }
+                    if ($isPartial){
+                        $purchaseRequestToUpdate->status = 2;
+                    }
+                    $purchaseRequestToUpdate->save();
+                }
             }
         }
     }
+
+
+    // public function isPartialRequest($purchaseOrderInfo, $purchaseRequest)
+    // {
+    //     foreach ($this->purchaseRequestHasProducts->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->get() as $purchaseRequestHasProducts) {
+    //         foreach ($purchaseOrderInfo['products'] as $product) {
+    //             if($product['product_id'] == $purchaseRequestHasProducts['product_id'] && $product['quantity'] != $purchaseRequestHasProducts['quantity'])
+    //             {
+    //                 $totalQuantity = 0;
+    //                 // criar um array de quantidade ja alocada que o index é o id do produto, subtrair dele
+    //                 $purchaseOrderIdArray = $this->purchaseOrderHasPurchaseRequests->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->pluck('purchase_order_id')->toArray();
+    //                 foreach ($purchaseOrderIdArray as $purchaseOrderId) {
+    //                     foreach ($this->purchaseOrderHasProducts->where('purchase_order_id', $purchaseOrderId)->where('product_id', $product['product_id'])->get() as $productFound) {
+    //                         $totalQuantity += $productFound['quantity'];
+    //                     }
+    //                 }
+    //                 if($totalQuantity < $purchaseRequestHasProducts['quantity']){
+    //                     return true;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
     // public function putPurchaseRequests($id, $purchaseOrderInfo)
     // {

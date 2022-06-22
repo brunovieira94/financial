@@ -29,6 +29,13 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
     {
         $infoRequest = $this->requestInfo;
         $query = PaymentRequest::query()->with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'company']);
+
+        if (array_key_exists('amount', $infoRequest)) {
+            $query->where('amount', $infoRequest['amount']);
+        }
+        if (array_key_exists('net_value', $infoRequest)) {
+            $query->where('net_value', $infoRequest['net_value']);
+        }
         if (array_key_exists('cpfcnpj', $infoRequest)) {
             $query->whereHas('provider', function ($query) use ($infoRequest) {
                 $query->where('cpf', $infoRequest['cpfcnpj'])->orWhere('cnpj', $infoRequest['cpfcnpj']);
