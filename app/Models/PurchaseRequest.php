@@ -12,7 +12,7 @@ class PurchaseRequest extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['cost_centers', 'companies', 'attachments', 'services', 'products', '*'];
+    protected static $logAttributes = ['cost_centers', 'company', 'attachments', 'services', 'products', '*'];
     protected static $logName = 'purchase_requests';
     public function tapActivity(Activity $activity, string $eventName)
     {
@@ -23,8 +23,8 @@ class PurchaseRequest extends Model
 
     use SoftDeletes;
     protected $table='purchase_requests';
-    protected $fillable = ['request_type', 'observations', 'status'];
-    protected $hidden = ['currency_id'];
+    protected $fillable = ['request_type', 'observations', 'status', 'company_id'];
+    protected $hidden = ['currency_id', 'company_id'];
 
     public function attachments(){
         return $this->hasMany(PurchaseRequestHasAttachments::class, 'purchase_request_id', 'id');
@@ -48,6 +48,11 @@ class PurchaseRequest extends Model
     public function companies()
     {
         return $this->hasMany(PurchaseRequestHasCompanies::class, 'purchase_request_id', 'id')->with('company');
+    }
+
+    public function company()
+    {
+        return $this->hasOne(Company::class, 'id', 'company_id');
     }
 
     public static function boot() {

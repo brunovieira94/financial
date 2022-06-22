@@ -16,6 +16,7 @@ class SupplyApprovalFlow extends Model
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
+        $user->role = Role::findOrFail($user->role_id);
         $activity->causer_id = $user->id;
         $activity->causer_object = $user;
     }
@@ -27,7 +28,7 @@ class SupplyApprovalFlow extends Model
 
     public function purchase_order()
     {
-        return $this->hasOne(PurchaseOrder::class, 'id', 'id_purchase_order')->with(['approval','cost_centers', 'attachments', 'services', 'products', 'companies', 'currency', 'provider', 'purchase_requests']);
+        return $this->hasOne(PurchaseOrder::class, 'id', 'id_purchase_order')->with(['user','approval','cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests']);
     }
 
     public function approval_flow()

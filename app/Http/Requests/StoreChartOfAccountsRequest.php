@@ -26,7 +26,7 @@ class StoreChartOfAccountsRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255',
-            'parent' => 'nullable|integer',
+            'parent' => 'nullable|integer|exists:chart_of_accounts,id',
             'code' => new DuplicateRoleChartOfAccounts(request()->input('parent')),
             'managerial_code' => 'nullable|max:255',
             'group_title' => 'nullable|max:255',

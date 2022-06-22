@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\UserService as UserService;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\PutUserRequest;
+use App\Exports\UsersExport;
 
 class UserController extends Controller
 {
@@ -46,6 +47,18 @@ class UserController extends Controller
     public function updateMyUser(PutMyUserRequest $request)
     {
         return $this->userService->updateMyUser($request->all());
+    }
+
+    public function export(Request $request)
+    {
+        if(array_key_exists('exportFormat', $request->all()))
+        {
+            if($request->all()['exportFormat'] == 'csv')
+            {
+                return (new UsersExport($request->all()))->download('usuários.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new UsersExport($request->all()))->download('usuários.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
 }

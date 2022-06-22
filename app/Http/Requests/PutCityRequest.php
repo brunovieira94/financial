@@ -17,7 +17,7 @@ class PutCityRequest extends FormRequest
     {
         return [
             'title' => ['required_without:states_id', 'max:250', new DuplicateCity(request()->input('states_id'), Request::instance()->id)],
-            'states_id' => 'required_without:title|integer',
+            'states_id' => 'required_without:title|integer|exists:states,id',
         ];
     }
 

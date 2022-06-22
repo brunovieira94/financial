@@ -15,10 +15,10 @@ class StoreUserRequest extends FormRequest
     {
         return [
             'name' => 'required|max:150',
-            'role_id' => 'required|integer',
+            'role_id' => 'required|integer|exists:role,id',
             'phone' => 'required|string',
             'extension' => 'required|string',
-            'email' => 'required|email|max:150|unique:users,email,NULL,id,deleted_at,NULL',
+            'email' => 'required|email|max:150|unique:users,email,' . $this->id . ',id,deleted_at,NULL',
             'password' => 'required|max:250|min:8',
         ];
     }

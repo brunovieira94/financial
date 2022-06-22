@@ -7,6 +7,8 @@ use App\Services\ProviderService as ProviderService;
 use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\PutProviderRequest;
 use App\Imports\ProvidersImport;
+use App\Exports\ProvidersExport;
+use App\Models\Provider;
 
 class ProviderController extends Controller
 {
@@ -41,6 +43,13 @@ class ProviderController extends Controller
 
     public function destroy($id)
     {
+        if(Provider::where('provider_id', $id)->exists())
+        {
+            return response()->json([
+                'erro' => 'Este fornecedor está associado a uma ou várias solicitações de pagamento.'
+            ], 422);
+        }
+
         $provider = $this->providerService->deleteProvider($id);
         return response('');
     }
@@ -49,5 +58,17 @@ class ProviderController extends Controller
     {
         $this->providerImport->import(request()->file('import_file'));
         return response('');
+    }
+
+    public function export(Request $request)
+    {
+        if(array_key_exists('exportFormat', $request->all()))
+        {
+            if($request->all()['exportFormat'] == 'csv')
+            {
+                return (new ProvidersExport($request->all()))->download('fornecedores.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new ProvidersExport($request->all()))->download('fornecedores.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

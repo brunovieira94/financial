@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Storage;
+use App\Scopes\ProfileCostCenterScope;
+use Config;
 
 class PaymentRequest extends Model
 {
@@ -25,14 +27,10 @@ class PaymentRequest extends Model
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
     protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
-    protected $casts = [
-        'other_files' => 'array',
-    ];
 
     protected $fillable = [
         'company_id',
         'group_form_payment_id',
-        'other_files',
         'note',
         'percentage_discount',
         'provider_id',
@@ -58,12 +56,18 @@ class PaymentRequest extends Model
         'payment_type',
     ];
 
-    public function group_payment()
+    public function purchase_order()
     {
-        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id');
+        return $this->hasMany(PaymentRequestHasPurchaseOrders::class, 'payment_request_id', 'id')->with(['purchase_order', 'purchase_order_installments']);
     }
 
-    public function attachments(){
+    public function group_payment()
+    {
+        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_id')->with('form_payment');
+    }
+
+    public function attachments()
+    {
         return $this->hasMany(PaymentRequestHasAttachments::class, 'payment_request_id', 'id');
     }
 
@@ -71,7 +75,7 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['xml_file'])) {
             $XML = $this->attributes['xml_file'];
-            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("XML/{$XML}", now()->addMinutes(30));
         }
     }
 
@@ -79,14 +83,14 @@ class PaymentRequest extends Model
     {
         if (!is_null($this->attributes['billet_file'])) {
             $billet = $this->attributes['billet_file'];
-            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(30));
         }
     }
     public function getInvoiceLinkAttribute()
     {
         if (!is_null($this->attributes['invoice_file'])) {
             $invoice = $this->attributes['invoice_file'];
-            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(5));
+            return Storage::disk('s3')->temporaryUrl("invoice/{$invoice}", now()->addMinutes(30));
         }
     }
 
@@ -97,7 +101,7 @@ class PaymentRequest extends Model
 
     public function installments()
     {
-        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id');
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id')->with(['group_payment', 'bank_account_provider', 'cnab_generated_installment'])->orderBy('parcel_number','asc');
     }
 
     public function provider()
@@ -145,12 +149,17 @@ class PaymentRequest extends Model
         return $this->hasMany(PaymentRequestHasTax::class, 'payment_request_id', 'id')->with('typeOfTax');
     }
 
+    public function cnab_payment_request()
+    {
+        return $this->hasOne(CnabGeneratedHasPaymentRequests::class, 'payment_request_id', 'id')->with('cnab_generated')->orderBy('id', 'asc');
+    }
+
     public function getDaysLateAttribute()
     {
         foreach ($this->installments as $value) {
             $dueDate = date_create($value['due_date']);
             $daysLate = date_diff($dueDate, now());
-            if ($dueDate < now() && $value['status'] != 'BD') {
+            if ($dueDate < now() && $value['status'] != Config::get('constants.status.paid out')) {
                 return $daysLate->days;
             } else {
                 return 0;
@@ -160,12 +169,12 @@ class PaymentRequest extends Model
 
     public function getNextExtensionDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date ?? null;
+        return $this->installments->sortBy('due_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->extension_date ?? null;
     }
 
     public function getNextCompetenceDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date ?? null;
+        return $this->installments->sortBy('due_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->competence_date ?? null;
     }
 
     public function getApplicantCanEditAttribute()
@@ -181,4 +190,11 @@ class PaymentRequest extends Model
         }
         return false;
     }
+
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new ProfileCostCenterScope);
+    }
+
 }
