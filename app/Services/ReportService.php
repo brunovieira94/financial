@@ -209,6 +209,12 @@ class ReportService
         $query = $query->with(['purchase_order', 'cnab_payment_request', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
 
+        if (array_key_exists('amount', $requestInfo)) {
+            $query->where('amount', $requestInfo['amount']);
+        }
+        if (array_key_exists('net_value', $requestInfo)) {
+            $query->where('net_value', $requestInfo['net_value']);
+        }
         if (array_key_exists('cpfcnpj', $requestInfo)) {
             $query->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
@@ -323,6 +329,12 @@ class ReportService
         $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
+            if (array_key_exists('net_value', $requestInfo)) {
+                $query->where('net_value', $requestInfo['net_value']);
+            }
+            if (array_key_exists('amount', $requestInfo)) {
+                $query->where('amount', $requestInfo['amount']);
+            }
             if (array_key_exists('cpfcnpj', $requestInfo)) {
                 $query->whereHas('provider', function ($query) use ($requestInfo) {
                     $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
@@ -449,6 +461,37 @@ class ReportService
     public function getAllApprovedPurchaseOrder($requestInfo)
     {
         $accountApproval = Utils::search($this->supplyApprovalFlow, $requestInfo);
+
+        $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
+            if (array_key_exists('provider', $requestInfo)) {
+                $query->where('provider_id', $requestInfo['provider']);
+            }
+            if (array_key_exists('cost_center', $requestInfo)) {
+                $query->whereHas('cost_centers', function ($cost_centers) use ($requestInfo) {
+                    $cost_centers->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
+            if (array_key_exists('service', $requestInfo)) {
+                $query->whereHas('services', function ($services) use ($requestInfo) {
+                    $services->where('service_id', $requestInfo['service']);
+                });
+            }
+            if (array_key_exists('product', $requestInfo)) {
+                $query->whereHas('products', function ($products) use ($requestInfo) {
+                    $products->where('product_id', $requestInfo['product']);
+                });
+            }
+
+            if (array_key_exists('billing_date', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+                }
+            }
+        });
+
         return Utils::pagination($accountApproval
             ->with('purchase_order')
             ->with('purchase_order.installments')

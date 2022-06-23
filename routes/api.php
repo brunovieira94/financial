@@ -188,6 +188,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{id}', [BillingController::class, 'show']);
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
+        Route::put('/approve/{id}', [BillingController::class, 'approve']);
+        Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
         Route::post('/export', [BillingController::class, 'export']);
     });
@@ -295,6 +297,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/bills-to-pay/export', [ReportController::class, 'billsToPayExport']);
         Route::post('/payment-requests-paid/export', [ReportController::class, 'paymentRequestPaidExport']);
         Route::post('/payment-requests-finished/export', [ReportController::class, 'paymentRequestFinishedExport']);
+        Route::post('/approved-installment/export', [ReportController::class, 'approvedInstallmentExport']);
+        Route::post('/installments-payable/export', [ReportController::class, 'installmentsPayableExport']);
     });
 
     Route::prefix('product')->group(function () {
