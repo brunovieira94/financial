@@ -28,6 +28,37 @@ class ApprovalFlowSupplyByUserService
             return response([], 404);
 
         $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow, $requestInfo);
+
+        $supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($requestInfo) {
+            if (array_key_exists('provider', $requestInfo)) {
+                $query->where('provider_id', $requestInfo['provider']);
+            }
+            if (array_key_exists('cost_center', $requestInfo)) {
+                $query->whereHas('cost_centers', function ($cost_centers) use ($requestInfo) {
+                    $cost_centers->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
+            if (array_key_exists('service', $requestInfo)) {
+                $query->whereHas('services', function ($services) use ($requestInfo) {
+                    $services->where('service_id', $requestInfo['service']);
+                });
+            }
+            if (array_key_exists('product', $requestInfo)) {
+                $query->whereHas('products', function ($products) use ($requestInfo) {
+                    $products->where('product_id', $requestInfo['product']);
+                });
+            }
+
+            if (array_key_exists('billing_date', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+                }
+            }
+        });
+
         return Utils::pagination($supplyApprovalFlow
             ->whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 0)
