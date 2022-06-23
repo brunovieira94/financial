@@ -8,6 +8,8 @@ use App\Http\Requests\StorePaymentRequestRequest;
 use App\Services\PaymentRequestService as PaymentRequestService;
 use App\Http\Requests\PutPaymentRequestRequest;
 use App\Imports\PaymentRequestsImport;
+use App\Models\AccountsPayableApprovalFlow;
+use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\PurchaseOrderHasInstallments;
@@ -16,11 +18,15 @@ class PaymentRequestController extends Controller
 {
     private $paymentRequestService;
     private $paymentRequestImport;
+    private $accountsPayableApprovalFlow;
+    private $approvalFlow;
 
-    public function __construct(PaymentRequestService $paymentRequestService, PaymentRequestsImport $paymentRequestImport)
+    public function __construct(ApprovalFlow $approvalFlow, AccountsPayableApprovalFlow $accountsPayableApprovalFlow,PaymentRequestService $paymentRequestService, PaymentRequestsImport $paymentRequestImport)
     {
         $this->paymentRequestService = $paymentRequestService;
         $this->paymentRequestImport = $paymentRequestImport;
+        $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
+        $this->approvalFlow = $approvalFlow;
     }
 
     public function index(Request $request)
@@ -116,6 +122,17 @@ class PaymentRequestController extends Controller
     {
         $requestInfo = $request->all();
         $paymentRequest = PaymentRequest::with(['provider', 'installments'])->findOrFail($id);
+
+        $accountApproval = $this->accountsPayableApprovalFlow->where('payment_request_id', $id)->first();
+        if ($this->approvalFlow
+            ->where('order', $accountApproval->order)
+            ->where('role_id', auth()->user()->role_id)
+            ->doesntExist()
+        ) {
+            return response()->json([
+                'erro' => 'Não é permitido ao usuário editar a conta ' . $id . ', modifique o fluxo de aprovação.',
+            ], 422);
+        }
 
         if (array_key_exists('invoice_number', $requestInfo)) {
             if ($paymentRequest->invoice_number != $requestInfo['invoice_number']) {
