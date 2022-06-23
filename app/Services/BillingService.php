@@ -23,7 +23,7 @@ class BillingService
 
     public function getAllBilling($requestInfo)
     {
-        $billing = Utils::search($this->billing, $requestInfo);
+        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', $requestInfo['approval_status']);
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
@@ -75,19 +75,29 @@ class BillingService
     public function putBilling($id, $billingInfo)
     {
         $billing = $this->billing->findOrFail($id);
+        if ($billing->approval_status == Config::get('constants.status.canceled')) {
+            return response()->json([
+                'error' => 'Pedido previamente cancelado',
+            ], 422);
+        }
         $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
         if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
                 'error' => $cangooroo['error'],
             ], 422);
         }
+        $billingInfo['approval_status'] =  Config::get('constants.status.open');
+        $billingInfo['reason'] = null;
+        $billingInfo['reason_to_reject_id'] = null;
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
     public function deleteBilling($id)
     {
-        $this->billing->findOrFail($id)->delete();
+        $billing = $this->billing->findOrFail($id);
+        $billing->approval_status =  Config::get('constants.status.canceled');
+        $billing->save();
         return true;
     }
 }
