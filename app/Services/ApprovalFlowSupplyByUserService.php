@@ -27,7 +27,12 @@ class ApprovalFlowSupplyByUserService
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow, $requestInfo);
+        $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow, $requestInfo, ['order']);
+
+        $supplyApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->where('status', 0)
+            ->whereRelation('purchase_order', 'deleted_at', '=', null)
+            ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']);
 
         $supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
@@ -59,11 +64,7 @@ class ApprovalFlowSupplyByUserService
             }
         });
 
-        return Utils::pagination($supplyApprovalFlow
-            ->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->where('status', 0)
-            ->whereRelation('purchase_order', 'deleted_at', '=', null)
-            ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']), $requestInfo);
+        return Utils::pagination($supplyApprovalFlow, $requestInfo);
     }
 
     public function approveAccount($id)
