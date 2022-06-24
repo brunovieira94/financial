@@ -16,8 +16,8 @@ class PutProductRequest extends FormRequest
     {
         return [
             'title' => 'max:255|unique:products,title,NULL,id,deleted_at,NULL',
-            'measurement_units_id' => 'integer',
-            'chart_of_accounts_id' => 'integer',
+            'measurement_units_id' => 'integer|exists:measurement_units,id',
+            'chart_of_accounts_id' => 'integer|exists:chart_of_accounts,id',
             'attributes' => 'array',
         ];
     }

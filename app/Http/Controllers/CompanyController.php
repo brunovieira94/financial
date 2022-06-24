@@ -7,6 +7,7 @@ use App\Services\CompanyService as CompanyService;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Http\Requests\PutCompanyRequest;
 use App\Imports\CompaniesImport;
+use App\Models\Company;
 
 class CompanyController extends Controller
 {
@@ -39,6 +40,13 @@ class CompanyController extends Controller
 
     public function destroy($id)
     {
+        if(Company::where('company_id', $id)->exists())
+        {
+            return response()->json([
+                'erro' => 'Este empresa está associada a uma ou várias solicitações de pagamento.'
+            ], 422);
+        }
+
         $company = $this->companyService->deleteCompany($id);
         return response('');
     }

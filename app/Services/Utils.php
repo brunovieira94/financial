@@ -72,41 +72,41 @@ class Utils
         return $query;
     }
 
-    public static function groupPayments($paymentRequests, $bankCode){
+    public static function groupInstallments($installments, $bankCode){
 
-        $groupPayment = [];
+        $groupInstallment = [];
 
-        foreach($paymentRequests as $paymentRequest)
+        foreach($installments as $installment)
         {
-            foreach($paymentRequest->group_payment->form_payment as $payment_form)
+            foreach($installment->group_payment->form_payment as $payment_form)
             {
                 if($payment_form->bank_code == $bankCode)
                 {
                     if($payment_form->group_form_payment_id == 2) //Default PIX group 2
                     {
-                        if(array_key_exists('45', $groupPayment))
+                        if(array_key_exists('45', $groupInstallment))
                         {
-                            array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
                             break;
                         } else
                         {
-                            $groupPayment['45'] = [$paymentRequest];
+                            $groupInstallment['45'] = [$installment];
                             break;
                         }
                     }
                     elseif($payment_form->group_form_payment_id == 1)
                     {
-                        if(substr($paymentRequest->bar_code, 0, 3) == $bankCode)
+                        if(substr($installment->bar_code, 0, 3) == $bankCode)
                         {
                             if($payment_form->same_ownership)
                             {
-                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
                                 {
-                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
                                 } else
                                 {
-                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
 
@@ -115,13 +115,13 @@ class Utils
                         {
                             if(!$payment_form->same_ownership)
                             {
-                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
                                 {
-                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
                                 } else
                                 {
-                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
 
@@ -129,17 +129,17 @@ class Utils
                         }
                     }else
                     {
-                        if($paymentRequest->bank_account_provider->bank->bank_code == $bankCode)
+                        if($installment->bank_account_provider->bank->bank_code == $bankCode)
                         {
                             if($payment_form->same_ownership)
                             {
-                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
                                 {
-                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
                                 } else
                                 {
-                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
                             }
@@ -147,13 +147,13 @@ class Utils
                         {
                             if(!$payment_form->same_ownership)
                             {
-                                if(array_key_exists($payment_form->code_cnab, $groupPayment))
+                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
                                 {
-                                    array_push($groupPayment[$payment_form->code_cnab], $paymentRequest);
+                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
                                 } else
                                 {
-                                    $groupPayment[$payment_form->code_cnab] = [$paymentRequest];
+                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
 
@@ -163,7 +163,7 @@ class Utils
                 }
             }
         }
-    return $groupPayment;
+    return $groupInstallment;
     }
 
     public static function formatCnab($tipo, $valor, $tamanho, $dec = 0, $sFill = '')

@@ -7,8 +7,10 @@ use App\Models\ApprovalFlow;
 use App\Models\CnabGenerated;
 use App\Models\FormPayment;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
+use Config;
 
 class ReportService
 {
@@ -17,20 +19,22 @@ class ReportService
     private $approvalFlow;
     private $filterCanceled = false;
     private $cnabGenerated;
+    private $installment;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
+    public function __construct(PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->paymentRequest = $paymentRequest;
         $this->supplyApprovalFlow = $supplyApprovalFlow;
         $this->cnabGenerated = $cnabGenerated;
+        $this->installment = $installment;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
     {
         $result = Utils::search($this->paymentRequest, $requestInfo);
-        $result = $result->with(['attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = $result->with(['purchase_order', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if (array_key_exists('from', $requestInfo)) {
             $result = $result->where('pay_date', '>=', $requestInfo['from']);
         }
@@ -39,6 +43,23 @@ class ReportService
         }
         if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
             $result = $result->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+        }
+        return Utils::pagination($result, $requestInfo);
+    }
+
+    public function getAllDueInstallment($requestInfo)
+    {
+        $result = Utils::search($this->installment, $requestInfo);
+        $result = $result->with(['payment_request', 'group_payment', 'bank_account_provider'])->has('payment_request');
+
+        if (array_key_exists('from', $requestInfo)) {
+            $result = $result->where('extension_date', '>=', $requestInfo['from']);
+        }
+        if (array_key_exists('to', $requestInfo)) {
+            $result = $result->where('extension_date', '<=', $requestInfo['to']);
+        }
+        if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
+            $result = $result->whereBetween('extension_date', [now(), now()->addMonths(1)]);
         }
         return Utils::pagination($result, $requestInfo);
     }
@@ -116,6 +137,28 @@ class ReportService
         }
     }
 
+    public function getAllApprovedInstallment($requestInfo)
+    {
+        $installment = Utils::search($this->installment, $requestInfo);
+        $installment = $installment->with(['payment_request', 'group_payment', 'bank_account_provider']);
+
+        $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query->whereHas('approval', function ($query) use ($requestInfo) {
+                $query->where('status', 1);
+            });
+        });
+
+        if (!array_key_exists('company_id', $requestInfo)) {
+            return Utils::pagination($installment
+                ->with('payment_request'), $requestInfo);
+        } else {
+            $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->where('company_id', $requestInfo['company_id']);
+            });
+            return Utils::pagination($installment, $requestInfo);
+        }
+    }
+
     public function getAllGeneratedCNABPaymentRequest($requestInfo)
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
@@ -134,42 +177,19 @@ class ReportService
 
     public function getAllDisapprovedPaymentRequest($requestInfo)
     {
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
 
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id);
-
-        $userCostCenter = auth()->user()->cost_center->map(function ($e) {
-            return $e->id;
-        });
-
-        if (!$approvalFlowUserOrder) {
+        if (!$approvalFlowUserOrder)
             return response([], 404);
-        }
 
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
-        return Utils::pagination(
-            $accountsPayableApprovalFlow
-                ->join("approval_flow", "approval_flow.order", "=", "accounts_payable_approval_flows.order")
-                ->select(['accounts_payable_approval_flows.*'])
-                ->join("payment_requests", function ($join) use ($userCostCenter) {
-                    $join->on("accounts_payable_approval_flows.payment_request_id", "=", "payment_requests.id")
-                        ->where(function ($q) use ($userCostCenter) {
-                            $q->where(function ($query) use ($userCostCenter) {
-                                $query->where("approval_flow.filter_cost_center", true)
-                                    ->whereIn("payment_requests.cost_center_id", $userCostCenter);
-                            })
-                                ->orWhere(function ($query) {
-                                    $query->where("approval_flow.filter_cost_center", false);
-                                });
-                        });
-                })
-                ->whereIn('accounts_payable_approval_flows.order', $approvalFlowUserOrder->get('order')->toArray())
-                ->where('status', 2)
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request', 'reason_to_reject'])
-                ->distinct(['accounts_payable_approval_flows.id']),
-            $requestInfo
-        );
+
+        return Utils::pagination($accountsPayableApprovalFlow
+            ->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->where('status', 2)
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->with(['payment_request', 'approval_flow', 'reason_to_reject']), $requestInfo);
     }
 
     public function getAllPaymentRequestsDeleted($requestInfo)
@@ -186,9 +206,15 @@ class ReportService
     public function getBillsToPay($requestInfo)
     {
         $query = $this->paymentRequest->query();
-        $query = $query->with(['attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $query = $query->with(['purchase_order', 'cnab_payment_request', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
 
 
+        if (array_key_exists('amount', $requestInfo)) {
+            $query->where('amount', $requestInfo['amount']);
+        }
+        if (array_key_exists('net_value', $requestInfo)) {
+            $query->where('net_value', $requestInfo['net_value']);
+        }
         if (array_key_exists('cpfcnpj', $requestInfo)) {
             $query->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
@@ -197,6 +223,11 @@ class ReportService
         if (array_key_exists('provider', $requestInfo)) {
             $query->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('id', $requestInfo['provider']);
+            });
+        }
+        if (array_key_exists('company', $requestInfo)) {
+            $query->whereHas('company', function ($query) use ($requestInfo) {
+                $query->where('id', $requestInfo['company']);
             });
         }
         if (array_key_exists('chart_of_accounts', $requestInfo)) {
@@ -254,30 +285,165 @@ class ReportService
         }
         if (array_key_exists('extension_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['extension_date'])) {
-                $query->whereHas('installments', function ($query) use ($requestInfo) {
-                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '>=', $requestInfo['extension_date']['from']);
-                });
-            }
-            if (array_key_exists('to', $requestInfo['extension_date'])) {
-                $query->whereHas('installments', function ($query) use ($requestInfo) {
-                    $query->where('status', '<>', 'BD')->orWhereNull('status')->where('extension_date', '<=', $requestInfo['extension_date']['to']);
-                });
-            }
-            if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
-                $query->whereHas('installments', function ($query) use ($requestInfo) {
-                    $query->where('status', '<>', 'BD')->orWhereNull('status')->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                $query->whereHas('installments', function ($installments) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['extension_date'])) {
+                        $installments->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['extension_date'])) {
+                        $installments->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                        $installments->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                    }
                 });
             }
         }
-        if (array_key_exists('days_late', $requestInfo)) {
-            $query->whereHas('installments', function ($query) use ($requestInfo) {
-                $query->where('status', '!=', 'BD')->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
+        if (array_key_exists('cnab_date', $requestInfo)) {
+            $query->whereHas('cnab_payment_request', function ($cnabPaymentRequest) use ($requestInfo) {
+                $cnabPaymentRequest->whereHas('cnab_generated', function ($cnabGenerated) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '>=', $requestInfo['cnab_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '<=', $requestInfo['cnab_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['cnab_date']) && !array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->whereBetween('file_date', [now(), now()->addMonths(1)]);
+                    }
+                });
             });
         }
 
         if ($this->filterCanceled) {
             $query->withTrashed();
             $query->where('deleted_at', '!=', NULL);
+        }
+
+        //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
+        return Utils::pagination($query, $requestInfo);
+    }
+
+    public function getInstallmentsPayable($requestInfo)
+    {
+        $query = $this->installment->query();
+        $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
+
+        $query->whereHas('payment_request', function ($query) use ($requestInfo) {
+            if (array_key_exists('net_value', $requestInfo)) {
+                $query->where('net_value', $requestInfo['net_value']);
+            }
+            if (array_key_exists('amount', $requestInfo)) {
+                $query->where('amount', $requestInfo['amount']);
+            }
+            if (array_key_exists('cpfcnpj', $requestInfo)) {
+                $query->whereHas('provider', function ($query) use ($requestInfo) {
+                    $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
+                });
+            }
+            if (array_key_exists('provider', $requestInfo)) {
+                $query->whereHas('provider', function ($query) use ($requestInfo) {
+                    $query->where('id', $requestInfo['provider']);
+                });
+            }
+            if (array_key_exists('chart_of_accounts', $requestInfo)) {
+                $query->whereHas('chart_of_accounts', function ($query) use ($requestInfo) {
+                    $query->where('id', $requestInfo['chart_of_accounts']);
+                });
+            }
+            if (array_key_exists('cost_center', $requestInfo)) {
+                $query->whereHas('cost_center', function ($query) use ($requestInfo) {
+                    $query->where('id', $requestInfo['cost_center']);
+                });
+            }
+            if (array_key_exists('payment_request', $requestInfo)) {
+                $query->where('id', $requestInfo['payment_request']);
+            }
+            if (array_key_exists('user', $requestInfo)) {
+                $query->whereHas('user', function ($query) use ($requestInfo) {
+                    $query->where('id', $requestInfo['user']);
+                });
+            }
+            if (array_key_exists('status', $requestInfo)) {
+                $query->whereHas('approval', function ($query) use ($requestInfo) {
+                    $query->where('status', $requestInfo['status']);
+                    if ($requestInfo['status'] == 3) {
+                        $this->filterCanceled = true;
+                    }
+                });
+            }
+            if (array_key_exists('approval_order', $requestInfo)) {
+                $query->whereHas('approval', function ($query) use ($requestInfo) {
+                    $query->where('order', $requestInfo['approval_order']);
+                });
+            }
+            if (array_key_exists('created_at', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['created_at'])) {
+                    $query->where('created_at', '>=', $requestInfo['created_at']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['created_at'])) {
+                    $query->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+                }
+                if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                    $query->whereBetween('created_at', [now()->addMonths(-1), now()]);
+                }
+            }
+            if (array_key_exists('pay_date', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['pay_date'])) {
+                    $query->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['pay_date'])) {
+                    $query->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+                }
+                if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                    $query->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+                }
+            }
+            if (array_key_exists('days_late', $requestInfo)) {
+                $query->whereHas('installments', function ($query) use ($requestInfo) {
+                    $query->where('status', '!=', Config::get('constants.status.paid out'))->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
+                });
+            }
+
+            if (array_key_exists('company', $requestInfo)) {
+                $query->whereHas('company', function ($query) use ($requestInfo) {
+                    $query->where('id', $requestInfo['company']);
+                });
+            }
+
+            if ($this->filterCanceled) {
+                $query->withTrashed();
+                $query->where('deleted_at', '!=', NULL);
+            }
+        });
+
+        if (array_key_exists('cnab_date', $requestInfo)) {
+            $query->whereHas('cnab_generated_installment', function ($cnabInstallment) use ($requestInfo) {
+                $cnabInstallment->whereHas('generated_cnab', function ($cnabGenerated) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '>=', $requestInfo['cnab_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '<=', $requestInfo['cnab_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['cnab_date']) && !array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->whereBetween('file_date', [now(), now()->addMonths(1)]);
+                    }
+                });
+            });
+        }
+
+        if (array_key_exists('extension_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['extension_date'])) {
+                if (array_key_exists('from', $requestInfo['extension_date'])) {
+                    $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['extension_date'])) {
+                    $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                }
+                if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                }
+            }
         }
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
@@ -295,6 +461,37 @@ class ReportService
     public function getAllApprovedPurchaseOrder($requestInfo)
     {
         $accountApproval = Utils::search($this->supplyApprovalFlow, $requestInfo);
+
+        $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
+            if (array_key_exists('provider', $requestInfo)) {
+                $query->where('provider_id', $requestInfo['provider']);
+            }
+            if (array_key_exists('cost_center', $requestInfo)) {
+                $query->whereHas('cost_centers', function ($cost_centers) use ($requestInfo) {
+                    $cost_centers->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
+            if (array_key_exists('service', $requestInfo)) {
+                $query->whereHas('services', function ($services) use ($requestInfo) {
+                    $services->where('service_id', $requestInfo['service']);
+                });
+            }
+            if (array_key_exists('product', $requestInfo)) {
+                $query->whereHas('products', function ($products) use ($requestInfo) {
+                    $products->where('product_id', $requestInfo['product']);
+                });
+            }
+
+            if (array_key_exists('billing_date', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+                }
+            }
+        });
+
         return Utils::pagination($accountApproval
             ->with('purchase_order')
             ->with('purchase_order.installments')

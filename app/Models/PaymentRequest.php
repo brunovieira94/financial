@@ -8,6 +8,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Support\Facades\Storage;
 use App\Scopes\ProfileCostCenterScope;
+use ArrayObject;
+use Config;
 
 class PaymentRequest extends Model
 {
@@ -100,7 +102,7 @@ class PaymentRequest extends Model
 
     public function installments()
     {
-        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id');
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'id')->with(['group_payment', 'bank_account_provider', 'cnab_generated_installment'])->orderBy('parcel_number', 'asc');
     }
 
     public function provider()
@@ -148,27 +150,38 @@ class PaymentRequest extends Model
         return $this->hasMany(PaymentRequestHasTax::class, 'payment_request_id', 'id')->with('typeOfTax');
     }
 
+    public function cnab_payment_request()
+    {
+        return $this->hasOne(CnabGeneratedHasPaymentRequests::class, 'payment_request_id', 'id')->with('cnab_generated')->orderBy('id', 'asc');
+    }
+
     public function getDaysLateAttribute()
     {
-        foreach ($this->installments as $value) {
-            $dueDate = date_create($value['due_date']);
-            $daysLate = date_diff($dueDate, now());
-            if ($dueDate < now() && $value['status'] != 'BD') {
-                return $daysLate->days;
-            } else {
-                return 0;
+
+        $installments = PaymentRequestHasInstallments::where('payment_request_id', $this->id)
+            ->orderBy('extension_date', 'asc')
+            ->get();
+
+        foreach ($installments as $installment) {
+            if ($installment['status'] != Config::get('constants.status.paid out')) {
+                if ($installment['extension_date'] != NULL) {
+                    $daysLate = date_diff(date_create($installment['extension_date']), now());
+                    return $daysLate->days;
+                    break;
+                }
             }
         }
+        return 0;
     }
 
     public function getNextExtensionDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->extension_date ?? null;
+        return $this->installments->sortBy('due_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->extension_date ?? null;
     }
 
     public function getNextCompetenceDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', 'BD')->first()->competence_date ?? null;
+        return $this->installments->sortBy('due_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->competence_date ?? null;
     }
 
     public function getApplicantCanEditAttribute()
@@ -190,5 +203,4 @@ class PaymentRequest extends Model
     {
         static::addGlobalScope(new ProfileCostCenterScope);
     }
-
 }

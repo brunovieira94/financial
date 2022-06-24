@@ -16,8 +16,8 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'title' => 'required|max:255|unique:products,title,NULL,id,deleted_at,NULL',
-            'measurement_units_id' => 'required|integer',
-            'chart_of_accounts_id' => 'required|integer',
+            'measurement_units_id' => 'required|integer|exists:measurement_units,id',
+            'chart_of_accounts_id' => 'required|integer|exists:chart_of_accounts,id',
             'description' => 'required',
             'attributes' => 'array',
         ];

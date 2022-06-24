@@ -22,8 +22,8 @@ class ApprovalFlowSupply extends Model
     }
 
     use SoftDeletes;
-    protected $table='approval_flow_supply';
-    protected $fillable = ['order','role_id'];
+    protected $table = 'approval_flow_supply';
+    protected $fillable = ['order', 'role_id'];
     protected $hidden = ['role_id'];
     //public $timestamps = false;
 

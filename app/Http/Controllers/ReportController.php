@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\AllApprovedInstallment;
 use Illuminate\Http\Request;
 use App\Services\ReportService;
 use App\Exports\AllDuePaymentRequestExport;
@@ -12,6 +13,7 @@ use App\Exports\AllGeneratedCNABPaymentRequestExport;
 use App\Exports\BillsToPayExport;
 use App\Exports\AllPaymentRequestPaidExport;
 use App\Exports\AllPaymentRequestFinishedExport;
+use App\Exports\InstallmentsPayableExport;
 
 class ReportController extends Controller
 {
@@ -28,6 +30,11 @@ class ReportController extends Controller
         return $this->reportService->getAllDuePaymentRequest($request->all());
     }
 
+    public function dueInstallment(Request $request)
+    {
+        return $this->reportService->getAllDueInstallment($request->all());
+    }
+
     public function duePaymentRequestExport(Request $request)
     {
         if (array_key_exists('exportFormat', $request->all())) {
@@ -40,6 +47,15 @@ class ReportController extends Controller
 
     public function approvedPaymentRequest(Request $request)
     {
+        if(array_key_exists('form_payment_id', $request->all()))
+        {
+            if(!array_key_exists('company_id', $request->all()))
+            {
+                return response()->json([
+                    'erro' => 'A empresa não foi informada'
+                ], 422);
+            }
+        }
         return $this->reportService->getAllApprovedPaymentRequest($request->all());
     }
 
@@ -51,6 +67,21 @@ class ReportController extends Controller
             }
         }
         return (new AllApprovedPaymentRequestExport($request->all()))->download('contasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function approvedInstallment(Request $request)
+    {
+        return $this->reportService->getAllApprovedInstallment($request->all());
+    }
+
+    public function approvedInstallmentExport(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new AllApprovedInstallment($request->all()))->download('parcelasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new AllApprovedInstallment($request->all()))->download('parcelasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function disapprovedPaymentRequest(Request $request)
@@ -111,7 +142,23 @@ class ReportController extends Controller
                 return (new BillsToPayExport($request->all()))->download('contasAPagar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
+
         return (new BillsToPayExport($request->all()))->download('contasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function installmentsPayable(Request $request)
+    {
+        return $this->reportService->getInstallmentsPayable($request->all());
+    }
+
+    public function installmentsPayableExport(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new InstallmentsPayableExport($request->all()))->download('parcelasAPagar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new InstallmentsPayableExport($request->all()))->download('parcelasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function paymentRequestPaid(Request $request)
