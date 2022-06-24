@@ -74,11 +74,11 @@ class PaymentRequestController extends Controller
             if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
                 if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                     return response()->json([
-                        'erro' => 'O código do boleto ou sistema na conta' .
+                        'erro' => 'O código de barras informado já existe no sistema na conta ' .
                             PaymentRequest::with('installments')
                             ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                             ->first()->id .
-                            ', para cadastrar essa conta deve ser apagada.'
+                            ', para cadastrar a conta deve ser cancelada/apagada.'
                     ], 409);
                     break;
                 }
@@ -167,11 +167,11 @@ class PaymentRequestController extends Controller
                     ->exists()) {
                     if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                         return response()->json([
-                            'erro' => 'O código do boleto ou sistema na conta' .
+                            'erro' => 'O código de barras informado já existe no sistema na conta ' .
                                 PaymentRequest::with('installments')
                                 ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                                 ->first()->id .
-                                ', para cadastrar essa conta deve ser apagada.'
+                                ', para cadastrar a conta deve ser cancelada/apagada.'
                         ], 409);
                         break;
                     }
