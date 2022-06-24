@@ -10,7 +10,7 @@ class PaymentRequestHasInstallments extends Model
 {
     protected $table = 'payment_requests_installments';
     public $timestamps = false;
-    protected $fillable = ['type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'status', 'amount_received'];
+    protected $fillable = ['type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received'];
     protected $appends = ['billet_link'];
 
     public function payment_request()
