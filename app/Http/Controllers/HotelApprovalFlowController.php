@@ -24,6 +24,7 @@ class HotelApprovalFlowController extends Controller
     public function store(StoreHotelApprovalFlowRequest $request)
     {
         $this->hotelApprovalFlowService->postHotelApprovalFlow($request->all());
+
         return response('', 201);
     }
 }
