@@ -39,14 +39,11 @@ class ApprovalFlowSupplyByUserService
         $idUserApproval = [];
 
         foreach ($supplyApprovalFlow as $purchaseOrderApproval) {
-
-            //$roles = ApprovalFlowSupply::where('order', $purchaseOrderApproval->order)->with('role')->get();
-            $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', 115)->get();
+            $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $purchaseOrderApproval->id_purchase_order)->get();
             $costCenterId = [];
             $maxPercentage = 0;
             $constCenterEqual = false;
             foreach ($costCenters as $costCenter) {
-                dd($costCenters);
                 if ($costCenter->percentage > $maxPercentage) {
                     $constCenterEqual = false;
                     unset($costCenterId);
@@ -56,33 +53,30 @@ class ApprovalFlowSupplyByUserService
                     $constCenterEqual = true;
                     $maxPercentage = $costCenter->percentage;
                 }
-                if($costCenter->percentage == $maxPercentage){
-                    if(!in_array($costCenter->cost_center_id, $costCenterId)){
-                        $costCenterId = [$costCenter->cost_center_id];
+                if ($costCenter->percentage == $maxPercentage) {
+                    if (!in_array($costCenter->cost_center_id, $costCenterId)) {
+                        array_push($costCenterId, $costCenter->cost_center_id);
                     }
                 }
-
             }
 
             if ($constCenterEqual) {
-                //dd($costCenterId);
-                $userApprovalByName = User::with('cost_center');
-                $userApprovalByName->whereHas('cost_center', function ($query) use ($costCenterId) {
-                    $query->whereIn($costCenterId, 'cost_center_id')->orderby('name');
+                $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
+                    $query->whereIn('cost_center_id', $costCenterId);
                 });
-                $userApprovalByName->first();
-                dd($userApprovalByName);
+                $userApprovalByName = $userApprovalByName->orderBy('name', 'asc')->first();
                 if ($userApprovalByName->id == auth()->user()->id) {
                     $idUserApproval[] = $purchaseOrderApproval->id;
                 }
             } else {
-                $idUserApproval[] = $purchaseOrderApproval->id;
+                $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
+                    $query->whereIn('cost_center_id', $costCenterId);
+                });
+                if ($userApprovalByName->where('id', auth()->user()->id)->exists()) {
+                    $idUserApproval[] = $purchaseOrderApproval->id;
+                }
             }
         }
-
-        dd($idUserApproval);
-
-
 
         $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow, $requestInfo, ['order']);
 
@@ -90,6 +84,9 @@ class ApprovalFlowSupplyByUserService
             ->where('status', 0)
             ->whereRelation('purchase_order', 'deleted_at', '=', null)
             ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']);
+
+        //filter cost center
+        $supplyApprovalFlow->whereIn('id', $idUserApproval);
 
         $supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
