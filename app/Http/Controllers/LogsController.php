@@ -24,4 +24,13 @@ class LogsController extends Controller
     {
         return $this->logsService->getLogs($log_name, $subject_id, $request->all());
     }
+
+    public function getPaymentRequestLogs(Request $request, $id)
+    {
+        return $this->logsService->getPaymentRequestLogs($id, $request->all());
+    }
+
+
+
+
 }

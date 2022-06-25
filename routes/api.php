@@ -230,6 +230,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
+        Route::get('/log-payment-request/{id}', [LogsController::class, 'getPaymentRequestLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
