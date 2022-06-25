@@ -133,7 +133,7 @@ class PurchaseOrder extends Model
             }
 
             foreach ($roles as $role) {
-                if ($role->role->id != 1) {
+                if ($role->role->id == 1) {
                     $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->orderby('name')->get();
                     $names = [];
                     foreach ($checkUser as $user) {

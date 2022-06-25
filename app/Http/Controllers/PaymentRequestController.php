@@ -21,7 +21,7 @@ class PaymentRequestController extends Controller
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
 
-    public function __construct(ApprovalFlow $approvalFlow, AccountsPayableApprovalFlow $accountsPayableApprovalFlow,PaymentRequestService $paymentRequestService, PaymentRequestsImport $paymentRequestImport)
+    public function __construct(ApprovalFlow $approvalFlow, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, PaymentRequestService $paymentRequestService, PaymentRequestsImport $paymentRequestImport)
     {
         $this->paymentRequestService = $paymentRequestService;
         $this->paymentRequestImport = $paymentRequestImport;
@@ -74,11 +74,11 @@ class PaymentRequestController extends Controller
             if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
                 if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                     return response()->json([
-                        'erro' => 'O código do boleto ou sistema na conta' .
+                        'erro' => 'O código de barras informado já existe no sistema na conta ' .
                             PaymentRequest::with('installments')
                             ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                             ->first()->id .
-                            ', para cadastrar essa conta deve ser apagada.'
+                            ', para cadastrar a conta deve ser cancelada/apagada.'
                     ], 409);
                     break;
                 }
@@ -123,15 +123,17 @@ class PaymentRequestController extends Controller
         $requestInfo = $request->all();
         $paymentRequest = PaymentRequest::with(['provider', 'installments'])->findOrFail($id);
 
-        $accountApproval = $this->accountsPayableApprovalFlow->where('payment_request_id', $id)->first();
-        if ($this->approvalFlow
-            ->where('order', $accountApproval->order)
-            ->where('role_id', auth()->user()->role_id)
-            ->doesntExist()
-        ) {
-            return response()->json([
-                'erro' => 'Não é permitido ao usuário editar a conta ' . $id . ', modifique o fluxo de aprovação.',
-            ], 422);
+        if (!$paymentRequest->applicant_can_edit) {
+            $accountApproval = $this->accountsPayableApprovalFlow->where('payment_request_id', $id)->first();
+            if ($this->approvalFlow
+                ->where('order', $accountApproval->order)
+                ->where('role_id', auth()->user()->role_id)
+                ->doesntExist()
+            ) {
+                return response()->json([
+                    'erro' => 'Não é permitido ao usuário editar a conta ' . $id . ', modifique o fluxo de aprovação.',
+                ], 422);
+            }
         }
 
         if (array_key_exists('invoice_number', $requestInfo)) {
@@ -167,11 +169,11 @@ class PaymentRequestController extends Controller
                     ->exists()) {
                     if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                         return response()->json([
-                            'erro' => 'O código do boleto ou sistema na conta' .
+                            'erro' => 'O código de barras informado já existe no sistema na conta ' .
                                 PaymentRequest::with('installments')
                                 ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                                 ->first()->id .
-                                ', para cadastrar essa conta deve ser apagada.'
+                                ', para cadastrar a conta deve ser cancelada/apagada.'
                         ], 409);
                         break;
                     }
