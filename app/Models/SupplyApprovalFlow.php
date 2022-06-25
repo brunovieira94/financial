@@ -24,7 +24,7 @@ class SupplyApprovalFlow extends Model
     protected $table = 'supply_approval_flows';
     protected $fillable = ['id_purchase_order', 'order', 'status', 'reason'];
     public $timestamps = false;
-    protected $hidden = ['id_purchase_order'];
+    //protected $hidden = ['id_purchase_order'];
     protected $appends = ['approver_stage'];
 
     public function purchase_order()
