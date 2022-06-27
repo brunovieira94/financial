@@ -40,6 +40,9 @@ class ApprovalFlowByUserService
             if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
             }
+            if (array_key_exists('net_value', $requestInfo)) {
+                $query->where('net_value', $requestInfo['net_value']);
+            }
             if (array_key_exists('company', $requestInfo)) {
                 $query->where('company_id', $requestInfo['company']);
             }
