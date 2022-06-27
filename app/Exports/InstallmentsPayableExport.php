@@ -156,7 +156,7 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->payment_request->id,
             $query->parcel_number,
             $query->payment_request->provider->trade_name ?? '',
-            $query->payment_request->cost_center->title,
+            $query->cost_center ? $query->cost_center->title : $query->cost_center,
             $query->due_date,
             $query->extension_date,
             $query->competence_date,
