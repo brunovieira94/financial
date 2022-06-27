@@ -38,42 +38,46 @@ class ApprovalFlowSupplyByUserService
 
         $idUserApproval = [];
 
-        foreach ($supplyApprovalFlow as $purchaseOrderApproval) {
-            $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $purchaseOrderApproval->id_purchase_order)->get();
-            $costCenterId = [];
-            $maxPercentage = 0;
-            $constCenterEqual = false;
-            foreach ($costCenters as $costCenter) {
-                if ($costCenter->percentage > $maxPercentage) {
-                    $constCenterEqual = false;
-                    unset($costCenterId);
-                    $costCenterId = [$costCenter->cost_center_id];
-                    $maxPercentage = $costCenter->percentage;
-                } else if ($costCenter->percentage == $maxPercentage) {
-                    $constCenterEqual = true;
-                    $maxPercentage = $costCenter->percentage;
-                }
-                if ($costCenter->percentage == $maxPercentage) {
-                    if (!in_array($costCenter->cost_center_id, $costCenterId)) {
-                        array_push($costCenterId, $costCenter->cost_center_id);
+        if (auth()->user()->role->filter_cost_center_supply) {
+            foreach ($supplyApprovalFlow as $purchaseOrderApproval) {
+                $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $purchaseOrderApproval->id_purchase_order)->get();
+                $costCenterId = [];
+                $maxPercentage = 0;
+                $constCenterEqual = false;
+                foreach ($costCenters as $costCenter) {
+                    if ($costCenter->percentage > $maxPercentage) {
+                        $constCenterEqual = false;
+                        unset($costCenterId);
+                        $costCenterId = [$costCenter->cost_center_id];
+                        $maxPercentage = $costCenter->percentage;
+                    } else if ($costCenter->percentage == $maxPercentage) {
+                        $constCenterEqual = true;
+                        $maxPercentage = $costCenter->percentage;
+                    }
+                    if ($costCenter->percentage == $maxPercentage) {
+                        if (!in_array($costCenter->cost_center_id, $costCenterId)) {
+                            array_push($costCenterId, $costCenter->cost_center_id);
+                        }
                     }
                 }
-            }
 
-            if ($constCenterEqual) {
-                $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
-                    $query->whereIn('cost_center_id', $costCenterId);
-                });
-                $userApprovalByName = $userApprovalByName->orderBy('name', 'asc')->first();
-                if ($userApprovalByName->id == auth()->user()->id) {
-                    $idUserApproval[] = $purchaseOrderApproval->id;
-                }
-            } else {
-                $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
-                    $query->whereIn('cost_center_id', $costCenterId);
-                });
-                if ($userApprovalByName->where('id', auth()->user()->id)->exists()) {
-                    $idUserApproval[] = $purchaseOrderApproval->id;
+                if ($constCenterEqual) {
+                    $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
+                        $query->whereIn('cost_center_id', $costCenterId);
+                    });
+                    if ($userApprovalByName->exists()) {
+                        $userApprovalByName = $userApprovalByName->orderBy('name', 'asc')->first();
+                        if ($userApprovalByName->id == auth()->user()->id) {
+                            $idUserApproval[] = $purchaseOrderApproval->id;
+                        }
+                    }
+                } else {
+                    $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
+                        $query->whereIn('cost_center_id', $costCenterId);
+                    });
+                    if ($userApprovalByName->where('id', auth()->user()->id)->exists()) {
+                        $idUserApproval[] = $purchaseOrderApproval->id;
+                    }
                 }
             }
         }
@@ -86,7 +90,9 @@ class ApprovalFlowSupplyByUserService
             ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']);
 
         //filter cost center
-        $supplyApprovalFlow->whereIn('id', $idUserApproval);
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $supplyApprovalFlow->whereIn('id', $idUserApproval);
+        }
 
         $supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
