@@ -21,9 +21,8 @@ class Role extends Model
         $activity->causer_id = $user->id;
         $activity->causer_object = $user;
     }
-
     use SoftDeletes;
-    protected $fillable = ['title', 'filter_cost_center'];
+    protected $fillable = ['title', 'filter_cost_center', 'filter_cost_center_supply'];
     protected $table='role';
 
     public function modules()
