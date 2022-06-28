@@ -14,7 +14,7 @@ class BillingService
     private $billing;
     private $cangoorooService;
 
-    private $with = ['user', 'cangooroo', 'reason_to_reject'];
+    private $with = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow'];
 
     public function __construct(Billing $billing, CangoorooService $cangoorooService)
     {
@@ -67,6 +67,7 @@ class BillingService
         $billing = new Billing;
         $billingInfo['user_id'] = auth()->user()->id;
         $billingInfo['approval_status'] =  Config::get('constants.status.open');
+        $billingInfo['order'] =  1;
         $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
         if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
