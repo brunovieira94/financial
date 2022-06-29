@@ -48,6 +48,8 @@ class LogsService
             if ($log['log_name'] == 'accounts_payable_approval_flows') {
                 $status = '';
 
+
+
                 switch ($log['properties']['attributes']['status']) {
 
                     case 0:
@@ -70,7 +72,8 @@ class LogsService
                     'causerUser' => $log['causer_object']['name'],
                     'causerUserRole' => $log['causer_object']['role']['title'],
                     'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'],
-                    'motive' => $log['properties']['attributes']['reason_to_reject'] != null ? $log['properties']['attributes']['reason_to_reject']['title'] : null
+                    'motive' => $log['properties']['attributes']['reason_to_reject'] != null ? $log['properties']['attributes']['reason_to_reject']['title'] : null,
+                    'reason' => $log['properties']['attributes']['reason'],
                 ];
             } else if ($log['log_name'] == 'payment_request') {
                 $retorno[] = [
