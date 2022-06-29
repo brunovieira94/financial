@@ -63,14 +63,30 @@ class LogsService
                         $status = 'default';
                 }
 
+                $reason = null;
+                $concatenate = false;
+
+                if($log['properties']['attributes']['reason_to_reject'] != null)
+                {
+                    $reason = $log['properties']['attributes']['reason_to_reject']['title'];
+                    $concatenate = true;
+                }
+                if($log['properties']['attributes']['reason'] != null){
+                    if($concatenate){
+                        $reason = $reason . ' - ' . $log['properties']['attributes']['reason'];
+                    }else{
+                        $reason = $log['properties']['attributes']['reason'];
+                    }
+                }
+
                 $retorno[] = [
                     'type' => $status,
                     'createdAt' => $log['created_at'],
                     'description' => $log['description'],
                     'causerUser' => $log['causer_object']['name'],
                     'causerUserRole' => $log['causer_object']['role']['title'],
-                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'],
-                    'motive' => $log['properties']['attributes']['reason_to_reject'] != null ? $log['properties']['attributes']['reason_to_reject']['title'] : null
+                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? null,
+                    'motive' => $reason,
                 ];
             } else if ($log['log_name'] == 'payment_request') {
                 $retorno[] = [

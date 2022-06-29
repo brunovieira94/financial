@@ -307,6 +307,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/payment-requests-finished/export', [ReportController::class, 'paymentRequestFinishedExport']);
         Route::post('/approved-installment/export', [ReportController::class, 'approvedInstallmentExport']);
         Route::post('/installments-payable/export', [ReportController::class, 'installmentsPayableExport']);
+        Route::post('/due-installments/export', [ReportController::class, 'dueInstallmentsExport']);
     });
 
     Route::prefix('product')->group(function () {

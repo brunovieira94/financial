@@ -13,6 +13,7 @@ use App\Exports\AllGeneratedCNABPaymentRequestExport;
 use App\Exports\BillsToPayExport;
 use App\Exports\AllPaymentRequestPaidExport;
 use App\Exports\AllPaymentRequestFinishedExport;
+use App\Exports\DueInstallmentsExport;
 use App\Exports\InstallmentsPayableExport;
 
 class ReportController extends Controller
@@ -43,6 +44,16 @@ class ReportController extends Controller
             }
         }
         return (new AllDuePaymentRequestExport($request->all()))->download('contasVencidas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function dueInstallmentsExport(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new DueInstallmentsExport($request->all()))->download('parcelasVencidas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new DueInstallmentsExport($request->all()))->download('parcelasVencidas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function approvedPaymentRequest(Request $request)
