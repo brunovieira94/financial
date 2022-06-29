@@ -11,7 +11,7 @@ class Billing extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['user', 'cangooroo', 'reason_to_reject', '*'];
+    protected static $logAttributes = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow', '*'];
     protected static $logName = 'billing';
     public function tapActivity(Activity $activity)
     {
@@ -40,6 +40,7 @@ class Billing extends Model
         'approval_status',
         'reason',
         'reason_to_reject_id',
+        'order',
     ];
     protected $hidden = ['user_id', 'cangooroo_booking_id', 'reason_to_reject_id'];
 
@@ -51,6 +52,11 @@ class Billing extends Model
     public function cangooroo()
     {
         return $this->hasOne(Cangooroo::class, 'booking_id', 'cangooroo_booking_id')->with('hotel');
+    }
+
+    public function approval_flow()
+    {
+        return $this->hasOne(HotelApprovalFlow::class, 'order', 'order')->with('role')->latest();
     }
 
     public function reason_to_reject()

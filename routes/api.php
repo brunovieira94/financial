@@ -37,6 +37,7 @@ use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\HotelApprovalFlowController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -192,6 +193,12 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
         Route::post('/export', [BillingController::class, 'export']);
+    });
+
+    Route::prefix('hotel-approval-flow')->group(function () {
+        Route::get('/', [HotelApprovalFlowController::class, 'index']);
+        Route::post('/', [HotelApprovalFlowController::class, 'store']);
+        Route::get('/all', [HotelApprovalFlowController::class, 'index']);
     });
 
     //Restful route -> Company
