@@ -174,6 +174,8 @@ class ApprovalFlowByUserService
                     } else if ($accountApproval->order != 0) {
                         $accountApproval->order -= 1;
                     }
+                    $accountApproval->reason = null;
+                    $accountApproval->reason_to_reject_id = null;
                     $accountApproval->fill($requestInfo)->save();
                 }
                 return response()->json([
@@ -237,6 +239,8 @@ class ApprovalFlowByUserService
         } else if ($accountApproval->order != 0) {
             $accountApproval->order -= 1;
         }
+        $accountApproval->reason = null;
+        $accountApproval->reason_to_reject_id = null;
         $accountApproval->fill($request->all())->save();
         return response()->json([
             'Sucesso' => 'Conta reprovada',

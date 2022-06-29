@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Models\Billing;
 use Config;
 use Illuminate\Http\Request;
+use Response;
 
 class BillingService
 {
@@ -13,7 +14,7 @@ class BillingService
     private $billing;
     private $cangoorooService;
 
-    private $with = ['user', 'cangooroo', 'reason_to_reject'];
+    private $with = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow'];
 
     public function __construct(Billing $billing, CangoorooService $cangoorooService)
     {
@@ -23,6 +24,9 @@ class BillingService
 
     public function getAllBilling($requestInfo)
     {
+        if (!array_key_exists('approval_status', $requestInfo)) {
+            return Response()->json(['error' => 'approval_status is required'], 400);
+        }
         $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', $requestInfo['approval_status']);
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
@@ -62,6 +66,8 @@ class BillingService
     {
         $billing = new Billing;
         $billingInfo['user_id'] = auth()->user()->id;
+        $billingInfo['approval_status'] =  Config::get('constants.status.open');
+        $billingInfo['order'] =  1;
         $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
         if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([

@@ -37,6 +37,7 @@ use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\HotelApprovalFlowController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -194,6 +195,12 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/export', [BillingController::class, 'export']);
     });
 
+    Route::prefix('hotel-approval-flow')->group(function () {
+        Route::get('/', [HotelApprovalFlowController::class, 'index']);
+        Route::post('/', [HotelApprovalFlowController::class, 'store']);
+        Route::get('/all', [HotelApprovalFlowController::class, 'index']);
+    });
+
     //Restful route -> Company
     Route::prefix('company')->group(function () {
         Route::get('/', [CompanyController::class, 'index']);
@@ -300,6 +307,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/payment-requests-finished/export', [ReportController::class, 'paymentRequestFinishedExport']);
         Route::post('/approved-installment/export', [ReportController::class, 'approvedInstallmentExport']);
         Route::post('/installments-payable/export', [ReportController::class, 'installmentsPayableExport']);
+        Route::post('/due-installments/export', [ReportController::class, 'dueInstallmentsExport']);
     });
 
     Route::prefix('product')->group(function () {
