@@ -113,7 +113,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     //Restful route -> Provider Categories
-
     Route::prefix('provider-category')->group(function () {
         Route::get('/', [ProviderCategoryController::class, 'index']);
         Route::get('/{id}', [ProviderCategoryController::class, 'show']);
@@ -136,7 +135,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [RoleController::class, 'destroy']);
     });
     //Restful route -> States
-
     Route::prefix('state')->group(function () {
         Route::get('/', [StateController::class, 'index']);
         Route::get('/{id}', [StateController::class, 'show']);
@@ -145,7 +143,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [StateController::class, 'destroy']);
         Route::post('/import', [StateController::class, 'import']);
     });
-
     //Restful route -> City
     Route::prefix('city')->group(function () {
         Route::get('/', [CityController::class, 'index']);
@@ -161,7 +158,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ApprovalFlowController::class, 'store']);
         Route::get('/all', [ApprovalFlowController::class, 'index']);
     });
-
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {
         Route::get('/', [ProviderController::class, 'index']);
@@ -238,6 +234,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
         Route::get('/log-payment-request/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+        Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
