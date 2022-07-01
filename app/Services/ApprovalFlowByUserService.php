@@ -13,7 +13,6 @@ class ApprovalFlowByUserService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
-    private $filterCanceled = false;
 
     public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
@@ -31,8 +30,7 @@ class ApprovalFlowByUserService
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
 
         $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->where('status', 0)
-            ->orWhere('status', 2)
+            ->whereIn('status', [0, 2])
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
 
@@ -114,9 +112,6 @@ class ApprovalFlowByUserService
 
         if (array_key_exists('status', $requestInfo)) {
             $accountsPayableApprovalFlow->where('status', $requestInfo['status']);
-            if ($requestInfo['status'] == 3) {
-                $this->filterCanceled = true;
-            }
         }
 
         if ($this->filterCanceled) {
