@@ -114,13 +114,6 @@ class ApprovalFlowByUserService
             $accountsPayableApprovalFlow->where('status', $requestInfo['status']);
         }
 
-        if ($this->filterCanceled) {
-            $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->withTrashed();
-                $query->where('deleted_at', '!=', NULL);
-            });
-        }
-
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         return Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
     }
