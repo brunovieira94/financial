@@ -427,7 +427,7 @@ class PaymentRequestService
                                 'payment_request_id' => $paymentRequest->id,
                                 'purchase_order_has_installments_id' => $purchaseInstallment['installment'],
                                 'payment_request_has_purchase_order_id' => $paymentRequestHasPurchaseOrders->id,
-                                'amount_received' => $purchaseOrders['amount_received'],
+                                'amount_received' => $purchaseInstallment['amount_received'],
                             ]
                         );
                         $purchaseInstallment = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
