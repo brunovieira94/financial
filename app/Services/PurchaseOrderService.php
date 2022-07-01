@@ -52,6 +52,17 @@ class PurchaseOrderService
     {
         $purchaseOrder = Utils::search($this->purchaseOrder, $requestInfo);
 
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $purchaseOrderIds = [];
+            foreach (auth()->user()->cost_center as $userCostCenter) {
+                $purchaseOrderCostCenters = PurchaseOrderHasCostCenters::where('cost_center_id', $userCostCenter->id)->get(['purchase_order_id']);
+                foreach ($purchaseOrderCostCenters as $purchaseOrderCostCenter) {
+                    $purchaseOrderIds[] = $purchaseOrderCostCenter->purchase_order_id;
+                }
+            }
+            $purchaseOrder->whereIn('id', $purchaseOrderIds);
+        }
+
         if (array_key_exists('provider', $requestInfo)) {
             $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('provider_id', $requestInfo['provider']);
@@ -368,17 +379,16 @@ class PurchaseOrderService
                     'purchase_request_id' => $purchaseRequest['purchase_request_id'],
                 ]);
                 $purchaseRequestToUpdate = $this->purchaseRequest->find($purchaseRequest['purchase_request_id']);
-                if($purchaseRequestToUpdate){
+                if ($purchaseRequestToUpdate) {
                     $purchaseRequestToUpdate->status = 1;
                     $isPartial = false;
                     foreach ($this->purchaseRequestHasProducts->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->get() as $purchaseRequestHasProducts) {
-                        if(array_key_exists($purchaseRequestHasProducts['product_id'], $productQuantityInOrder)){
-                            if($productQuantityInOrder[$purchaseRequestHasProducts['product_id']] >= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order'])){
+                        if (array_key_exists($purchaseRequestHasProducts['product_id'], $productQuantityInOrder)) {
+                            if ($productQuantityInOrder[$purchaseRequestHasProducts['product_id']] >= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order'])) {
                                 $productQuantityInOrder[$purchaseRequestHasProducts['product_id']] -= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order']);
                                 $purchaseRequestHasProducts->in_order = $purchaseRequestHasProducts['quantity'];
                                 $purchaseRequestHasProducts->save();
-                            }
-                            else{
+                            } else {
                                 $isPartial = true;
                                 $purchaseRequestHasProducts->in_order += $productQuantityInOrder[$purchaseRequestHasProducts['product_id']];
                                 $productQuantityInOrder[$purchaseRequestHasProducts['product_id']] = 0;
@@ -386,7 +396,7 @@ class PurchaseOrderService
                             }
                         }
                     }
-                    if ($isPartial){
+                    if ($isPartial) {
                         $purchaseRequestToUpdate->status = 2;
                     }
                     $purchaseRequestToUpdate->save();
