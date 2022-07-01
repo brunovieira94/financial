@@ -30,7 +30,9 @@ class LogsController extends Controller
         return $this->logsService->getPaymentRequestLogs($id, $request->all());
     }
 
-
-
+    public function getPurchaseOrderLogs(Request $request, $id)
+    {
+        return $this->logsService->getPurchaseOrderLogs($id, $request->all());
+    }
 
 }
