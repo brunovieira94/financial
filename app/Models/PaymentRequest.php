@@ -198,7 +198,6 @@ class PaymentRequest extends Model
         return false;
     }
 
-
     protected static function booted()
     {
         static::addGlobalScope(new ProfileCostCenterScope);
