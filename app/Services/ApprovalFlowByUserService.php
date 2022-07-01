@@ -169,6 +169,16 @@ class ApprovalFlowByUserService
                     $maxOrder = $this->approvalFlow->max('order');
                     $accountApproval->status = Config::get('constants.status.disapproved');
 
+                    if ($this->approvalFlow
+                        ->where('order', $accountApproval->order)
+                        ->where('role_id', auth()->user()->role_id)
+                        ->doesntExist()
+                    ) {
+                        return response()->json([
+                            'erro' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                        ], 422);
+                    }
+
                     if ($accountApproval->order > $maxOrder) {
                         $accountApproval->order = Config::get('constants.status.open');
                     } else if ($accountApproval->order != 0) {
@@ -193,7 +203,7 @@ class ApprovalFlowByUserService
                         ->doesntExist()
                     ) {
                         return response()->json([
-                            'erro' => 'Não é permitido a esse usuário aprovar/reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                            'erro' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
@@ -212,7 +222,7 @@ class ApprovalFlowByUserService
             }
         } else {
             return response()->json([
-                'Erro' => 'Nenhuma Conta Selecionada',
+                'erro' => 'Nenhuma conta selecionada',
             ], 422);
         }
     }
@@ -228,7 +238,7 @@ class ApprovalFlowByUserService
             ->doesntExist()
         ) {
             return response()->json([
-                'erro' => 'Não é permitido a esse usuário aprovar/reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                'erro' => 'Não é permitido a esse usuário reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
             ], 422);
         }
 
