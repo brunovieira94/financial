@@ -35,6 +35,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
 
         $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 0)
+            ->orWhere('status', 2)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
 
