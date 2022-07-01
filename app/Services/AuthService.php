@@ -15,8 +15,7 @@ class AuthService
     private $user;
 
 
-    public function __construct(Module $module, RoleHasModule $roleHasModule, Role $role, User $user)
-    {
+    public function __construct(Module $module, RoleHasModule $roleHasModule, Role $role, User $user){
         $this->module = $module;
         $this->roleHasModule = $roleHasModule;
         $this->role = $role;
@@ -27,13 +26,9 @@ class AuthService
     {
         $user = $this->user->findOrFail($id);
 
-        $permissions = $this->roleHasModule->with('module')->where('role_id', $user->role_id);
+        $permissions = $this->roleHasModule->where('role_id', $user->role_id)->get(['create', 'read', 'update', 'delete', 'import', 'export', 'module_id']);
 
-        $permissions->whereHas('module', function ($query) {
-            $query->where('active', true);
-        })->get(['create', 'read', 'update', 'delete', 'import', 'export', 'module_id']);
-
-        foreach ($permissions as $permission) {
+        foreach($permissions as $permission){
             $this->module->withoutAppends = true;
             $module = $this->module->where('id', $permission->module_id)->get(['route'])->first();
             unset($permission->module_id);
@@ -42,9 +37,13 @@ class AuthService
 
         $user->role = $this->role->where('id', $user->role_id)->get(['id', 'title'])->first();
 
-        unset($user->role_id);
+        unset( $user->role_id);
         $user->permissions = $permissions;
 
         return response(['user' => $user, 'access_token' => $tokenResponse->access_token, 'refresh_token' => $tokenResponse->refresh_token]);
     }
+
 }
+
+
+
