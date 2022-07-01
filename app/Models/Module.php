@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Scopes\FilterActive;
+use App\Scopes\FilterActiveScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,6 +49,6 @@ class Module extends Model
 
     protected static function booted()
     {
-        static::addGlobalScope(new FilterActive);
+        static::addGlobalScope(new FilterActiveScope);
     }
 }
