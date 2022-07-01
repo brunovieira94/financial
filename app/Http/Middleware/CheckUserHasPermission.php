@@ -68,13 +68,11 @@ class CheckUserHasPermission
             return $next($request);
 
         //array de objetos com module id
-        $roles = $this->role->where('role_id', $user->role_id)->get(['module_id']);
+        $roles = $this->role->with('module')->where('role_id', $user->role_id);
 
-        // if ($request->isMethod('GET')) {
-        //     if (array_key_exists('noAuth', $request->all())){
-        //         return $next($request);
-        //     }
-        // }
+        $roles = $roles->whereHas('module', function ($query) {
+            $query->where('active', true);
+        })->get(['module_id']);
 
         switch ($routeAccessed) {
             case 'approved-installment':
