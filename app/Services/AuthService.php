@@ -29,7 +29,7 @@ class AuthService
 
         $permissions = $this->roleHasModule->with('module')->where('role_id', $user->role_id);
 
-        $permissions->whereHas('module', function ($query) {
+        $permissions = $permissions->whereHas('module', function ($query) {
             $query->where('active', true);
         })->get(['create', 'read', 'update', 'delete', 'import', 'export', 'module_id']);
 
