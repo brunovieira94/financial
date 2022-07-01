@@ -13,7 +13,6 @@ class ApprovalFlowByUserService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
-    private $filterCanceled = false;
 
     public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
@@ -113,9 +112,6 @@ class ApprovalFlowByUserService
 
         if (array_key_exists('status', $requestInfo)) {
             $accountsPayableApprovalFlow->where('status', $requestInfo['status']);
-            if ($requestInfo['status'] == 3) {
-                $this->filterCanceled = true;
-            }
         }
 
         if ($this->filterCanceled) {
