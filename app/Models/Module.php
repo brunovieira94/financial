@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\FilterActiveScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,7 +15,7 @@ class Module extends Model
     use SoftDeletes;
     protected static $logAttributes = ['*'];
     protected $table='module';
-    protected $fillable = ['title', 'route', 'parent'];
+    protected $fillable = ['title', 'route', 'parent', 'active'];
 
     public function roles()
     {
@@ -44,5 +45,10 @@ class Module extends Model
         }
 
         return $modules;
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new FilterActiveScope);
     }
 }
