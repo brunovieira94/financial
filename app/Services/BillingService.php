@@ -6,7 +6,6 @@ namespace App\Services;
 use App\Models\Billing;
 use Config;
 use Illuminate\Http\Request;
-use Response;
 
 class BillingService
 {
@@ -22,12 +21,9 @@ class BillingService
         $this->cangoorooService = $cangoorooService;
     }
 
-    public function getAllBilling($requestInfo)
+    public function getAllBilling($requestInfo, $approvalStatus)
     {
-        if (!array_key_exists('approval_status', $requestInfo)) {
-            return Response()->json(['error' => 'approval_status is required'], 400);
-        }
-        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', $requestInfo['approval_status']);
+        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 

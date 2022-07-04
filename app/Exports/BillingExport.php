@@ -11,15 +11,25 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use App\Services\Utils;
 
 class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
 
     use Exportable;
 
+    private $requestInfo;
+    private $approvalStatus;
+
+    public function __construct($requestInfo, $approvalStatus)
+    {
+        $this->requestInfo = $requestInfo;
+        $this->approvalStatus = $approvalStatus;
+    }
+
     public function collection()
     {
-        return Billing::with(['cangooroo.hotel.bank_account', 'user'])->get();
+        return Billing::with(['cangooroo.hotel.bank_account', 'user'])->where('approval_status', array_search($this->approvalStatus, Utils::$approvalStatus))->get();
     }
 
     public function map($billing): array
