@@ -149,8 +149,8 @@ class LogsService
                     'createdAt' => $log['created_at'],
                     'description' => $log['description'],
                     'causerUser' => $log['causer_object']['name'],
-                    'causerUserRole' => $log['causer_object']['role']['title'],
-                    'createdUser' => $log['properties']['attributes']['purchase_order']['user']['name'] ?? null,
+                    'causerUserRole' => isset($log['causer_object']['role']) ? $log['causer_object']['role']['title'] : '',
+                    'createdUser' => $log['properties']['attributes']['purchase_order']['user']['name'] ?? '',
                     'motive' => $log['properties']['attributes']['reason']
                 ];
             } else if ($log['log_name'] == 'purchase_orders') {

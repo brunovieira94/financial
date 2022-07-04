@@ -41,7 +41,7 @@ class AuthService
 
         $user->role = $this->role->where('id', $user->role_id)->get(['id', 'title'])->first();
 
-        unset( $user->role_id);
+        unset($user->role_id);
         $user->permissions = $permissions;
 
         return response(['user' => $user, 'access_token' => $tokenResponse->access_token, 'refresh_token' => $tokenResponse->refresh_token]);
