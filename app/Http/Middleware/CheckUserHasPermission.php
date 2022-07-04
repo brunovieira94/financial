@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
 use App\Models\RoleHasModule;
 use App\Models\Module;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +22,7 @@ class CheckUserHasPermission
     {
         $user = $request->user();
         $uri = Route::current()->uri();
+        $url = explode('/', $request->url());
         $route = explode('/', $uri);
 
         $whiteList = [
@@ -44,22 +44,21 @@ class CheckUserHasPermission
             'update-installment'
         ];
 
-        $routeAccessed = null;
+        $routeAccessed = $route[count($route) - 1];
 
-        if ('{id}' == $route[count($route) - 1]) {
+        if ('{id}' == $routeAccessed) {
+            $routeAccessed = $route[count($route) - 2];
             if (in_array($route[count($route) - 2], $unverifiedSubRoutes)) {
                 $routeAccessed = $route[count($route) - 3];
-            } else {
-                $routeAccessed = $route[count($route) - 2];
             }
-        } else if (in_array($route[count($route) - 1], $unverifiedSubRoutes)) {
+        } else if (in_array($routeAccessed, $unverifiedSubRoutes)) {
             $routeAccessed = $route[count($route) - 2];
-        } else {
-            $routeAccessed = $route[count($route) - 1];
-            if ($routeAccessed == 'export' || $routeAccessed == 'import') {
-                $routeAccessed = $route[count($route) - 2];
-            }
+        } else if ($routeAccessed == 'export' || $routeAccessed == 'import') {
+            $routeAccessed = $route[count($route) - 2];
+        } else if ($routeAccessed == '{approvalStatus}') {
+            $routeAccessed = $url[count($url) - 1];
         }
+
 
         if (in_array($route[1], $whiteList))
             return $next($request);
