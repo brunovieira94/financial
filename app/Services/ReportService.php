@@ -462,6 +462,24 @@ class ReportService
     {
         $accountApproval = Utils::search($this->supplyApprovalFlow, $requestInfo);
 
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $purchaseOrderIds = [];
+            foreach (auth()->user()->cost_center as $userCostCenter) {
+
+                $purchaseOrderCostCenters = $this->supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($userCostCenter) {
+                    $query->whereHas('cost_centers', function ($cost_centers) use ($userCostCenter) {
+                        $cost_centers->where('cost_center_id', $userCostCenter->id);
+                    });
+                })->get(['id_purchase_order']);
+
+                foreach ($purchaseOrderCostCenters as $purchaseOrderCostCenter) {
+                    $purchaseOrderIds[] = $purchaseOrderCostCenter->id_purchase_order;
+                }
+            }
+
+            $accountApproval->whereIn('id_purchase_order', $purchaseOrderIds);
+        }
+
         $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
