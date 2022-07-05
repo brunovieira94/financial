@@ -427,11 +427,14 @@ class PaymentRequestService
                                 'payment_request_id' => $paymentRequest->id,
                                 'purchase_order_has_installments_id' => $purchaseInstallment['installment'],
                                 'payment_request_has_purchase_order_id' => $paymentRequestHasPurchaseOrders->id,
-                                'amount_received' => $purchaseInstallment['amount_received'],
+                                'amount_received' => isset($purchaseInstallment['amount_received']) ? $purchaseInstallment['amount_received'] : 0,
                             ]
                         );
                         $purchaseInstallment = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
-                        $purchaseInstallment->payment_request_id = $paymentRequest->id;
+                        $amountPaid = DB::table('payment_request_has_purchase_order_installments')
+                        ->where('purchase_order_has_installments_id', $purchaseInstallment->id)
+                        ->sum('amount_received');
+                        $purchaseInstallment->amount_paid = $amountPaid;
                         $purchaseInstallment->save();
                     }
                 }

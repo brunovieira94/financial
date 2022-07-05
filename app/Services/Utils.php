@@ -2,28 +2,28 @@
 
 namespace App\Services;
 
-use App\Models\FormPayment;
-
 class Utils
 {
     const defaultPerPage = 20;
     const defaultOrderBy = 'id';
     const defaultOrder = 'desc';
 
-    public static function pagination($model,$requestInfo){
+    public static function pagination($model, $requestInfo)
+    {
         $orderBy = $requestInfo['orderBy'] ?? self::defaultOrderBy;
         $order = $requestInfo['order'] ?? self::defaultOrder;
         $perPage = $requestInfo['perPage'] ?? self::defaultPerPage;
         return $model->orderBy($orderBy, $order)->paginate($perPage);
     }
 
-    public static function getDeleteKeys($nestable){
+    public static function getDeleteKeys($nestable)
+    {
         $arrayIds = [];
-        foreach($nestable as $key=>$value){
+        foreach ($nestable as $key => $value) {
             array_push($arrayIds, $nestable[$key]['id']);
-            if(sizeof($nestable[$key]['children']) > 0){
+            if (sizeof($nestable[$key]['children']) > 0) {
                 $auxArray = self::getDeleteKeys($nestable[$key]['children']);
-                foreach($auxArray as $element){
+                foreach ($auxArray as $element) {
                     array_push($arrayIds, $element);
                 }
             }
@@ -46,124 +46,97 @@ class Utils
         return $date = implode('-', $date);
     }
 
-    public static function search($model,$requestInfo,$excludeFields = null){
+    public static function search($model, $requestInfo, $excludeFields = null)
+    {
         $fillable = $model->getFillable();
-        if ($excludeFields != null)
-        {
-            foreach ($fillable as $key=>$value) {
-                if(in_array($fillable[$key], $excludeFields)){
+        if ($excludeFields != null) {
+            foreach ($fillable as $key => $value) {
+                if (in_array($fillable[$key], $excludeFields)) {
                     unset($fillable[$key]);
                 }
             }
         }
         $query = $model->query();
-        if(array_key_exists('search', $requestInfo)){
+        if (array_key_exists('search', $requestInfo)) {
 
             if (self::validateDate($requestInfo['search'], 'd/m/Y')) {
                 $requestInfo['search'] = self::formatDate($requestInfo['search']);
             }
-            if(array_key_exists('searchFields', $requestInfo)){
+            if (array_key_exists('searchFields', $requestInfo)) {
                 $query->whereLike($requestInfo['searchFields'], "%{$requestInfo['search']}%");
-            }
-            else{
+            } else {
                 $query->whereLike($fillable, "%{$requestInfo['search']}%");
             }
         }
         return $query;
     }
 
-    public static function groupInstallments($installments, $bankCode){
+    public static function groupInstallments($installments, $bankCode)
+    {
 
         $groupInstallment = [];
 
-        foreach($installments as $installment)
-        {
-            foreach($installment->group_payment->form_payment as $payment_form)
-            {
-                if($payment_form->bank_code == $bankCode)
-                {
-                    if($payment_form->group_form_payment_id == 2) //Default PIX group 2
+        foreach ($installments as $installment) {
+            foreach ($installment->group_payment->form_payment as $payment_form) {
+                if ($payment_form->bank_code == $bankCode) {
+                    if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
                     {
-                        if(array_key_exists('45', $groupInstallment))
-                        {
+                        if (array_key_exists('45', $groupInstallment)) {
                             array_push($groupInstallment[$payment_form->code_cnab], $installment);
                             break;
-                        } else
-                        {
+                        } else {
                             $groupInstallment['45'] = [$installment];
                             break;
                         }
-                    }
-                    elseif($payment_form->group_form_payment_id == 1)
-                    {
-                        if(substr($installment->bar_code, 0, 3) == $bankCode)
-                        {
-                            if($payment_form->same_ownership)
-                            {
-                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
-                                {
+                    } elseif ($payment_form->group_form_payment_id == 1) {
+                        if (substr($installment->bar_code, 0, 3) == $bankCode) {
+                            if ($payment_form->same_ownership) {
+                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
-                                } else
-                                {
+                                } else {
                                     $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
-
                             }
-                        }else
-                        {
-                            if(!$payment_form->same_ownership)
-                            {
-                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
-                                {
+                        } else {
+                            if (!$payment_form->same_ownership) {
+                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
-                                } else
-                                {
-                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                    break;
-                                }
-
-                            }
-                        }
-                    }else
-                    {
-                        if($installment->bank_account_provider->bank->bank_code == $bankCode)
-                        {
-                            if($payment_form->same_ownership)
-                            {
-                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
-                                {
-                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                    break;
-                                } else
-                                {
+                                } else {
                                     $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
                             }
-                        }else
-                        {
-                            if(!$payment_form->same_ownership)
-                            {
-                                if(array_key_exists($payment_form->code_cnab, $groupInstallment))
-                                {
+                        }
+                    } else {
+                        if ($installment->bank_account_provider->bank->bank_code == $bankCode) {
+                            if ($payment_form->same_ownership) {
+                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
-                                } else
-                                {
+                                } else {
                                     $groupInstallment[$payment_form->code_cnab] = [$installment];
                                     break;
                                 }
-
+                            }
+                        } else {
+                            if (!$payment_form->same_ownership) {
+                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                    break;
+                                } else {
+                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
         }
-    return $groupInstallment;
+        return $groupInstallment;
     }
 
     public static function formatCnab($tipo, $valor, $tamanho, $dec = 0, $sFill = '')
@@ -296,4 +269,15 @@ class Utils
     {
         return substr($boleto, 33, 4);
     }
+
+    public static array $approvalStatus = [
+        "billing-open",
+        "billing-approved",
+        "billing-rejected",
+        "billing-canceled",
+        "billing-paid",
+        "billing-error",
+        "billing-cnab-generated",
+        "billing-finished"
+    ];
 }
