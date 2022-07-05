@@ -85,7 +85,7 @@ class ApprovalFlowSupplyByUserService
         $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow, $requestInfo, ['order']);
 
         $supplyApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->where('status', 0)
+            ->whereIn('status', [0, 2])
             ->whereRelation('purchase_order', 'deleted_at', '=', null)
             ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']);
 
