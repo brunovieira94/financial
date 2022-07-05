@@ -21,7 +21,7 @@ class StorePaymentRequestRequest extends FormRequest
                 'required',
                 'integer',
                 function ($attribute, $value, $fail) {
-                    if($this->purchase_order_id == null)
+                    if(!isset($this->installment_purchase_order))
                     {
                         if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
                         {
