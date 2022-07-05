@@ -147,6 +147,75 @@ class ApprovalFlowSupplyByUserService
         ], 200);
     }
 
+    public function approveManyAccounts($requestInfo)
+    {
+        if (array_key_exists('ids', $requestInfo)) {
+            if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
+                foreach ($requestInfo['ids'] as $value) {
+                    $accountApproval = $this->supplyApprovalFlow->findOrFail($value);
+                    $maxOrder = $this->approvalFlow->max('order');
+                    $accountApproval->status = Config::get('constants.status.disapproved');
+
+                    if ($this->approvalFlow
+                        ->where('order', $accountApproval->order)
+                        ->where('role_id', auth()->user()->role_id)
+                        ->doesntExist()
+                    ) {
+                        return response()->json([
+                            'erro' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                        ], 422);
+                    }
+
+                    if ($accountApproval->order > $maxOrder) {
+                        $accountApproval->order = Config::get('constants.status.open');
+                    } else if ($accountApproval->order != 0) {
+                        $accountApproval->order -= 1;
+                    }
+
+                    $accountApproval->reason = null;
+                    //$accountApproval->reason_to_reject_id = null;
+                    $accountApproval->fill($requestInfo)->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Contas reprovadas',
+                ], 200);
+            } else {
+                foreach ($requestInfo['ids'] as $value) {
+                    $accountApproval = $this->supplyApprovalFlow->with('purchase_order')->findOrFail($value);
+                    $maxOrder = $this->approvalFlow->max('order');
+                    $accountApproval->status = 0;
+
+                    if ($this->approvalFlow
+                        ->where('order', $accountApproval->order)
+                        ->where('role_id', auth()->user()->role_id)
+                        ->doesntExist()
+                    ) {
+                        return response()->json([
+                            'erro' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                        ], 422);
+                    }
+
+                    if ($accountApproval->order >= $maxOrder) {
+                        $accountApproval->status = Config::get('constants.status.approved');
+                    } else {
+                        $accountApproval->order += 1;
+                    }
+
+                    $accountApproval->reason = null;
+                    //$accountApproval->reason_to_reject_id = null;
+                    $accountApproval->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Pedido aprovado',
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'erro' => 'Nenhuma conta selecionada',
+            ], 422);
+        }
+    }
+
     public function reproveAccount($id, Request $request)
     {
         $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
