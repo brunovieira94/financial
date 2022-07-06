@@ -27,6 +27,11 @@ class ApprovalFlowSupplyByUserController extends Controller
         return response('Conta aprovada');
     }
 
+    public function approveManyAccounts(Request $request)
+    {
+        return $this->supplyApprovalFlowService->approveManyAccounts($request->all());
+    }
+
     public function reproveAccount($id, PutAccountsPayableApprovalFlowRequest $request)
     {
         $this->supplyApprovalFlowService->reproveAccount($id, $request);
