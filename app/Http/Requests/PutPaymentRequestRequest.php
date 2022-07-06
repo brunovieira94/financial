@@ -24,7 +24,7 @@ class PutPaymentRequestRequest extends FormRequest
                     {
                         if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
                         {
-                            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
+                            $fail('O fornecedor selecionado exige que seja informado um pedido de compra para realizar o cadastro dessa solicitação.');
                         }
                     }
                 },
