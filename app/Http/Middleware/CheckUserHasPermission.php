@@ -92,6 +92,9 @@ class CheckUserHasPermission
             case 'cangooroo':
                 $routeAccessed = 'billing';
                 break;
+            case 'approved-purchase-order-integration';
+                $routeAccessed = 'payment-request';
+                break;
         }
 
         foreach ($roles as $role) {

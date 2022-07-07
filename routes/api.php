@@ -291,6 +291,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
+        Route::get('/approved-purchase-order-integration', [ReportController::class, 'approvedPurchaseOrderForIntegration']);
         Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
         Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
         Route::get('/payment-requests-cnab-generated-list/{id}', [ReportController::class, 'getCnabGenerate']);
