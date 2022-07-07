@@ -286,15 +286,28 @@ class ReportService
         }
         if (array_key_exists('extension_date', $requestInfo)) {
 
-           // $installments = DB::table('payment_requests_installments')
-           //     ->select(['payment_request_id', 'id'])
-           //     ->where('payment_request_id', 5076)
-            //    ->distinct()
-            //    ->get();
-           // return $installments;
+            $installments = DB::select("SELECT id as id_payment_request, (select
+            id as id_payment_requests_installments
+            FROM api.payment_requests_installments
+            WHERE payment_request_id = id_payment_request
+            AND status <> 4
+            AND status <> 7
+            ORDER BY extension_date asc
+            LIMIT 1) AS id_installment
+            FROM api.payment_requests
+            WHERE deleted_at IS NULL");
 
+            $installmentIDs = [];
+
+            foreach ($installments as $installment) {
+                if ($installment->id_installment != null) {
+                    array_push($installmentIDs, $installment->id_installment);
+                }
+            }
+            $requestInfo['installmentsIds'] = $installmentIDs;
 
             $query->whereHas('installments', function ($query) use ($requestInfo) {
+                $query->whereIn('id', $requestInfo['installmentsIds']);
                 if (array_key_exists('from', $requestInfo['extension_date'])) {
                     $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                 }
