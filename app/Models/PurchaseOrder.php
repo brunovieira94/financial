@@ -89,6 +89,11 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderHasInstallments::class, 'purchase_order_id', 'id');
     }
 
+    public function installments_integration()
+    {
+        return $this->hasMany(PurchaseOrderHasInstallments::class, 'purchase_order_id', 'id')->whereRaw('amount_paid < portion_amount');
+    }
+
     public static function boot()
     {
         parent::boot();

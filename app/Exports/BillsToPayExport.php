@@ -150,7 +150,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
                     }
                 }
                 foreach ($paymentIds as $id) {
-                    $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('due_date')->first();
+                    $payment = PaymentRequestHasInstallments::where('status', '<>', Config::get('constants.status.paid out'))->orWhereNull('status')->where('payment_request_id', $id)->get()->sortBy('extension_date')->first();
                     if ($payment->extension_date <= now()->addMonths(1) && now() <= $payment->extension_date) {
                         array_push($paymentIdsToReturn, $payment->payment_request_id);
                     }
