@@ -11,6 +11,7 @@ use App\Models\PaymentRequestHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
 use Config;
+use Illuminate\Support\Facades\DB;
 
 class ReportService
 {
@@ -284,19 +285,26 @@ class ReportService
             }
         }
         if (array_key_exists('extension_date', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['extension_date'])) {
-                $query->whereHas('installments', function ($installments) use ($requestInfo) {
-                    if (array_key_exists('from', $requestInfo['extension_date'])) {
-                        $installments->where('extension_date', '>=', $requestInfo['extension_date']['from']);
-                    }
-                    if (array_key_exists('to', $requestInfo['extension_date'])) {
-                        $installments->where('extension_date', '<=', $requestInfo['extension_date']['to']);
-                    }
-                    if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
-                        $installments->whereBetween('extension_date', [now(), now()->addMonths(1)]);
-                    }
-                });
-            }
+
+           // $installments = DB::table('payment_requests_installments')
+           //     ->select(['payment_request_id', 'id'])
+           //     ->where('payment_request_id', 5076)
+            //    ->distinct()
+            //    ->get();
+           // return $installments;
+
+
+            $query->whereHas('installments', function ($query) use ($requestInfo) {
+                if (array_key_exists('from', $requestInfo['extension_date'])) {
+                    $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['extension_date'])) {
+                    $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                }
+                if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                }
+            });
         }
         if (array_key_exists('cnab_date', $requestInfo)) {
             $query->whereHas('cnab_payment_request', function ($cnabPaymentRequest) use ($requestInfo) {
@@ -513,6 +521,66 @@ class ReportService
         return Utils::pagination($accountApproval
             ->with('purchase_order')
             ->with('purchase_order.installments')
+            ->whereRelation('purchase_order', 'deleted_at', '=', null)
+            ->where('status', 1), $requestInfo);
+    }
+
+    public function getAllApprovedPurchaseOrderForIntegration($requestInfo)
+    {
+        $accountApproval = Utils::search($this->supplyApprovalFlow, $requestInfo);
+
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $purchaseOrderIds = [];
+            foreach (auth()->user()->cost_center as $userCostCenter) {
+
+                $purchaseOrderCostCenters = $this->supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($userCostCenter) {
+                    $query->whereHas('cost_centers', function ($cost_centers) use ($userCostCenter) {
+                        $cost_centers->where('cost_center_id', $userCostCenter->id);
+                    });
+                })->get(['id_purchase_order']);
+
+                foreach ($purchaseOrderCostCenters as $purchaseOrderCostCenter) {
+                    $purchaseOrderIds[] = $purchaseOrderCostCenter->id_purchase_order;
+                }
+            }
+
+            $accountApproval->whereIn('id_purchase_order', $purchaseOrderIds);
+        }
+
+        $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
+            if (array_key_exists('provider', $requestInfo)) {
+                $query->where('provider_id', $requestInfo['provider']);
+            }
+            if (array_key_exists('cost_center', $requestInfo)) {
+                $query->whereHas('cost_centers', function ($cost_centers) use ($requestInfo) {
+                    $cost_centers->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
+            if (array_key_exists('service', $requestInfo)) {
+                $query->whereHas('services', function ($services) use ($requestInfo) {
+                    $services->where('service_id', $requestInfo['service']);
+                });
+            }
+            if (array_key_exists('product', $requestInfo)) {
+                $query->whereHas('products', function ($products) use ($requestInfo) {
+                    $products->where('product_id', $requestInfo['product']);
+                });
+            }
+
+            if (array_key_exists('billing_date', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+                }
+            }
+        });
+
+        return Utils::pagination($accountApproval
+            ->with('purchase_order')
+            ->has('purchase_order.installments_integration')
+            ->with('purchase_order.installments_integration')
             ->whereRelation('purchase_order', 'deleted_at', '=', null)
             ->where('status', 1), $requestInfo);
     }
