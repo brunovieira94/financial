@@ -93,8 +93,9 @@ class CangoorooService
         return $cangooroo;
     }
 
-    public function getCangoorooBookingIDData($reserve)
+    public function getCangoorooBookingIDData($reserve, $retrys = 5)
     {
+        $retrys--;
         $apiCall = Http::post(env('CANGOOROO_BOOKING_LIST_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingList"), [
             'Credential' => [
                 "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
@@ -104,7 +105,7 @@ class CangoorooService
                 "SupplierLoc" => $reserve
             ]
         ]);
-        if (array_key_exists('Error', $apiCall->json()) && $apiCall->json()['Error']['Message'] == 'Object reference not set to an instance of an object.') return $this->getCangoorooBookingIDData($reserve);
+        if ($retrys > 0 && array_key_exists('Error', $apiCall->json()) && $apiCall->json()['Error']['Message'] == 'Object reference not set to an instance of an object.') return $this->getCangoorooBookingIDData($reserve, $retrys);
         if ($apiCall->status() == 400 || $apiCall->json()['TotalResults'] < 1) return false;
         $response = $apiCall->json()['Reservations'];
         return $response[0]['BookingId'];
