@@ -244,6 +244,7 @@ class PaymentRequestService
                     $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
                     $installments['payment_request_id'] = $paymentRequest['id'];
                     $installments['parcel_number'] = $key + 1;
+                    $installments['status'] = 0;
 
                     if ($updateCompetence) {
                         if (!array_key_exists('competence_date', $installments)) {
@@ -252,13 +253,11 @@ class PaymentRequestService
                             $installments['competence_date'] = $date;
                         }
                     }
-
                     if ($updateExtension) {
                         if (!array_key_exists('extension_date', $installments)) {
                             $installments['extension_date'] = $installments['due_date'];
                         }
                     }
-
                     $paymentRequestHasInstallments = $paymentRequestHasInstallments->create($installments);
                     $notDeleteInstallmentsID[] = $paymentRequestHasInstallments->id;
                 }
