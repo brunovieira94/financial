@@ -59,7 +59,7 @@ class BillingController extends Controller
     public function getCangoorooData(Request $request)
     {
         try {
-            $cangooroo = $this->cangoorooService->updateCangoorooData($request->booking_id, $request->reserve);
+            $cangooroo = $this->cangoorooService->updateCangoorooData($request->reserve);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }

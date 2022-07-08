@@ -54,7 +54,7 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $this->cangoorooService->updateCangoorooData($billing['cangooroo_booking_id'], $billing['reserve']);
+        $this->cangoorooService->updateCangoorooData($billing['reserve']);
         return $this->billing->with($this->with)->findOrFail($id);
     }
 
@@ -64,12 +64,13 @@ class BillingService
         $billingInfo['user_id'] = auth()->user()->id;
         $billingInfo['approval_status'] =  Config::get('constants.status.open');
         $billingInfo['order'] =  1;
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve']);
         if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
                 'error' => $cangooroo['error'],
             ], 422);
         }
+        $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
         $billing = $billing->create($billingInfo);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -82,7 +83,7 @@ class BillingService
                 'error' => 'Pedido previamente cancelado',
             ], 422);
         }
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['cangooroo_booking_id'], $billingInfo['reserve']);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve']);
         if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
                 'error' => $cangooroo['error'],
@@ -91,6 +92,7 @@ class BillingService
         $billingInfo['approval_status'] =  Config::get('constants.status.open');
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
+        $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }

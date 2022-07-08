@@ -16,8 +16,10 @@ class CangoorooService
         $this->cangooroo = $cangooroo;
     }
 
-    public function updateCangoorooData($bookingId, $reserve)
+    public function updateCangoorooData($reserve)
     {
+        $bookingId = $this->getCangoorooBookingIDData($reserve);
+        if(!$bookingId) return ['error' => 'Código de reserva inválido'];
         $apiCall = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
             'Credential' => [
                 "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
@@ -25,8 +27,9 @@ class CangoorooService
             ],
             'BookingId' => $bookingId,
         ]);
-        if ($apiCall->status() == 400) return (object) [];;
+        if ($apiCall->status() == 400) return (object) [];
         $response = $apiCall->json()['BookingDetail'];
+        //dd($apiCall->json());
 
         $roomIndex = null;
         $possibleRooms = [];
@@ -88,5 +91,22 @@ class CangoorooService
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
         return $cangooroo;
+    }
+
+    public function getCangoorooBookingIDData($reserve)
+    {
+        $apiCall = Http::post(env('CANGOOROO_BOOKING_LIST_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingList"), [
+            'Credential' => [
+                "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
+                "Password" => env('CANGOOROO_PASSWORD', "zS2HMrhk2TbwmYxM"),
+            ],
+            'SearchBookingCriteria' => [
+                "SupplierLoc" => $reserve
+            ]
+        ]);
+        if (array_key_exists('Error', $apiCall->json()) && $apiCall->json()['Error']['Message'] == 'Object reference not set to an instance of an object.') return $this->getCangoorooBookingIDData($reserve);
+        if ($apiCall->status() == 400 || $apiCall->json()['TotalResults'] < 1) return false;
+        $response = $apiCall->json()['Reservations'];
+        return $response[0]['BookingId'];
     }
 }
