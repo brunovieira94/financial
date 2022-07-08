@@ -18,22 +18,26 @@ class CangoorooService
 
     public function updateCangoorooData($bookingId, $reserve)
     {
-        $response = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
+        $apiCall = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
             'Credential' => [
                 "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
                 "Password" => env('CANGOOROO_PASSWORD', "zS2HMrhk2TbwmYxM"),
             ],
             'BookingId' => $bookingId,
-        ])->throw()->json()['BookingDetail'];
+        ]);
+        if ($apiCall->status() == 400) return (object) [];;
+        $response = $apiCall->json()['BookingDetail'];
 
         $roomIndex = null;
+        $possibleRooms = [];
         foreach ($response['Rooms'] as $key => $room) {
+            array_push($possibleRooms, explode('-', $room['SupplierReservationCode'])[0]);
             if (strpos($room['SupplierReservationCode'], $reserve) !== false && strlen($reserve) > 4) {
                 $roomIndex = $key;
             }
         }
         if ($roomIndex === null) {
-            return ['error' => 'Dados de reserva inválidos'];
+            return ['error' => 'Dados de reserva inválidos. Possíveis números de reserva para esse  Id: ' . implode(', ', $possibleRooms)];
         }
 
         $room = $response['Rooms'][$roomIndex];
