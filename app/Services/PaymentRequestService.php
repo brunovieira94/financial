@@ -403,17 +403,35 @@ class PaymentRequestService
     {
         if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
 
+            $paymentRequestPurchaseOrderInstallmentsIDsDelete = [];
+            $paymentRequestHasPurchaseOrdersIDsDelete = [];
+
             if ($id != null) {
-                DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
-                DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
-                DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
+                if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
+                    foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                        array_push($paymentRequestPurchaseOrderInstallmentsIDsDelete, $paymentHasPurchaseOrder->id);
+                        $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentHasPurchaseOrder->purchase_order_has_installments_id);
+                        $installmentPurchaseOrder->amount_paid -= $paymentHasPurchaseOrder->amount_received;
+                        $installmentPurchaseOrder->save();
+                    }
+                }
+                if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->exists()) {
+                    foreach (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                        array_push($paymentRequestHasPurchaseOrdersIDsDelete, $paymentHasPurchaseOrder->id);
+                    }
+                }
             }
 
             foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
+                $reviewed = false;
+                if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $paymentRequest->id)->where('purchase_order_id', $purchaseOrders['order'])->exists()) {
+                    $reviewed = PaymentRequestHasPurchaseOrders::where('payment_request_id', $paymentRequest->id)->where('purchase_order_id', $purchaseOrders['order'])->first()->reviewed;
+                }
                 $paymentRequestHasPurchaseOrders = PaymentRequestHasPurchaseOrders::create(
                     [
                         'payment_request_id' => $paymentRequest->id,
                         'purchase_order_id' => $purchaseOrders['order'],
+                        'reviewed' => $reviewed
                     ]
                 );
                 $purchaseOrder = PurchaseOrder::with('installments')
@@ -431,13 +449,18 @@ class PaymentRequestService
                         );
                         $purchaseInstallment = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
                         $amountPaid = DB::table('payment_request_has_purchase_order_installments')
-                        ->where('purchase_order_has_installments_id', $purchaseInstallment->id)
-                        ->sum('amount_received');
+                            ->where('purchase_order_has_installments_id', $purchaseInstallment->id)
+                            ->sum('amount_received');
                         $purchaseInstallment->amount_paid = $amountPaid;
                         $purchaseInstallment->save();
                     }
                 }
             }
+
+            PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
+            PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
+            //DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
+            //DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
         }
     }
 
