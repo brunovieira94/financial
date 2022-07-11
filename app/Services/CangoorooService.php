@@ -16,24 +16,31 @@ class CangoorooService
         $this->cangooroo = $cangooroo;
     }
 
-    public function updateCangoorooData($bookingId, $reserve)
+    public function updateCangoorooData($reserve)
     {
-        $response = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
+        $bookingId = $this->getCangoorooBookingIDData($reserve);
+        if(!$bookingId) return ['error' => 'Código de reserva inválido'];
+        $apiCall = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
             'Credential' => [
                 "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
                 "Password" => env('CANGOOROO_PASSWORD', "zS2HMrhk2TbwmYxM"),
             ],
             'BookingId' => $bookingId,
-        ])->throw()->json()['BookingDetail'];
+        ]);
+        if ($apiCall->status() == 400) return (object) [];
+        $response = $apiCall->json()['BookingDetail'];
+        //dd($apiCall->json());
 
         $roomIndex = null;
+        $possibleRooms = [];
         foreach ($response['Rooms'] as $key => $room) {
+            array_push($possibleRooms, explode('-', $room['SupplierReservationCode'])[0]);
             if (strpos($room['SupplierReservationCode'], $reserve) !== false && strlen($reserve) > 4) {
                 $roomIndex = $key;
             }
         }
         if ($roomIndex === null) {
-            return ['error' => 'Dados de reserva inválidos'];
+            return ['error' => 'Dados de reserva inválidos. Possíveis números de reserva para esse  Id: ' . implode(', ', $possibleRooms)];
         }
 
         $room = $response['Rooms'][$roomIndex];
@@ -84,5 +91,23 @@ class CangoorooService
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
         return $cangooroo;
+    }
+
+    public function getCangoorooBookingIDData($reserve, $retrys = 5)
+    {
+        $retrys--;
+        $apiCall = Http::post(env('CANGOOROO_BOOKING_LIST_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingList"), [
+            'Credential' => [
+                "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
+                "Password" => env('CANGOOROO_PASSWORD', "zS2HMrhk2TbwmYxM"),
+            ],
+            'SearchBookingCriteria' => [
+                "SupplierLoc" => $reserve
+            ]
+        ]);
+        if ($retrys > 0 && array_key_exists('Error', $apiCall->json()) && $apiCall->json()['Error']['Message'] == 'Object reference not set to an instance of an object.') return $this->getCangoorooBookingIDData($reserve, $retrys);
+        if ($apiCall->status() == 400 || $apiCall->json()['TotalResults'] < 1) return false;
+        $response = $apiCall->json()['Reservations'];
+        return $response[0]['BookingId'];
     }
 }

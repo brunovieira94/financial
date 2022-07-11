@@ -294,8 +294,7 @@ class ReportService
             AND status <> 7
             ORDER BY extension_date asc
             LIMIT 1) AS id_installment
-            FROM api.payment_requests
-            WHERE deleted_at IS NULL");
+            FROM api.payment_requests");
 
             $installmentIDs = [];
 
@@ -466,8 +465,6 @@ class ReportService
                 }
             }
         }
-
-        //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return Utils::pagination($query, $requestInfo);
     }
 
