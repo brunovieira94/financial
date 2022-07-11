@@ -36,10 +36,14 @@ class PurchaseRequestService
     public function getAllPurchaseRequest($requestInfo)
     {
         $purchaseRequest = Utils::search($this->purchaseRequest, $requestInfo);
-        if(array_key_exists('status', $requestInfo)){
-            $purchaseRequest->where('status', $requestInfo['status']);
+        if (array_key_exists('status', $requestInfo)) {
+            if ($requestInfo['status'] == 4) {
+                $purchaseRequest->where('status', $requestInfo['status'])->withTrashed();
+            } else {
+                $purchaseRequest->where('status', $requestInfo['status']);
+            }
         }
-        if(array_key_exists('request_type', $requestInfo)){
+        if (array_key_exists('request_type', $requestInfo)) {
             $purchaseRequest->where('request_type', $requestInfo['request_type']);
         }
         return Utils::pagination($purchaseRequest->with($this->with), $requestInfo);
@@ -76,7 +80,10 @@ class PurchaseRequestService
 
     public function deletePurchaseRequest($id)
     {
-        $this->purchaseRequest->findOrFail($id)->delete();
+        $toDelete = $this->purchaseRequest->findOrFail($id);
+        $toDelete['status'] = 4;
+        $toDelete->save();
+        $toDelete->delete();
         return true;
     }
 
@@ -128,7 +135,7 @@ class PurchaseRequestService
         if (array_key_exists('services', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['services'] as $service) {
                 $purchaseRequestHasServices = new PurchaseRequestHasServices;
-                if($service['contract_type'] == 2 || $service['contract_type'] == 3){
+                if ($service['contract_type'] == 2 || $service['contract_type'] == 3) {
                     $service['contract_duration'] = 0;
                 }
                 $purchaseRequestHasServices = $purchaseRequestHasServices->create([
@@ -150,7 +157,7 @@ class PurchaseRequestService
 
         if (array_key_exists('services', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['services'] as $service) {
-                if($service['contract_type'] == 2 || $service['contract_type'] == 3){
+                if ($service['contract_type'] == 2 || $service['contract_type'] == 3) {
                     $service['contract_duration'] = 0;
                 }
                 if (array_key_exists('id', $service)) {

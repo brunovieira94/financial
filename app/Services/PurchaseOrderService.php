@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Module;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasCompanies;
@@ -14,7 +15,7 @@ use App\Models\PurchaseOrderHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestHasProducts;
-
+use App\Models\RoleHasModule;
 use Illuminate\Http\Request;
 
 class PurchaseOrderService
@@ -128,35 +129,73 @@ class PurchaseOrderService
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
+    public function getCanEditPurchaseOrder($route)
+    {
+        $getModule = Module::where('route', $route)->first();
+        if ($getModule != null) {
+            if (auth()->user()->role_id != 1) {
+                $checkUserRoleModule = RoleHasModule::where([
+                    'role_id' => auth()->user()->role_id,
+                    'module_id' => $getModule->id
+                ])->first();
+                return $checkUserRoleModule != null && $checkUserRoleModule->update;
+            } else {
+                return true;
+            }
+        }
+    }
+
     public function putPurchaseOrder($id, $purchaseOrderInfo, Request $request)
     {
-        $purchaseOrder = $this->purchaseOrder->findOrFail($id);
-        if (!array_key_exists('payment_condition', $purchaseOrderInfo)) {
-            $purchaseOrderInfo['payment_condition'] = null;
+        $newStatus = '';
+        if ($this->getCanEditPurchaseOrder('purchase-order')) {
+            $purchaseOrder = $this->purchaseOrder->with(['approval'])->findOrFail($id);
+            //caso o pedido já foi aprovado só pode aprovar se tiver a permissão
+            if ($purchaseOrder->approval->status == 1) {
+                if ($this->getCanEditPurchaseOrder('approved-purchase-order')) {
+                    $newStatus = 0;
+                } else {
+                    return response()->json([
+                        'erro' => 'Não é permitido ao usuário editar o pedido ' . $id . ', porque já está aprovado.',
+                    ], 422);
+                }
+            }
+
+            if (!array_key_exists('payment_condition', $purchaseOrderInfo)) {
+                $purchaseOrderInfo['payment_condition'] = null;
+            }
+            if (!array_key_exists('billing_date', $purchaseOrderInfo)) {
+                $purchaseOrderInfo['billing_date'] = null;
+            }
+
+            $oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+
+            $purchaseOrder->fill($purchaseOrderInfo)->save();
+            $this->putProducts($id, $purchaseOrderInfo);
+            $this->putServices($id, $purchaseOrderInfo);
+
+            $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+
+            // caso o valor for maior do que o antigo o pedido deve voltar para o início da aprovação 
+            if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
+                $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
+                $supplyApprovalFlow['order'] = 0;
+                if ($newStatus != '') {
+                    $supplyApprovalFlow['status'] = $newStatus;
+                }
+                $supplyApprovalFlow->save();
+            }
+
+            $this->putCompanies($id, $purchaseOrderInfo);
+            $this->putCostCenters($id, $purchaseOrderInfo);
+            $this->putAttachments($id, $purchaseOrderInfo, $request);
+            $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
+            return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
+        } else {
+            return response()->json([
+                'erro' => 'Não é permitido ao usuário editar o pedido ' . $id,
+            ], 422);
         }
-        if (!array_key_exists('billing_date', $purchaseOrderInfo)) {
-            $purchaseOrderInfo['billing_date'] = null;
-        }
-
-        $oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
-
-        $purchaseOrder->fill($purchaseOrderInfo)->save();
-        $this->putProducts($id, $purchaseOrderInfo);
-        $this->putServices($id, $purchaseOrderInfo);
-
-        $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
-
-        if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
-            $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
-            $supplyApprovalFlow['order'] = 0;
-            $supplyApprovalFlow->save();
-        }
-
-        $this->putCompanies($id, $purchaseOrderInfo);
-        $this->putCostCenters($id, $purchaseOrderInfo);
-        $this->putAttachments($id, $purchaseOrderInfo, $request);
-        $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
-        return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
     public function deletePurchaseOrder($id)
