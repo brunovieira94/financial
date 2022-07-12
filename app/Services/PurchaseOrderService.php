@@ -156,7 +156,7 @@ class PurchaseOrderService
                     $newStatus = 0;
                 } else {
                     return response()->json([
-                        'erro' => 'Não é permitido ao usuário editar o pedido ' . $id . ', porque já está aprovado.',
+                        'error' => 'Não é permitido ao usuário editar o pedido ' . $id . ', porque já está aprovado.',
                     ], 422);
                 }
             }
@@ -176,7 +176,7 @@ class PurchaseOrderService
 
             $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
 
-            // caso o valor for maior do que o antigo o pedido deve voltar para o início da aprovação 
+            // caso o valor for maior do que o antigo o pedido deve voltar para o início da aprovação
             if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
                 $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
                 $supplyApprovalFlow['order'] = 0;
@@ -193,7 +193,7 @@ class PurchaseOrderService
             return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
         } else {
             return response()->json([
-                'erro' => 'Não é permitido ao usuário editar o pedido ' . $id,
+                'error' => 'Não é permitido ao usuário editar o pedido ' . $id,
             ], 422);
         }
     }

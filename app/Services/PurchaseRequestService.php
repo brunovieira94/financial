@@ -46,6 +46,23 @@ class PurchaseRequestService
         if (array_key_exists('request_type', $requestInfo)) {
             $purchaseRequest->where('request_type', $requestInfo['request_type']);
         }
+
+        if (array_key_exists('service', $requestInfo)) {
+            $purchaseRequest->whereHas('services', function ($query) use ($requestInfo) {
+                $query->where('service_id', $requestInfo['service']);
+            });
+        }
+
+        if (array_key_exists('product', $requestInfo)) {
+            $purchaseRequest->whereHas('products', function ($query) use ($requestInfo) {
+                $query->where('product_id', $requestInfo['product']);
+            });
+        }
+
+        if (array_key_exists('request_date', $requestInfo)) {
+            $purchaseRequest->where('created_at', $requestInfo['request_date']);
+        }
+
         return Utils::pagination($purchaseRequest->with($this->with), $requestInfo);
     }
 

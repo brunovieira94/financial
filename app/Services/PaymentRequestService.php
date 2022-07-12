@@ -11,10 +11,12 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
+use App\Models\BankAccount;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
+use App\Models\Provider;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
 use AWS\CRT\HTTP\Response;
@@ -115,6 +117,7 @@ class PaymentRequestService
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
+        $this->syncProviderGeneric($paymentRequestInfo);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -171,6 +174,7 @@ class PaymentRequestService
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
+        $this->syncProviderGeneric($paymentRequestInfo, $id);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -188,7 +192,7 @@ class PaymentRequestService
             return true;
         } else {
             return response()->json([
-                'erro' => 'Só é permitido deletar conta na ordem 0',
+                'error' => 'Só é permitido deletar conta na ordem 0',
             ], 422);
         }
     }
@@ -385,7 +389,7 @@ class PaymentRequestService
 
         if (!$permissionChange) {
             return response()->json([
-                'erro' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
+                'error' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
             ], 422);
         }
 
@@ -459,8 +463,25 @@ class PaymentRequestService
 
             PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
             PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
-            //DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
-            //DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
+        } else if ($id != null) {
+            $paymentRequestPurchaseOrderInstallmentsIDsDelete = [];
+            $paymentRequestHasPurchaseOrdersIDsDelete = [];
+
+            if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                    array_push($paymentRequestPurchaseOrderInstallmentsIDsDelete, $paymentHasPurchaseOrder->id);
+                    $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentHasPurchaseOrder->purchase_order_has_installments_id);
+                    $installmentPurchaseOrder->amount_paid -= $paymentHasPurchaseOrder->amount_received;
+                    $installmentPurchaseOrder->save();
+                }
+            }
+            if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                    array_push($paymentRequestHasPurchaseOrdersIDsDelete, $paymentHasPurchaseOrder->id);
+                }
+            }
+            PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
+            PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
         }
     }
 
@@ -473,5 +494,30 @@ class PaymentRequestService
         }
         $installment->fill($requestInfo)->save();
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
+    }
+
+    public function syncProviderGeneric($requestInfo, $id = null)
+    {
+        $provider = Provider::findOrFail($requestInfo['provider_id']);
+        if (array_key_exists('installments', $requestInfo)) {
+            if ($provider->generic_provider) {
+                if ($id != null) {
+                    ProviderHasBankAccounts::where('provider_id', $provider->id)->delete();
+                }
+                foreach ($requestInfo['installments'] as $installment) {
+                    $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
+                    $bankAccount->hidden = true;
+                    $bankAccount->save();
+
+                    $providerHasBankAccount = ProviderHasBankAccounts::create(
+                        [
+                            'provider_id' => $provider->id,
+                            'bank_account_id' => $installment['bank_account_provider_id'],
+                            'default_bank' => false
+                        ]
+                    );
+                }
+            }
+        }
     }
 }
