@@ -47,13 +47,13 @@ class RoleController extends Controller
         if(ApprovalFlow::where('role_id', $id)->exists() OR ApprovalFlowSupply::where('role_id', $id)->exists())
         {
             return response()->json([
-                'erro' => 'Este perfil está sendo utilizado no fluxo de aprovação é necessário que remova antes de apagar.'
+                'error' => 'Este perfil está sendo utilizado no fluxo de aprovação é necessário que remova antes de apagar.'
             ], 422);
         }
         if(User::where('role_id', $id)->exists())
         {
             return response()->json([
-                'erro' => 'Este prfil está sendo utilizado por usuário(s) no sistema é necessário que remova antes de apagar.'
+                'error' => 'Este prfil está sendo utilizado por usuário(s) no sistema é necessário que remova antes de apagar.'
             ], 422);
         }
 

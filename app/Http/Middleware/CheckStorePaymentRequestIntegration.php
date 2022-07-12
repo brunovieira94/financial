@@ -28,7 +28,7 @@ class CheckStorePaymentRequestIntegration
 
             if($amountReceived != $paymentRequestInfo['amount']){
                 return response()->json([
-                    'erro' => 'A soma dos valores recebidos da parcela não confere com o valor total da solicitação de pagamento.'
+                    'error' => 'A soma dos valores recebidos da parcela não confere com o valor total da solicitação de pagamento.'
                 ], 422);
             }
         }

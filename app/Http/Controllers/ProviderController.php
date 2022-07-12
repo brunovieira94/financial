@@ -46,7 +46,7 @@ class ProviderController extends Controller
         if(Provider::where('provider_id', $id)->exists())
         {
             return response()->json([
-                'erro' => 'Este fornecedor está associado a uma ou várias solicitações de pagamento.'
+                'error' => 'Este fornecedor está associado a uma ou várias solicitações de pagamento.'
             ], 422);
         }
 
