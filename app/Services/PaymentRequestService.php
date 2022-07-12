@@ -192,7 +192,7 @@ class PaymentRequestService
             return true;
         } else {
             return response()->json([
-                'erro' => 'Só é permitido deletar conta na ordem 0',
+                'error' => 'Só é permitido deletar conta na ordem 0',
             ], 422);
         }
     }
@@ -389,7 +389,7 @@ class PaymentRequestService
 
         if (!$permissionChange) {
             return response()->json([
-                'erro' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
+                'error' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
             ], 422);
         }
 
