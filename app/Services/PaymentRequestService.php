@@ -463,8 +463,25 @@ class PaymentRequestService
 
             PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
             PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
-            //DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
-            //DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
+        } else if ($id != null) {
+            $paymentRequestPurchaseOrderInstallmentsIDsDelete = [];
+            $paymentRequestHasPurchaseOrdersIDsDelete = [];
+
+            if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                    array_push($paymentRequestPurchaseOrderInstallmentsIDsDelete, $paymentHasPurchaseOrder->id);
+                    $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentHasPurchaseOrder->purchase_order_has_installments_id);
+                    $installmentPurchaseOrder->amount_paid -= $paymentHasPurchaseOrder->amount_received;
+                    $installmentPurchaseOrder->save();
+                }
+            }
+            if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                    array_push($paymentRequestHasPurchaseOrdersIDsDelete, $paymentHasPurchaseOrder->id);
+                }
+            }
+            PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
+            PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
         }
     }
 
@@ -479,14 +496,15 @@ class PaymentRequestService
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
 
-    public function syncProviderGeneric($requestInfo, $id = null){
+    public function syncProviderGeneric($requestInfo, $id = null)
+    {
         $provider = Provider::findOrFail($requestInfo['provider_id']);
-        if(array_key_exists('installments', $requestInfo)){
-            if($provider->generic_provider){
-                if($id != null){
+        if (array_key_exists('installments', $requestInfo)) {
+            if ($provider->generic_provider) {
+                if ($id != null) {
                     ProviderHasBankAccounts::where('provider_id', $provider->id)->delete();
                 }
-                foreach($requestInfo['installments'] as $installment){
+                foreach ($requestInfo['installments'] as $installment) {
                     $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
                     $bankAccount->hidden = true;
                     $bankAccount->save();
