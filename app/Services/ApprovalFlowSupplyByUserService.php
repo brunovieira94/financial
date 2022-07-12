@@ -162,7 +162,7 @@ class ApprovalFlowSupplyByUserService
                         ->doesntExist()
                     ) {
                         return response()->json([
-                            'erro' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                            'error' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
@@ -191,7 +191,7 @@ class ApprovalFlowSupplyByUserService
                         ->doesntExist()
                     ) {
                         return response()->json([
-                            'erro' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                            'error' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
@@ -211,7 +211,7 @@ class ApprovalFlowSupplyByUserService
             }
         } else {
             return response()->json([
-                'erro' => 'Nenhuma conta selecionada',
+                'error' => 'Nenhuma conta selecionada',
             ], 422);
         }
     }

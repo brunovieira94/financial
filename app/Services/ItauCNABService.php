@@ -270,7 +270,7 @@ class ItauCNABService
                 break;
             default:
                 return Response()->json([
-                    'erro' => 'banco selecionado pela empresa inválido.'
+                    'error' => 'banco selecionado pela empresa inválido.'
                 ], 422);
         }
 
