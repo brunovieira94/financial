@@ -11,10 +11,12 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
+use App\Models\BankAccount;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
+use App\Models\Provider;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
 use AWS\CRT\HTTP\Response;
@@ -115,6 +117,7 @@ class PaymentRequestService
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
+        $this->syncProviderGeneric($paymentRequestInfo);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -171,6 +174,7 @@ class PaymentRequestService
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
+        $this->syncProviderGeneric($paymentRequestInfo, $id);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -473,5 +477,29 @@ class PaymentRequestService
         }
         $installment->fill($requestInfo)->save();
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
+    }
+
+    public function syncProviderGeneric($requestInfo, $id = null){
+        $provider = Provider::findOrFail($requestInfo['provider_id']);
+        if(array_key_exists('installments', $requestInfo)){
+            if($provider->generic_provider){
+                if($id != null){
+                    ProviderHasBankAccounts::where('provider_id', $provider->id)->delete();
+                }
+                foreach($requestInfo['installments'] as $installment){
+                    $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
+                    $bankAccount->hidden = true;
+                    $bankAccount->save();
+
+                    $providerHasBankAccount = ProviderHasBankAccounts::create(
+                        [
+                            'provider_id' => $provider->id,
+                            'bank_account_id' => $installment['bank_account_provider_id'],
+                            'default_bank' => false
+                        ]
+                    );
+                }
+            }
+        }
     }
 }
