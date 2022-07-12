@@ -454,6 +454,7 @@ class PaymentRequestService
                         $purchaseInstallment = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
                         $amountPaid = DB::table('payment_request_has_purchase_order_installments')
                             ->where('purchase_order_has_installments_id', $purchaseInstallment->id)
+                            ->whereNotIn('purchase_order_has_installments_id', $paymentRequestPurchaseOrderInstallmentsIDsDelete)
                             ->sum('amount_received');
                         $purchaseInstallment->amount_paid = $amountPaid;
                         $purchaseInstallment->save();
