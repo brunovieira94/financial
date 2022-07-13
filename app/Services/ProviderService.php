@@ -77,11 +77,19 @@ class ProviderService
             foreach ($providerInfo['bank_accounts'] as $bank) {
                 $bank['hidden'] = $genericProvider;
                 if (array_key_exists('id', $bank)) {
-                    $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
+                    // $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
+                    $bankAccount = $this->bankAccount->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
-                    $providerHasBankAccount = ProviderHasBankAccounts::findOrFail($bankAccount->bank_account_default->id);
-                    $providerHasBankAccount->fill($bank)->save();
+                    //$providerHasBankAccount = ProviderHasBankAccounts::findOrFail($bankAccount->bank_account_default->id);
+                    //$providerHasBankAccount->fill($bank)->save();
+
+                    if (!ProviderHasBankAccounts::where('provider_id', $id)->where('bank_account_id', $bankAccount->id)->exists()) {
+                        $attachArray[] = [
+                            'bank_account_id' => $bankAccount->id,
+                            'default_bank' => $bank['default_bank'] ?? false,
+                        ];
+                    }
                 } else {
                     $bankAccount = new BankAccount;
                     $bankAccount = $bankAccount->create($bank);
@@ -95,10 +103,11 @@ class ProviderService
 
             // Execute delete procedure only if not a generic provider
             if (!$genericProvider) {
-                $collection = $this->providerHasBankAccounts
+                $collection = $this->providerHasBankAccounts->with('bank_account')
                     ->where('provider_id', $id)
                     ->whereNotIn('bank_account_id', $updateBankAccounts)
                     ->whereNotIn('bank_account_id', $createdBankAccounts)
+                    ->whereRelation('bank_account', 'hidden', '=', false)
                     ->get(['bank_account_id']);
                 $this->bankAccount->destroy($collection->toArray());
             }
@@ -106,6 +115,9 @@ class ProviderService
             $provider = $this->provider->findOrFail($id);
             $provider->bank_account()->attach($attachArray);
         }
+
+        $updateBankAccounts = $this->providerHasBankAccounts::where('provider_id', $id)->get(['bank_account_id']);
+        BankAccount::whereIn('id', $updateBankAccounts->toArray())->update(['hidden' => $genericProvider]);
     }
 
     public function syncBankAccounts($provider, $providerInfo)
