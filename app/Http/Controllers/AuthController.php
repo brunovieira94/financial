@@ -127,10 +127,10 @@ class AuthController extends Controller
                             }
                         }
                         if (array_key_exists('attributes', $decodedLog['properties'])) {
-                            if (array_key_exists('payment_request', $decodedLog['properties']['old']) && $decodedLog['properties']['old']['payment_request'] != null) {
-                                if (array_key_exists('provider', $decodedLog['properties']['old']['payment_request']) && $decodedLog['properties']['old']['payment_request']['provider'] != null) {
-                                    if (array_key_exists('bank_account', $decodedLog['properties']['old']['payment_request']['provider'])) {
-                                        $decodedLog['properties']['old']['payment_request']['provider']['bank_account'] = [];
+                            if (array_key_exists('payment_request', $decodedLog['properties']['attributes']) && $decodedLog['properties']['attributes']['payment_request'] != null) {
+                                if (array_key_exists('provider', $decodedLog['properties']['attributes']['payment_request'])) {
+                                    if (array_key_exists('bank_account', $decodedLog['properties']['attributes']['payment_request']['provider'])) {
+                                        $decodedLog['properties']['attributes']['payment_request']['provider']['bank_account'] = [];
                                         $logUpdate = Activity::findOrFail($log->id);
                                         $logUpdate->update(['properties' => $decodedLog['properties']]);
                                     }
