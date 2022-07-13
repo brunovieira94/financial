@@ -69,11 +69,13 @@ class ProviderService
         $updateBankAccounts = [];
         $createdBankAccounts = [];
 
+        $genericProvider = array_key_exists('generic_provider', $providerInfo) && $providerInfo['generic_provider'];
+
         if (array_key_exists('bank_accounts', $providerInfo)) {
             $attachArray = [];
 
             foreach ($providerInfo['bank_accounts'] as $bank) {
-                $bank['hidden'] = array_key_exists('generic_provider', $providerInfo) && $providerInfo['generic_provider'];
+                $bank['hidden'] = $genericProvider;
                 if (array_key_exists('id', $bank)) {
                     $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
@@ -91,12 +93,15 @@ class ProviderService
                 }
             }
 
-            $collection = $this->providerHasBankAccounts
-                ->where('provider_id', $id)
-                ->whereNotIn('bank_account_id', $updateBankAccounts)
-                ->whereNotIn('bank_account_id', $createdBankAccounts)
-                ->get(['bank_account_id']);
-            $this->bankAccount->destroy($collection->toArray());
+            // Execute delete procedure only if not a generic provider
+            if (!$genericProvider) {
+                $collection = $this->providerHasBankAccounts
+                    ->where('provider_id', $id)
+                    ->whereNotIn('bank_account_id', $updateBankAccounts)
+                    ->whereNotIn('bank_account_id', $createdBankAccounts)
+                    ->get(['bank_account_id']);
+                $this->bankAccount->destroy($collection->toArray());
+            }
 
             $provider = $this->provider->findOrFail($id);
             $provider->bank_account()->attach($attachArray);
