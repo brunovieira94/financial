@@ -25,14 +25,15 @@ class BankAccountService
     public function postBankAccount($bankAccountInfo)
     {
         $bankAccount = new BankAccount;
-        return $bankAccount->create($bankAccountInfo);
+        $bankAccount = $bankAccount->create($bankAccountInfo);
+        return $this->bankAccount->with('bank')->findOrFail($bankAccount->id);
     }
 
     public function putBankAccount($id, $bankAccountInfo)
     {
         $bankAccount = $this->bankAccount->findOrFail($id);
         $bankAccount->fill($bankAccountInfo)->save();
-        return $bankAccount;
+        return $this->bankAccount->with('bank')->findOrFail($id);
     }
 
     public function deleteBankAccount($id)
