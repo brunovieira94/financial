@@ -112,8 +112,10 @@ class ProviderService
     {
         $syncArray = [];
         if (array_key_exists('bank_accounts', $providerInfo)) {
+            $genericProvider = array_key_exists('generic_provider', $providerInfo) && $providerInfo['generic_provider'];
             foreach ($providerInfo['bank_accounts'] as $bank) {
                 $bankAccount = new BankAccount;
+                $bank['hidden'] = $genericProvider;
                 $bankAccount = $bankAccount->create($bank);
                 $syncArray[] = [
                     'bank_account_id' => $bankAccount->id,
