@@ -48,12 +48,16 @@ class AuthController extends Controller
 
         foreach ($logs as $log)
         {
-            dd($log->properties['attributes']['provider']['bank_account']);
-            unset($log->properties['attributes']['provider']['bank_account']);
 
-            $log->properties['attributes']['provider']['bank_account'] = [];
-            dd($log);
-          //  Activity::findOrFail()
+            $decodedLog = json_decode($log, true);
+
+            $decodedLog['properties']['attributes']['provider']['bank_account'] = [];
+            $logUpdate = Activity::findOrFail($log->id);
+            $logUpdate->update(['properties' => $decodedLog['properties']]);
+
+
+            $logUpdate = Activity::findOrFail($log->id);
+            dd($logUpdate->properties['attributes']['provider']['bank_account']);
         }
 
         dd('deu certo');
