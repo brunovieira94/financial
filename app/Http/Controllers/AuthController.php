@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\AuthService as AuthService;
 use Illuminate\Http\Request;
+use Spatie\Activitylog\Models\Activity;
 
 class AuthController extends Controller
 {
@@ -37,5 +38,24 @@ class AuthController extends Controller
         $jwtPayload = json_decode($tokenPayload);
 
         return $this->authService->getUser($jwtPayload->sub, $tokenResponse);
+    }
+
+    public function log(Request $request)
+    {
+        $requestInfo = $request->all();
+
+        $logs = Activity::where('log_name', 'payment_request')->where('id', 3855)->get();
+
+        foreach ($logs as $log)
+        {
+            dd($log->properties['attributes']['provider']['bank_account']);
+            unset($log->properties['attributes']['provider']['bank_account']);
+
+            $log->properties['attributes']['provider']['bank_account'] = [];
+            dd($log);
+          //  Activity::findOrFail()
+        }
+
+        dd('deu certo');
     }
 }
