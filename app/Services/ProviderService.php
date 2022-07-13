@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\Provider;
 use App\Models\BankAccount;
 use App\Models\ProviderHasBankAccounts;
@@ -20,13 +21,13 @@ class ProviderService
 
     public function getAllProvider($requestInfo)
     {
-        $provider = Utils::search($this->provider,$requestInfo);
-        return Utils::pagination($provider->with($this->with),$requestInfo);
+        $provider = Utils::search($this->provider, $requestInfo);
+        return Utils::pagination($provider->with($this->with), $requestInfo);
     }
 
     public function getProvider($id)
     {
-      return $this->provider->with($this->with)->findOrFail($id);
+        return $this->provider->with($this->with)->findOrFail($id);
     }
 
     public function postProvider($providerInfo)
@@ -44,8 +45,7 @@ class ProviderService
     public function putProvider($id, $providerInfo)
     {
         $provider = $this->provider->findOrFail($id);
-        if($provider->provider_type == 'F')
-        {
+        if ($provider->provider_type == 'F') {
             $providerInfo['trade_name'] = $providerInfo['full_name'];
         }
 
@@ -63,16 +63,18 @@ class ProviderService
         return true;
     }
 
-    public function putBankAccounts($id, $providerInfo){
+    public function putBankAccounts($id, $providerInfo)
+    {
 
         $updateBankAccounts = [];
         $createdBankAccounts = [];
 
-        if(array_key_exists('bank_accounts', $providerInfo)){
+        if (array_key_exists('bank_accounts', $providerInfo)) {
             $attachArray = [];
 
-            foreach($providerInfo['bank_accounts'] as $bank){
-                if (array_key_exists('id', $bank)){
+            foreach ($providerInfo['bank_accounts'] as $bank) {
+                $bank['hidden'] = array_key_exists('generic_provider', $providerInfo) && $providerInfo['generic_provider'];
+                if (array_key_exists('id', $bank)) {
                     $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
@@ -90,10 +92,10 @@ class ProviderService
             }
 
             $collection = $this->providerHasBankAccounts
-            ->where('provider_id', $id)
-            ->whereNotIn('bank_account_id', $updateBankAccounts)
-            ->whereNotIn('bank_account_id', $createdBankAccounts)
-            ->get(['bank_account_id']);
+                ->where('provider_id', $id)
+                ->whereNotIn('bank_account_id', $updateBankAccounts)
+                ->whereNotIn('bank_account_id', $createdBankAccounts)
+                ->get(['bank_account_id']);
             $this->bankAccount->destroy($collection->toArray());
 
             $provider = $this->provider->findOrFail($id);
@@ -101,10 +103,11 @@ class ProviderService
         }
     }
 
-    public function syncBankAccounts($provider, $providerInfo){
+    public function syncBankAccounts($provider, $providerInfo)
+    {
         $syncArray = [];
-        if(array_key_exists('bank_accounts', $providerInfo)){
-            foreach($providerInfo['bank_accounts'] as $bank){
+        if (array_key_exists('bank_accounts', $providerInfo)) {
+            foreach ($providerInfo['bank_accounts'] as $bank) {
                 $bankAccount = new BankAccount;
                 $bankAccount = $bankAccount->create($bank);
                 $syncArray[] = [
@@ -115,5 +118,4 @@ class ProviderService
             $provider->bank_account()->sync($syncArray);
         }
     }
-
 }
