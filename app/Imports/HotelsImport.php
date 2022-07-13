@@ -22,6 +22,8 @@ class HotelsImport implements ToCollection, WithValidation, WithHeadingRow
     private $formOfPayment = null;
     private $billingType = null;
     private $accountType = null;
+    public $not_imported = 0;
+    public $imported = 0;
 
     public function collection(Collection $rows)
     {
@@ -126,6 +128,7 @@ class HotelsImport implements ToCollection, WithValidation, WithHeadingRow
                     ]);
                 }
             }
+            $this->imported++;
         }
     }
 
