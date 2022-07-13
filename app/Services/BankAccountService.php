@@ -25,7 +25,7 @@ class BankAccountService
     public function postBankAccount($bankAccountInfo)
     {
         $bankAccount = new BankAccount;
-        $bankAccount->create($bankAccountInfo);
+        $bankAccount = $bankAccount->create($bankAccountInfo);
         return $this->bankAccount->with('bank')->findOrFail($bankAccount->id);
     }
 
