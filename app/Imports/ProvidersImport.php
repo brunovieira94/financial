@@ -69,30 +69,29 @@ class ProvidersImport implements ToModel, WithValidation, WithHeadingRow
     public function rules(): array
     {
         return [
-            'plano_de_contas' => [function($attribute, $value, $onFailure) {
-                if($value != null) {
+            'plano_de_contas' => [function ($attribute, $value, $onFailure) {
+                if ($value != null) {
                     $this->chartOfAccountsID = UtilsImport::getLastedID($value, $this->chartOfAccounts);
-                    if ($this->chartOfAccountsID == null){
+                    if ($this->chartOfAccountsID == null) {
                         $onFailure('Plano de contas: Código informado invalido');
                     }
                 }
             }],
-            'centro_de_custo' => [function($attribute, $value, $onFailure) {
-                if($value != null) {
+            'centro_de_custo' => [function ($attribute, $value, $onFailure) {
+                if ($value != null) {
                     $this->costCenterID = UtilsImport::getLastedID($value, $this->costCenter);
-                    if ($this->costCenterID == null){
+                    if ($this->costCenterID == null) {
                         $onFailure('Centro de custo: Código informado invalido');
                     }
                 }
-
             }],
-            'usuario_123_e_mail' => ['required',function($attribute, $value, $onFailure) {
-                if ($this->user == null){
+            'usuario_123_e_mail' => ['required', function ($attribute, $value, $onFailure) {
+                if ($this->user == null) {
                     $onFailure('Usuario: usuario invalido');
                 }
             }],
-            'categoria_do_fornecedor' => ['required',function($attribute, $value, $onFailure) {
-                if ($this->providerCategory == null){
+            'categoria_do_fornecedor' => ['required', function ($attribute, $value, $onFailure) {
+                if ($this->providerCategory == null) {
                     $onFailure('Categorida do Fornecedor: Categoria selecionada invalida');
                 }
             }],
@@ -112,9 +111,9 @@ class ProvidersImport implements ToModel, WithValidation, WithHeadingRow
             'data_de_nascimento' => 'date_format:d/m/Y',
             'cpf' => 'numeric|unique:providers,cpf,NULL,id,deleted_at,NULL',
             'cnpj' => 'numeric|unique:providers,cnpj,NULL,id,deleted_at,NULL',
-            'cidade' => [function($attribute, $value, $onFailure) {
-                if($value != null) {
-                    if($this->city == null){
+            'cidade' => [function ($attribute, $value, $onFailure) {
+                if ($value != null) {
+                    if ($this->city == null) {
                         $onFailure('Cidade: Nao encontrada');
                     }
                 }
