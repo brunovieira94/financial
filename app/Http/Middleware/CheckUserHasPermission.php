@@ -94,6 +94,8 @@ class CheckUserHasPermission
                 break;
             case 'approved-purchase-order-integration';
                 $routeAccessed = 'payment-request';
+            case 'bank-account';
+                $routeAccessed = 'provider';
                 break;
         }
 
