@@ -11,10 +11,12 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
+use App\Models\BankAccount;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
+use App\Models\Provider;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
 use AWS\CRT\HTTP\Response;
@@ -115,6 +117,7 @@ class PaymentRequestService
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
+        $this->syncProviderGeneric($paymentRequestInfo);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -155,9 +158,6 @@ class PaymentRequestService
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
         }
-        //if (array_key_exists('billet_file', $paymentRequestInfo)) {
-        //    $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
-        //}
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $this->putAttachments($id, $paymentRequestInfo, $request);
         }
@@ -174,6 +174,7 @@ class PaymentRequestService
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
+        $this->syncProviderGeneric($paymentRequestInfo, $id);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -183,7 +184,6 @@ class PaymentRequestService
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)) {
-            //$this->destroyInstallments($paymentRequest);
             $this->paymentRequest->findOrFail($id)->delete();
             activity()->disableLogging();
             $approval->status = 3;
@@ -192,7 +192,7 @@ class PaymentRequestService
             return true;
         } else {
             return response()->json([
-                'erro' => 'Só é permitido deletar conta na ordem 0',
+                'error' => 'Só é permitido deletar conta na ordem 0',
             ], 422);
         }
     }
@@ -248,6 +248,7 @@ class PaymentRequestService
                     $paymentRequestHasInstallments = new PaymentRequestHasInstallments;
                     $installments['payment_request_id'] = $paymentRequest['id'];
                     $installments['parcel_number'] = $key + 1;
+                    $installments['status'] = 0;
 
                     if ($updateCompetence) {
                         if (!array_key_exists('competence_date', $installments)) {
@@ -256,13 +257,11 @@ class PaymentRequestService
                             $installments['competence_date'] = $date;
                         }
                     }
-
                     if ($updateExtension) {
                         if (!array_key_exists('extension_date', $installments)) {
                             $installments['extension_date'] = $installments['due_date'];
                         }
                     }
-
                     $paymentRequestHasInstallments = $paymentRequestHasInstallments->create($installments);
                     $notDeleteInstallmentsID[] = $paymentRequestHasInstallments->id;
                 }
@@ -386,17 +385,11 @@ class PaymentRequestService
                     break;
                 }
             }
-            // if (array_key_exists('competence_date', $installment)) {
-            //     if ($approvalFlow->competency == false) {
-            //         $permissionChange = false;
-            //         break;
-            //     }
-            // }
         }
 
         if (!$permissionChange) {
             return response()->json([
-                'erro' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
+                'error' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
             ], 422);
         }
 
@@ -414,26 +407,40 @@ class PaymentRequestService
     {
         if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
 
+            $paymentRequestPurchaseOrderInstallmentsIDsDelete = [];
+            $paymentRequestHasPurchaseOrdersIDsDelete = [];
+
             if ($id != null) {
-                DB::statement('UPDATE purchase_order_has_installments SET payment_request_id = NULL WHERE payment_request_id = ' . $id . ';');
-                DB::statement('DELETE FROM payment_request_has_purchase_order_installments WHERE payment_request_id = ' . $id . ';');
-                DB::statement('DELETE FROM payment_request_has_purchase_orders WHERE payment_request_id = ' . $id . ';');
+                if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
+                    foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                        array_push($paymentRequestPurchaseOrderInstallmentsIDsDelete, $paymentHasPurchaseOrder->id);
+                        $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentHasPurchaseOrder->purchase_order_has_installments_id);
+                        $installmentPurchaseOrder->amount_paid -= $paymentHasPurchaseOrder->amount_received;
+                        $installmentPurchaseOrder->save();
+                    }
+                }
+                if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->exists()) {
+                    foreach (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                        array_push($paymentRequestHasPurchaseOrdersIDsDelete, $paymentHasPurchaseOrder->id);
+                    }
+                }
             }
 
             foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
-
+                $reviewed = false;
+                if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $paymentRequest->id)->where('purchase_order_id', $purchaseOrders['order'])->exists()) {
+                    $reviewed = PaymentRequestHasPurchaseOrders::where('payment_request_id', $paymentRequest->id)->where('purchase_order_id', $purchaseOrders['order'])->first()->reviewed;
+                }
                 $paymentRequestHasPurchaseOrders = PaymentRequestHasPurchaseOrders::create(
                     [
                         'payment_request_id' => $paymentRequest->id,
                         'purchase_order_id' => $purchaseOrders['order'],
+                        'reviewed' => $reviewed
                     ]
                 );
-
                 $purchaseOrder = PurchaseOrder::with('installments')
                     ->findOrFail($purchaseOrders['order']);
-
                 $purchaseInstallmentsIDs = $purchaseOrder->installments->pluck('id')->toArray();
-
                 foreach ($paymentRequestInfo['installment_purchase_order'] as $purchaseInstallment) {
                     if (in_array((int) $purchaseInstallment['installment'], $purchaseInstallmentsIDs)) {
                         PaymentRequestHasPurchaseOrderInstallments::create(
@@ -441,14 +448,41 @@ class PaymentRequestService
                                 'payment_request_id' => $paymentRequest->id,
                                 'purchase_order_has_installments_id' => $purchaseInstallment['installment'],
                                 'payment_request_has_purchase_order_id' => $paymentRequestHasPurchaseOrders->id,
+                                'amount_received' => isset($purchaseInstallment['amount_received']) ? $purchaseInstallment['amount_received'] : 0,
                             ]
                         );
                         $purchaseInstallment = PurchaseOrderHasInstallments::findOrFail($purchaseInstallment['installment']);
-                        $purchaseInstallment->payment_request_id = $paymentRequest->id;
+                        $amountPaid = DB::table('payment_request_has_purchase_order_installments')
+                            ->where('purchase_order_has_installments_id', $purchaseInstallment->id)
+                            ->whereNotIn('purchase_order_has_installments_id', $paymentRequestPurchaseOrderInstallmentsIDsDelete)
+                            ->sum('amount_received');
+                        $purchaseInstallment->amount_paid = $amountPaid;
                         $purchaseInstallment->save();
                     }
                 }
             }
+
+            PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
+            PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
+        } else if ($id != null) {
+            $paymentRequestPurchaseOrderInstallmentsIDsDelete = [];
+            $paymentRequestHasPurchaseOrdersIDsDelete = [];
+
+            if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                    array_push($paymentRequestPurchaseOrderInstallmentsIDsDelete, $paymentHasPurchaseOrder->id);
+                    $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentHasPurchaseOrder->purchase_order_has_installments_id);
+                    $installmentPurchaseOrder->amount_paid -= $paymentHasPurchaseOrder->amount_received;
+                    $installmentPurchaseOrder->save();
+                }
+            }
+            if (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrders::where('payment_request_id', $id)->get() as $paymentHasPurchaseOrder) {
+                    array_push($paymentRequestHasPurchaseOrdersIDsDelete, $paymentHasPurchaseOrder->id);
+                }
+            }
+            PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
+            PaymentRequestHasPurchaseOrderInstallments::destroy($paymentRequestPurchaseOrderInstallmentsIDsDelete);
         }
     }
 
@@ -461,5 +495,30 @@ class PaymentRequestService
         }
         $installment->fill($requestInfo)->save();
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
+    }
+
+    public function syncProviderGeneric($requestInfo, $id = null)
+    {
+        $provider = Provider::findOrFail($requestInfo['provider_id']);
+        if (array_key_exists('installments', $requestInfo)) {
+            if ($provider->generic_provider) {
+                //if ($id != null) {
+                //    ProviderHasBankAccounts::where('provider_id', $provider->id)->delete();
+                //}
+                foreach ($requestInfo['installments'] as $installment) {
+                    $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
+                    $bankAccount->hidden = true;
+                    $bankAccount->save();
+
+                    $providerHasBankAccount = ProviderHasBankAccounts::create(
+                        [
+                            'provider_id' => $provider->id,
+                            'bank_account_id' => $installment['bank_account_provider_id'],
+                            'default_bank' => false
+                        ]
+                    );
+                }
+            }
+        }
     }
 }

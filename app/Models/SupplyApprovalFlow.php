@@ -11,7 +11,7 @@ class SupplyApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['supply_approval_flow', '*'];
+    protected static $logAttributes = ['supply_approval_flow', 'purchase_order', '*'];
     protected static $logName = 'supply_approval_flows';
     public function tapActivity(Activity $activity, string $eventName)
     {

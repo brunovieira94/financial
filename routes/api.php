@@ -113,7 +113,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     //Restful route -> Provider Categories
-
     Route::prefix('provider-category')->group(function () {
         Route::get('/', [ProviderCategoryController::class, 'index']);
         Route::get('/{id}', [ProviderCategoryController::class, 'show']);
@@ -136,7 +135,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [RoleController::class, 'destroy']);
     });
     //Restful route -> States
-
     Route::prefix('state')->group(function () {
         Route::get('/', [StateController::class, 'index']);
         Route::get('/{id}', [StateController::class, 'show']);
@@ -145,7 +143,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [StateController::class, 'destroy']);
         Route::post('/import', [StateController::class, 'import']);
     });
-
     //Restful route -> City
     Route::prefix('city')->group(function () {
         Route::get('/', [CityController::class, 'index']);
@@ -161,7 +158,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ApprovalFlowController::class, 'store']);
         Route::get('/all', [ApprovalFlowController::class, 'index']);
     });
-
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {
         Route::get('/', [ProviderController::class, 'index']);
@@ -184,15 +180,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('billing')->group(function () {
-        Route::get('/', [BillingController::class, 'index']);
-        Route::post('cangooroo', [BillingController::class, 'getCangoorooData']);
+        Route::get('/{approvalStatus}', [BillingController::class, 'index']);
+        Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
         Route::get('/{id}', [BillingController::class, 'show']);
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
         Route::put('/approve/{id}', [BillingController::class, 'approve']);
         Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
-        Route::post('/export', [BillingController::class, 'export']);
+        Route::post('/export/{approvalStatus}', [BillingController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {
@@ -238,6 +234,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
         Route::get('/log-payment-request/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+        Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
@@ -257,8 +254,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/group-form-payment', [PaymentRequestController::class, 'groupFormPayment']);
         Route::get('/', [PaymentRequestController::class, 'index']);
         Route::get('/{id}', [PaymentRequestController::class, 'show']);
-        Route::post('/', [PaymentRequestController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
-        Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice']);
+        Route::post('/', [PaymentRequestController::class, 'store'])->middleware(['check.installments', 'check.values.invoice', 'check.values.payment.request.integration']);
+        Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice', 'check.values.payment.request.integration']);
         Route::post('update-installment/{id}', [PaymentRequestController::class, 'updateInstallment']);
         Route::delete('/{id}', [PaymentRequestController::class, 'destroy']);
     });
@@ -294,6 +291,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
+        Route::get('/approved-purchase-order-integration', [ReportController::class, 'approvedPurchaseOrderForIntegration']);
         Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
         Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
         Route::get('/payment-requests-cnab-generated-list/{id}', [ReportController::class, 'getCnabGenerate']);
@@ -307,7 +305,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/payment-requests-finished/export', [ReportController::class, 'paymentRequestFinishedExport']);
         Route::post('/approved-installment/export', [ReportController::class, 'approvedInstallmentExport']);
         Route::post('/installments-payable/export', [ReportController::class, 'installmentsPayableExport']);
-        Route::post('/due-installments/export', [ReportController::class, 'dueInstallmentsExport']);
     });
 
     Route::prefix('product')->group(function () {
@@ -379,6 +376,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('supply-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowSupplyByUserController::class, 'accountsApproveUser']);
         Route::put('/approve/{id}', [ApprovalFlowSupplyByUserController::class, 'approveAccount']);
+        Route::put('/approve-many', [ApprovalFlowSupplyByUserController::class, 'approveManyAccounts']);
         Route::put('/reprove/{id}', [ApprovalFlowSupplyByUserController::class, 'reproveAccount']);
         Route::put('/cancel/{id}', [ApprovalFlowSupplyByUserController::class, 'cancelAccount']);
     });

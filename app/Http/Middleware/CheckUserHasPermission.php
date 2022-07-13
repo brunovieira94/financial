@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Http\Request;
 use App\Models\RoleHasModule;
 use App\Models\Module;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +22,7 @@ class CheckUserHasPermission
     {
         $user = $request->user();
         $uri = Route::current()->uri();
+        $url = explode('/', $request->url());
         $route = explode('/', $uri);
 
         $whiteList = [
@@ -44,22 +44,21 @@ class CheckUserHasPermission
             'update-installment'
         ];
 
-        $routeAccessed = null;
+        $routeAccessed = $route[count($route) - 1];
 
-        if ('{id}' == $route[count($route) - 1]) {
+        if ('{id}' == $routeAccessed) {
+            $routeAccessed = $route[count($route) - 2];
             if (in_array($route[count($route) - 2], $unverifiedSubRoutes)) {
                 $routeAccessed = $route[count($route) - 3];
-            } else {
-                $routeAccessed = $route[count($route) - 2];
             }
-        } else if (in_array($route[count($route) - 1], $unverifiedSubRoutes)) {
+        } else if (in_array($routeAccessed, $unverifiedSubRoutes)) {
             $routeAccessed = $route[count($route) - 2];
-        } else {
-            $routeAccessed = $route[count($route) - 1];
-            if ($routeAccessed == 'export' || $routeAccessed == 'import') {
-                $routeAccessed = $route[count($route) - 2];
-            }
+        } else if ($routeAccessed == 'export' || $routeAccessed == 'import') {
+            $routeAccessed = $route[count($route) - 2];
+        } else if ($routeAccessed == '{approvalStatus}') {
+            $routeAccessed = $url[count($url) - 1];
         }
+
 
         if (in_array($route[1], $whiteList))
             return $next($request);
@@ -68,7 +67,11 @@ class CheckUserHasPermission
             return $next($request);
 
         //array de objetos com module id
-        $roles = $this->role->where('role_id', $user->role_id)->get(['module_id']);
+        $roles = $this->role->where('role_id', $user->role_id);
+
+        $roles = $roles->whereHas('module', function ($query) {
+            $query->where('active', true);
+        })->get(['module_id']);
 
         // if ($request->isMethod('GET')) {
         //     if (array_key_exists('noAuth', $request->all())){
@@ -88,6 +91,11 @@ class CheckUserHasPermission
                 break;
             case 'cangooroo':
                 $routeAccessed = 'billing';
+                break;
+            case 'approved-purchase-order-integration';
+                $routeAccessed = 'payment-request';
+            case 'bank-account';
+                $routeAccessed = 'provider';
                 break;
         }
 

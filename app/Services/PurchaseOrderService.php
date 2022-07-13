@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Module;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasCompanies;
@@ -14,7 +15,7 @@ use App\Models\PurchaseOrderHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestHasProducts;
-
+use App\Models\RoleHasModule;
 use Illuminate\Http\Request;
 
 class PurchaseOrderService
@@ -51,6 +52,17 @@ class PurchaseOrderService
     public function getAllPurchaseOrder($requestInfo)
     {
         $purchaseOrder = Utils::search($this->purchaseOrder, $requestInfo);
+
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $purchaseOrderIds = [];
+            foreach (auth()->user()->cost_center as $userCostCenter) {
+                $purchaseOrderCostCenters = PurchaseOrderHasCostCenters::where('cost_center_id', $userCostCenter->id)->get(['purchase_order_id']);
+                foreach ($purchaseOrderCostCenters as $purchaseOrderCostCenter) {
+                    $purchaseOrderIds[] = $purchaseOrderCostCenter->purchase_order_id;
+                }
+            }
+            $purchaseOrder->whereIn('id', $purchaseOrderIds);
+        }
 
         if (array_key_exists('provider', $requestInfo)) {
             $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
@@ -117,35 +129,73 @@ class PurchaseOrderService
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
+    public function getCanEditPurchaseOrder($route)
+    {
+        $getModule = Module::where('route', $route)->first();
+        if ($getModule != null) {
+            if (auth()->user()->role_id != 1) {
+                $checkUserRoleModule = RoleHasModule::where([
+                    'role_id' => auth()->user()->role_id,
+                    'module_id' => $getModule->id
+                ])->first();
+                return $checkUserRoleModule != null && $checkUserRoleModule->update;
+            } else {
+                return true;
+            }
+        }
+    }
+
     public function putPurchaseOrder($id, $purchaseOrderInfo, Request $request)
     {
-        $purchaseOrder = $this->purchaseOrder->findOrFail($id);
-        if (!array_key_exists('payment_condition', $purchaseOrderInfo)) {
-            $purchaseOrderInfo['payment_condition'] = null;
+        $newStatus = '';
+        if ($this->getCanEditPurchaseOrder('purchase-order')) {
+            $purchaseOrder = $this->purchaseOrder->with(['approval'])->findOrFail($id);
+            //caso o pedido já foi aprovado só pode aprovar se tiver a permissão
+            if ($purchaseOrder->approval->status == 1) {
+                if ($this->getCanEditPurchaseOrder('approved-purchase-order')) {
+                    $newStatus = 0;
+                } else {
+                    return response()->json([
+                        'error' => 'Não é permitido ao usuário editar o pedido ' . $id . ', porque já está aprovado.',
+                    ], 422);
+                }
+            }
+
+            if (!array_key_exists('payment_condition', $purchaseOrderInfo)) {
+                $purchaseOrderInfo['payment_condition'] = null;
+            }
+            if (!array_key_exists('billing_date', $purchaseOrderInfo)) {
+                $purchaseOrderInfo['billing_date'] = null;
+            }
+
+            $oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+
+            $purchaseOrder->fill($purchaseOrderInfo)->save();
+            $this->putProducts($id, $purchaseOrderInfo);
+            $this->putServices($id, $purchaseOrderInfo);
+
+            $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+
+            // caso o valor for maior do que o antigo o pedido deve voltar para o início da aprovação
+            if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
+                $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
+                $supplyApprovalFlow['order'] = 0;
+                if ($newStatus != '') {
+                    $supplyApprovalFlow['status'] = $newStatus;
+                }
+                $supplyApprovalFlow->save();
+            }
+
+            $this->putCompanies($id, $purchaseOrderInfo);
+            $this->putCostCenters($id, $purchaseOrderInfo);
+            $this->putAttachments($id, $purchaseOrderInfo, $request);
+            $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
+            return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
+        } else {
+            return response()->json([
+                'error' => 'Não é permitido ao usuário editar o pedido ' . $id,
+            ], 422);
         }
-        if (!array_key_exists('billing_date', $purchaseOrderInfo)) {
-            $purchaseOrderInfo['billing_date'] = null;
-        }
-
-        $oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
-
-        $purchaseOrder->fill($purchaseOrderInfo)->save();
-        $this->putProducts($id, $purchaseOrderInfo);
-        $this->putServices($id, $purchaseOrderInfo);
-
-        $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
-
-        if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
-            $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
-            $supplyApprovalFlow['order'] = 0;
-            $supplyApprovalFlow->save();
-        }
-
-        $this->putCompanies($id, $purchaseOrderInfo);
-        $this->putCostCenters($id, $purchaseOrderInfo);
-        $this->putAttachments($id, $purchaseOrderInfo, $request);
-        $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
-        return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
     public function deletePurchaseOrder($id)
@@ -368,17 +418,16 @@ class PurchaseOrderService
                     'purchase_request_id' => $purchaseRequest['purchase_request_id'],
                 ]);
                 $purchaseRequestToUpdate = $this->purchaseRequest->find($purchaseRequest['purchase_request_id']);
-                if($purchaseRequestToUpdate){
+                if ($purchaseRequestToUpdate) {
                     $purchaseRequestToUpdate->status = 1;
                     $isPartial = false;
                     foreach ($this->purchaseRequestHasProducts->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->get() as $purchaseRequestHasProducts) {
-                        if(array_key_exists($purchaseRequestHasProducts['product_id'], $productQuantityInOrder)){
-                            if($productQuantityInOrder[$purchaseRequestHasProducts['product_id']] >= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order'])){
+                        if (array_key_exists($purchaseRequestHasProducts['product_id'], $productQuantityInOrder)) {
+                            if ($productQuantityInOrder[$purchaseRequestHasProducts['product_id']] >= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order'])) {
                                 $productQuantityInOrder[$purchaseRequestHasProducts['product_id']] -= ($purchaseRequestHasProducts['quantity'] - $purchaseRequestHasProducts['in_order']);
                                 $purchaseRequestHasProducts->in_order = $purchaseRequestHasProducts['quantity'];
                                 $purchaseRequestHasProducts->save();
-                            }
-                            else{
+                            } else {
                                 $isPartial = true;
                                 $purchaseRequestHasProducts->in_order += $productQuantityInOrder[$purchaseRequestHasProducts['product_id']];
                                 $productQuantityInOrder[$purchaseRequestHasProducts['product_id']] = 0;
@@ -386,7 +435,7 @@ class PurchaseOrderService
                             }
                         }
                     }
-                    if ($isPartial){
+                    if ($isPartial) {
                         $purchaseRequestToUpdate->status = 2;
                     }
                     $purchaseRequestToUpdate->save();

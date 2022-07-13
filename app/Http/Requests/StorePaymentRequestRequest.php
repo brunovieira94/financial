@@ -20,15 +20,15 @@ class StorePaymentRequestRequest extends FormRequest
             'provider_id' => [
                 'required',
                 'integer',
-                //function ($attribute, $value, $fail) {
-                //    if($this->purchase_order_id == null)
-                //    {
-                //        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
-                //        {
-                //            $fail('O fornecedor exige que seja informado a ordem de compra para o cadastro.');
-                //        }
-                //    }
-                //},
+                function ($attribute, $value, $fail) {
+                    if(!isset($this->installment_purchase_order))
+                    {
+                        if(!Provider::findOrFail($value)->allows_registration_without_purchase_order)
+                        {
+                            $fail('O fornecedor selecionado exige que seja informado um pedido de compra para realizar o cadastro dessa solicitação.');
+                        }
+                    }
+                },
                 'exists:providers,id',
             ],
             'form_payment' => 'max:2',
@@ -79,6 +79,8 @@ class StorePaymentRequestRequest extends FormRequest
             'installments.*.billet_number' => 'max:150',
             'installments.*.fine' => 'numeric',
             'installments.*.billet_file' => 'file',
+            'purchase_orders.*.order' => 'required_with:installment_purchase_order.*.installment',
+            'installment_purchase_order.*.installment' => 'required_with:purchase_orders.*.order',
         ];
     }
 }

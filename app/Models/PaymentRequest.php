@@ -176,12 +176,12 @@ class PaymentRequest extends Model
 
     public function getNextExtensionDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->extension_date ?? null;
+        return $this->installments->sortBy('extension_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->extension_date ?? null;
     }
 
     public function getNextCompetenceDateAttribute()
     {
-        return $this->installments->sortBy('due_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->competence_date ?? null;
+        return $this->installments->sortBy('extension_date')->where('status', '<>', Config::get('constants.status.paid out'))->first()->competence_date ?? null;
     }
 
     public function getApplicantCanEditAttribute()
@@ -197,7 +197,6 @@ class PaymentRequest extends Model
         }
         return false;
     }
-
 
     protected static function booted()
     {

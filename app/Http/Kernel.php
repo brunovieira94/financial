@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'check.permission' => \App\Http\Middleware\CheckUserHasPermission::class,
         'check.installments' => \App\Http\Middleware\CheckPortionAmounts::class,
         'check.values.invoice' => \App\Http\Middleware\CheckValuesWhenSendingInvoice::class,
+        'check.values.payment.request.integration' => \App\Http\Middleware\CheckStorePaymentRequestIntegration::class,
     ];
 }
