@@ -77,12 +77,19 @@ class ProviderService
             foreach ($providerInfo['bank_accounts'] as $bank) {
                 $bank['hidden'] = $genericProvider;
                 if (array_key_exists('id', $bank)) {
-                   // $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
+                    // $bankAccount = $this->bankAccount->with('bank_account_default')->findOrFail($bank['id']);
                     $bankAccount = $this->bankAccount->findOrFail($bank['id']);
                     $bankAccount->fill($bank)->save();
                     $updateBankAccounts[] = $bank['id'];
                     //$providerHasBankAccount = ProviderHasBankAccounts::findOrFail($bankAccount->bank_account_default->id);
                     //$providerHasBankAccount->fill($bank)->save();
+
+                    if (!ProviderHasBankAccounts::where('provider_id', $id)->where('bank_account_id', $bankAccount->id)->exists()) {
+                        $attachArray[] = [
+                            'bank_account_id' => $bankAccount->id,
+                            'default_bank' => $bank['default_bank'] ?? false,
+                        ];
+                    }
                 } else {
                     $bankAccount = new BankAccount;
                     $bankAccount = $bankAccount->create($bank);
