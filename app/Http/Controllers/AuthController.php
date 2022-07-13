@@ -62,51 +62,59 @@ class AuthController extends Controller
         $approvalFlowIDs = AccountsPayableApprovalFlow::whereIn('payment_request_id', $paymentRequestsIDs)->get('id');
         $approvalFlowIDs = $approvalFlowIDs->pluck('id');
 
-        // dd($paymentRequestsIDs);
+        $totalUpdated = 0;
+        $totalCreated = 0;
+        $logsIDs = [];
 
-        $logsPaymentRequest = Activity::where('log_name', 'payment_request')->whereIn('subject_id', $paymentRequestsIDs)->get();
+        foreach ($paymentRequestsIDs as $idPayment) {
+            $idLogs = Activity::where('log_name', 'payment_request')->where('subject_id', $idPayment)->get('id');
+            $idLogs = $idLogs->pluck('id');
 
-        foreach ($logsPaymentRequest as $log) {
-            //dd($log->id);
+            foreach ($idLogs as $logID) {
 
-            $decodedLog = json_decode($log, true);
-            if ($decodedLog['log_name'] == 'payment_request') {
-                if ($decodedLog['description'] == 'created' or $decodedLog['description'] == 'deleted') {
-                    if (array_key_exists('properties', $decodedLog)) {
-                        if (array_key_exists('attributes', $decodedLog['properties'])) {
-                            if (array_key_exists('provider', $decodedLog['properties']['attributes'])) {
-                                if (array_key_exists('bank_account', $decodedLog['properties']['attributes']['provider'])) {
-                                    $decodedLog['properties']['attributes']['provider']['bank_account'] = [];
-                                    $logUpdate = Activity::findOrFail($log->id);
-                                    $logUpdate->update(['properties' => $decodedLog['properties']]);
-                                }
+                $log = Activity::findOrFail($logID);
+                $decodedLog = json_decode($log->properties, true);
+
+                if ($log->log_name == 'payment_request') {
+                    if ($log->description == 'created' or $log->description == 'deleted') {
+                        if (array_key_exists('provider', $decodedLog['attributes'])) {
+                            if (array_key_exists('bank_account', $decodedLog['attributes']['provider'])) {
+                                $decodedLog['attributes']['provider']['bank_account'] = [];
+                                $log->properties = $decodedLog;
+                                $log->save();
+                                $totalCreated++;
                             }
                         }
-                    }
-                } else if ($decodedLog['description'] == 'updated') {
-                    if (array_key_exists('properties', $decodedLog)) {
-                        if (array_key_exists('old', $decodedLog['properties'])) {
-                            if (array_key_exists('provider', $decodedLog['properties']['attributes'])) {
-                                if (array_key_exists('bank_account', $decodedLog['properties']['attributes']['provider'])) {
-                                    $decodedLog['properties']['attributes']['provider']['bank_account'] = [];
-                                    $logUpdate = Activity::findOrFail($log->id);
-                                    $logUpdate->update(['properties' => $decodedLog['properties']]);
+                    } else if ($log->description == 'updated') {
+                        if (array_key_exists('old', $decodedLog)) {
+                            if (array_key_exists('provider', $decodedLog['attributes'])) {
+                                if (array_key_exists('bank_account', $decodedLog['attributes']['provider'])) {
+                                    $decodedLog['attributes']['provider']['bank_account'] = [];
+                                    $log->properties = $decodedLog;
+                                    $log->save();
+                                    $totalUpdated++;
                                 }
                             }
-                        }
-                        if (array_key_exists('attributes', $decodedLog['properties'])) {
-                            if (array_key_exists('provider', $decodedLog['properties']['attributes'])) {
-                                if (array_key_exists('bank_account', $decodedLog['properties']['attributes']['provider'])) {
-                                    $decodedLog['properties']['attributes']['provider']['bank_account'] = [];
-                                    $logUpdate = Activity::findOrFail($log->id);
-                                    $logUpdate->update(['properties' => $decodedLog['properties']]);
+                            if (array_key_exists('attributes', $decodedLog)) {
+                                if (array_key_exists('provider', $decodedLog['attributes'])) {
+                                    if (array_key_exists('bank_account', $decodedLog['attributes']['provider'])) {
+                                        $decodedLog['attributes']['provider']['bank_account'] = [];
+                                        $log->properties = $decodedLog;
+                                        $log->save();
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                array_push($logsIDs, $log->id);
             }
         }
+
+        //$logsPaymentRequest = Activity::where('log_name', 'payment_request')->whereIn('subject_id', $paymentRequestsIDs)->get();
+
+
+        /*
 
         $logsApprovalFlow = Activity::where('log_name', 'accounts_payable_approval_flows')->whereIn('subject_id', $approvalFlowIDs)->get();
         foreach ($logsApprovalFlow as $log) {
@@ -141,7 +149,14 @@ class AuthController extends Controller
                 }
             }
         }
+        */
 
-        return response(['Sucesso' => 'Contas alteradas'], 200);
+        return response([
+            'Sucesso' => 'Contas alteradas',
+            'Criado' => $totalCreated,
+            'Atualizado' => $totalUpdated,
+            'ID Logs' => $logsIDs,
+            'Solicitação de Pagamento' => $paymentRequestsIDs
+        ], 200);
     }
 }

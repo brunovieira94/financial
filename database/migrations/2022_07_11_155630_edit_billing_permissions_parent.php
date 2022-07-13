@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use App\Models\Module;
 
-class EditBillingPermissionss extends Migration
+class EditBillingPermissionsParent extends Migration
 {
     /**
      * Run the migrations.

@@ -24,7 +24,7 @@ class Provider extends Model
     }
 
     use SoftDeletes;
-    protected $table='providers';
+    protected $table = 'providers';
     protected $casts = [
         'phones' => 'array',
     ];
