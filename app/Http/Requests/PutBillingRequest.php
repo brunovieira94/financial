@@ -22,7 +22,6 @@ class PutBillingRequest extends FormRequest
             'pay_date' => 'required|date',
             'boleto_value' => 'max:150',
             'boleto_code' => 'max:150',
-            'recipient_name' => 'required|max:150 ',
             'oracle_protocol' => 'required|max:150 ',
             'cnpj' => 'required|max:150 ',
             'reason' => 'max:255',
