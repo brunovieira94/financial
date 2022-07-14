@@ -49,6 +49,8 @@ class PaymentRequestController extends Controller
         $requestInfo = $request->all();
 
         if (array_key_exists('invoice_number', $requestInfo)) {
+            // GARANTIR QUE O NÚMERO DE INVOICE OU NOTA FISCAL NÃO REPETE PARA O MESMO FORCEDOR
+            // SE FOR FORNECEDOR DIFERENTE PERMITE
             if (!self::checkInvoiceOrBilletProviderExists('invoice_number', $request->invoice_number, $requestInfo)) {
                 return response()->json([
                     'error' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
@@ -57,16 +59,6 @@ class PaymentRequestController extends Controller
                         ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                         '.'
                 ], 422);
-            }
-            if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
-                if (!$requestInfo['force_registration']) {
-                    return response()->json([
-                        'error' => 'O número de nota fiscal ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                            PaymentRequest::where('invoice_number', $request->invoice_number)
-                            ->first()->id .
-                            ', tem certeza que deseja cadastrar mesmo assim?'
-                    ], 422);
-                }
             }
         }
 
