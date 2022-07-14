@@ -130,16 +130,6 @@ class PaymentRequestController extends Controller
                                 '.'
                         ], 422);
                     }
-                    if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
-                        if (!$requestInfo['force_registration']) {
-                            return response()->json([
-                                'error' => 'O número da nota fiscal ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                    PaymentRequest::where('invoice_number', $request->invoice_number)
-                                    ->first()->id .
-                                    ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 422);
-                        }
-                    }
                 }
             }
         }
@@ -174,18 +164,6 @@ class PaymentRequestController extends Controller
                                 '.'
                         ], 422);
                         break;
-                    }
-                    if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
-                        if (!$requestInfo['force_registration']) {
-                            return response()->json([
-                                'error' => 'O número do boleto já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                    PaymentRequest::with('installments')
-                                    ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
-                                    ->first()->id .
-                                    ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 422);
-                            break;
-                        }
                     }
                 }
             }
