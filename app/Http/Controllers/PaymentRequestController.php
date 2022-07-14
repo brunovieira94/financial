@@ -65,7 +65,7 @@ class PaymentRequestController extends Controller
                             PaymentRequest::where('invoice_number', $request->invoice_number)
                             ->first()->id .
                             ', tem certeza que deseja cadastrar mesmo assim?'
-                    ], 422);
+                    ], 424);
                 }
             }
         }
@@ -79,7 +79,7 @@ class PaymentRequestController extends Controller
                             ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                             ->first()->id .
                             ', para cadastrar a conta deve ser cancelada/apagada.'
-                    ], 422);
+                    ], 409);
                     break;
                 }
             }
@@ -91,7 +91,7 @@ class PaymentRequestController extends Controller
                             ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                             ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                             '.'
-                    ], 422);
+                    ], 409);
                     break;
                 }
                 if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
@@ -102,7 +102,7 @@ class PaymentRequestController extends Controller
                                 ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                                 ->first()->id .
                                 ', tem certeza que deseja cadastrar mesmo assim?'
-                        ], 422);
+                        ], 424);
                         break;
                     }
                 }
@@ -146,7 +146,7 @@ class PaymentRequestController extends Controller
                                 ->where('invoice_number', $request->invoice_number)
                                 ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                                 '.'
-                        ], 422);
+                        ], 409);
                     }
                     if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
                         if (!$requestInfo['force_registration']) {
@@ -155,7 +155,7 @@ class PaymentRequestController extends Controller
                                     PaymentRequest::where('invoice_number', $request->invoice_number)
                                     ->first()->id .
                                     ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 422);
+                            ], 424);
                         }
                     }
                 }
@@ -174,7 +174,7 @@ class PaymentRequestController extends Controller
                                 ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                                 ->first()->id .
                                 ', para cadastrar a conta deve ser cancelada/apagada.'
-                        ], 422);
+                        ], 409);
                         break;
                     }
                 }
@@ -190,7 +190,7 @@ class PaymentRequestController extends Controller
                                 ->where('billet_number', $installment['billet_number'])
                                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                                 '.'
-                        ], 422);
+                        ], 409);
                         break;
                     }
                     if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
@@ -201,7 +201,7 @@ class PaymentRequestController extends Controller
                                     ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                                     ->first()->id .
                                     ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 422);
+                            ], 424);
                             break;
                         }
                     }
