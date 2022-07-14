@@ -158,8 +158,8 @@ class PaymentRequestController extends Controller
                     if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
                         return response()->json([
                             'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
-                                PaymentRequest::with('provider')
-                                ->where('billet_number', $installment['billet_number'])
+                                PaymentRequest::with(['provider', 'installments'])
+                                ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                                 '.'
                         ], 422);
