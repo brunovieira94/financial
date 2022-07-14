@@ -17,7 +17,7 @@ class PaidBillingInfoService
         $this->paidBillingInfo = $paidBillingInfo;
     }
 
-    public function getAllPaidBillingInfo($requestInfo, $approvalStatus)
+    public function getAllPaidBillingInfo($requestInfo)
     {
         $paidBillingInfo = Utils::search($this->paidBillingInfo, $requestInfo);
         return Utils::pagination($paidBillingInfo->with($this->with), $requestInfo);

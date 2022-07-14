@@ -10,30 +10,30 @@ use App\Imports\DailyPaidBillingInfoImport;
 
 class PaidBillingInfoController extends Controller
 {
-    private $billingService;
+    private $paidBbillingService;
     private $paidBillingInfoImport;
     private $dailyPaidBillingInfoImport;
 
-    public function __construct(PaidBillingInfoService $billingService, PaidBillingInfoImport $paidBillingInfoImport, DailyPaidBillingInfoImport $dailyPaidBillingInfoImport)
+    public function __construct(PaidBillingInfoService $paidBbillingService, PaidBillingInfoImport $paidBillingInfoImport, DailyPaidBillingInfoImport $dailyPaidBillingInfoImport)
     {
-        $this->billingService = $billingService;
+        $this->paidBbillingService = $paidBbillingService;
         $this->paidBillingInfoImport = $paidBillingInfoImport;
         $this->dailyPaidBillingInfoImport = $dailyPaidBillingInfoImport;
     }
 
-    public function index(Request $request, $approvalStatus)
+    public function index(Request $request)
     {
-        return $this->billingService->getAllPaidBillingInfo($request->all(), $approvalStatus);
+        return $this->paidBbillingService->getAllPaidBillingInfo($request->all());
     }
 
     public function show($id)
     {
-        return $this->billingService->getPaidBillingInfo($id);
+        return $this->paidBbillingService->getPaidBillingInfo($id);
     }
 
     public function destroy($id)
     {
-        $this->billingService->deletePaidBillingInfo($id);
+        $this->paidBbillingService->deletePaidBillingInfo($id);
         return response('');
     }
 
