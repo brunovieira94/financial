@@ -64,6 +64,7 @@ class PaymentRequestController extends Controller
 
         foreach ($requestInfo['installments'] as $installment) {
             if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
+                // O Código do Boleto nunca pode repetir
                 if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                     return response()->json([
                         'error' => 'O código de barras informado já existe no sistema na conta ' .
@@ -76,6 +77,7 @@ class PaymentRequestController extends Controller
                 }
             }
             if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
+                // O número do Boleto só pode repetir se forem fornecedores diferentes
                 if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
                     return response()->json([
                         'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
@@ -85,18 +87,6 @@ class PaymentRequestController extends Controller
                             '.'
                     ], 422);
                     break;
-                }
-                if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
-                    if (!$requestInfo['force_registration']) {
-                        return response()->json([
-                            'error' => 'O número do boleto já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                PaymentRequest::with('installments')
-                                ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
-                                ->first()->id .
-                                ', tem certeza que deseja cadastrar mesmo assim?'
-                        ], 422);
-                        break;
-                    }
                 }
             }
         }
