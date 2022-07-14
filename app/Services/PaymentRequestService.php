@@ -502,21 +502,19 @@ class PaymentRequestService
         $provider = Provider::findOrFail($requestInfo['provider_id']);
         if (array_key_exists('installments', $requestInfo)) {
             if ($provider->generic_provider) {
-                //if ($id != null) {
-                //    ProviderHasBankAccounts::where('provider_id', $provider->id)->delete();
-                //}
                 foreach ($requestInfo['installments'] as $installment) {
-                    $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
-                    $bankAccount->hidden = true;
-                    $bankAccount->save();
-
-                    $providerHasBankAccount = ProviderHasBankAccounts::create(
-                        [
-                            'provider_id' => $provider->id,
-                            'bank_account_id' => $installment['bank_account_provider_id'],
-                            'default_bank' => false
-                        ]
-                    );
+                    if ($installment['group_form_payment_id'] != 1) {
+                        $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
+                        $bankAccount->hidden = true;
+                        $bankAccount->save();
+                        $providerHasBankAccount = ProviderHasBankAccounts::create(
+                            [
+                                'provider_id' => $provider->id,
+                                'bank_account_id' => $installment['bank_account_provider_id'],
+                                'default_bank' => false
+                            ]
+                        );
+                    }
                 }
             }
         }
