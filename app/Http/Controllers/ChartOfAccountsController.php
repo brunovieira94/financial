@@ -46,7 +46,7 @@ class ChartOfAccountsController extends Controller
         if(ChartOfAccounts::where('parent', $id)->exists())
         {
             return response()->json([
-                'erro' => 'Este plano de contas está associado a outros planos de contas é necessário apagar e/ou alterar suas dependências antes de apagá lo.'
+                'error' => 'Este plano de contas está associado a outros planos de contas é necessário apagar e/ou alterar suas dependências antes de apagá lo.'
             ], 422);
         }
         $chartOfAccounts = $this->chartOfAccountsService->deleteChartOfAccounts($id);

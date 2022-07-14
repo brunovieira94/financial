@@ -73,7 +73,7 @@ class UserService
         if (array_key_exists('password', $userInfo) && array_key_exists('new-password', $userInfo)) {
             if (!Hash::check($userInfo['password'], auth()->user()->password)) {
                 return Response()->json([
-                    'erro' => 'A senha informada é inválida',
+                    'error' => 'A senha informada é inválida',
                 ], 422);
             }
 

@@ -40,7 +40,7 @@ class CheckPortionAmounts
             }
             if (number_format($netValue, 2) != number_format($parcelSum, 2)) {
                 return response()->json([
-                    'erro' => 'Verifique o valor total das parcelas.'
+                    'error' => 'Verifique o valor total das parcelas.'
                 ], 422);
             }
         }

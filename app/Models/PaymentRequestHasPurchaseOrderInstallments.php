@@ -8,7 +8,7 @@ class PaymentRequestHasPurchaseOrderInstallments extends Model
 {
     protected $table='payment_request_has_purchase_order_installments';
     public $timestamps = false;
-    protected $fillable = ['payment_request_has_purchase_order_id', 'payment_request_id', 'purchase_order_has_installments_id'];
+    protected $fillable = ['amount_received', 'payment_request_has_purchase_order_id', 'payment_request_id', 'purchase_order_has_installments_id'];
     protected $hidden = ['id', 'payment_request_has_purchase_order_id', 'payment_request_id', 'purchase_order_has_installments_id'];
 
     public function installment_purchase()

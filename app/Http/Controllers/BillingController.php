@@ -20,9 +20,9 @@ class BillingController extends Controller
         $this->cangoorooService = $cangoorooService;
     }
 
-    public function index(Request $request)
+    public function index(Request $request, $approvalStatus)
     {
-        return $this->billingService->getAllBilling($request->all());
+        return $this->billingService->getAllBilling($request->all(), $approvalStatus);
     }
 
     public function show($id)
@@ -58,7 +58,11 @@ class BillingController extends Controller
 
     public function getCangoorooData(Request $request)
     {
-        $cangooroo = $this->cangoorooService->updateCangoorooData($request->booking_id, $request->reserve);
+        try {
+            $cangooroo = $this->cangoorooService->updateCangoorooData($request->reserve);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
         if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
             return response()->json([
                 'error' => $cangooroo['error'],
@@ -67,11 +71,11 @@ class BillingController extends Controller
         return $cangooroo;
     }
 
-    public function export(Request $request)
+    public function export(Request $request, $approvalStatus)
     {
         if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-            return (new BillingExport($request->all()))->download('faturamento.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
         }
-        return (new BillingExport($request->all()))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }
