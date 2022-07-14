@@ -56,7 +56,7 @@ class PaymentRequestController extends Controller
                         ->where('invoice_number', $request->invoice_number)
                         ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                         '.'
-                ], 422);
+                ], 409);
             }
             if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
                 if (!$requestInfo['force_registration']) {
