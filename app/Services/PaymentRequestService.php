@@ -51,14 +51,64 @@ class PaymentRequestService
 
     public function getPaymentRequestByUser($requestInfo)
     {
-        $paymentRequest = Utils::search($this->paymentRequest, $requestInfo);
-        return Utils::pagination($paymentRequest->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
+        $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
+
+        foreach ($paymentRequests as $paymentRequest) {
+            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
+                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                    $installment = [
+                        'id' => $installment->installment_purchase->id,
+                        'amount_received' => $installment->amount_received,
+                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
+                        'parcel_number' => $installment->installment_purchase->parcel_number,
+                        'portion_amount' => $installment->installment_purchase->portion_amount,
+                        'due_date' => $installment->installment_purchase->due_date,
+                        'note' => $installment->installment_purchase->note,
+                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
+                        'money_discount' => $installment->installment_purchase->money_discount,
+                        'invoice_received' => $installment->installment_purchase->invoice_received,
+                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
+                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
+                        'amount_paid' => $installment->installment_purchase->amount_paid,
+                    ];
+
+                    $purchaseOrder->purchase_order_installments[$key] = $installment;
+                }
+            }
+        }
+        return $paymentRequests;
     }
 
     public function getAllPaymentRequest($requestInfo)
     {
-        $paymentRequest = Utils::search($this->paymentRequest, $requestInfo);
-        return Utils::pagination($paymentRequest->with($this->with), $requestInfo);
+        $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->with($this->with), $requestInfo);
+
+        foreach ($paymentRequests as $paymentRequest) {
+            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
+                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                    $installment = [
+                        'id' => $installment->installment_purchase->id,
+                        'amount_received' => $installment->amount_received,
+                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
+                        'parcel_number' => $installment->installment_purchase->parcel_number,
+                        'portion_amount' => $installment->installment_purchase->portion_amount,
+                        'due_date' => $installment->installment_purchase->due_date,
+                        'note' => $installment->installment_purchase->note,
+                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
+                        'money_discount' => $installment->installment_purchase->money_discount,
+                        'invoice_received' => $installment->installment_purchase->invoice_received,
+                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
+                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
+                        'amount_paid' => $installment->installment_purchase->amount_paid,
+                    ];
+
+                    $purchaseOrder->purchase_order_installments[$key] = $installment;
+                }
+            }
+        }
+        return $paymentRequests;
     }
 
     public function getPaymentRequest($id)
@@ -75,7 +125,6 @@ class PaymentRequestService
             }
         }
         return $paymentRequest;
-        return;
     }
 
     public function postPaymentRequest(Request $request)
