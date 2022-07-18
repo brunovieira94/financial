@@ -63,7 +63,19 @@ class PaymentRequestService
 
     public function getPaymentRequest($id)
     {
-        return $this->paymentRequest->with($this->with)->findOrFail($id);
+        $paymentRequest = $this->paymentRequest->with($this->with)->findOrFail($id);
+
+        if (!empty($paymentRequest->purchase_order)) {
+            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
+                if (!empty($purchaseOrder->purchase_order_installments)) {
+                    foreach ($purchaseOrder->purchase_order_installments as $installment) {
+                        $installment->installment_purchase->amount_received = $installment->amount_received;
+                    }
+                }
+            }
+        }
+        return $paymentRequest;
+        return;
     }
 
     public function postPaymentRequest(Request $request)
