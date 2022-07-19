@@ -358,6 +358,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/{id}', [PurchaseOrderController::class, 'update']);
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
         Route::get('/listinvoice/{id}', [PurchaseOrderController::class, 'listinvoice']);
+        Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
     });
 
     Route::prefix('purchase-request')->group(function () {

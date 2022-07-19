@@ -47,4 +47,9 @@ class PurchaseOrderController extends Controller
     {
         return $this->purchaseOrderService->getListInvoicePurchaseOrder($id);
     }
+
+    public function getinvoice($id)
+    {
+        return $this->purchaseOrderService->getInvoicePurchaseOrder($id);
+    }
 }

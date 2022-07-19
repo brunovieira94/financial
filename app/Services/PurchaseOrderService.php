@@ -651,4 +651,11 @@ class PurchaseOrderService
         }
         return $listInvoice;
     }
+
+    public function getInvoicePurchaseOrder($id)
+    {
+        $gePaymentRequest = $this->paymentRequest::where('id', $id)->with('purchase_order')->get();
+
+        return $gePaymentRequest;
+    }
 }
