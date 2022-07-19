@@ -35,7 +35,7 @@ class CheckStorePaymentRequestIntegration
                 $installmentPurchase->amount_paid += $instalmentPurchaseOrder['amount_received'];
                 if ($installmentPurchase->amount_paid > ($installmentPurchase->portion_amount - $installmentPurchase->money_discount)) {
                     return response()->json([
-                        'error' => 'A soma do valor recebido para a parcela: ' . $installmentPurchase->id . ' é maior do que necessário para o pagamento completo da mesma.'
+                        'error' => 'A soma do valor recebido para a parcela: ' . $installmentPurchase->id . ' é maior do que necessário para o pagamento completo da mesma, verifique o desconto aplicado e o valor informado.'
                     ], 422);
                     break;
                 }
