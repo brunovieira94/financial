@@ -357,6 +357,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PurchaseOrderController::class, 'store']);
         Route::post('/{id}', [PurchaseOrderController::class, 'update']);
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
+        Route::get('/listinvoice/{id}', [PurchaseOrderController::class, 'listinvoice']);
     });
 
     Route::prefix('purchase-request')->group(function () {
@@ -395,5 +396,3 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
     Route::post('/solve-log', [AuthController::class, 'log']);
 });
-
-
