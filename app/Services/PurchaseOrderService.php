@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Module;
+use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasCompanies;
@@ -31,10 +33,12 @@ class PurchaseOrderService
     private $purchaseOrderServicesHasInstallments;
     private $purchaseOrderHasInstallments;
     private $attachments;
+    private $paymentRequestHasPurchaseOrders;
+    private $paymentRequest;
 
     private $with = ['user', 'installments', 'approval', 'cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments)
+    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments, PaymentRequestHasPurchaseOrders $paymentRequestHasPurchaseOrders, PaymentRequest $paymentRequest)
     {
         $this->purchaseOrder = $purchaseOrder;
         $this->purchaseRequest = $purchaseRequest;
@@ -47,6 +51,8 @@ class PurchaseOrderService
         $this->attachments = $attachments;
         $this->purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments;
         $this->purchaseOrderHasInstallments = $purchaseOrderHasInstallments;
+        $this->paymentRequestHasPurchaseOrders = $paymentRequestHasPurchaseOrders;
+        $this->paymentRequest = $paymentRequest;
     }
 
     public function getAllPurchaseOrder($requestInfo)
@@ -624,5 +630,32 @@ class PurchaseOrderService
             $currentValue -= $purchaseOrder['money_discount_products'];
         }
         return $currentValue;
+    }
+
+    public function getListInvoicePurchaseOrder($id)
+    {
+        $getListPaymentRequestIds = $this->paymentRequestHasPurchaseOrders::where('purchase_order_id', $id)->get(['payment_request_id']);
+
+        $listInvoice = [];
+        foreach ($getListPaymentRequestIds as $getListPaymentRequestId) {
+            $getPaymentRequest = $this->paymentRequest->where([
+                'id' => $getListPaymentRequestId->payment_request_id,
+                'payment_type' => 0
+            ])->first();
+            if ($getPaymentRequest != null) {
+                $listInvoice[] = [
+                    'id' => $getPaymentRequest->id,
+                    'emission_date' => $getPaymentRequest->emission_date
+                ];
+            }
+        }
+        return $listInvoice;
+    }
+
+    public function getInvoicePurchaseOrder($id)
+    {
+        $gePaymentRequest = $this->paymentRequest::where('id', $id)->with('purchase_order')->get();
+
+        return $gePaymentRequest;
     }
 }
