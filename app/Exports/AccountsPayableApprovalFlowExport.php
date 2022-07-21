@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Carbon\Carbon;
 use Config;
 
 class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
@@ -199,6 +200,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             $accountsPayableApprovalFlow->payment_request->bar_code,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
+            $accountsPayableApprovalFlow->payment_request->note,
         ];
     }
 
@@ -227,6 +229,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             'Código de barras',
             'Pŕoxima data de prorrogação',
             'Data de Criação',
+            'Observações',
         ];
     }
 }
