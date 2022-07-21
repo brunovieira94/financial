@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Carbon\Carbon;
 
 class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
@@ -165,6 +166,7 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->fine,
             $query->discount,
             $query->portion_amount,
+            $query->note,
         ];
     }
 
@@ -183,6 +185,7 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             'Multa',
             'Desconto',
             'Valor Final',
+            'Observações',
         ];
     }
 }

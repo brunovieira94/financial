@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Carbon\Carbon;
 use Config;
 
 class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
@@ -172,8 +173,10 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     public function map($accountsPayableApprovalFlow): array
     {
         $this->totalTax = 0;
-        foreach ($accountsPayableApprovalFlow->payment_request->tax as $value) {
-            $this->totalTax += $value['tax_amount'];
+        if($accountsPayableApprovalFlow->payment_request && array_key_exists('tax', $accountsPayableApprovalFlow->payment_request)){
+            foreach ($accountsPayableApprovalFlow->payment_request->tax as $value) {
+                $this->totalTax += $value['tax_amount'];
+            }
         }
 
         return [
@@ -199,6 +202,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             $accountsPayableApprovalFlow->payment_request->bar_code,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
+            $accountsPayableApprovalFlow->payment_request->note,
         ];
     }
 
@@ -227,6 +231,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             'Código de barras',
             'Pŕoxima data de prorrogação',
             'Data de Criação',
+            'Observações',
         ];
     }
 }
