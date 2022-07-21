@@ -109,7 +109,7 @@ class ProviderService
                     ->whereNotIn('bank_account_id', $createdBankAccounts)
                     ->whereRelation('bank_account', 'hidden', '=', false)
                     ->get(['bank_account_id']);
-                $this->bankAccount->destroy($collection->toArray());
+                $this->bankAccount->destroy($collection->pluck('bank_account_id'));
             }
 
             $provider = $this->provider->findOrFail($id);
