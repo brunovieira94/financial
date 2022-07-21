@@ -57,6 +57,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->fine,
             $installment->discount,
             $installment->portion_amount,
+            $installment->note,
         ];
     }
 
@@ -75,6 +76,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             'Multa',
             'Desconto',
             'Valor Final',
+            'Observações',
         ];
     }
 }
