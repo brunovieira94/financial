@@ -58,6 +58,7 @@ class AllPaymentRequestPaidExport implements FromCollection, ShouldAutoSize, Wit
             $accountsPayableApprovalFlow->payment_request->bar_code,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
+            $accountsPayableApprovalFlow->payment_request->note,
         ];
     }
 
@@ -86,6 +87,7 @@ class AllPaymentRequestPaidExport implements FromCollection, ShouldAutoSize, Wit
             'Código de barras',
             'Pŕoxima data de prorrogação',
             'Data de Criação',
+            'Observações',
         ];
     }
 }
