@@ -48,7 +48,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->payment_request->id,
             $installment->parcel_number,
             $installment->payment_request->provider->trade_name ?? '',
-            $installment->payment_request->cost_center->title,
+            $installment->payment_request->cost_center->title ?? '',
             $installment->due_date,
             $installment->extension_date,
             $installment->competence_date,
