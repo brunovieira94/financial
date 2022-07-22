@@ -107,25 +107,45 @@ class PurchaseOrderService
 
     public function postPurchaseOrder($purchaseOrderInfo, Request $request)
     {
-        $purchaseOrder = new PurchaseOrder;
-        $purchaseOrderInfo['user_id'] = auth()->user()->id;
-        $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
-        $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
-        $this->syncServices($purchaseOrder, $purchaseOrderInfo);
-        $this->syncCompanies($purchaseOrder, $purchaseOrderInfo);
-        $this->syncCostCenters($purchaseOrder, $purchaseOrderInfo);
-        $this->syncAttachments($purchaseOrder, $purchaseOrderInfo, $request);
-        $this->syncPurchaseRequests($purchaseOrder, $purchaseOrderInfo);
+        $discount = 0;
+        $new_final_negotiated_total_value = 0;
+        foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
+            $discount += $installments['discount'];
+        }
+        if ($discount > 0) {
+            $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'] + $discount;
+        } else {
+            $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'];
+        }
 
-        $supplyApprovalFlow = new SupplyApprovalFlow;
-        activity()->disableLogging();
-        $supplyApprovalFlow = $supplyApprovalFlow->create([
-            'id_purchase_order' => $purchaseOrder->id,
-            'order' => 1,
-            'status' => 0,
-        ]);
-        activity()->enableLogging();
-        $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
+        if ($purchaseOrderInfo['negotiated_total_value'] == $new_final_negotiated_total_value) {
+
+            $purchaseOrder = new PurchaseOrder;
+            $purchaseOrderInfo['user_id'] = auth()->user()->id;
+            $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
+            $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
+            $this->syncServices($purchaseOrder, $purchaseOrderInfo);
+            $this->syncCompanies($purchaseOrder, $purchaseOrderInfo);
+            $this->syncCostCenters($purchaseOrder, $purchaseOrderInfo);
+            $this->syncAttachments($purchaseOrder, $purchaseOrderInfo, $request);
+            $this->syncPurchaseRequests($purchaseOrder, $purchaseOrderInfo);
+
+            $supplyApprovalFlow = new SupplyApprovalFlow;
+            activity()->disableLogging();
+            $supplyApprovalFlow = $supplyApprovalFlow->create([
+                'id_purchase_order' => $purchaseOrder->id,
+                'order' => 1,
+                'status' => 0,
+            ]);
+            activity()->enableLogging();
+
+            $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
+        } else {
+            return response()->json([
+                'error' => 'O valor total inicial e o valor total das parcelas não são iguais. Por favor validar o valor das parcelas.',
+            ], 422);
+        }
+
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
