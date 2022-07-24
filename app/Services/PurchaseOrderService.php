@@ -36,7 +36,7 @@ class PurchaseOrderService
     private $paymentRequestHasPurchaseOrders;
     private $paymentRequest;
 
-    private $with = ['user', 'installments', 'approval', 'cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests'];
+    private $with = ['user', 'installments', 'approval', 'cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests', 'payment_requests'];
 
     public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments, PaymentRequestHasPurchaseOrders $paymentRequestHasPurchaseOrders, PaymentRequest $paymentRequest)
     {
@@ -654,8 +654,8 @@ class PurchaseOrderService
 
     public function getInvoicePurchaseOrder($id)
     {
-        $gePaymentRequest = $this->paymentRequest::where('id', $id)->with('purchase_order')->get();
+        $getPaymentRequest = $this->paymentRequest::where('id', $id)->with('purchase_order')->get();
 
-        return $gePaymentRequest;
+        return $getPaymentRequest;
     }
 }
