@@ -58,6 +58,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             $query->fine,
             $query->discount,
             $query->portion_amount,
+            $query->note,
         ];
     }
 
@@ -76,6 +77,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             'Multa',
             'Desconto',
             'Valor Final',
+            'Observações',
         ];
     }
 }

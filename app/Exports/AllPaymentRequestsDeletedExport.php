@@ -58,6 +58,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->bar_code,
             $accountsPayableApprovalFlow->payment_request_trashed->next_extension_date,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
+            $accountsPayableApprovalFlow->payment_request->note,
         ];
     }
 
@@ -86,6 +87,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             'Código de barras',
             'Pŕoxima data de prorrogação',
             'Data de Criação',
+            'Observações',
         ];
     }
 }

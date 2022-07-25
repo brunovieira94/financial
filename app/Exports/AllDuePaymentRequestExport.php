@@ -66,6 +66,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
             $paymentRequest->bar_code,
             $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
+            $paymentRequest->note,
         ];
     }
 
@@ -94,6 +95,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
             'Código de barras',
             'Pŕoxima data de prorrogação',
             'Data de Criação',
+            'Observações',
         ];
     }
 }

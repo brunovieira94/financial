@@ -160,7 +160,7 @@ return [
         'date'      => 'data',
         'day'       => 'dia',
         'excerpt'   => 'resumo',
-        'first_name'=> 'primeiro nome',
+        'first_name' => 'primeiro nome',
         'gender'    => 'gênero',
         'hour'      => 'hora',
         'last_name' => 'sobrenome',
@@ -266,6 +266,7 @@ return [
         'cost_centers' => 'centros de custo',
         'billing_date' => 'data de pagamento',
         'payment_condition' => 'condição de pagamento',
+        'request_type' => 'tipo de requisição de compra'
     ],
 
 ];

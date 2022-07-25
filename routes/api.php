@@ -37,6 +37,7 @@ use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\PaidBillingInfoController;
 use App\Http\Controllers\HotelApprovalFlowController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
@@ -189,6 +190,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
         Route::post('/export/{approvalStatus}', [BillingController::class, 'export']);
+    });
+
+    Route::prefix('paid-billing-info')->group(function () {
+        Route::get('/', [PaidBillingInfoController::class, 'index']);
+        Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
+        Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
+        Route::post('/import', [PaidBillingInfoController::class, 'import']);
+        //Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {
@@ -357,6 +366,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PurchaseOrderController::class, 'store']);
         Route::post('/{id}', [PurchaseOrderController::class, 'update']);
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
+        Route::get('/listinvoice/{id}', [PurchaseOrderController::class, 'listinvoice']);
+        Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
     });
 
     Route::prefix('purchase-request')->group(function () {
@@ -395,5 +406,3 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
     Route::post('/solve-log', [AuthController::class, 'log']);
 });
-
-
