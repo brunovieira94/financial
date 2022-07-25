@@ -15,6 +15,9 @@ class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeading
 
     use Importable;
 
+    public $not_imported = 0;
+    public $imported = 0;
+
     public function collection(Collection $rows)
     {
         foreach ($rows as $row)
