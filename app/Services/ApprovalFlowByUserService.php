@@ -23,17 +23,25 @@ class ApprovalFlowByUserService
     public function getAllAccountsForApproval($requestInfo)
     {
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
+        $maxOrder = $this->approvalFlow->max('order');
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
 
-        $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->whereIn('status', [0, 2])
-            ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
-
+        if (in_array($maxOrder, $approvalFlowUserOrder->pluck('order')->toArray())) {
+            $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+                ->orWhere('order', '>', $maxOrder)
+                ->whereIn('status', [0, 2])
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
+        } else {
+            $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+                ->whereIn('status', [0, 2])
+                ->whereRelation('payment_request', 'deleted_at', '=', null)
+                ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
+        }
 
         $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
@@ -117,9 +125,9 @@ class ApprovalFlowByUserService
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
 
-        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow){
+        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow) {
             foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,
