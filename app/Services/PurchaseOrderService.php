@@ -658,4 +658,8 @@ class PurchaseOrderService
 
         return $getPaymentRequest;
     }
+
+    public function putInvoicePurchaseOrder(Request $dados)
+    {
+    }
 }
