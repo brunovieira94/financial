@@ -9,6 +9,7 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use Illuminate\Http\Request;
 use Config;
+use Exception;
 
 class ApprovalFlowByUserService
 {
@@ -34,9 +35,11 @@ class ApprovalFlowByUserService
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo, ['order']);
 
         if (in_array($maxOrder, $approvalFlowUserOrder->pluck('order')->toArray())) {
-            $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
-                ->orWhere('order', '>', $maxOrder)
+            $accountsPayableApprovalFlow
                 ->whereIn('status', [0, 2])
+                ->where(function ($query) use ($approvalFlowUserOrder, $maxOrder) {
+                    return $query->whereIn('order', $approvalFlowUserOrder->toArray())->orWhere('order', '>', $maxOrder);
+                })
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
                 ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'approval_flow', 'reason_to_reject']);
         } else {
@@ -128,24 +131,26 @@ class ApprovalFlowByUserService
         $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
 
         foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow) {
-            foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
+            if ($accountsPayableApprovalFlow['payment_request'] != null) {
+                foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
+                    foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
+                        $installment = [
+                            'id' => $installment->installment_purchase->id,
+                            'amount_received' => $installment->amount_received,
+                            'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
+                            'parcel_number' => $installment->installment_purchase->parcel_number,
+                            'portion_amount' => $installment->installment_purchase->portion_amount,
+                            'due_date' => $installment->installment_purchase->due_date,
+                            'note' => $installment->installment_purchase->note,
+                            'percentage_discount' => $installment->installment_purchase->percentage_discount,
+                            'money_discount' => $installment->installment_purchase->money_discount,
+                            'invoice_received' => $installment->installment_purchase->invoice_received,
+                            'invoice_paid' => $installment->installment_purchase->invoice_paid,
+                            'payment_request_id' => $installment->installment_purchase->payment_request_id,
+                            'amount_paid' => $installment->installment_purchase->amount_paid,
+                        ];
+                        $purchaseOrder->purchase_order_installments[$key] = $installment;
+                    }
                 }
             }
         }
