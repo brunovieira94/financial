@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\BankAccount;
 use App\Models\GroupFormPayment;
+use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasAttachments;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
@@ -34,11 +35,12 @@ class PaymentRequestService
     private $approvalFlow;
     private $groupFormPayment;
     private $attachments;
+    private $paymentRequestClean;
 
 
-    private $with = ['purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['purchase_order.purchase_order','purchase_order.purchase_order_installments', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
+    public function __construct(PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
@@ -47,14 +49,14 @@ class PaymentRequestService
         $this->approvalFlow = $approvalFlow;
         $this->groupFormPayment = $groupFormPayment;
         $this->attachments = $attachments;
+        $this->paymentRequestClean = $paymentRequestClean;
     }
 
     public function getPaymentRequestByUser($requestInfo)
     {
-        $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
-
-        foreach ($paymentRequests as $paymentRequest) {
+        $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->where('user_id', auth()->user()->id), $requestInfo);
+        /*foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
                     $installment = [
@@ -72,20 +74,18 @@ class PaymentRequestService
                         'payment_request_id' => $installment->installment_purchase->payment_request_id,
                         'amount_paid' => $installment->installment_purchase->amount_paid,
                     ];
-
                     $purchaseOrder->purchase_order_installments[$key] = $installment;
                 }
             }
-        }
+        }*/
         return $paymentRequests;
     }
 
     public function getAllPaymentRequest($requestInfo)
     {
-        $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->with($this->with), $requestInfo);
-
-        foreach ($paymentRequests as $paymentRequest) {
+        $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests, $requestInfo);
+        /*foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
                     $installment = [
@@ -103,18 +103,16 @@ class PaymentRequestService
                         'payment_request_id' => $installment->installment_purchase->payment_request_id,
                         'amount_paid' => $installment->installment_purchase->amount_paid,
                     ];
-
                     $purchaseOrder->purchase_order_installments[$key] = $installment;
                 }
             }
-        }
+        }*/
         return $paymentRequests;
     }
 
     public function getPaymentRequest($id)
     {
-        $paymentRequest = $this->paymentRequest->with($this->with)->findOrFail($id);
-
+        $paymentRequest = $this->paymentRequestClean->with($this->with)->findOrFail($id);
         if (!empty($paymentRequest->purchase_order)) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 if (!empty($purchaseOrder->purchase_order_installments)) {
