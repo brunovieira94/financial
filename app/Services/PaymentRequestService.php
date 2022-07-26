@@ -55,7 +55,7 @@ class PaymentRequestService
     public function getPaymentRequestByUser($requestInfo)
     {
         $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->where('user_id', auth()->user()->id), $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency'])->where('user_id', auth()->user()->id), $requestInfo);
         /*foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
@@ -84,7 +84,7 @@ class PaymentRequestService
     public function getAllPaymentRequest($requestInfo)
     {
         $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency']), $requestInfo);
         /*foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
