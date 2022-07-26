@@ -56,7 +56,7 @@ class PaymentRequestService
 
         foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,
@@ -87,7 +87,7 @@ class PaymentRequestService
 
         foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,
@@ -249,6 +249,16 @@ class PaymentRequestService
             activity()->disableLogging();
             $approval->status = 3;
             $approval->save();
+
+            if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentRequestHasPurchaseOrderInstallments) {
+                    if (PurchaseOrderHasInstallments::where('id', $paymentRequestHasPurchaseOrderInstallments['purchase_order_has_installments_id'])->exists()) {
+                        $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentRequestHasPurchaseOrderInstallments['purchase_order_has_installments_id']);
+                        $installmentPurchaseOrder->amount_paid -= $paymentRequestHasPurchaseOrderInstallments['amount_received'];
+                        $installmentPurchaseOrder->save();
+                    }
+                }
+            }
             activity()->enableLogging();
             return true;
         } else {
