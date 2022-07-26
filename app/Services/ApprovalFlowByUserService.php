@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
@@ -13,11 +14,13 @@ class ApprovalFlowByUserService
 {
     private $accountsPayableApprovalFlow;
     private $approvalFlow;
+    private $accountsPayableApprovalFlowClean;
 
-    public function __construct(AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
+    public function __construct(AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
+        $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
     }
 
     public function getAllAccountsForApproval($requestInfo)
@@ -28,21 +31,20 @@ class ApprovalFlowByUserService
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo, ['order']);
 
         if (in_array($maxOrder, $approvalFlowUserOrder->pluck('order')->toArray())) {
             $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
                 ->orWhere('order', '>', $maxOrder)
                 ->whereIn('status', [0, 2])
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
+                ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'approval_flow', 'reason_to_reject']);
         } else {
             $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
                 ->whereIn('status', [0, 2])
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
+                ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'approval_flow', 'reason_to_reject']);
         }
-
         $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
