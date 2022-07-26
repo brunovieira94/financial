@@ -173,7 +173,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     public function map($accountsPayableApprovalFlow): array
     {
         $this->totalTax = 0;
-        if($accountsPayableApprovalFlow->payment_request && array_key_exists('tax', $accountsPayableApprovalFlow->payment_request)){
+        if (isset($accountsPayableApprovalFlow->payment_request) && isset($accountsPayableApprovalFlow->payment_request->tax)) {
             foreach ($accountsPayableApprovalFlow->payment_request->tax as $value) {
                 $this->totalTax += $value['tax_amount'];
             }
