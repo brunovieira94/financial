@@ -32,10 +32,10 @@ class ApprovalFlowByUserService
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
 
         if (in_array($maxOrder, $approvalFlowUserOrder->pluck('order')->toArray())) {
-            $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+            $accountsPayableApprovalFlow
                 ->whereIn('status', [0, 2])
-                ->orWhere(function ($query) use ($maxOrder) {
-                    $query->where('order', '>', $maxOrder)->whereIn('status', [0, 2]);
+                ->where(function ($query) use ($approvalFlowUserOrder, $maxOrder) {
+                    return $query->whereIn('order', $approvalFlowUserOrder->toArray())->orWhere('order', '>', $maxOrder);
                 })
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
                 ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
