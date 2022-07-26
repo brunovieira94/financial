@@ -43,7 +43,7 @@ class ApprovalFlowByUserService
             $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
                 ->whereIn('status', [0, 2])
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'approval_flow', 'reason_to_reject']);
+                ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'payment_request.currency', 'approval_flow', 'reason_to_reject']);
         }
         $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
