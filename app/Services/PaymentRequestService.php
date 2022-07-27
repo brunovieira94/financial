@@ -113,13 +113,24 @@ class PaymentRequestService
     public function getPaymentRequest($id)
     {
         $paymentRequest = $this->paymentRequestClean->with($this->with)->findOrFail($id);
-        if (!empty($paymentRequest->purchase_order)) {
-            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                if (!empty($purchaseOrder->purchase_order_installments)) {
-                    foreach ($purchaseOrder->purchase_order_installments as $installment) {
-                        $installment->installment_purchase->amount_received = $installment->amount_received;
-                    }
-                }
+        foreach ($paymentRequest->purchase_order as $purchaseOrder) {
+            foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
+                $installment = [
+                    'id' => $installment->installment_purchase->id,
+                    'amount_received' => $installment->amount_received,
+                    'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
+                    'parcel_number' => $installment->installment_purchase->parcel_number,
+                    'portion_amount' => $installment->installment_purchase->portion_amount,
+                    'due_date' => $installment->installment_purchase->due_date,
+                    'note' => $installment->installment_purchase->note,
+                    'percentage_discount' => $installment->installment_purchase->percentage_discount,
+                    'money_discount' => $installment->installment_purchase->money_discount,
+                    'invoice_received' => $installment->installment_purchase->invoice_received,
+                    'invoice_paid' => $installment->installment_purchase->invoice_paid,
+                    'payment_request_id' => $installment->installment_purchase->payment_request_id,
+                    'amount_paid' => $installment->installment_purchase->amount_paid,
+                ];
+                $purchaseOrder->purchase_order_installments[$key] = $installment;
             }
         }
         return $paymentRequest;
