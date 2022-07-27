@@ -13,7 +13,7 @@ class CreatePurchaseOrderDelivery extends Migration
      */
     public function up()
     {
-        Schema::create('purchase_order_delivery', function (Blueprint $table) {
+        Schema::create('purchase_order_deliverys', function (Blueprint $table) {
             $table->id();
             $table->integer('payment_request_id')->unsigned();
             $table->foreign('payment_request_id')->references('id')->on('payment_requests')->constrained()->onUpdate('cascade')->onDelete('cascade');
@@ -23,7 +23,7 @@ class CreatePurchaseOrderDelivery extends Migration
             $table->foreign('product_id')->references('id')->on('products')->constrained()->onUpdate('cascade')->onDelete('cascade');
             $table->integer('service_id')->unsigned()->nullable();
             $table->foreign('service_id')->references('id')->on('services')->constrained()->onUpdate('cascade')->onDelete('cascade');
-            $table->integer('quantity')->nullable();
+            $table->integer('delivery_quantity')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -36,6 +36,6 @@ class CreatePurchaseOrderDelivery extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('purchase_order_delivery');
+        Schema::dropIfExists('purchase_order_deliverys');
     }
 }
