@@ -112,7 +112,7 @@ class PaymentRequestService
 
     public function getPaymentRequest($id)
     {
-        $paymentRequest = $this->paymentRequestClean->with($this->with)->findOrFail($id);
+        $paymentRequest = $this->paymentRequestClean->with($this->with)->withTrashed()->findOrFail($id);
         foreach ($paymentRequest->purchase_order as $purchaseOrder) {
             foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                 $installment = [
