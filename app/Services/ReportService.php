@@ -10,6 +10,7 @@ use App\Models\FormPayment;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
 use Config;
@@ -26,8 +27,9 @@ class ReportService
     private $paymentRequest;
     private $paymentRequestClean;
     private $accountsPayableApprovalFlowClean;
+    private $installmentClean;
 
-    public function __construct(AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean,PaymentRequestClean $paymentRequestClean,PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
+    public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean,PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
@@ -37,6 +39,7 @@ class ReportService
         $this->installment = $installment;
         $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
         $this->paymentRequestClean = $paymentRequestClean;
+        $this->installmentClean = $installmentClean;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -352,8 +355,8 @@ class ReportService
 
     public function getInstallmentsPayable($requestInfo)
     {
-        $query = $this->installment->query();
-        $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
+        $query = $this->installmentClean->query();
+        $query = $query->with(['cnab_generated_installment', 'payment_request', 'payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'payment_request.cnab_payment_request.cnab_generated']);
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('net_value', $requestInfo)) {
