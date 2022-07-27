@@ -26,7 +26,6 @@ class ApprovalFlowByUserService
     public function getAllAccountsForApproval($requestInfo)
     {
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
-        $maxOrder = $this->approvalFlow->max('order');
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
