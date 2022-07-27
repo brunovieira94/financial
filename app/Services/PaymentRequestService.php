@@ -247,16 +247,6 @@ class PaymentRequestService
             activity()->disableLogging();
             $approval->status = 3;
             $approval->save();
-
-            if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->exists()) {
-                foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $id)->get() as $paymentRequestHasPurchaseOrderInstallments) {
-                    if (PurchaseOrderHasInstallments::where('id', $paymentRequestHasPurchaseOrderInstallments['purchase_order_has_installments_id'])->exists()) {
-                        $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentRequestHasPurchaseOrderInstallments['purchase_order_has_installments_id']);
-                        $installmentPurchaseOrder->amount_paid -= $paymentRequestHasPurchaseOrderInstallments['amount_received'];
-                        $installmentPurchaseOrder->save();
-                    }
-                }
-            }
             activity()->enableLogging();
             return true;
         } else {
