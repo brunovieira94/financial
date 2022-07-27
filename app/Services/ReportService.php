@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
 use App\Models\CnabGenerated;
 use App\Models\FormPayment;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
@@ -21,8 +23,11 @@ class ReportService
     private $filterCanceled = false;
     private $cnabGenerated;
     private $installment;
+    private $paymentRequest;
+    private $paymentRequestClean;
+    private $accountsPayableApprovalFlowClean;
 
-    public function __construct(PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
+    public function __construct(AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean,PaymentRequestClean $paymentRequestClean,PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
@@ -30,6 +35,8 @@ class ReportService
         $this->supplyApprovalFlow = $supplyApprovalFlow;
         $this->cnabGenerated = $cnabGenerated;
         $this->installment = $installment;
+        $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
+        $this->paymentRequestClean = $paymentRequestClean;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -206,8 +213,8 @@ class ReportService
 
     public function getBillsToPay($requestInfo)
     {
-        $query = $this->paymentRequest->query();
-        $query = $query->with(['purchase_order', 'cnab_payment_request', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $query = $this->paymentRequestClean->query();
+        $query = $query->with(['provider', 'cost_center', 'approval.approval_flow', 'installments', 'currency', 'cnab_payment_request.cnab_generated']);
 
 
         if (array_key_exists('amount', $requestInfo)) {
