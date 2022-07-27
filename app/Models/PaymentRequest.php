@@ -198,6 +198,23 @@ class PaymentRequest extends Model
         return false;
     }
 
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function ($installmentPurchase) {
+            if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $installmentPurchase->id)->exists()) {
+                foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $installmentPurchase->id)->get() as $paymentRequestHasPurchaseOrderInstallments) {
+                    if (PurchaseOrderHasInstallments::where('id', $paymentRequestHasPurchaseOrderInstallments['purchase_order_has_installments_id'])->exists()) {
+                        $installmentPurchaseOrder = PurchaseOrderHasInstallments::findOrFail($paymentRequestHasPurchaseOrderInstallments['purchase_order_has_installments_id']);
+                        $installmentPurchaseOrder->amount_paid -= $paymentRequestHasPurchaseOrderInstallments['amount_received'];
+                        $installmentPurchaseOrder->save();
+                    }
+                }
+                PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $installmentPurchase->id)->delete();
+            }
+        });
+    }
+
     protected static function booted()
     {
         static::addGlobalScope(new ProfileCostCenterScope);

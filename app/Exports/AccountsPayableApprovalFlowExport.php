@@ -35,8 +35,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             return response([], 404);
 
         $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
-            ->where('status', 0)
-            ->orWhere('status', 2)
+            ->whereIn('status', [0, 2])
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
 
@@ -173,7 +172,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     public function map($accountsPayableApprovalFlow): array
     {
         $this->totalTax = 0;
-        if($accountsPayableApprovalFlow->payment_request && array_key_exists('tax', $accountsPayableApprovalFlow->payment_request)){
+        if (isset($accountsPayableApprovalFlow->payment_request) && isset($accountsPayableApprovalFlow->payment_request->tax)) {
             foreach ($accountsPayableApprovalFlow->payment_request->tax as $value) {
                 $this->totalTax += $value['tax_amount'];
             }
