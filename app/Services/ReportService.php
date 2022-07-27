@@ -30,7 +30,7 @@ class ReportService
     private $installmentClean;
 
     private $paymentRequestCleanWith = ['provider', 'cost_center', 'approval.approval_flow', 'installments', 'currency', 'cnab_payment_request.cnab_generated'];
-    private $installmentCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'cnab_payment_request.cnab_generated', 'group_payment.form_payment', 'bank_account_provider'];
+    private $installmentCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'cnab_generated_installment.generated_cnab', 'bank_account_provider'];
     private $accountsPayableApprovalFlowCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'payment_request.cnab_payment_request.cnab_generated'];
 
     public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
