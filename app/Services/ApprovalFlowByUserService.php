@@ -27,27 +27,17 @@ class ApprovalFlowByUserService
     public function getAllAccountsForApproval($requestInfo)
     {
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
-        $maxOrder = $this->approvalFlow->max('order');
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo, ['order']);
 
-        if (in_array($maxOrder, $approvalFlowUserOrder->pluck('order')->toArray())) {
-            $accountsPayableApprovalFlow
-                ->whereIn('status', [0, 2])
-                ->where(function ($query) use ($approvalFlowUserOrder, $maxOrder) {
-                    return $query->whereIn('order', $approvalFlowUserOrder->toArray())->orWhere('order', '>', $maxOrder);
-                })
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'approval_flow', 'reason_to_reject']);
-        } else {
-            $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
-                ->whereIn('status', [0, 2])
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'payment_request.currency', 'approval_flow', 'reason_to_reject']);
-        }
+        $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->whereIn('status', [0, 2])
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->with(['payment_request.provider', 'payment_request.company', 'payment_request.cost_center', 'payment_request.currency', 'approval_flow', 'reason_to_reject']);
+
         $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
