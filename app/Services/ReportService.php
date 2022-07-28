@@ -887,7 +887,6 @@ class ReportService
     public function getAllApprovedPurchaseOrderForIntegration($requestInfo)
     {
         $accountApproval = $this->supplyApprovalFlow;
-
         if (auth()->user()->role->filter_cost_center_supply) {
             $purchaseOrderIds = [];
             foreach (auth()->user()->cost_center as $userCostCenter) {
