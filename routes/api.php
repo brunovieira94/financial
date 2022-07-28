@@ -38,7 +38,9 @@ use App\Http\Controllers\ReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\PaidBillingInfoController;
+use App\Http\Controllers\Controller;
 use App\Http\Controllers\HotelApprovalFlowController;
+use App\Http\Controllers\InfoController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -402,7 +404,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 //Restful route -> Login
 Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
-    Route::post('/solve-log', [AuthController::class, 'log']);
 });
+
+Route::post('/solve-log', [AuthController::class, 'log']);
+Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
 
 
