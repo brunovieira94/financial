@@ -164,4 +164,9 @@ class PurchaseOrder extends Model
             return $approverStage;
         }
     }
+
+    public function payment_requests()
+    {
+        return $this->hasMany(PaymentRequestHasPurchaseOrders::class);
+    }
 }

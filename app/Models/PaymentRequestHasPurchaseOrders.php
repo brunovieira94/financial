@@ -9,7 +9,7 @@ class PaymentRequestHasPurchaseOrders extends Model
     protected $table = 'payment_request_has_purchase_orders';
     public $timestamps = false;
     protected $fillable = ['payment_request_id', 'purchase_order_id', 'reviewed'];
-    protected $hidden = ['payment_request_id', 'purchase_order_id', 'id'];
+    protected $hidden = [/*'payment_request_id', 'purchase_order_id',*/'id'];
 
     public function purchase_order()
     {
