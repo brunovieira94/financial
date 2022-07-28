@@ -79,6 +79,7 @@ class CheckUserHasPermission
         //     }
         // }
 
+        dd($routeAccessed);
         switch ($routeAccessed) {
             case 'approved-installment':
                 $routeAccessed = 'approved-payment-request';
@@ -96,6 +97,9 @@ class CheckUserHasPermission
                 $routeAccessed = 'payment-request';
             case 'bank-account';
                 $routeAccessed = 'provider';
+                break;
+            case 'installment';
+                $routeAccessed = 'payment-request';
                 break;
         }
 

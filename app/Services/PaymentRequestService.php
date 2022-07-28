@@ -15,6 +15,7 @@ use App\Models\BankAccount;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasAttachments;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Provider;
@@ -36,11 +37,11 @@ class PaymentRequestService
     private $groupFormPayment;
     private $attachments;
     private $paymentRequestClean;
-
+    private $installmentClean;
 
     private $with = ['purchase_order.purchase_order','purchase_order.purchase_order_installments', 'company', 'attachments', 'group_payment', 'tax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
-    public function __construct(PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
+    public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
@@ -50,6 +51,7 @@ class PaymentRequestService
         $this->groupFormPayment = $groupFormPayment;
         $this->attachments = $attachments;
         $this->paymentRequestClean = $paymentRequestClean;
+        $this->installmentClean = $installmentClean;
     }
 
     public function getPaymentRequestByUser($requestInfo)
@@ -589,4 +591,9 @@ class PaymentRequestService
             }
         }
     }
+    public function getInstallment($id)
+    {
+        return $this->installmentClean->with(['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', ])->findOrFail($id);
+    }
+
 }
