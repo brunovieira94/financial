@@ -38,7 +38,7 @@ class PaymentRequestService
     private $paymentRequestClean;
 
 
-    private $with = ['purchase_order.purchase_order','purchase_order.purchase_order_installments', 'company', 'attachments', 'group_payment', 'tax', 'approval.approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['purchase_order.purchase_order','purchase_order.purchase_order_installments', 'company', 'attachments', 'group_payment', 'tax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
 
     public function __construct(PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
