@@ -24,15 +24,15 @@ class Provider extends Model
     }
 
     use SoftDeletes;
-    protected $table='providers';
+    protected $table = 'providers';
     protected $casts = [
         'phones' => 'array',
     ];
-    protected $fillable = ['allows_registration_without_purchase_order', 'company_name', 'trade_name', 'alias', 'cnpj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email', 'user_id', 'responsible_phone', 'responsible_email', 'state_subscription', 'chart_of_accounts_id', 'cpf', 'rg', 'full_name', 'birth_date', 'provider_type', 'city_subscription', 'accept_billet_payment', 'credit_card_payment', 'international'];
+    protected $fillable = ['generic_provider', 'allows_registration_without_purchase_order', 'company_name', 'trade_name', 'alias', 'cnpj', 'responsible', 'provider_categories_id', 'cost_center_id', 'cep', 'cities_id', 'address', 'number', 'complement', 'district', 'phones', 'email', 'user_id', 'responsible_phone', 'responsible_email', 'state_subscription', 'chart_of_accounts_id', 'cpf', 'rg', 'full_name', 'birth_date', 'provider_type', 'city_subscription', 'accept_billet_payment', 'credit_card_payment', 'international'];
 
     public function bank_account()
     {
-        return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with(['bank', 'bank_account_default'])->whereNull('pix_key_type');
+        return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with(['bank', 'bank_account_default'])->whereNull('pix_key_type')->where('hidden', false);
     }
 
     public function provider_category()

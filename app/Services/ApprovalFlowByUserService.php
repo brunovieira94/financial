@@ -115,7 +115,31 @@ class ApprovalFlowByUserService
         }
 
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
-        return Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
+        $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
+
+        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow){
+            foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
+                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                    $installment = [
+                        'id' => $installment->installment_purchase->id,
+                        'amount_received' => $installment->amount_received,
+                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
+                        'parcel_number' => $installment->installment_purchase->parcel_number,
+                        'portion_amount' => $installment->installment_purchase->portion_amount,
+                        'due_date' => $installment->installment_purchase->due_date,
+                        'note' => $installment->installment_purchase->note,
+                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
+                        'money_discount' => $installment->installment_purchase->money_discount,
+                        'invoice_received' => $installment->installment_purchase->invoice_received,
+                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
+                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
+                        'amount_paid' => $installment->installment_purchase->amount_paid,
+                    ];
+                    $purchaseOrder->purchase_order_installments[$key] = $installment;
+                }
+            }
+        }
+        return $accountsPayableApprovalFlows;
     }
 
     public function approveAccount($id)
@@ -128,7 +152,7 @@ class ApprovalFlowByUserService
             ->doesntExist()
         ) {
             return response()->json([
-                'erro' => 'Não é permitido a esse usuário aprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                'error' => 'Não é permitido a esse usuário aprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
             ], 422);
         }
 
@@ -164,7 +188,7 @@ class ApprovalFlowByUserService
                         ->doesntExist()
                     ) {
                         return response()->json([
-                            'erro' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                            'error' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
@@ -192,7 +216,7 @@ class ApprovalFlowByUserService
                         ->doesntExist()
                     ) {
                         return response()->json([
-                            'erro' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                            'error' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
@@ -211,7 +235,7 @@ class ApprovalFlowByUserService
             }
         } else {
             return response()->json([
-                'erro' => 'Nenhuma conta selecionada',
+                'error' => 'Nenhuma conta selecionada',
             ], 422);
         }
     }
@@ -227,7 +251,7 @@ class ApprovalFlowByUserService
             ->doesntExist()
         ) {
             return response()->json([
-                'erro' => 'Não é permitido a esse usuário reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                'error' => 'Não é permitido a esse usuário reprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
             ], 422);
         }
 

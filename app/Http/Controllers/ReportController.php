@@ -63,7 +63,7 @@ class ReportController extends Controller
             if(!array_key_exists('company_id', $request->all()))
             {
                 return response()->json([
-                    'erro' => 'A empresa não foi informada'
+                    'error' => 'A empresa não foi informada'
                 ], 422);
             }
         }
@@ -205,6 +205,11 @@ class ReportController extends Controller
     public function approvedPurchaseOrder(Request $request)
     {
         return $this->reportService->getAllApprovedPurchaseOrder($request->all());
+    }
+
+    public function approvedPurchaseOrderForIntegration(Request $request)
+    {
+        return $this->reportService->getAllApprovedPurchaseOrderForIntegration($request->all());
     }
 
     public function getAllCnabGenerate(Request $request)

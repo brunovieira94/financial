@@ -263,8 +263,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/group-form-payment', [PaymentRequestController::class, 'groupFormPayment']);
         Route::get('/', [PaymentRequestController::class, 'index']);
         Route::get('/{id}', [PaymentRequestController::class, 'show']);
-        Route::post('/', [PaymentRequestController::class, 'store'])->middleware(['check.installments', 'check.values.invoice']);
-        Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice']);
+        Route::post('/', [PaymentRequestController::class, 'store'])->middleware(['check.installments', 'check.values.invoice', 'check.values.payment.request.integration']);
+        Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice', 'check.values.payment.request.integration']);
         Route::post('update-installment/{id}', [PaymentRequestController::class, 'updateInstallment']);
         Route::delete('/{id}', [PaymentRequestController::class, 'destroy']);
     });
@@ -300,6 +300,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/payment-requests-cnab-generated', [ReportController::class, 'generatedCNABPaymentRequestCNAB']);
         Route::get('/payment-requests-paid', [ReportController::class, 'paymentRequestPaid']);
         Route::get('/payment-requests-finished', [ReportController::class, 'paymentRequestFinished']);
+        Route::get('/approved-purchase-order-integration', [ReportController::class, 'approvedPurchaseOrderForIntegration']);
         Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
         Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
         Route::get('/payment-requests-cnab-generated-list/{id}', [ReportController::class, 'getCnabGenerate']);
@@ -401,4 +402,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 //Restful route -> Login
 Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
+    Route::post('/solve-log', [AuthController::class, 'log']);
 });
+
+

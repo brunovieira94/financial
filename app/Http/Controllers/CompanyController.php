@@ -43,7 +43,7 @@ class CompanyController extends Controller
         if(Company::where('company_id', $id)->exists())
         {
             return response()->json([
-                'erro' => 'Este empresa está associada a uma ou várias solicitações de pagamento.'
+                'error' => 'Este empresa está associada a uma ou várias solicitações de pagamento.'
             ], 422);
         }
 

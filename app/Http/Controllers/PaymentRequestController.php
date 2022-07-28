@@ -49,69 +49,51 @@ class PaymentRequestController extends Controller
         $requestInfo = $request->all();
 
         if (array_key_exists('invoice_number', $requestInfo)) {
+            // GARANTIR QUE O NÚMERO DE INVOICE OU NOTA FISCAL NÃO REPETE PARA O MESMO FORCEDOR
+            // SE FOR FORNECEDOR DIFERENTE PERMITE
             if (!self::checkInvoiceOrBilletProviderExists('invoice_number', $request->invoice_number, $requestInfo)) {
                 return response()->json([
-                    'erro' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
+                    'error' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
                         PaymentRequest::with('provider')
                         ->where('invoice_number', $request->invoice_number)
                         ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                         '.'
-                ], 409);
-            }
-            if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
-                if (!$requestInfo['force_registration']) {
-                    return response()->json([
-                        'erro' => 'O número de nota fiscal ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                            PaymentRequest::where('invoice_number', $request->invoice_number)
-                            ->first()->id .
-                            ', tem certeza que deseja cadastrar mesmo assim?'
-                    ], 424);
-                }
+                ], 422);
             }
         }
 
         foreach ($requestInfo['installments'] as $installment) {
             if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
+                // O Código do Boleto nunca pode repetir
                 if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                     return response()->json([
-                        'erro' => 'O código de barras informado já existe no sistema na conta ' .
+                        'error' => 'O código de barras informado já existe no sistema na conta ' .
                             PaymentRequest::with('installments')
                             ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                             ->first()->id .
                             ', para cadastrar a conta deve ser cancelada/apagada.'
-                    ], 409);
+                    ], 422);
                     break;
                 }
             }
             if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
+                // O número do Boleto só pode repetir se forem fornecedores diferentes
                 if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
                     return response()->json([
-                        'erro' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
+                        'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
                             PaymentRequest::with(['provider', 'installments'])
                             ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                             ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                             '.'
-                    ], 409);
+                    ], 422);
                     break;
-                }
-                if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
-                    if (!$requestInfo['force_registration']) {
-                        return response()->json([
-                            'erro' => 'O número do boleto já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                PaymentRequest::with('installments')
-                                ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
-                                ->first()->id .
-                                ', tem certeza que deseja cadastrar mesmo assim?'
-                        ], 424);
-                        break;
-                    }
                 }
             }
         }
 
         if (!self::checkInstallmentsPurchaseOrder($request->all())) {
             return response()->json([
-                'erro' => 'É necessário que informa ao menos parcela para cada pedido de compra.'
+                'error' => 'É necessário que informa ao menos parcela para cada pedido de compra.'
             ], 422);
         }
 
@@ -131,7 +113,7 @@ class PaymentRequestController extends Controller
                 ->doesntExist()
             ) {
                 return response()->json([
-                    'erro' => 'Não é permitido ao usuário editar a conta ' . $id . ', modifique o fluxo de aprovação.',
+                    'error' => 'Não é permitido ao usuário editar a conta ' . $id . ', modifique o fluxo de aprovação.',
                 ], 422);
             }
         }
@@ -141,22 +123,12 @@ class PaymentRequestController extends Controller
                 if (array_key_exists('invoice_number', $requestInfo)) {
                     if (!self::checkInvoiceOrBilletProviderExists('invoice_number', $request->invoice_number, $requestInfo)) {
                         return response()->json([
-                            'erro' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
+                            'error' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
                                 PaymentRequest::with('provider')
                                 ->where('invoice_number', $request->invoice_number)
                                 ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                                 '.'
-                        ], 409);
-                    }
-                    if (!self::checkInvoiceOrBilletExists('invoice_number', $request->invoice_number, $requestInfo)) {
-                        if (!$requestInfo['force_registration']) {
-                            return response()->json([
-                                'erro' => 'O número da nota fiscal ou invoice já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                    PaymentRequest::where('invoice_number', $request->invoice_number)
-                                    ->first()->id .
-                                    ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 424);
-                        }
+                        ], 422);
                     }
                 }
             }
@@ -169,12 +141,12 @@ class PaymentRequestController extends Controller
                     ->exists()) {
                     if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
                         return response()->json([
-                            'erro' => 'O código de barras informado já existe no sistema na conta ' .
+                            'error' => 'O código de barras informado já existe no sistema na conta ' .
                                 PaymentRequest::with('installments')
                                 ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                                 ->first()->id .
                                 ', para cadastrar a conta deve ser cancelada/apagada.'
-                        ], 409);
+                        ], 422);
                         break;
                     }
                 }
@@ -185,25 +157,13 @@ class PaymentRequestController extends Controller
                     ->exists()) {
                     if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
                         return response()->json([
-                            'erro' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
-                                PaymentRequest::with('provider')
-                                ->where('billet_number', $installment['billet_number'])
+                            'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
+                                PaymentRequest::with(['provider', 'installments'])
+                                ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                                 '.'
-                        ], 409);
+                        ], 422);
                         break;
-                    }
-                    if (!self::checkInvoiceOrBilletExists('billet_number', $installment['billet_number'], $requestInfo)) {
-                        if (!$requestInfo['force_registration']) {
-                            return response()->json([
-                                'erro' => 'O número do boleto já foi cadastrado no sistema em outro fornecedor na conta ' .
-                                    PaymentRequest::with('installments')
-                                    ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
-                                    ->first()->id .
-                                    ', tem certeza que deseja cadastrar mesmo assim?'
-                            ], 424);
-                            break;
-                        }
                     }
                 }
             }
@@ -211,7 +171,7 @@ class PaymentRequestController extends Controller
 
         if (!self::checkInstallmentsPurchaseOrder($request->all())) {
             return response()->json([
-                'erro' => 'É necessário que informa ao menos parcela para cada pedido de compra.'
+                'error' => 'É necessário que informa ao menos parcela para cada pedido de compra.'
             ], 422);
         }
 

@@ -58,6 +58,7 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, ShouldAuto
             $accountsPayableApprovalFlow->payment_request->bar_code,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
+            $accountsPayableApprovalFlow->payment_request->note,
         ];
     }
 
@@ -86,6 +87,7 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, ShouldAuto
             'Código de barras',
             'Pŕoxima data de prorrogação',
             'Data de Criação',
+            'Observações',
         ];
     }
 }
