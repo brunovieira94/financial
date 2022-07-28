@@ -360,8 +360,10 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/listinvoice/{id}', [PurchaseOrderController::class, 'listinvoice']);
         Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
         //Route::get('/getdelivery/{id}', [PurchaseOrderController::class, 'getDelivery']);
-        Route::put('/putdelivery', [PurchaseOrderController::class, 'putDelivery']);
+        //Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
     });
+
+    Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
 
     Route::prefix('purchase-request')->group(function () {
         Route::get('/', [PurchaseRequestController::class, 'index']);
