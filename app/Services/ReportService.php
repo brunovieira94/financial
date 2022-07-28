@@ -902,7 +902,7 @@ class ReportService
                 }
             }
 
-            $accountApproval->whereIn('id_purchase_order', $purchaseOrderIds);
+            $accountApproval = $accountApproval->whereIn('id_purchase_order', $purchaseOrderIds);
         }
 
         $accountApproval = $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
