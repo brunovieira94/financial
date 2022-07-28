@@ -37,6 +37,7 @@ use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\PaidBillingInfoController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
@@ -191,6 +192,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
         Route::post('/export/{approvalStatus}', [BillingController::class, 'export']);
+    });
+
+    Route::prefix('paid-billing-info')->group(function () {
+        Route::get('/', [PaidBillingInfoController::class, 'index']);
+        Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
+        Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
+        Route::post('/import', [PaidBillingInfoController::class, 'import']);
+        //Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {

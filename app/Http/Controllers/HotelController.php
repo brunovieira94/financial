@@ -49,7 +49,10 @@ class HotelController extends Controller
     public function import()
     {
         $this->hotelImport->import(request()->file('import_file'));
-        return response('');
+        return response([
+            'not_imported' => $this->hotelImport->not_imported,
+            'imported' => $this->hotelImport->imported,
+        ]);
     }
 
     public function export(Request $request)
