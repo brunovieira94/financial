@@ -74,7 +74,7 @@ class PutProviderRequest extends FormRequest
             ->ignore($this->id),
             ],
             'full_name' => 'string|max:255|prohibited_if:provider_type,==,J',
-            'birth_date' => 'date|max:255|prohibited_if:provider_type,==,J',
+            'birth_date' => 'date',
             'international' => 'boolean',
         ];
     }

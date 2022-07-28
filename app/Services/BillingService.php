@@ -55,6 +55,8 @@ class BillingService
     {
         $billing = $this->billing->findOrFail($id);
         $this->cangoorooService->updateCangoorooData($billing['reserve']);
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billing['reserve']);
+        $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($id);
     }
 
@@ -71,6 +73,7 @@ class BillingService
             ], 422);
         }
         $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo['reserve']);
         $billing = $billing->create($billingInfo);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -93,6 +96,7 @@ class BillingService
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
         $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo['reserve']);
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -103,5 +107,10 @@ class BillingService
         $billing->approval_status =  Config::get('constants.status.canceled');
         $billing->save();
         return true;
+    }
+
+    public function getPaymentStatus($reserve)
+    {
+        
     }
 }

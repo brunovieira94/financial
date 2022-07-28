@@ -56,7 +56,7 @@ class PaymentRequestService
 
         foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,
@@ -87,7 +87,7 @@ class PaymentRequestService
 
         foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,

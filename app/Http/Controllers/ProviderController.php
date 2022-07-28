@@ -8,7 +8,9 @@ use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\PutProviderRequest;
 use App\Imports\ProvidersImport;
 use App\Exports\ProvidersExport;
+use App\Models\PaymentRequest;
 use App\Models\Provider;
+use App\Models\PurchaseOrder;
 
 class ProviderController extends Controller
 {
@@ -43,10 +45,16 @@ class ProviderController extends Controller
 
     public function destroy($id)
     {
-        if(Provider::where('provider_id', $id)->exists())
+        if(PaymentRequest::where('provider_id', $id)->exists())
         {
             return response()->json([
                 'error' => 'Este fornecedor está associado a uma ou várias solicitações de pagamento.'
+            ], 422);
+        }
+        if(PurchaseOrder::where('provider_id', $id)->exists())
+        {
+            return response()->json([
+                'error' => 'Este fornecedor está associado a um pedido de compra.'
             ], 422);
         }
 
