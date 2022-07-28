@@ -6,6 +6,7 @@ use App\Models\Module;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderClean;
 use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasCompanies;
 use App\Models\PurchaseOrderHasServices;
@@ -35,12 +36,14 @@ class PurchaseOrderService
     private $attachments;
     private $paymentRequestHasPurchaseOrders;
     private $paymentRequest;
+    private $purchaseOrderClean;
 
     private $with = ['user', 'installments', 'approval', 'cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests'];
 
-    public function __construct(PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments, PaymentRequestHasPurchaseOrders $paymentRequestHasPurchaseOrders, PaymentRequest $paymentRequest)
+    public function __construct(PurchaseOrderClean $purchaseOrderClean, PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments, PaymentRequestHasPurchaseOrders $paymentRequestHasPurchaseOrders, PaymentRequest $paymentRequest)
     {
         $this->purchaseOrder = $purchaseOrder;
+        $this->purchaseOrderClean = $purchaseOrderClean;
         $this->purchaseRequest = $purchaseRequest;
         $this->purchaseOrderHasProducts = $purchaseOrderHasProducts;
         $this->purchaseRequestHasProducts = $purchaseRequestHasProducts;
@@ -57,7 +60,7 @@ class PurchaseOrderService
 
     public function getAllPurchaseOrder($requestInfo)
     {
-        $purchaseOrder = Utils::search($this->purchaseOrder, $requestInfo);
+        $purchaseOrder = Utils::search($this->purchaseOrderClean, $requestInfo);
 
         if (auth()->user()->role->filter_cost_center_supply) {
             $purchaseOrderIds = [];
@@ -103,7 +106,7 @@ class PurchaseOrderService
             }
         }
 
-        return Utils::pagination($purchaseOrder->with($this->with), $requestInfo);
+        return Utils::pagination($purchaseOrder->with(['provider', 'cost_centers', 'approval.approval_flow', 'services', 'products']), $requestInfo);
     }
 
     public function getPurchaseOrder($id)
