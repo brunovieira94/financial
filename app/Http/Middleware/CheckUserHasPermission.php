@@ -79,7 +79,6 @@ class CheckUserHasPermission
         //     }
         // }
 
-        dd($routeAccessed);
         switch ($routeAccessed) {
             case 'approved-installment':
                 $routeAccessed = 'approved-payment-request';
