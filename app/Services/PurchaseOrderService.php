@@ -111,7 +111,7 @@ class PurchaseOrderService
         return Utils::pagination($purchaseOrder->with(['provider', 'cost_centers', 'approval.approval_flow', 'services', 'products']), $requestInfo);
         */
 
-        $purchaseOrder = Utils::search($this->purchaseOrderClean, $requestInfo);
+        $purchaseOrder = Utils::search($this->purchaseOrder, $requestInfo);
 
         if (auth()->user()->role->filter_cost_center_supply) {
             $purchaseOrderIds = [];
