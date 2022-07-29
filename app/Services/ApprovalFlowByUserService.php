@@ -2,6 +2,11 @@
 
 namespace App\Services;
 
+use App\Http\Resources\ApprovalFlowByUserCollection;
+use App\Http\Resources\ApprovalFlowByUserResource;
+use App\Http\Resources\PaymentRequestCollection;
+use App\Http\Resources\reports\ApprovalFlowByUserResource as ReportsApprovalFlowByUserResource;
+use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
@@ -19,7 +24,7 @@ class ApprovalFlowByUserService
     private $accountsPayableApprovalFlowClean;
     private $paymentRequestClean;
 
-    private $paymentRequestCleanWith = ['company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
+    private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
 
     public function __construct(PaymentRequestClean $paymentRequestClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
@@ -45,7 +50,7 @@ class ApprovalFlowByUserService
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
-        return Utils::pagination($paymentRequest, $requestInfo);
+        return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo));
     }
 
     public function approveAccount($id)
