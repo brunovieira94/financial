@@ -61,6 +61,7 @@ class PurchaseOrderService
 
     public function getAllPurchaseOrder($requestInfo)
     {
+        /*
         $purchaseOrder = Utils::search($this->purchaseOrderClean, $requestInfo);
 
         if (auth()->user()->role->filter_cost_center_supply) {
@@ -108,6 +109,55 @@ class PurchaseOrderService
         }
 
         return Utils::pagination($purchaseOrder->with(['provider', 'cost_centers', 'approval.approval_flow', 'services', 'products']), $requestInfo);
+        */
+
+        $purchaseOrder = Utils::search($this->purchaseOrderClean, $requestInfo);
+
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $purchaseOrderIds = [];
+            foreach (auth()->user()->cost_center as $userCostCenter) {
+                $purchaseOrderCostCenters = PurchaseOrderHasCostCenters::where('cost_center_id', $userCostCenter->id)->get(['purchase_order_id']);
+                foreach ($purchaseOrderCostCenters as $purchaseOrderCostCenter) {
+                    $purchaseOrderIds[] = $purchaseOrderCostCenter->purchase_order_id;
+                }
+            }
+            $purchaseOrder->whereIn('id', $purchaseOrderIds);
+        }
+
+        if (array_key_exists('provider', $requestInfo)) {
+            $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $purchaseOrder->whereHas('cost_centers', function ($query) use ($requestInfo) {
+                $query->where('cost_center_id', $requestInfo['cost_center']);
+            });
+        }
+
+        if (array_key_exists('service', $requestInfo)) {
+            $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
+                $query->where('service_id', $requestInfo['service']);
+            });
+        }
+
+        if (array_key_exists('product', $requestInfo)) {
+            $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
+                $query->where('product_id', $requestInfo['product']);
+            });
+        }
+
+        if (array_key_exists('billing_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['billing_date'])) {
+                $purchaseOrder->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['billing_date'])) {
+                $purchaseOrder->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+            }
+        }
+
+        return Utils::pagination($purchaseOrder->with($this->with), $requestInfo);
     }
 
     public function getPurchaseOrder($id)
