@@ -408,5 +408,6 @@ Route::prefix('/auth')->group(function () {
 
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
+Route::get('/delete-tax', [InfoController::class, 'taxDelete']);
 
 

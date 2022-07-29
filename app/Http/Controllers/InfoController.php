@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentRequestHasTax;
+use App\Models\TypeOfTax;
 use DB;
 use Illuminate\Http\Request;
 
@@ -29,4 +31,20 @@ class InfoController extends Controller
             'tax' => $taxDuplicate
         ], 200);
     }
+
+    public function taxDelete(Request $request)
+    {
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [9])->update(['type_of_tax_id' => 2]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [10])->update(['type_of_tax_id' => 3]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [12])->update(['type_of_tax_id' => 5]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [14])->update(['type_of_tax_id' => 7]);
+        TypeOfTax::destroy([9,10,12,14]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [11,4])->update(['type_of_tax_id' => 15]);
+        TypeOfTax::destroy([11,4]);
+
+        return response()->json([
+            'sucess' => 'taxas deletadas e atualizadas'
+        ], 200);
+    }
+
 }
