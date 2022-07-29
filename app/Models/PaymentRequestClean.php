@@ -97,7 +97,7 @@ class PaymentRequestClean extends Model
 
     public function approval()
     {
-        return $this->hasOne(AccountsPayableApprovalFlow::class, 'payment_request_id', 'id'); //->with('approval_flow');
+        return $this->hasOne(AccountsPayableApprovalFlowClean::class, 'payment_request_id', 'id'); //->with('approval_flow');
     }
 
     public function installments()
