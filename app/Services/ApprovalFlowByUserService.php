@@ -37,7 +37,6 @@ class ApprovalFlowByUserService
             return response([], 404);
 
         $paymentRequest = Utils::search($this->paymentRequestClean, $requestInfo, ['order']);
-
         $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
             $query->whereIn('order', $approvalFlowUserOrder->toArray())
                 ->whereIn('status', [0, 2])
