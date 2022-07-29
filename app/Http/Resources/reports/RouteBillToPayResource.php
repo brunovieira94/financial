@@ -27,6 +27,9 @@ class RouteBillToPayResource extends JsonResource
             'approval' => new ReportsApprovalResource($this->approval),
             'days_late' => $this->days_late,
             'amount' => $this->amount,
+            'net_value' => $this->net_value,
+            'pay_date' => $this->pay_date,
+            'currency' => new ReportsCurrencyResource($this->currency),
             'cnab_payment_request' => new ReportsCnabPaymentRequestResource($this->cnab_payment_request),
         ];
     }
