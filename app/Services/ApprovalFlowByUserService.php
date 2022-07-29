@@ -19,7 +19,7 @@ class ApprovalFlowByUserService
     private $accountsPayableApprovalFlowClean;
     private $paymentRequestClean;
 
-    private $paymentRequestCleanWith = ['provider', 'cost_center', 'approval.approval_flow', 'installments', 'currency', 'cnab_payment_request.cnab_generated'];
+    private $paymentRequestCleanWith = ['company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
 
     public function __construct(PaymentRequestClean $paymentRequestClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
@@ -40,10 +40,10 @@ class ApprovalFlowByUserService
         $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
             $query->whereIn('order', $approvalFlowUserOrder->toArray())
                 ->whereIn('status', [0, 2])
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->with($this->paymentRequestCleanWith);
+                ->where('deleted_at', '=', null);
         });
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
+        $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
         return Utils::pagination($paymentRequest, $requestInfo);
     }
