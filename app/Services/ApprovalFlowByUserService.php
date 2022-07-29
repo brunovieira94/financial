@@ -43,7 +43,7 @@ class ApprovalFlowByUserService
                 ->where('deleted_at', '=', null);
         });
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
-        $paymentRequest->with($this->paymentRequestCleanWith);
+        $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
         return Utils::pagination($paymentRequest, $requestInfo);
     }
