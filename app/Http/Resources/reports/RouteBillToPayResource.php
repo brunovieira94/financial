@@ -4,7 +4,7 @@ namespace App\Http\Resources\reports;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class RouteApprovalFlowByUserResource extends JsonResource
+class RouteBillToPayResource extends JsonResource
 {
     /**
      * Transform the resource collection into an array.
@@ -23,8 +23,7 @@ class RouteApprovalFlowByUserResource extends JsonResource
             'created_at' => $this->created_at,
             'cost_center' => new ReportsCostCenterResource($this->cost_center),
             'approval' => new ReportsApprovalResource($this->approval),
-            'applicant_can_edit' => $this->applicant_can_edit,
-            'next_extension_date' => $this->next_extension_date
+            'days_late' => $this->days_late,
         ];
     }
 }
