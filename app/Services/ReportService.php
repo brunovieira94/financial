@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\reports\RouteBillToPayResource;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
@@ -345,7 +346,7 @@ class ReportService
         }
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
-        return Utils::pagination($query, $requestInfo);
+        return RouteBillToPayResource::collection(Utils::pagination($query, $requestInfo));
     }
 
     public function getInstallmentsPayable($requestInfo)
