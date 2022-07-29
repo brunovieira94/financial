@@ -4,6 +4,7 @@ namespace App\Services;
 
 
 use App\Models\Billing;
+use App\Models\PaidBillingInfo;
 use Config;
 use Illuminate\Http\Request;
 
@@ -55,7 +56,7 @@ class BillingService
     {
         $billing = $this->billing->findOrFail($id);
         $this->cangoorooService->updateCangoorooData($billing['reserve']);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billing['reserve']);
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billing);
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($id);
     }
@@ -73,7 +74,7 @@ class BillingService
             ], 422);
         }
         $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo['reserve']);
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo);
         $billing = $billing->create($billingInfo);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -96,7 +97,7 @@ class BillingService
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
         $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo['reserve']);
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo);
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -109,8 +110,20 @@ class BillingService
         return true;
     }
 
-    public function getPaymentStatus($reserve)
+    public function getPaymentStatus($billing)
     {
-        
+        $reserve = $billing['reserve'];
+        $paidReserves = PaidBillingInfo::where('reserve', $reserve)->get();
+        if(empty($paidReserves->toArray())){
+            return "Não Pago";
+        }
+        else{
+            $sum = 0;
+            foreach ($paidReserves as $paidReserve) {
+                $sum += $paidReserve['supplier_value'];
+            }
+            if($sum >= ($billing['supplier_value']-5)) return "Pago";
+            else return "Pago - Incompleto";
+        }
     }
 }

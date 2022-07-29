@@ -183,9 +183,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('billing')->group(function () {
-        Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
-        Route::get('/{id}', [BillingController::class, 'show']);
+        Route::get('/show/{id}', [BillingController::class, 'show']);
+        Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
         Route::put('/approve/{id}', [BillingController::class, 'approve']);
