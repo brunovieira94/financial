@@ -6,6 +6,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class RouteApprovalFlowByUserResource extends JsonResource
 {
+    public static $wrap = null;
     /**
      * Transform the resource collection into an array.
      *

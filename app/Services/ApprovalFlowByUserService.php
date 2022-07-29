@@ -7,6 +7,7 @@ use App\Http\Resources\ApprovalFlowByUserResource;
 use App\Http\Resources\PaymentRequestCollection;
 use App\Http\Resources\reports\ApprovalFlowByUserResource as ReportsApprovalFlowByUserResource;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
+use App\Http\Resources\RouteApprovalFlowByUserCollection;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
@@ -50,7 +51,7 @@ class ApprovalFlowByUserService
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
-        return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo));
+        return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo)); //;
     }
 
     public function approveAccount($id)
