@@ -300,6 +300,10 @@ class PaymentRequestService
                     $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
                 }
 
+                if (!array_key_exists('portion_amount', $installments)) {
+                    $installments['portion_amount'] = $installments['initial_value'];
+                }
+
                 if (array_key_exists('id', $installments)) {
                     $installments['parcel_number'] = $key + 1;
                     $installmentBD = PaymentRequestHasInstallments::findOrFail($installments['id']);
