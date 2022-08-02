@@ -15,7 +15,8 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
     private $totalTax;
 
 
-    public function __construct($requestInfo){
+    public function __construct($requestInfo)
+    {
         $this->requestInfo = $requestInfo;
     }
 
@@ -24,8 +25,8 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
     public function collection()
     {
         return AccountsPayableApprovalFlow::with(['payment_request_trashed'])
-        ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null)
-        ->get();
+            ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null)
+            ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
@@ -37,7 +38,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
 
         return [
             $accountsPayableApprovalFlow->payment_request_trashed->id,
-            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? 'CNPJ: '.$accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : 'CPF: '. $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
+            $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj ? 'CNPJ: ' . $accountsPayableApprovalFlow->payment_request_trashed->provider->cnpj : 'CPF: ' . $accountsPayableApprovalFlow->payment_request_trashed->provider->cpf) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->provider ? ($accountsPayableApprovalFlow->payment_request_trashed->provider->company_name ? $accountsPayableApprovalFlow->payment_request_trashed->provider->company_name : $accountsPayableApprovalFlow->payment_request_trashed->provider->full_name) : $accountsPayableApprovalFlow->payment_request_trashed->provider,
             $accountsPayableApprovalFlow->payment_request_trashed->emission_date,
             $accountsPayableApprovalFlow->payment_request_trashed->pay_date,
@@ -58,7 +59,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->bar_code,
             $accountsPayableApprovalFlow->payment_request_trashed->next_extension_date,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
-            $accountsPayableApprovalFlow->payment_request->note,
+            $accountsPayableApprovalFlow->payment_request_trashed->note,
         ];
     }
 
