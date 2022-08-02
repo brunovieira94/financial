@@ -68,7 +68,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
             $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
             $paymentRequest->note,
-            $paymentRequest->approval->approval_flow ? $paymentRequest->approval->approval_flow->role->title : '',
+            $paymentRequest->approval->approval_flow_first['title'],
             Config::get('constants.statusPt.'.$paymentRequest->approval->status)
         ];
     }

@@ -60,7 +60,7 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, ShouldAuto
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
-            $accountsPayableApprovalFlow->payment_request->approval->approval_flow ? $accountsPayableApprovalFlow->payment_request->approval->approval_flow->role->title : '',
+            $accountsPayableApprovalFlow->payment_request->approval->approval_flow_first['title'],
             Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }

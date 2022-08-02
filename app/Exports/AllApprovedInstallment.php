@@ -58,7 +58,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->discount,
             $installment->portion_amount,
             $installment->note,
-            $installment->payment_request->approval->approval_flow ? $installment->payment_request->approval->approval_flow->role->title : '',
+            $installment->payment_request->approval->approval_flow_first['title'],
             Config::get('constants.statusPt.'.$installment->payment_request->approval->status)
         ];
     }
