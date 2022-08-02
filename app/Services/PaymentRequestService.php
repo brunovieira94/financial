@@ -302,6 +302,8 @@ class PaymentRequestService
 
                 if (!array_key_exists('portion_amount', $installments)) {
                     $installments['portion_amount'] = $installments['initial_value'];
+                } else if ($installments['portion_amount'] <= 0) {
+                    $installments['portion_amount'] = $installments['initial_value'];
                 }
 
                 if (array_key_exists('id', $installments)) {
@@ -315,6 +317,8 @@ class PaymentRequestService
                     $installments['parcel_number'] = $key + 1;
                     $installments['status'] = 0;
                     if (!array_key_exists('portion_amount', $installments)) {
+                        $installments['portion_amount'] = $installments['initial_value'];
+                    } else if ($installments['portion_amount'] <= 0) {
                         $installments['portion_amount'] = $installments['initial_value'];
                     }
                     if ($updateCompetence) {
