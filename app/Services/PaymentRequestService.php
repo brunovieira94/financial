@@ -314,7 +314,9 @@ class PaymentRequestService
                     $installments['payment_request_id'] = $paymentRequest['id'];
                     $installments['parcel_number'] = $key + 1;
                     $installments['status'] = 0;
-
+                    if (!array_key_exists('portion_amount', $installments)) {
+                        $installments['portion_amount'] = $installments['initial_value'];
+                    }
                     if ($updateCompetence) {
                         if (!array_key_exists('competence_date', $installments)) {
                             $date = new Carbon($installments['due_date']);
