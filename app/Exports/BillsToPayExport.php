@@ -186,6 +186,8 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
             $paymentRequest->note,
+            $paymentRequest->approval->approval_flow ? $paymentRequest->approval->approval_flow->role->title : '',
+            Config::get('constants.statusPt.'.$paymentRequest->approval->status)
         ];
     }
 
@@ -215,6 +217,8 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             'Pŕoxima data de prorrogação',
             'Data de Criação',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }
