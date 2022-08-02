@@ -25,7 +25,12 @@ class RouteApprovalFlowByUserResource extends JsonResource
             'cost_center' => new ReportsCostCenterResource($this->cost_center),
             'approval' => new ReportsApprovalResource($this->approval),
             'applicant_can_edit' => $this->applicant_can_edit,
-            'next_extension_date' => $this->next_extension_date
+            'next_extension_date' => $this->next_extension_date,
+            'payment_type' => $this->payment_type,
+            'emission_date' => $this->emission_date,
+            'net_value' => $this->net_value,
+            'invoice_number' => $this->invoice_number,
+            'pay_date' => $this->pay_date,
         ];
     }
 }

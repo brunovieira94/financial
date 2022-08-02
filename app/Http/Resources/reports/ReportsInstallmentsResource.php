@@ -23,6 +23,8 @@ class ReportsInstallmentsResource extends JsonResource
             'initial_value' => $this->initial_value,
             'fine' => $this->fine,
             'percentage_discount' => $this->percentage_discount,
+            'billet_number' => $this->billet_number,
+            'bar_code' => $this->bar_code,
         ];
     }
 }
