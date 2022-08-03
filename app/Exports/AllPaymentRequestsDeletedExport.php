@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Config;
 
 class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
@@ -60,6 +61,8 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->next_extension_date,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
             $accountsPayableApprovalFlow->payment_request_trashed->note,
+            $accountsPayableApprovalFlow->payment_request_trashed->approval->approval_flow_first['title'],
+            Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request_trashed->approval->status)
         ];
     }
 
@@ -89,6 +92,8 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             'Pŕoxima data de prorrogação',
             'Data de Criação',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

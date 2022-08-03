@@ -167,6 +167,8 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->discount,
             $query->portion_amount,
             $query->note,
+            $query->payment_request->approval->approval_flow_first['title'],
+            Config::get('constants.statusPt.'.$query->payment_request->approval->status)
         ];
     }
 
@@ -186,6 +188,8 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             'Desconto',
             'Valor Final',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

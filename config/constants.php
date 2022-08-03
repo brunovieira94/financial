@@ -11,5 +11,15 @@ return [
         'error' => '5',
         'cnab generated' => '6',
         'finished' => '7',
+    ],
+    'statusPt' => [
+        'Em Processo',
+        'Aprovada',
+        'Reprovada',
+        'Cancelada',
+        'Paga',
+        'Erro',
+        'CNAB Gerado',
+        'Finalizada',
     ]
 ];
