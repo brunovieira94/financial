@@ -30,6 +30,7 @@ class PaymentRequest extends Model
     protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'group_approval_flow_id',
         'company_id',
         'group_form_payment_id',
         'note',
@@ -56,6 +57,11 @@ class PaymentRequest extends Model
         'form_payment',
         'payment_type',
     ];
+
+    public function group_approval_flow()
+    {
+        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id')->with('approval_flow');
+    }
 
     public function purchase_order()
     {

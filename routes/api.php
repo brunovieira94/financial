@@ -159,7 +159,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
-        Route::get('/all', [ApprovalFlowController::class, 'index']);
+        Route::put('/{id}', [ApprovalFlowController::class, 'update']);
+        Route::delete('/{id}', [ApprovalFlowController::class, 'destroy']);
+        Route::get('/{id}', [ApprovalFlowController::class, 'show']);
     });
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {

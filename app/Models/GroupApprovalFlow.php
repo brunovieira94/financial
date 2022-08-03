@@ -9,12 +9,12 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 use App\Models\Role;
 
-class ApprovalFlow extends Model
+class GroupApprovalFlow extends Model
 {
     // Logs
     use LogsActivity;
     protected static $logAttributes = ['*'];
-    protected static $logName = 'approval_flow';
+    protected static $logName = 'group_approval_flow';
     public function tapActivity(Activity $activity, string $eventName)
     {
         $user = auth()->user();
@@ -23,13 +23,11 @@ class ApprovalFlow extends Model
     }
 
     use SoftDeletes;
-    protected $table='approval_flow';
-    protected $fillable = ['order','role_id','competency', 'extension', 'filter_cost_center', 'group_approval_flow_id'];
-    protected $hidden = ['role_id'];
-    //public $timestamps = false;
+    protected $table='group_approval_flow';
+    protected $fillable = ['title', 'description'];
 
-    public function role()
+    public function approval_flow()
     {
-        return $this->hasOne(Role::class, 'id', 'role_id')->withTrashed();
+        return $this->hasMany(ApprovalFlow::class, 'group_approval_flow_id', 'id')->with('role');
     }
 }

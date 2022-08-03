@@ -28,6 +28,7 @@ class StoreCostCenterRequest extends FormRequest
             'title' => 'required|max:255' ,
             'parent' => 'nullable|integer|exists:cost_center,id',
             'code' => new DuplicateRoleCostCenter(request()->input('parent')),
+            'group_approval_flow_id' => 'required|integer|exists:group_approval_flow,id'
         ];
     }
 
@@ -35,6 +36,7 @@ class StoreCostCenterRequest extends FormRequest
     {
         return [
             'title' => 'centro de custos',
+            'group_approval_flow_id' => 'grupo de aprovação'
         ];
     }
 }

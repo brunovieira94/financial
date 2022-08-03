@@ -22,18 +22,21 @@ class ApprovalFlowByUserService
 
     public function getAllAccountsForApproval($requestInfo)
     {
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order', 'group_approval_flow_id']);
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
 
-        $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+        $accountsPayableApprovalFlow->whereIn('order', $approvalFlowUserOrder->pluck('order'))
             ->whereIn('status', [0, 2])
             ->whereRelation('payment_request', 'deleted_at', '=', null)
             ->with(['payment_request', 'approval_flow', 'reason_to_reject']);
 
+        $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($approvalFlowUserOrder) {
+            $query->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'));
+        });
 
         $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
@@ -117,9 +120,9 @@ class ApprovalFlowByUserService
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
 
-        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow){
+        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow) {
             foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,
@@ -145,18 +148,19 @@ class ApprovalFlowByUserService
     public function approveAccount($id)
     {
         $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['group_approval_flow_id']);
 
         if ($this->approvalFlow
             ->where('order', $accountApproval->order)
             ->where('role_id', auth()->user()->role_id)
+            ->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'))
             ->doesntExist()
         ) {
             return response()->json([
                 'error' => 'Não é permitido a esse usuário aprovar a conta ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
             ], 422);
         }
-
-        $maxOrder = $this->approvalFlow->max('order');
+        $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
         $accountApproval->status = 0;
 
         if ($accountApproval->order >= $maxOrder) {
@@ -175,16 +179,18 @@ class ApprovalFlowByUserService
 
     public function approveManyAccounts($requestInfo)
     {
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['group_approval_flow_id']);
         if (array_key_exists('ids', $requestInfo)) {
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
                     $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($value);
-                    $maxOrder = $this->approvalFlow->max('order');
+                    $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
                     $accountApproval->status = Config::get('constants.status.disapproved');
 
                     if ($this->approvalFlow
                         ->where('order', $accountApproval->order)
                         ->where('role_id', auth()->user()->role_id)
+                        ->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'))
                         ->doesntExist()
                     ) {
                         return response()->json([
@@ -213,6 +219,7 @@ class ApprovalFlowByUserService
                     if ($this->approvalFlow
                         ->where('order', $accountApproval->order)
                         ->where('role_id', auth()->user()->role_id)
+                        ->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'))
                         ->doesntExist()
                     ) {
                         return response()->json([
@@ -243,11 +250,13 @@ class ApprovalFlowByUserService
     public function reproveAccount($id, Request $request)
     {
         $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
+        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['group_approval_flow_id']);
         $maxOrder = $this->approvalFlow->max('order');
 
         if ($this->approvalFlow
             ->where('order', $accountApproval->order)
             ->where('role_id', auth()->user()->role_id)
+            ->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'))
             ->doesntExist()
         ) {
             return response()->json([
