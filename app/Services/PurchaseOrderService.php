@@ -210,7 +210,10 @@ class PurchaseOrderService
             $this->putCostCenters($id, $purchaseOrderInfo);
             $this->putAttachments($id, $purchaseOrderInfo, $request);
 
-            $discount = 0;
+            $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
+
+            //validar valor total das parcelas
+            /*$discount = 0;
             $new_final_negotiated_total_value = 0;
             foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
                 $discount += $installments['discount'];
@@ -227,7 +230,7 @@ class PurchaseOrderService
                 return response()->json([
                     'error' => 'O valor total inicial e o valor total das parcelas não são iguais. Por favor validar o valor das parcelas.',
                 ], 422);
-            }
+            }*/
 
             return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
         } else {
