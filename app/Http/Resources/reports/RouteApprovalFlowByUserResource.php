@@ -31,6 +31,7 @@ class RouteApprovalFlowByUserResource extends JsonResource
             'net_value' => $this->net_value,
             'invoice_number' => $this->invoice_number,
             'pay_date' => $this->pay_date,
+            'currency' => new ReportsCurrencyResource($this->currency),
         ];
     }
 }
