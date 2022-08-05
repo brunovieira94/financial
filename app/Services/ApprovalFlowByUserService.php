@@ -117,9 +117,9 @@ class ApprovalFlowByUserService
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
         $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
 
-        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow){
+        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow) {
             foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key=>$installment) {
+                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
                         'id' => $installment->installment_purchase->id,
                         'amount_received' => $installment->amount_received,
@@ -144,7 +144,13 @@ class ApprovalFlowByUserService
 
     public function approveAccount($id)
     {
-        $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
+        if ($this->accountsPayableApprovalFlow->with('payment_request')->whereRelation('payment_request', 'deleted_at', '=', null)->where('id', $id)->exists()) {
+            $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->whereRelation('payment_request', 'deleted_at', '=', null)->findOrFail($id);
+        } else {
+            return response()->json([
+                'error' => 'A conta não foi encontrada para aprovação, verifique novamente.',
+            ], 422);
+        }
 
         if ($this->approvalFlow
             ->where('order', $accountApproval->order)
@@ -178,10 +184,15 @@ class ApprovalFlowByUserService
         if (array_key_exists('ids', $requestInfo)) {
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
-                    $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($value);
+                    if ($this->accountsPayableApprovalFlow->with('payment_request')->whereRelation('payment_request', 'deleted_at', '=', null)->where('id', $value)->exists()) {
+                        $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($value);
+                    } else {
+                        return response()->json([
+                            'error' => 'A conta não foi encontrada para reprovação, verifique novamente.',
+                        ], 422);
+                    }
                     $maxOrder = $this->approvalFlow->max('order');
                     $accountApproval->status = Config::get('constants.status.disapproved');
-
                     if ($this->approvalFlow
                         ->where('order', $accountApproval->order)
                         ->where('role_id', auth()->user()->role_id)
@@ -191,7 +202,6 @@ class ApprovalFlowByUserService
                             'error' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
-
                     if ($accountApproval->order > $maxOrder) {
                         $accountApproval->order = Config::get('constants.status.open');
                     } else if ($accountApproval->order != 0) {
@@ -206,7 +216,13 @@ class ApprovalFlowByUserService
                 ], 200);
             } else {
                 foreach ($requestInfo['ids'] as $value) {
-                    $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($value);
+                    if ($this->accountsPayableApprovalFlow->with('payment_request')->whereRelation('payment_request', 'deleted_at', '=', null)->where('id', $value)->exists()) {
+                        $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($value);
+                    } else {
+                        return response()->json([
+                            'error' => 'A conta não foi encontrada para aprovação, verifique novamente.',
+                        ], 422);
+                    }
                     $maxOrder = $this->approvalFlow->max('order');
                     $accountApproval->status = 0;
 
@@ -242,7 +258,13 @@ class ApprovalFlowByUserService
 
     public function reproveAccount($id, Request $request)
     {
-        $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($id);
+        if ($this->accountsPayableApprovalFlow->with('payment_request')->whereRelation('payment_request', 'deleted_at', '=', null)->where('id', $id)->exists()) {
+            $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->whereRelation('payment_request', 'deleted_at', '=', null)->findOrFail($id);
+        } else {
+            return response()->json([
+                'error' => 'A conta não foi encontrada para reprovação, verifique novamente.',
+            ], 422);
+        }
         $maxOrder = $this->approvalFlow->max('order');
 
         if ($this->approvalFlow

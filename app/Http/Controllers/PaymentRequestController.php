@@ -237,6 +237,7 @@ class PaymentRequestController extends Controller
                 ->withoutGlobalScopes()
                 ->whereRelation('installments', $attribute, '=', $value)
                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
+                ->whereNull('deleted_at')
                 ->exists()
             ) {
                 return false;
@@ -244,6 +245,7 @@ class PaymentRequestController extends Controller
         } else if (PaymentRequest::with('provider')
             ->withoutGlobalScopes()
             ->where($attribute, $value)
+            ->whereNull('deleted_at')
             ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
             ->exists()
         ) {
@@ -257,6 +259,7 @@ class PaymentRequestController extends Controller
             if (PaymentRequest::with(['provider', 'installments'])
                 ->withoutGlobalScopes()
                 ->whereRelation('installments', $attribute, '=', $value)
+                ->whereNull('deleted_at')
                 ->exists()
             ) {
                 if ($requestInfo['force_registration']) {
@@ -266,6 +269,7 @@ class PaymentRequestController extends Controller
             }
         } else if (PaymentRequest::where($attribute, $value)
             ->withoutGlobalScopes()
+            ->whereNull('deleted_at')
             ->exists()
         ) {
             return false;

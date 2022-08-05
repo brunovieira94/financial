@@ -52,7 +52,7 @@ class PaymentRequestService
     public function getPaymentRequestByUser($requestInfo)
     {
         $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->withoutGlobalScopes()->whereIn('cost_center_id', auth()->user()->cost_center->pluck('id'))->orWhere('user_id', auth()->user()->id)->with($this->with), $requestInfo);
 
         foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
