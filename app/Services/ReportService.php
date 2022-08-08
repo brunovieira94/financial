@@ -51,15 +51,18 @@ class ReportService
     {
         $result = Utils::search($this->paymentRequestClean, $requestInfo);
         $result = $result->with($this->paymentRequestCleanWith);
-        if (array_key_exists('from', $requestInfo)) {
-            $result = $result->where('extension_date', '>=', $requestInfo['from']);
-        }
-        if (array_key_exists('to', $requestInfo)) {
-            $result = $result->where('extension_date', '<=', $requestInfo['to']);
-        }
-        if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
-            $result = $result->whereBetween('extension_date', [now(), now()->addMonths(1)]);
-        }
+
+        $result = $result->whereHas('installments', function ($query) use ($requestInfo) {
+            if (array_key_exists('from', $requestInfo)) {
+                $query = $query->where('extension_date', '>=', $requestInfo['from']);
+            }
+            if (array_key_exists('to', $requestInfo)) {
+                $query = $query->where('extension_date', '<=', $requestInfo['to']);
+            }
+            if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
+                $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+            }
+        });
         return Utils::pagination($result, $requestInfo);
     }
 
