@@ -140,8 +140,8 @@ class BillingService
     public function getBillingSuggestion($billingInfo, $cangooroo)
     {
         $suggestionReason = '';
-        if($billingInfo['payment_status'] != 'Pago'){
-            $suggestionReason = $suggestionReason.' | Reserva em aberto';
+        if($billingInfo['payment_status'] != 'Não Pago'){
+            $suggestionReason = $suggestionReason.' | Reserva deve estar em aberto';
         }
         if($cangooroo['status'] != 'Confirmed'){
             $suggestionReason = $suggestionReason.' | Reserva não confirmada no Cangooroo';
@@ -163,7 +163,7 @@ class BillingService
         }
         else{
             $suggestion = false;
-            substr_replace($suggestionReason, '', 0, 3);
+            $suggestionReason = substr_replace($suggestionReason, '', 0, 3);
         }
         return [
             'suggestion' => $suggestion,
