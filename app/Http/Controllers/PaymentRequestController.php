@@ -268,9 +268,9 @@ class PaymentRequestController extends Controller
         return $this->paymentRequestService->updateInstallment($id, $request);
     }
 
-    public function getInstallment(Request $request, $id)
+    public function getInstallment($id)
     {
-        return $this->paymentRequestService->getInstallment($id, $request);
+        return $this->paymentRequestService->getInstallment($id);
     }
 
 }

@@ -258,6 +258,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     //Restful route -> Payment Request
     Route::prefix('payment-request')->group(function () {
+        Route::get('/installment/{id}', [PaymentRequestController::class, 'getInstallment']);
         Route::get('/all', [PaymentRequestController::class, 'getAllPaymentRequest']);
         Route::post('/import', [PaymentRequestController::class, 'import']);
         Route::get('/group-form-payment', [PaymentRequestController::class, 'groupFormPayment']);
@@ -267,7 +268,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/{id}', [PaymentRequestController::class, 'update'])->middleware(['check.installments', 'check.values.invoice', 'check.values.payment.request.integration']);
         Route::post('update-installment/{id}', [PaymentRequestController::class, 'updateInstallment']);
         Route::delete('/{id}', [PaymentRequestController::class, 'destroy']);
-        Route::get('/installment/{id}', [PaymentRequestController::class, 'getInstallment']);
     });
 
     Route::put('/update-date-installment', [PaymentRequestController::class, 'updateDateInstallment']);

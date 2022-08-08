@@ -102,6 +102,7 @@ class CheckUserHasPermission
                 break;
         }
 
+
         foreach ($roles as $role) {
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);
             $role = $this->role->where('role_id', $user->role_id)->where('module_id', $role->module_id)->first();

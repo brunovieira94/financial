@@ -39,7 +39,8 @@ class PaymentRequestService
     private $paymentRequestClean;
     private $installmentClean;
 
-    private $with = ['purchase_order.purchase_order','purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $installmentWith = ['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'];
 
     public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
@@ -593,7 +594,6 @@ class PaymentRequestService
     }
     public function getInstallment($id)
     {
-        return $this->installmentClean->with(['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'])->findOrFail($id);
+        return $this->installmentClean->with($this->installmentWith)->findOrFail($id);
     }
-
 }
