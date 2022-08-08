@@ -36,16 +36,11 @@ class LogsService
             ])->orWhere(function ($q) use ($approvalFlow) {
                 return $q->where('log_name', 'accounts_payable_approval_flows')->where('subject_id', $approvalFlow->id);
             })->orderBy('created_at', 'asc')->get();
-        } else if (LogActivity::where([
-            ['log_name', 'payment_request'],
-            ['subject_id', $id]
-        ])->orderBy('created_at', 'asc')->exists()) {
+        } else {
             $logPaymentRequest =  LogActivity::where([
                 ['log_name', 'payment_request'],
                 ['subject_id', $id]
             ])->orderBy('created_at', 'asc')->get();
-        } else {
-            return [];
         }
 
         $retorno = [];
@@ -75,7 +70,7 @@ class LogsService
                 $reason = null;
                 $concatenate = false;
 
-                if ($log['properties']['attributes']['reason_to_reject'] != null) {
+                if ($log['properties']['attributes']['reason_to_reject_id'] != null) {
                     $reason = $log['properties']['attributes']['reason_to_reject']['title'];
                     $concatenate = true;
                 }
@@ -92,8 +87,8 @@ class LogsService
                     'createdAt' => $log['created_at'],
                     'description' => $log['description'],
                     'causerUser' => $log['causer_object']['name'],
-                    'causerUserRole' => $log['causer_object']['role']['title'],
-                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? null,
+                    'causerUserRole' => $log['causer_object']['role']['title'] ?? '',
+                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? '',
                     'motive' => $reason,
                 ];
             } else if ($log['log_name'] == 'payment_request') {
