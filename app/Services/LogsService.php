@@ -84,9 +84,9 @@ class LogsService
 
                 $retorno[] = [
                     'type' => $status,
-                    'createdAt' => $log['created_at'],
-                    'description' => $log['description'],
-                    'causerUser' => $log['causer_object']['name'],
+                    'createdAt' => $log['created_at'] ?? '',
+                    'description' => $log['description'] ?? '',
+                    'causerUser' => $log['causer_object']['name'] ?? '',
                     'causerUserRole' => $log['causer_object']['role']['title'] ?? '',
                     'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? '',
                     'motive' => $reason,
