@@ -35,7 +35,7 @@ class AccountsPayableApprovalFlowClean extends Model
 
     public function payment_request_trashed()
     {
-        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id');//->with(['group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
+        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id')->withTrashed();//->with(['group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
     }
 
     public function installment_payment_request()

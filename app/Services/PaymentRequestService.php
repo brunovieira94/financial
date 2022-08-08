@@ -593,7 +593,7 @@ class PaymentRequestService
     }
     public function getInstallment($id)
     {
-        return $this->installmentClean->with(['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', ])->findOrFail($id);
+        return $this->installmentClean->with(['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'])->findOrFail($id);
     }
 
 }
