@@ -36,11 +36,16 @@ class LogsService
             ])->orWhere(function ($q) use ($approvalFlow) {
                 return $q->where('log_name', 'accounts_payable_approval_flows')->where('subject_id', $approvalFlow->id);
             })->orderBy('created_at', 'asc')->get();
-        } else {
+        } else if (LogActivity::where([
+            ['log_name', 'payment_request'],
+            ['subject_id', $id]
+        ])->orderBy('created_at', 'asc')->exists()) {
             $logPaymentRequest =  LogActivity::where([
                 ['log_name', 'payment_request'],
                 ['subject_id', $id]
             ])->orderBy('created_at', 'asc')->get();
+        } else {
+            return [];
         }
 
         $retorno = [];
