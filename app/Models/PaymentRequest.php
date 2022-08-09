@@ -60,7 +60,7 @@ class PaymentRequest extends Model
 
     public function group_approval_flow()
     {
-        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id')->with('approval_flow');
+        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id');
     }
 
     public function purchase_order()
