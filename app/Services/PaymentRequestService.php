@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\BankAccount;
+use App\Models\CostCenter;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestHasAttachments;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
@@ -131,6 +132,8 @@ class PaymentRequestService
     {
         $paymentRequestInfo = $request->all();
         $paymentRequestInfo['user_id'] = auth()->user()->id;
+
+        $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
