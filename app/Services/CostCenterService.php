@@ -27,6 +27,9 @@ class CostCenterService
         $costCenters = Utils::pagination($costCenter->where('parent', null), $requestInfo);
         //$costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
+        foreach($nestable as $nest){
+            $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->get();
+        }
         return $nestable;
     }
 
