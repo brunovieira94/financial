@@ -49,7 +49,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             $query->payment_request->id,
             $query->parcel_number,
             $query->payment_request->provider->trade_name ?? '',
-            $query->cost_center ? $query->cost_center->title : $query->cost_center,
+            $query->payment_request->cost_center->title ?? '',
             $query->due_date,
             $query->extension_date,
             $query->competence_date,
@@ -59,6 +59,8 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             $query->discount,
             $query->portion_amount,
             $query->note,
+            $query->payment_request->approval->approval_flow_first['title'],
+            Config::get('constants.statusPt.'.$query->payment_request->approval->status)
         ];
     }
 
@@ -78,6 +80,8 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             'Desconto',
             'Valor Final',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

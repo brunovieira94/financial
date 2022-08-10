@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Config;
 
 class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
@@ -130,6 +131,8 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
+            $accountsPayableApprovalFlow->payment_request->approval->approval_flow_first['title'],
+            Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }
 
@@ -159,6 +162,8 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             'Pŕoxima data de prorrogação',
             'Data de Criação',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

@@ -55,6 +55,7 @@ class PaymentRequestController extends Controller
                 return response()->json([
                     'error' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
                         PaymentRequest::with('provider')
+                        ->withoutGlobalScopes()
                         ->where('invoice_number', $request->invoice_number)
                         ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                         '.'
@@ -69,6 +70,7 @@ class PaymentRequestController extends Controller
                     return response()->json([
                         'error' => 'O código de barras informado já existe no sistema na conta ' .
                             PaymentRequest::with('installments')
+                            ->withoutGlobalScopes()
                             ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                             ->first()->id .
                             ', para cadastrar a conta deve ser cancelada/apagada.'
@@ -82,6 +84,7 @@ class PaymentRequestController extends Controller
                     return response()->json([
                         'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
                             PaymentRequest::with(['provider', 'installments'])
+                            ->withoutGlobalScopes()
                             ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                             ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                             '.'
@@ -125,6 +128,7 @@ class PaymentRequestController extends Controller
                         return response()->json([
                             'error' => 'O número de nota fiscal ou invoice já foi cadastrado para este fornecedor na conta ' .
                                 PaymentRequest::with('provider')
+                                ->withoutGlobalScopes()
                                 ->where('invoice_number', $request->invoice_number)
                                 ->whereRelation('provider', 'id', '=', $request->provider_id)->first()->id .
                                 '.'
@@ -143,6 +147,7 @@ class PaymentRequestController extends Controller
                         return response()->json([
                             'error' => 'O código de barras informado já existe no sistema na conta ' .
                                 PaymentRequest::with('installments')
+                                ->withoutGlobalScopes()
                                 ->whereRelation('installments', 'bar_code', '=', $installment['bar_code'])
                                 ->first()->id .
                                 ', para cadastrar a conta deve ser cancelada/apagada.'
@@ -159,6 +164,7 @@ class PaymentRequestController extends Controller
                         return response()->json([
                             'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
                                 PaymentRequest::with(['provider', 'installments'])
+                                ->withoutGlobalScopes()
                                 ->whereRelation('installments', 'billet_number', '=', $installment['billet_number'])
                                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])->first()->id .
                                 '.'
@@ -228,6 +234,7 @@ class PaymentRequestController extends Controller
     {
         if ($attribute == 'bar_code' or $attribute == 'billet_number') {
             if (PaymentRequest::with(['provider', 'installments'])
+                ->withoutGlobalScopes()
                 ->whereRelation('installments', $attribute, '=', $value)
                 ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
                 ->exists()
@@ -235,6 +242,7 @@ class PaymentRequestController extends Controller
                 return false;
             }
         } else if (PaymentRequest::with('provider')
+            ->withoutGlobalScopes()
             ->where($attribute, $value)
             ->whereRelation('provider', 'id', '=', $requestInfo['provider_id'])
             ->exists()
@@ -247,6 +255,7 @@ class PaymentRequestController extends Controller
     {
         if ($attribute == 'bar_code' or $attribute == 'billet_number') {
             if (PaymentRequest::with(['provider', 'installments'])
+                ->withoutGlobalScopes()
                 ->whereRelation('installments', $attribute, '=', $value)
                 ->exists()
             ) {
@@ -256,6 +265,7 @@ class PaymentRequestController extends Controller
                 return false;
             }
         } else if (PaymentRequest::where($attribute, $value)
+            ->withoutGlobalScopes()
             ->exists()
         ) {
             return false;

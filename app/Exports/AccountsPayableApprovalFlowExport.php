@@ -202,6 +202,8 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
+            $accountsPayableApprovalFlow->payment_request->approval->approval_flow_first['title'],
+            Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }
 
@@ -231,6 +233,8 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             'Pŕoxima data de prorrogação',
             'Data de Criação',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

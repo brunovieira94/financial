@@ -311,7 +311,13 @@ class PaymentRequestService
                 if (array_key_exists('billet_file', $installments)) {
                     $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
                 }
-
+                if (array_key_exists('portion_amount', $installments)) {
+                    if ($installments['portion_amount'] <= 0) {
+                        $installments['portion_amount'] = $installments['initial_value'];
+                    }
+                }else {
+                    $installments['portion_amount'] = $installments['initial_value'];
+                }
                 if (array_key_exists('id', $installments)) {
                     $installments['parcel_number'] = $key + 1;
                     $installmentBD = PaymentRequestHasInstallments::findOrFail($installments['id']);
@@ -322,7 +328,13 @@ class PaymentRequestService
                     $installments['payment_request_id'] = $paymentRequest['id'];
                     $installments['parcel_number'] = $key + 1;
                     $installments['status'] = 0;
-
+                    if (array_key_exists('portion_amount', $installments)) {
+                        if ($installments['portion_amount'] <= 0) {
+                            $installments['portion_amount'] = $installments['initial_value'];
+                        }
+                    }else {
+                        $installments['portion_amount'] = $installments['initial_value'];
+                    }
                     if ($updateCompetence) {
                         if (!array_key_exists('competence_date', $installments)) {
                             $date = new Carbon($installments['due_date']);

@@ -73,7 +73,7 @@ class StoreProviderRequest extends FormRequest
             ->ignore($this->id),
             ],
             'full_name' => 'required_if:provider_type,==,F|string|max:255|prohibited_if:provider_type,==,J',
-            'birth_date' => 'required_if:provider_type,==,F|date|max:255|prohibited_if:provider_type,==,J',
+            'birth_date' => 'date',
             'international' => 'boolean',
         ];
     }

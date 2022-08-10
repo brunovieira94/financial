@@ -12,5 +12,15 @@ return [
         'cnab generated' => '6',
         'finished' => '7',
     ],
-    '123_secret' => 'Vrdq63SvNe3Jkwwq3OMHtYrj7mksZTL4s1WjeiJq'
+    '123_secret' => 'Vrdq63SvNe3Jkwwq3OMHtYrj7mksZTL4s1WjeiJq',
+    'statusPt' => [
+        'Em Processo',
+        'Aprovada',
+        'Reprovada',
+        'Cancelada',
+        'Paga',
+        'Erro',
+        'CNAB Gerado',
+        'Finalizada',
+    ]
 ];
