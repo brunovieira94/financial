@@ -23,7 +23,7 @@ class AccountsPayableApprovalFlow extends Model
     }
 
     protected $table='accounts_payable_approval_flows';
-    protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
+    protected $fillable = ['action', 'reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
     protected $appends = ['approver_stage', 'approval_flow_first'];

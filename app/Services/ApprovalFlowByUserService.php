@@ -6,8 +6,10 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
+use App\Models\UserHasPaymentRequest;
 use Illuminate\Http\Request;
 use Config;
+use CreateUserHasPaymentRequest;
 
 class ApprovalFlowByUserService
 {
@@ -290,5 +292,18 @@ class ApprovalFlowByUserService
         return response()->json([
             'Sucesso' => 'Conta cancelada',
         ], 200);
+    }
+
+    public function multipleApproval($requestInfo)
+    {
+        foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
+            foreach ($requestInfo['users'] as $idUser) {
+                UserHasPaymentRequest::create([
+                    'user_id' => $idUser,
+                    'payment_request_id' => $idPaymentRequest,
+                    'status' => 0
+                ]);
+            }
+        }
     }
 }
