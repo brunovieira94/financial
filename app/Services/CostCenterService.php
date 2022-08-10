@@ -28,7 +28,7 @@ class CostCenterService
         //$costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
         foreach($nestable as $nest){
-            $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->get();
+            $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->first();
         }
         return $nestable;
     }
@@ -39,7 +39,7 @@ class CostCenterService
         $nestable = $this->costCenter->nestable($costCenter);
         $costCenter = $this->costCenter->with($this->with)->findOrFail($id);
         foreach($nestable as $nest){
-            $nest->group_approval_flow = GroupApprovalFlow::where('id', $costCenter->group_approval_flow_id)->with('approval_flow')->get();
+            $nest->group_approval_flow = GroupApprovalFlow::where('id', $costCenter->group_approval_flow_id)->with('approval_flow')->first();
         }
         return $nestable;
     }
