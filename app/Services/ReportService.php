@@ -2,12 +2,16 @@
 
 namespace App\Services;
 
+use App\Http\Resources\reports\RouteBillToPayResource;
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
 use App\Models\CnabGenerated;
 use App\Models\FormPayment;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\SupplyApprovalFlow;
 use Carbon\Carbon;
 use Config;
@@ -21,8 +25,16 @@ class ReportService
     private $filterCanceled = false;
     private $cnabGenerated;
     private $installment;
+    private $paymentRequest;
+    private $paymentRequestClean;
+    private $accountsPayableApprovalFlowClean;
+    private $installmentClean;
 
-    public function __construct(PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
+    private $paymentRequestCleanWith = ['provider', 'cost_center', 'approval.approval_flow', 'installments', 'currency', 'cnab_payment_request.cnab_generated'];
+    private $installmentCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'cnab_generated_installment.generated_cnab', 'bank_account_provider', 'group_payment.form_payment'];
+    private $accountsPayableApprovalFlowCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'payment_request.cnab_payment_request.cnab_generated'];
+
+    public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
@@ -30,51 +42,34 @@ class ReportService
         $this->supplyApprovalFlow = $supplyApprovalFlow;
         $this->cnabGenerated = $cnabGenerated;
         $this->installment = $installment;
+        $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
+        $this->paymentRequestClean = $paymentRequestClean;
+        $this->installmentClean = $installmentClean;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
     {
-        $result = Utils::search($this->paymentRequest, $requestInfo);
-        $result = $result->with(['purchase_order', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
-        if (array_key_exists('from', $requestInfo)) {
-            $result = $result->where('pay_date', '>=', $requestInfo['from']);
-        }
-        if (array_key_exists('to', $requestInfo)) {
-            $result = $result->where('pay_date', '<=', $requestInfo['to']);
-        }
-        if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
-            $result = $result->whereBetween('pay_date', [now(), now()->addMonths(1)]);
-        }
-        $result = Utils::pagination($result, $requestInfo);
-        foreach ($result as $paymentRequest) {
-            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
+        $result = Utils::search($this->paymentRequestClean, $requestInfo);
+        $result = $result->with($this->paymentRequestCleanWith);
+
+        $result = $result->whereHas('installments', function ($query) use ($requestInfo) {
+            if (array_key_exists('from', $requestInfo)) {
+                $query = $query->where('extension_date', '>=', $requestInfo['from']);
             }
-        }
-        return $result;
+            if (array_key_exists('to', $requestInfo)) {
+                $query = $query->where('extension_date', '<=', $requestInfo['to']);
+            }
+            if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
+                $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+            }
+        });
+        return Utils::pagination($result, $requestInfo);
     }
 
     public function getAllDueInstallment($requestInfo)
     {
-        $result = Utils::search($this->installment, $requestInfo);
-        $result = $result->with(['payment_request', 'group_payment', 'bank_account_provider'])->has('payment_request');
+        $result = Utils::search($this->installmentClean, $requestInfo);
+        $result = $result->with($this->installmentCleanWith)->has('payment_request');
 
         if (array_key_exists('from', $requestInfo)) {
             $result = $result->where('extension_date', '>=', $requestInfo['from']);
@@ -90,65 +85,18 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->with($this->accountsPayableApprovalFlowCleanWith);
 
         if ((!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $requestInfo)) {
-            $query = Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
+            return Utils::pagination($accountsPayableApprovalFlow
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
                 ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
                 ->where('status', 1), $requestInfo);
-            foreach ($query as $accountsPayableApprovalFlow) {
-                foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                    foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                        $installment = [
-                            'id' => $installment->installment_purchase->id,
-                            'amount_received' => $installment->amount_received,
-                            'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                            'parcel_number' => $installment->installment_purchase->parcel_number,
-                            'portion_amount' => $installment->installment_purchase->portion_amount,
-                            'due_date' => $installment->installment_purchase->due_date,
-                            'note' => $installment->installment_purchase->note,
-                            'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                            'money_discount' => $installment->installment_purchase->money_discount,
-                            'invoice_received' => $installment->installment_purchase->invoice_received,
-                            'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                            'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                            'amount_paid' => $installment->installment_purchase->amount_paid,
-                        ];
-                        $purchaseOrder->purchase_order_installments[$key] = $installment;
-                    }
-                }
-            }
-            return $query;
         } elseif (!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) {
-            $query = Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
+            return Utils::pagination($accountsPayableApprovalFlow
                 ->whereRelation('payment_request', 'deleted_at', '=', null)
                 ->where('status', 1), $requestInfo);
-            foreach ($query as $accountsPayableApprovalFlow) {
-                foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                    foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                        $installment = [
-                            'id' => $installment->installment_purchase->id,
-                            'amount_received' => $installment->amount_received,
-                            'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                            'parcel_number' => $installment->installment_purchase->parcel_number,
-                            'portion_amount' => $installment->installment_purchase->portion_amount,
-                            'due_date' => $installment->installment_purchase->due_date,
-                            'note' => $installment->installment_purchase->note,
-                            'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                            'money_discount' => $installment->installment_purchase->money_discount,
-                            'invoice_received' => $installment->installment_purchase->invoice_received,
-                            'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                            'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                            'amount_paid' => $installment->installment_purchase->amount_paid,
-                        ];
-                        $purchaseOrder->purchase_order_installments[$key] = $installment;
-                    }
-                }
-            }
-            return $query;
         }
 
         $formPayment = FormPayment::findOrFail($requestInfo['form_payment_id']);
@@ -156,199 +104,55 @@ class ReportService
         if ($formPayment->group_form_payment_id == 1) {
             if ($formPayment->same_ownership) {
                 if (!array_key_exists('company_id', $requestInfo)) {
-                    $query = Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                    ->where('status', 1), $requestInfo);
-                    foreach ($query as $accountsPayableApprovalFlow) {
-                        foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                            foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                                $installment = [
-                                    'id' => $installment->installment_purchase->id,
-                                    'amount_received' => $installment->amount_received,
-                                    'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                                    'parcel_number' => $installment->installment_purchase->parcel_number,
-                                    'portion_amount' => $installment->installment_purchase->portion_amount,
-                                    'due_date' => $installment->installment_purchase->due_date,
-                                    'note' => $installment->installment_purchase->note,
-                                    'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                                    'money_discount' => $installment->installment_purchase->money_discount,
-                                    'invoice_received' => $installment->installment_purchase->invoice_received,
-                                    'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                                    'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                                    'amount_paid' => $installment->installment_purchase->amount_paid,
-                                ];
-                                $purchaseOrder->purchase_order_installments[$key] = $installment;
-                            }
-                        }
-                    }
-                    return $query;
+                    return Utils::pagination($accountsPayableApprovalFlow
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                        ->where('status', 1), $requestInfo);
                 } else {
-                    $query = Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                    ->where('status', 1), $requestInfo);
-                    foreach ($query as $accountsPayableApprovalFlow) {
-                        foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                            foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                                $installment = [
-                                    'id' => $installment->installment_purchase->id,
-                                    'amount_received' => $installment->amount_received,
-                                    'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                                    'parcel_number' => $installment->installment_purchase->parcel_number,
-                                    'portion_amount' => $installment->installment_purchase->portion_amount,
-                                    'due_date' => $installment->installment_purchase->due_date,
-                                    'note' => $installment->installment_purchase->note,
-                                    'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                                    'money_discount' => $installment->installment_purchase->money_discount,
-                                    'invoice_received' => $installment->installment_purchase->invoice_received,
-                                    'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                                    'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                                    'amount_paid' => $installment->installment_purchase->amount_paid,
-                                ];
-                                $purchaseOrder->purchase_order_installments[$key] = $installment;
-                            }
-                        }
-                    }
-                    return $query;
+                    return Utils::pagination($accountsPayableApprovalFlow
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
+                        ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                        ->where('status', 1), $requestInfo);
                 }
             } else {
                 if (!array_key_exists('company_id', $requestInfo)) {
-                    $query = Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                    ->where('status', 1), $requestInfo);
-                    foreach ($query as $accountsPayableApprovalFlow) {
-                        foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                            foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                                $installment = [
-                                    'id' => $installment->installment_purchase->id,
-                                    'amount_received' => $installment->amount_received,
-                                    'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                                    'parcel_number' => $installment->installment_purchase->parcel_number,
-                                    'portion_amount' => $installment->installment_purchase->portion_amount,
-                                    'due_date' => $installment->installment_purchase->due_date,
-                                    'note' => $installment->installment_purchase->note,
-                                    'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                                    'money_discount' => $installment->installment_purchase->money_discount,
-                                    'invoice_received' => $installment->installment_purchase->invoice_received,
-                                    'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                                    'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                                    'amount_paid' => $installment->installment_purchase->amount_paid,
-                                ];
-                                $purchaseOrder->purchase_order_installments[$key] = $installment;
-                            }
-                        }
-                    }
-                    return $query;
+                    return Utils::pagination($accountsPayableApprovalFlow
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                        ->where('status', 1), $requestInfo);
                 } else {
-                    $query = Utils::pagination($accountsPayableApprovalFlow
-                    ->with('payment_request')
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                    ->where('status', 1), $requestInfo);
-                    foreach ($query as $accountsPayableApprovalFlow) {
-                        foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                            foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                                $installment = [
-                                    'id' => $installment->installment_purchase->id,
-                                    'amount_received' => $installment->amount_received,
-                                    'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                                    'parcel_number' => $installment->installment_purchase->parcel_number,
-                                    'portion_amount' => $installment->installment_purchase->portion_amount,
-                                    'due_date' => $installment->installment_purchase->due_date,
-                                    'note' => $installment->installment_purchase->note,
-                                    'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                                    'money_discount' => $installment->installment_purchase->money_discount,
-                                    'invoice_received' => $installment->installment_purchase->invoice_received,
-                                    'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                                    'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                                    'amount_paid' => $installment->installment_purchase->amount_paid,
-                                ];
-                                $purchaseOrder->purchase_order_installments[$key] = $installment;
-                            }
-                        }
-                    }
-                    return $query;
+                    return Utils::pagination($accountsPayableApprovalFlow
+                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
+                        ->whereRelation('payment_request', 'deleted_at', '=', null)
+                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
+                        ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                        ->where('status', 1), $requestInfo);
                 }
             }
         } else {
             if (!array_key_exists('company_id', $requestInfo)) {
-                $query = Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
-                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->where('status', 1), $requestInfo);
-                foreach ($query as $accountsPayableApprovalFlow) {
-                    foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                        foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                            $installment = [
-                                'id' => $installment->installment_purchase->id,
-                                'amount_received' => $installment->amount_received,
-                                'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                                'parcel_number' => $installment->installment_purchase->parcel_number,
-                                'portion_amount' => $installment->installment_purchase->portion_amount,
-                                'due_date' => $installment->installment_purchase->due_date,
-                                'note' => $installment->installment_purchase->note,
-                                'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                                'money_discount' => $installment->installment_purchase->money_discount,
-                                'invoice_received' => $installment->installment_purchase->invoice_received,
-                                'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                                'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                                'amount_paid' => $installment->installment_purchase->amount_paid,
-                            ];
-                            $purchaseOrder->purchase_order_installments[$key] = $installment;
-                        }
-                    }
-                }
-                return $query;
+                return Utils::pagination($accountsPayableApprovalFlow
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->where('status', 1), $requestInfo);
             } else {
-                $query = Utils::pagination($accountsPayableApprovalFlow
-                ->with('payment_request')
-                ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                ->where('status', 1), $requestInfo);
-                foreach ($query as $accountsPayableApprovalFlow) {
-                    foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                        foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                            $installment = [
-                                'id' => $installment->installment_purchase->id,
-                                'amount_received' => $installment->amount_received,
-                                'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                                'parcel_number' => $installment->installment_purchase->parcel_number,
-                                'portion_amount' => $installment->installment_purchase->portion_amount,
-                                'due_date' => $installment->installment_purchase->due_date,
-                                'note' => $installment->installment_purchase->note,
-                                'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                                'money_discount' => $installment->installment_purchase->money_discount,
-                                'invoice_received' => $installment->installment_purchase->invoice_received,
-                                'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                                'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                                'amount_paid' => $installment->installment_purchase->amount_paid,
-                            ];
-                            $purchaseOrder->purchase_order_installments[$key] = $installment;
-                        }
-                    }
-                }
-                return $query;
+                return Utils::pagination($accountsPayableApprovalFlow
+                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
+                    ->whereRelation('payment_request', 'deleted_at', '=', null)
+                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
+                    ->where('status', 1), $requestInfo);
             }
         }
     }
 
     public function getAllApprovedInstallment($requestInfo)
     {
-        $installment = Utils::search($this->installment, $requestInfo);
-        $installment = $installment->with(['payment_request', 'group_payment', 'bank_account_provider']);
+        $installment = Utils::search($this->installmentClean, $requestInfo);
+        $installment = $installment->with($this->installmentCleanWith);
 
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {
@@ -357,8 +161,7 @@ class ReportService
         });
 
         if (!array_key_exists('company_id', $requestInfo)) {
-            return Utils::pagination($installment
-                ->with('payment_request'), $requestInfo);
+            return Utils::pagination($installment, $requestInfo);
         } else {
             $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
                 $query->where('company_id', $requestInfo['company_id']);
@@ -369,66 +172,17 @@ class ReportService
 
     public function getAllGeneratedCNABPaymentRequest($requestInfo)
     {
-        $accountsPayableApprovalFlows = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
-        $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlows
-            ->with('payment_request')
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
             ->where('status', 6), $requestInfo);
-
-        foreach ($accountsPayableApprovalFlows as $accountsPayableApprovalFlow) {
-            foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }
-        return $accountsPayableApprovalFlows;
     }
 
     public function getAllPaymentRequestPaid($requestInfo)
     {
-        $accountsPayableApprovalFlows = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
-        $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlows
-            ->with('payment_request')
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->with($this->accountsPayableApprovalFlowCleanWith);
+        return Utils::pagination($accountsPayableApprovalFlow
             ->where('status', 4), $requestInfo);
-
-        foreach ($accountsPayableApprovalFlows as $accountsPayableApprovalFlow) {
-            foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }
-        return $accountsPayableApprovalFlows;
     }
 
     public function getAllDisapprovedPaymentRequest($requestInfo)
@@ -438,79 +192,31 @@ class ReportService
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        $accountsPayableApprovalFlows = Utils::search($this->accountsPayableApprovalFlow, $requestInfo, ['order']);
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo, ['order']);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'accounts_payable_approval_flows.id';
 
-        $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlows
+        return Utils::pagination($accountsPayableApprovalFlow
             ->whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 2)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->with(['payment_request', 'approval_flow', 'reason_to_reject']), $requestInfo);
-
-        foreach ($accountsPayableApprovalFlows as $accountsPayableApprovalFlow) {
-            foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }
-        return $accountsPayableApprovalFlows;
+            ->with($this->accountsPayableApprovalFlowCleanWith), $requestInfo);
     }
 
     public function getAllPaymentRequestsDeleted($requestInfo)
     {
-        $accountsPayableApprovalFlows = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
-        $accountsPayableApprovalFlows = Utils::pagination(
-            $accountsPayableApprovalFlows
-                ->with('payment_request_trashed')
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
+        return Utils::pagination(
+            $accountsPayableApprovalFlow
+                ->with(['payment_request_trashed.provider', 'payment_request_trashed.cost_center', 'payment_request_trashed.approval.approval_flow', 'payment_request_trashed.currency', 'payment_request_trashed.cnab_payment_request.cnab_generated'])
                 ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null),
             $requestInfo
         );
-
-        foreach ($accountsPayableApprovalFlows as $accountsPayableApprovalFlow) {
-            foreach ($accountsPayableApprovalFlow['payment_request_trashed']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }
-        return $accountsPayableApprovalFlows;
     }
 
     public function getBillsToPay($requestInfo)
     {
-        $query = $this->paymentRequest->query();
-        $query = $query->with(['purchase_order', 'cnab_payment_request', 'attachments', 'group_payment', 'company', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $query = $this->paymentRequestClean->query();
+        $query = $query->with($this->paymentRequestCleanWith);
 
 
         if (array_key_exists('amount', $requestInfo)) {
@@ -642,37 +348,14 @@ class ReportService
             $query->where('deleted_at', '!=', NULL);
         }
 
-        $query = Utils::pagination($query, $requestInfo);
-        foreach ($query as $paymentRequest) {
-            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }
-        return $query;
+        //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
+        return RouteBillToPayResource::collection(Utils::pagination($query, $requestInfo));
     }
 
     public function getInstallmentsPayable($requestInfo)
     {
-        $query = $this->installment->query();
-        $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
+        $query = $this->installmentClean->query();
+        $query = $query->with($this->installmentCleanWith);
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('net_value', $requestInfo)) {
@@ -791,38 +474,15 @@ class ReportService
                 }
             }
         }
-
         return Utils::pagination($query, $requestInfo);
     }
 
     public function getAllPaymentRequestFinished($requestInfo)
     {
-        $accountsPayableApprovalFlows = Utils::search($this->accountsPayableApprovalFlow, $requestInfo);
-        $accountsPayableApprovalFlows = Utils::pagination($accountsPayableApprovalFlows->with('payment_request')->where('status', 7), $requestInfo);
-
-        foreach ($accountsPayableApprovalFlows as  $accountsPayableApprovalFlow) {
-            foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }
-        return $accountsPayableApprovalFlows;
+        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
+        return Utils::pagination($accountsPayableApprovalFlow
+            ->with($this->accountsPayableApprovalFlowCleanWith)
+            ->where('status', 7), $requestInfo);
     }
 
     public function getAllApprovedPurchaseOrder($requestInfo)

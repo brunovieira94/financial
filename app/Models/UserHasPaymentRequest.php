@@ -11,7 +11,6 @@ class UserHasPaymentRequest extends Model
     protected $table = 'user_has_payment_request';
     public $timestamps = false;
     protected $fillable = ['user_id', 'payment_request_id', 'status'];
-    protected $appends = ['billet_link'];
 
     public function payment_request()
     {
