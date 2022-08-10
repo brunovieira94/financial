@@ -52,6 +52,7 @@ class ApprovalFlowService
     public function putApprovalFlow($id, $approvalFlowInfo)
     {
         $groupApprovalFlow = $this->groupApprovalFlow->findOrFail($id);
+        $groupApprovalFlow->fill($approvalFlowInfo)->save();
         DB::table('approval_flow')->where('group_approval_flow_id', $id)->delete();
 
         $approvalFlow = new ApprovalFlow;
