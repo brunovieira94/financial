@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\ApprovalFlow;
 use App\Models\CostCenter;
 use App\Models\ChartOfAccounts;
+use App\Models\GroupApprovalFlow;
 
 use function PHPSTORM_META\map;
 use function PHPUnit\Framework\isNull;
@@ -32,6 +34,10 @@ class CostCenterService
     {
         $costCenter = $this->costCenter->with($this->with)->findOrFail($id)->where('id', $id)->get();
         $nestable = $this->costCenter->nestable($costCenter);
+        $costCenter = $this->costCenter->with($this->with)->findOrFail($id);
+        foreach($nestable as $nest){
+            $nest->group_approval_flow = GroupApprovalFlow::where('id', $costCenter->group_approval_flow_id)->with('approval_flow')->get();
+        }
         return $nestable;
     }
 
