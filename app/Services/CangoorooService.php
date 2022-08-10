@@ -19,7 +19,7 @@ class CangoorooService
     public function updateCangoorooData($reserve)
     {
         $bookingId = $this->getCangoorooBookingIDData($reserve);
-        if(!$bookingId) return ['error' => 'Código de reserva inválido'];
+        if (!$bookingId) return ['error' => 'Código de reserva inválido'];
         $apiCall = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
             'Credential' => [
                 "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
@@ -29,7 +29,6 @@ class CangoorooService
         ]);
         if ($apiCall->status() == 400) return (object) [];
         $response = $apiCall->json()['BookingDetail'];
-        //dd($apiCall->json());
 
         $roomIndex = null;
         $possibleRooms = [];
@@ -78,9 +77,7 @@ class CangoorooService
                 "selling_price" => $room['SellingPrice']['Value'],
             ];
 
-        if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) {
-            return ['error' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id']];
-        }
+        if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return (object) [];
 
         $cangooroo = $this->cangooroo->where('booking_id', $bookingId)->first('id');
         if ($cangooroo) {

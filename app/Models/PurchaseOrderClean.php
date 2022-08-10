@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 
-class PurchaseOrder extends Model
+class PurchaseOrderClean extends Model
 {
     // Logs
     use LogsActivity;
@@ -36,27 +36,27 @@ class PurchaseOrder extends Model
 
     public function cost_centers()
     {
-        return $this->hasMany(PurchaseOrderHasCostCenters::class, 'purchase_order_id', 'id')->with('cost_center');
+        return $this->hasMany(PurchaseOrderHasCostCenters::class, 'purchase_order_id', 'id');//->with('cost_center');
     }
 
     public function purchase_requests()
     {
-        return $this->hasMany(PurchaseOrderHasPurchaseRequests::class, 'purchase_order_id', 'id')->with('purchase_request');
+        return $this->hasMany(PurchaseOrderHasPurchaseRequests::class, 'purchase_order_id', 'id');//->with('purchase_request');
     }
 
     public function services()
     {
-        return $this->hasMany(PurchaseOrderHasServices::class, 'purchase_order_id', 'id')->with(['service', 'installments']);
+        return $this->hasMany(PurchaseOrderHasServices::class, 'purchase_order_id', 'id');//->with(['service', 'installments']);
     }
 
     public function products()
     {
-        return $this->hasMany(PurchaseOrderHasProducts::class, 'purchase_order_id', 'id')->with('product');
+        return $this->hasMany(PurchaseOrderHasProducts::class, 'purchase_order_id', 'id');//->with('product');
     }
 
     public function companies()
     {
-        return $this->hasMany(PurchaseOrderHasCompanies::class, 'purchase_order_id', 'id')->with('company');
+        return $this->hasMany(PurchaseOrderHasCompanies::class, 'purchase_order_id', 'id');//->with('company');
     }
 
     public function currency()
@@ -76,7 +76,7 @@ class PurchaseOrder extends Model
 
     public function approval()
     {
-        return $this->hasOne(SupplyApprovalFlow::class, 'id_purchase_order', 'id')->with('approval_flow');
+        return $this->hasOne(SupplyApprovalFlow::class, 'id_purchase_order', 'id');//->with('approval_flow');
     }
 
     public function user()
@@ -163,10 +163,5 @@ class PurchaseOrder extends Model
         } else {
             return $approverStage;
         }
-    }
-
-    public function payment_requests()
-    {
-        return $this->hasMany(PaymentRequestHasPurchaseOrders::class);
     }
 }

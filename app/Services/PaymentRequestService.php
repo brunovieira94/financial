@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\BankAccount;
 use App\Models\GroupFormPayment;
+use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasAttachments;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Provider;
@@ -34,11 +36,13 @@ class PaymentRequestService
     private $approvalFlow;
     private $groupFormPayment;
     private $attachments;
+    private $paymentRequestClean;
+    private $installmentClean;
 
+    private $with = ['purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $installmentWith = ['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'];
 
-    private $with = ['purchase_order', 'company', 'attachments', 'group_payment', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
-
-    public function __construct(PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
+    public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
@@ -47,14 +51,15 @@ class PaymentRequestService
         $this->approvalFlow = $approvalFlow;
         $this->groupFormPayment = $groupFormPayment;
         $this->attachments = $attachments;
+        $this->paymentRequestClean = $paymentRequestClean;
+        $this->installmentClean = $installmentClean;
     }
 
     public function getPaymentRequestByUser($requestInfo)
     {
-        $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->where('user_id', auth()->user()->id)->with($this->with), $requestInfo);
-
-        foreach ($paymentRequests as $paymentRequest) {
+        $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency'])->where('user_id', auth()->user()->id), $requestInfo);
+        /*foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
@@ -72,20 +77,18 @@ class PaymentRequestService
                         'payment_request_id' => $installment->installment_purchase->payment_request_id,
                         'amount_paid' => $installment->installment_purchase->amount_paid,
                     ];
-
                     $purchaseOrder->purchase_order_installments[$key] = $installment;
                 }
             }
-        }
+        }*/
         return $paymentRequests;
     }
 
     public function getAllPaymentRequest($requestInfo)
     {
-        $paymentRequests = Utils::search($this->paymentRequest, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->with($this->with), $requestInfo);
-
-        foreach ($paymentRequests as $paymentRequest) {
+        $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
+        $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency']), $requestInfo);
+        /*foreach ($paymentRequests as $paymentRequest) {
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
@@ -103,25 +106,34 @@ class PaymentRequestService
                         'payment_request_id' => $installment->installment_purchase->payment_request_id,
                         'amount_paid' => $installment->installment_purchase->amount_paid,
                     ];
-
                     $purchaseOrder->purchase_order_installments[$key] = $installment;
                 }
             }
-        }
+        }*/
         return $paymentRequests;
     }
 
     public function getPaymentRequest($id)
     {
-        $paymentRequest = $this->paymentRequest->with($this->with)->findOrFail($id);
-
-        if (!empty($paymentRequest->purchase_order)) {
-            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                if (!empty($purchaseOrder->purchase_order_installments)) {
-                    foreach ($purchaseOrder->purchase_order_installments as $installment) {
-                        $installment->installment_purchase->amount_received = $installment->amount_received;
-                    }
-                }
+        $paymentRequest = $this->paymentRequestClean->with($this->with)->withTrashed()->findOrFail($id);
+        foreach ($paymentRequest->purchase_order as $purchaseOrder) {
+            foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
+                $installment = [
+                    'id' => $installment->installment_purchase->id,
+                    'amount_received' => $installment->amount_received,
+                    'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
+                    'parcel_number' => $installment->installment_purchase->parcel_number,
+                    'portion_amount' => $installment->installment_purchase->portion_amount,
+                    'due_date' => $installment->installment_purchase->due_date,
+                    'note' => $installment->installment_purchase->note,
+                    'percentage_discount' => $installment->installment_purchase->percentage_discount,
+                    'money_discount' => $installment->installment_purchase->money_discount,
+                    'invoice_received' => $installment->installment_purchase->invoice_received,
+                    'invoice_paid' => $installment->installment_purchase->invoice_paid,
+                    'payment_request_id' => $installment->installment_purchase->payment_request_id,
+                    'amount_paid' => $installment->installment_purchase->amount_paid,
+                ];
+                $purchaseOrder->purchase_order_installments[$key] = $installment;
             }
         }
         return $paymentRequest;
@@ -591,5 +603,9 @@ class PaymentRequestService
                 }
             }
         }
+    }
+    public function getInstallment($id)
+    {
+        return $this->installmentClean->with($this->installmentWith)->findOrFail($id);
     }
 }
