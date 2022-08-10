@@ -106,7 +106,7 @@ class CostCenterService
     public function allCostCenters($costCenterInfo)
     {
         $costCenters = Utils::search($this->costCenter, $costCenterInfo);
-        $costCenters = Utils::pagination($costCenters, $costCenterInfo);
+        $costCenters = Utils::pagination($costCenters->with('group_approval_flow'), $costCenterInfo);
 
         //foreach ($costCenters as $costCenter)
         //{
