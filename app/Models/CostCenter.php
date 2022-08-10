@@ -29,6 +29,11 @@ class CostCenter extends Model
 
     protected $appends = ['linked_costCenters'];
 
+    public function group_approval_flow()
+    {
+        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id');
+    }
+
     public function getLinkedCostCentersAttribute()
     {
         return $this->hasMany(CostCenter::class, 'parent', 'id')->count();

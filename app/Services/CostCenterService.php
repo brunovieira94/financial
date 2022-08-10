@@ -11,6 +11,7 @@ use function PHPUnit\Framework\isNull;
 class CostCenterService
 {
     private $costCenter;
+    private $with = ['group_approval_flow.approval_flow'];
     // private $chartOfAccounts;
     public function __construct(CostCenter $costCenter)
     {
@@ -29,7 +30,7 @@ class CostCenterService
 
     public function getCostCenter($id)
     {
-        $costCenter = $this->costCenter->findOrFail($id)->where('id', $id)->get();
+        $costCenter = $this->costCenter->with($this->with)->findOrFail($id)->where('id', $id)->get();
         $nestable = $this->costCenter->nestable($costCenter);
         return $nestable;
     }
@@ -45,7 +46,7 @@ class CostCenterService
             ->where('parent', null)
             ->whereIn('id', $costCenterID)
             , $requestInfo);
-            $nestable = $this->costCenter->nestable($costCenters);
+            $nestable = $this->costCenter->with($this->with)->nestable($costCenters);
             return $nestable;
         }else
         {
@@ -60,7 +61,8 @@ class CostCenterService
         if (array_key_exists('parent', $costCenterInfo) && is_numeric($costCenterInfo['parent'])) {
             $this->costCenter->findOrFail($costCenterInfo['parent'])->get();
         }
-        return $costCenter->create($costCenterInfo);
+        $costCenter = $costCenter->create($costCenterInfo);
+        return $this->costCenter->with($this->with)->findOrFail($costCenter->id);
     }
 
     public function putCostCenter($id, $costCenterInfo)
