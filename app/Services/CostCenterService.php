@@ -56,6 +56,9 @@ class CostCenterService
             ->whereIn('id', $costCenterID)
             , $requestInfo);
             $nestable = $this->costCenter->with($this->with)->nestable($costCenters);
+            foreach($nestable as $nest){
+                $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->first();
+            }
             return $nestable;
         }else
         {
