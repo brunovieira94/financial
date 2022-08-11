@@ -26,7 +26,7 @@ class ApprovalFlowService
 
     public function getApprovalFlowById($id)
     {
-        return $this->groupApprovalFlow->with($this->with)->get();
+        return $this->groupApprovalFlow->with($this->with)->findOrFail($id);
     }
 
 
