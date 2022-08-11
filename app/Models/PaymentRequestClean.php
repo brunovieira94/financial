@@ -57,6 +57,11 @@ class PaymentRequestClean extends Model
         'payment_type',
     ];
 
+    public function group_approval_flow()
+    {
+        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id');
+    }
+
     public function purchase_order()
     {
         return $this->hasMany(PaymentRequestHasPurchaseOrders::class, 'payment_request_id', 'id'); //->with(['purchase_order', 'purchase_order_installments']);
