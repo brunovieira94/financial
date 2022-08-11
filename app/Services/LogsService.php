@@ -63,6 +63,9 @@ class LogsService
                     case 1:
                         $status = 'approved';
                         break;
+                    case 8:
+                        $status = 'multiple-approval';
+                        break;
                     default:
                         $status = 'default';
                 }
@@ -90,6 +93,7 @@ class LogsService
                     'causerUserRole' => $log['causer_object']['role']['title'] ?? '',
                     'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? '',
                     'motive' => $reason,
+                    'stage' => isset($log['properties']['old']['order']) ? $log['properties']['old']['order'] + 1 : '', //front exibe a etapa com adição de 1
                 ];
             } else if ($log['log_name'] == 'payment_request') {
                 $retorno[] = [
