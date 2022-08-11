@@ -416,4 +416,3 @@ Route::prefix('/auth')->group(function () {
 
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
-

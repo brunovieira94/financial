@@ -474,6 +474,7 @@ class ReportService
                 }
             }
         }
+        
         return Utils::pagination($query, $requestInfo);
     }
 
