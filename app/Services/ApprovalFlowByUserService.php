@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Config;
 use CreateUserHasPaymentRequest;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class ApprovalFlowByUserService
 {
@@ -47,10 +48,19 @@ class ApprovalFlowByUserService
 
         $paymentRequest = Utils::search($this->paymentRequestClean, $requestInfo, ['order']);
         $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
-            $query->whereIn('order', $approvalFlowUserOrder->pluck('order')->toArray())
-                ->whereIn('status', [0, 2])
+            //$query->whereIn('order', $approvalFlowUserOrder->pluck('order')->toArray())
+            $query->whereIn('status', [0, 2])
                 ->where('deleted_at', '=', null);
         });
+        $idsPaymentRequestOrder = [];
+        foreach ($approvalFlowUserOrder as $approvalOrder) {
+            $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])->with('payment_request');
+            $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalOrder) {
+                $query->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id']);
+            })->get('payment_request_id');
+            $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
+        }
+        $paymentRequest = $paymentRequest->whereIn('id', $idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
         $paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest) {
             $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
