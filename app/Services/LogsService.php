@@ -66,6 +66,9 @@ class LogsService
                     case 8:
                         $status = 'multiple-approval';
                         break;
+                    case 9:
+                        $status = 'transfer-approval';
+                        break;
                     default:
                         $status = 'default';
                 }

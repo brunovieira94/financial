@@ -59,4 +59,11 @@ class ApprovalFlowByUserController extends Controller
     {
         return $this->accountsPayableApprovalFlowService->multipleApproval($request->all());
     }
+
+    public function transferApproval(Request $request)
+    {
+        return $this->accountsPayableApprovalFlowService->transferApproval($request->all());
+    }
+
+
 }
