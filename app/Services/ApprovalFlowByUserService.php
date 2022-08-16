@@ -191,7 +191,7 @@ class ApprovalFlowByUserService
     public function transferApproval($requestInfo)
     {
         foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
-            if (!UserHasPaymentRequest::where('user_id', $idUser)->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
+            if (!UserHasPaymentRequest::where('user_id', $requestInfo['user'])->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
                 UserHasPaymentRequest::create([
                     'user_id' => $requestInfo['user'],
                     'payment_request_id' => $idPaymentRequest,
