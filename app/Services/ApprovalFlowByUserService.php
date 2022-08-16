@@ -47,6 +47,8 @@ class ApprovalFlowByUserService
             return response([], 404);
 
         $paymentRequest = Utils::search($this->paymentRequestClean, $requestInfo, ['order']);
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
+
         $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
             //$query->whereIn('order', $approvalFlowUserOrder->pluck('order')->toArray())
             $query->whereIn('status', [0, 2])
@@ -66,8 +68,6 @@ class ApprovalFlowByUserService
             $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
             $query->whereIn('id', $ids);
         });
-
-        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
         return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo)); //;
