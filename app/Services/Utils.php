@@ -287,56 +287,56 @@ class Utils
     public static function baseFilterReportsPaymentRequest($paymentRequest, $requestInfo)
     {
         if (array_key_exists('provider', $requestInfo)) {
-            $paymentRequest->where('provider_id', $requestInfo['provider']);
+            $paymentRequest = $paymentRequest->where('provider_id', $requestInfo['provider']);
         }
         if (array_key_exists('net_value', $requestInfo)) {
-            $paymentRequest->where('net_value', $requestInfo['net_value']);
+            $paymentRequest = $paymentRequest->where('net_value', $requestInfo['net_value']);
         }
         if (array_key_exists('company', $requestInfo)) {
-            $paymentRequest->where('company_id', $requestInfo['company']);
+            $paymentRequest = $paymentRequest->where('company_id', $requestInfo['company']);
         }
         if (array_key_exists('cost_center', $requestInfo)) {
-            $paymentRequest->where('cost_center_id', $requestInfo['cost_center']);
+            $paymentRequest = $paymentRequest->where('cost_center_id', $requestInfo['cost_center']);
         }
         if (array_key_exists('cpfcnpj', $requestInfo)) {
-            $paymentRequest->whereHas('provider', function ($query) use ($requestInfo) {
+            $paymentRequest = $paymentRequest->whereHas('provider', function ($query) use ($requestInfo) {
                 $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
             });
         }
         if (array_key_exists('chart_of_accounts', $requestInfo)) {
-            $paymentRequest->where('chart_of_account_id', $requestInfo['chart_of_accounts']);
+            $paymentRequest = $paymentRequest->where('chart_of_account_id', $requestInfo['chart_of_accounts']);
         }
         if (array_key_exists('payment_request', $requestInfo)) {
-            $paymentRequest->where('id', $requestInfo['payment_request']);
+            $paymentRequest = $paymentRequest->where('id', $requestInfo['payment_request']);
         }
         if (array_key_exists('user', $requestInfo)) {
-            $paymentRequest->where('user_id', $requestInfo['user']);
+            $paymentRequest = $paymentRequest->where('user_id', $requestInfo['user']);
         }
         if (array_key_exists('created_at', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['created_at'])) {
-                $paymentRequest->where('created_at', '>=', $requestInfo['created_at']['from']);
+                $paymentRequest = $paymentRequest->where('created_at', '>=', $requestInfo['created_at']['from']);
             }
             if (array_key_exists('to', $requestInfo['created_at'])) {
-                $paymentRequest->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+                $paymentRequest = $paymentRequest->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
             }
             if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
-                $paymentRequest->whereBetween('created_at', [now()->addMonths(-1), now()]);
+                $paymentRequest = $paymentRequest->whereBetween('created_at', [now()->addMonths(-1), now()]);
             }
         }
         if (array_key_exists('pay_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['pay_date'])) {
-                $paymentRequest->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+                $paymentRequest = $paymentRequest->where('pay_date', '>=', $requestInfo['pay_date']['from']);
             }
             if (array_key_exists('to', $requestInfo['pay_date'])) {
-                $paymentRequest->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+                $paymentRequest = $paymentRequest->where('pay_date', '<=', $requestInfo['pay_date']['to']);
             }
             if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
-                $paymentRequest->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+                $paymentRequest = $paymentRequest->whereBetween('pay_date', [now(), now()->addMonths(1)]);
             }
         }
         if (array_key_exists('extension_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['extension_date'])) {
-                $paymentRequest->whereHas('installments', function ($installments) use ($requestInfo) {
+                $paymentRequest = $paymentRequest->whereHas('installments', function ($installments) use ($requestInfo) {
                     if (array_key_exists('from', $requestInfo['extension_date'])) {
                         $installments->where('extension_date', '>=', $requestInfo['extension_date']['from']);
                     }
@@ -350,19 +350,19 @@ class Utils
             }
         }
         if (array_key_exists('days_late', $requestInfo)) {
-            $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
+            $paymentRequest = $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
                 $query->where('status', '!=', Config::get('constants.status.paid out'))->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
             });
         }
 
         if (array_key_exists('approval_order', $requestInfo)) {
-            $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('order', $requestInfo['approval_order']);
             });
         }
 
         if (array_key_exists('status', $requestInfo)) {
-            $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', $requestInfo['status']);
             });
         }
