@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
+use App\Models\ApprovalFlow;
 use Carbon\Carbon;
 use Config;
+use DB;
 
 class Utils
 {
@@ -364,6 +368,91 @@ class Utils
         if (array_key_exists('status', $requestInfo)) {
             $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', $requestInfo['status']);
+            });
+        }
+
+        if (array_key_exists('role', $requestInfo)) {
+            $approvalFlowOrders = ApprovalFlow::where('role_id', $requestInfo['role'])->get(['order', 'group_approval_flow_id']);
+            $paymentRequestIDs = [];
+            foreach ($approvalFlowOrders as $approvalFlowOrder) {
+                $accountApprovalFlow = AccountsPayableApprovalFlow::where('order', $approvalFlowOrder['order'])->with('payment_request');
+                $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalFlowOrder) {
+                    $query->where('group_approval_flow_id', $approvalFlowOrder['group_approval_flow_id']);
+                })->get('payment_request_id');
+                $paymentRequestIDs = array_merge($paymentRequestIDs, $accountApprovalFlow->pluck('payment_request_id')->toArray());
+            }
+            $paymentRequest = $paymentRequest->whereIn('id', $paymentRequestIDs);
+        }
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $paymentRequest->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $paymentRequest->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $paymentRequest->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
+                $paymentRequest->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
+                $paymentRequest->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                $paymentRequest->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        if (array_key_exists('extension_date', $requestInfo)) {
+
+            $installments = DB::select("SELECT id as id_payment_request, (select
+            id as id_payment_requests_installments
+            FROM api.payment_requests_installments
+            WHERE payment_request_id = id_payment_request
+            AND status <> 4
+            AND status <> 7
+            ORDER BY extension_date asc
+            LIMIT 1) AS id_installment
+            FROM api.payment_requests");
+
+            $installmentIDs = [];
+
+            foreach ($installments as $installment) {
+                if ($installment->id_installment != null) {
+                    array_push($installmentIDs, $installment->id_installment);
+                }
+            }
+            $requestInfo['installmentsIds'] = $installmentIDs;
+
+            $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
+                $query->whereIn('id', $requestInfo['installmentsIds']);
+                if (array_key_exists('from', $requestInfo['extension_date'])) {
+                    $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['extension_date'])) {
+                    $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                }
+                if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                }
+            });
+        }
+
+        if (array_key_exists('cnab_date', $requestInfo)) {
+            $paymentRequest->whereHas('cnab_payment_request', function ($cnabPaymentRequest) use ($requestInfo) {
+                $cnabPaymentRequest->whereHas('cnab_generated', function ($cnabGenerated) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '>=', $requestInfo['cnab_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->where('file_date', '<=', $requestInfo['cnab_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['cnab_date']) && !array_key_exists('from', $requestInfo['cnab_date'])) {
+                        $cnabGenerated->whereBetween('file_date', [now(), now()->addMonths(1)]);
+                    }
+                });
             });
         }
         return $paymentRequest;
