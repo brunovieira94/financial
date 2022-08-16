@@ -173,14 +173,16 @@ class ApprovalFlowByUserService
     {
         foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
             foreach ($requestInfo['users'] as $idUser) {
-                UserHasPaymentRequest::create([
-                    'user_id' => $idUser,
-                    'payment_request_id' => $idPaymentRequest,
-                    'status' => 0
-                ]);
-                $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
-                $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
-                $accountsPayableApprovalFlow->save();
+                if (!UserHasPaymentRequest::where('user_id', $idUser)->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
+                    UserHasPaymentRequest::create([
+                        'user_id' => $idUser,
+                        'payment_request_id' => $idPaymentRequest,
+                        'status' => 0
+                    ]);
+                    $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
+                    $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
+                    $accountsPayableApprovalFlow->save();
+                }
             }
         }
         return true;
