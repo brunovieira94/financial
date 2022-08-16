@@ -57,7 +57,7 @@ class AccountsPayableApprovalFlowClean extends Model
     {
 
         $approverStage = [];
-        $roles = ApprovalFlow::where('order', $this->order)->with('role')->get();
+        $roles = ApprovalFlow::where('order', $this->order)->where('group_approval_flow_id', $this->group_approval_flow_id)->with('role')->get();
         $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->withoutGlobalScopes()->first()->cost_center_id;
         foreach ($roles as $role) {
             if($role->role->id != 1)
