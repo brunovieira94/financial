@@ -68,6 +68,8 @@ class ApprovalFlowByUserService
             $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
             $paymentRequestMultiple = PaymentRequest::whereIn('id', $ids);
             $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
+            $paymentRequestMultiple->get('id');
+            $ids = $paymentRequestMultiple->pluck('id')->toArray();
             $query->whereIn('id', $ids);
         });
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
