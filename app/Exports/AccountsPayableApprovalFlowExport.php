@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
+use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\UserHasPaymentRequest;
 use App\Services\Utils;
@@ -31,12 +32,12 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     public function collection()
     {
         $requestInfo = $this->requestInfo;
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order', 'group_approval_flow_id']);
+        $approvalFlowUserOrder = ApprovalFlow::where('role_id', auth()->user()->role_id)->get(['order', 'group_approval_flow_id']);
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        $paymentRequest = Utils::search($this->paymentRequestClean, $requestInfo, ['order']);
+        $paymentRequest = PaymentRequest::with(['provider', 'company']);
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
 
         $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
