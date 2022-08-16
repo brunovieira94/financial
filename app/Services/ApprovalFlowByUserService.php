@@ -64,8 +64,10 @@ class ApprovalFlowByUserService
         }
         $paymentRequest = $paymentRequest->whereIn('id', $idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
-        $paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest) {
+        $paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
             $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
+            $paymentRequestMultiple = PaymentRequest::whereIn('id', $ids);
+            $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
             $query->whereIn('id', $ids);
         });
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
