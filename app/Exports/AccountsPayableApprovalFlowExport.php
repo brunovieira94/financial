@@ -21,6 +21,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     private $requestInfo;
     private $totalTax;
     private $filterCanceled = false;
+    private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
 
     public function __construct($requestInfo)
     {
