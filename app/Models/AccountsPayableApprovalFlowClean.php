@@ -45,7 +45,7 @@ class AccountsPayableApprovalFlowClean extends Model
 
     public function approval_flow()
     {
-        return $this->hasOne(ApprovalFlow::class, 'order', 'order')->with('role')->where('group_approval_flow_id', $this->group_approval_flow_id)->latest();
+        return $this->hasOne(ApprovalFlow::class, 'order', 'order')->with('role')->latest();
     }
 
     public function reason_to_reject()
