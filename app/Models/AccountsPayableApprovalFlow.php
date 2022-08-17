@@ -53,7 +53,34 @@ class AccountsPayableApprovalFlow extends Model
         return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
     }
 
-    public function getApprovalFlowFirstAttribute()
+    public function getApproverStageAttribute()
+    {
+
+        $approverStage = [];
+        $roles = ApprovalFlow::where('order', $this->order)->where('group_approval_flow_id', $this->group_approval_flow_id)->with('role')->get();
+        $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->withoutGlobalScopes()->first()->cost_center_id;
+        foreach ($roles as $role) {
+            if ($role->role->id != 1) {
+                $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->get();
+                $names = [];
+                foreach ($checkUser as $user) {
+                    foreach ($user->cost_center as $userCostCenter) {
+                        if ($userCostCenter->id == $costCenterId) {
+                            $names[] = $user->name;
+                        }
+                    }
+                }
+                $approverStage[] = [
+                    'title' => $role->role->title,
+                    'name' => count($names) > 0 ? $names[0] : '',
+                    'names' => $names,
+                ];
+            }
+        }
+        return $approverStage;
+    }
+
+    public function getApproverStageFirstAttribute()
     {
         if (ApprovalFlow::with('role')
             ->where('order', $this->order)
@@ -75,33 +102,5 @@ class AccountsPayableApprovalFlow extends Model
                 'title' => ''
             ];
         }
-    }
-
-    public function getApproverStageFirstAttribute()
-    {
-
-        $approverStage = [];
-        $roles = ApprovalFlow::where('order', $this->order)->where('group_approval_flow_id', $this->group_approval_flow_id)->with('role')->get();
-        $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->withoutGlobalScopes()->first()->cost_center_id;
-        foreach ($roles as $role) {
-            if($role->role->id != 1)
-            {
-                $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->get();
-                $names = [];
-                foreach ($checkUser as $user) {
-                    foreach ($user->cost_center as $userCostCenter){
-                        if($userCostCenter->id == $costCenterId){
-                            $names[] = $user->name;
-                        }
-                    }
-                }
-                $approverStage[] = [
-                    'title' => $role->role->title,
-                    'name' => count($names) > 0 ? $names[0]: '',
-                    'names' => $names,
-                ];
-            }
-        }
-        return $approverStage;
     }
 }
