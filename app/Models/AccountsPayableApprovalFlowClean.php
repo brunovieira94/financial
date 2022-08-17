@@ -23,10 +23,10 @@ class AccountsPayableApprovalFlowClean extends Model
     }
 
     protected $table = 'accounts_payable_approval_flows';
-    protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
+    protected $fillable = ['group_approval_flow_id', 'reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
-    protected $appends = ['approver_stage', 'approval_flow_first', 'approval_flow_first_new'];
+    protected $appends = ['approver_stage'];
 
     public function payment_request()
     {
@@ -45,7 +45,7 @@ class AccountsPayableApprovalFlowClean extends Model
 
     public function approval_flow()
     {
-        return $this->hasOne(ApprovalFlow::class, 'order', 'order')->with('role')->latest();
+        return $this->hasOne(ApprovalFlow::class, 'order', 'order')->with('role')->where('group_approval_flow_id', $this->group_approval_flow_id)->latest();
     }
 
     public function reason_to_reject()
@@ -78,29 +78,5 @@ class AccountsPayableApprovalFlowClean extends Model
             }
         }
         return $approverStage;
-    }
-
-    public function getApprovalFlowFirstNewAttribute()
-    {
-        if (ApprovalFlow::with('role')
-            ->where('order', $this->order)
-            ->where('group_approval_flow_id', $this->group_approval_flow_id)
-            ->orderBy('id', 'ASC')
-            ->whereRelation('role', 'deleted_at', '=', null)->exists()
-        ) {
-            $approvalFlow = ApprovalFlow::with('role')
-                ->where('order', $this->order)
-                ->where('group_approval_flow_id', $this->group_approval_flow_id)
-                ->orderBy('id', 'ASC')
-                ->whereRelation('role', 'deleted_at', '=', null)
-                ->first();
-            return [
-                'title' => $approvalFlow->role->title
-            ];
-        } else {
-            return [
-                'title' => ''
-            ];
-        }
     }
 }

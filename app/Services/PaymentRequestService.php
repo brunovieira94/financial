@@ -182,6 +182,7 @@ class PaymentRequestService
             'payment_request_id' => $paymentRequest->id,
             'order' => 1,
             'status' => 0,
+            'group_approval_flow_id' => $paymentRequest->group_approval_flow_id,
         ]);
         activity()->enableLogging();
 
