@@ -59,7 +59,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             $query->discount,
             $query->portion_amount,
             $query->note,
-            $query->payment_request->approval->approval_stage_first['title'],
+            $query->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.'.$query->payment_request->approval->status)
         ];
     }

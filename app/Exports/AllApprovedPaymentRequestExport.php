@@ -131,7 +131,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
-            $accountsPayableApprovalFlow->payment_request->approval->approval_stage_first['title'],
+            $accountsPayableApprovalFlow->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }
