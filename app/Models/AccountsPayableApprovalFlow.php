@@ -77,7 +77,7 @@ class AccountsPayableApprovalFlow extends Model
         }
     }
 
-    public function getApproverStageAttribute()
+    public function getApproverStageFirstAttribute()
     {
 
         $approverStage = [];
@@ -105,7 +105,7 @@ class AccountsPayableApprovalFlow extends Model
         return $approverStage;
     }
 
-    public function getApproverStageFirstAttribute()
+    public function getApprovalFlowAttribute()
     {
         if (ApprovalFlow::with('role')
             ->where('order', $this->order)
