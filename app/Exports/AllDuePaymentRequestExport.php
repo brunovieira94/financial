@@ -25,13 +25,13 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
     {
         $result = PaymentRequest::with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         if(array_key_exists('from', $this->requestInfo)){
-            $result = $result->where('pay_date', '>=', $this->requestInfo['from']);
+            $result = $result->where('extension_date', '>=', $this->requestInfo['from']);
         }
         if(array_key_exists('to', $this->requestInfo)){
-            $result = $result->where('pay_date', '<=', $this->requestInfo['to']);
+            $result = $result->where('extension_date', '<=', $this->requestInfo['to']);
         }
         if(!array_key_exists('to', $this->requestInfo) && !array_key_exists('from', $this->requestInfo)){
-            $result = $result->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            $result = $result->whereBetween('extension_date', [now(), now()->addMonths(1)]);
         }
         return $result->get();
         //return PaymentRequest::with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->get();

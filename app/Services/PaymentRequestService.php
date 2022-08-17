@@ -202,7 +202,7 @@ class PaymentRequestService
     {
         $paymentRequestInfo = $request->all();
         $paymentRequest = $this->paymentRequest->findOrFail($id);
-        $maxOrder = $this->approvalFlow->max('order');
+        $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $paymentRequest->group_approval_flow_id)->max('order');
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         activity()->disableLogging();
@@ -227,6 +227,16 @@ class PaymentRequestService
             }
             $approval->reason_to_reject_id = null;
             $approval->reason = null;
+        }
+
+        if($paymentRequest->cost_center_id != $paymentRequestInfo['cost_center_id']){
+            $costCenter = CostCenter::findOrFail($paymentRequestInfo['cost_center_id']);
+            if($paymentRequest->group_form_payment_id != $costCenter->group_approval_flow_id){
+                $paymentRequest->group_approval_flow_id = $costCenter->group_approval_flow_id;
+                $approval->group_approval_flow_id = $costCenter->group_approval_flow_id;
+                $approval->order = 0;
+                $approval->status = 0;
+            }
         }
 
         $approval->save();
