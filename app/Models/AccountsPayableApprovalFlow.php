@@ -26,7 +26,7 @@ class AccountsPayableApprovalFlow extends Model
     protected $fillable = ['action', 'reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
-    protected $appends = ['approver_stage', 'approval_flow_first'];
+    protected $appends = ['approver_stage', 'approval_flow_first', 'approval_flow_first_new'];
 
     public function payment_request()
     {
@@ -103,5 +103,29 @@ class AccountsPayableApprovalFlow extends Model
             }
         }
         return $approverStage;
+    }
+
+    public function getApprovalFlowFirstNewAttribute()
+    {
+        if (ApprovalFlow::with('role')
+            ->where('order', $this->order)
+            ->where('group_approval_flow_id', $this->group_approval_flow_id)
+            ->orderBy('id', 'ASC')
+            ->whereRelation('role', 'deleted_at', '=', null)->exists()
+        ) {
+            $approvalFlow = ApprovalFlow::with('role')
+                ->where('order', $this->order)
+                ->where('group_approval_flow_id', $this->group_approval_flow_id)
+                ->orderBy('id', 'ASC')
+                ->whereRelation('role', 'deleted_at', '=', null)
+                ->first();
+            return [
+                'title' => $approvalFlow->role->title
+            ];
+        } else {
+            return [
+                'title' => ''
+            ];
+        }
     }
 }
