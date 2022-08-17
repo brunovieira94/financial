@@ -186,7 +186,7 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
             $paymentRequest->note,
-            $paymentRequest->approval->approval_flow ? $paymentRequest->approval->approval_flow->role->title : '',
+            $paymentRequest->approval->approval_stage_first['title'],
             Config::get('constants.statusPt.'.$paymentRequest->approval->status)
         ];
     }

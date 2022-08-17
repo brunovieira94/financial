@@ -99,7 +99,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             $paymentRequest->next_extension_date,
             $paymentRequest->created_at,
             $paymentRequest->note,
-            $paymentRequest->approval->approval_flow_first['title'],
+            $paymentRequest->approval->approval_stage_first['title'],
             Config::get('constants.statusPt.'.$paymentRequest->approval->status)
         ];
     }
