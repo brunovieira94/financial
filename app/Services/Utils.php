@@ -372,10 +372,9 @@ class Utils
         }
 
         if (array_key_exists('role', $requestInfo)) {
-            //$approvalFlowOrders = ApprovalFlow::where('role_id', $requestInfo['role'])->get(['order', 'group_approval_flow_id']);
+            $approvalFlowOrders = ApprovalFlow::where('role_id', $requestInfo['role'])->get(['order', 'group_approval_flow_id']);
             $paymentRequestIDs = [];
-
-            $approvalFlowOrders = DB::select(
+            /*$approvalFlowOrders = DB::select(
                 'SELECT *
                 FROM api.approval_flow
                 WHERE role_id = ' . $requestInfo['role'] . '
@@ -383,12 +382,11 @@ class Utils
                 approval_flow.order,
                 group_approval_flow_id
                 order by id ASC'
-            );
-
+            );*/
             foreach ($approvalFlowOrders as $approvalFlowOrder) {
-                $accountApprovalFlow = AccountsPayableApprovalFlow::where('order', $approvalFlowOrder->order)->with('payment_request');
+                $accountApprovalFlow = AccountsPayableApprovalFlow::where('order', $approvalFlowOrder['order'])->with('payment_request');
                 $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalFlowOrder) {
-                    $query->where('group_approval_flow_id', $approvalFlowOrder->group_approval_flow_id);
+                    $query->where('group_approval_flow_id', $approvalFlowOrder['group_approval_flow_id']);
                 })->get('payment_request_id');
                 $paymentRequestIDs = array_merge($paymentRequestIDs, $accountApprovalFlow->pluck('payment_request_id')->toArray());
             }
