@@ -221,9 +221,13 @@ class ReportService
 
         if (array_key_exists('status', $requestInfo)) {
             $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
-                $query->where('status', $requestInfo['status']);
                 if ($requestInfo['status'] == 3) {
                     $this->filterCanceled = true;
+                }
+                if ($requestInfo['status'] == 0) {
+                    $query->whereIn('status', [0, 8, 9]);
+                } else {
+                    $query->where('status', $requestInfo['status']);
                 }
             });
         }
@@ -279,9 +283,13 @@ class ReportService
             }
             if (array_key_exists('status', $requestInfo)) {
                 $query->whereHas('approval', function ($query) use ($requestInfo) {
-                    $query->where('status', $requestInfo['status']);
                     if ($requestInfo['status'] == 3) {
                         $this->filterCanceled = true;
+                    }
+                    if ($requestInfo['status'] == 0) {
+                        $query->whereIn('status', [0, 8, 9]);
+                    } else {
+                        $query->where('status', $requestInfo['status']);
                     }
                 });
             }

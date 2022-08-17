@@ -367,7 +367,11 @@ class Utils
 
         if (array_key_exists('status', $requestInfo)) {
             $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
-                $query->where('status', $requestInfo['status']);
+                if ($requestInfo['status'] == 0) {
+                    $query->whereIn('status', [0, 8, 9]);
+                } else {
+                    $query->where('status', $requestInfo['status']);
+                }
             });
         }
 
