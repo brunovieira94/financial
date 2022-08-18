@@ -41,6 +41,8 @@ class Billing extends Model
         'reason',
         'reason_to_reject_id',
         'order',
+        'suggestion',
+        'suggestion_reason'
     ];
     protected $hidden = ['user_id', 'cangooroo_booking_id', 'reason_to_reject_id'];
 
