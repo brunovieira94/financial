@@ -8,6 +8,7 @@ use App\Models\PaidBillingInfo;
 use App\Models\Hotel;
 use Config;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class BillingService
 {
@@ -56,8 +57,9 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
+        $cangooroo = $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billing['reserve']);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
@@ -78,6 +80,7 @@ class BillingService
             ], 422);
         }
         $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billingInfo['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
@@ -104,6 +107,7 @@ class BillingService
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
         $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billingInfo['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
@@ -169,5 +173,31 @@ class BillingService
             'suggestion' => $suggestion,
             'suggestion_reason' => $suggestionReason
         ];
+    }
+
+    public function get123Status($hotelId, $reserve)
+    {
+        $token = $this->get123Token();
+        if($token){
+            $apiCall = Http::withHeaders([
+                'Shared-Id' => '123',
+            ])->withToken($token)->get(env('API_123_STATUS_URL', "http://teste31.123milhas.com/api/v3/hotel/booking/status")."/".$hotelId."/".$reserve);
+            if ($apiCall->status() != 200) return null; // N.D dados de reserva inválidos na base 123
+            $response = $apiCall->json();
+            return $response['status'];
+        }
+        else{
+            return null; //erro ao autenticar api 123, contate o suporte
+        }
+    }
+
+    public function get123Token()
+    {
+        $apiCall = Http::withHeaders([
+            'secret' => env('API_123_SECRET', Config::get('constants.123_secret')),
+        ])->get(env('API_123_AUTH_URL', "http://teste31.123milhas.com/api/v3/client/auth"));
+        if ($apiCall->status() != 200) return false;
+        $response = $apiCall->json();
+        return $response['access_token'];
     }
 }

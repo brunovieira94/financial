@@ -70,7 +70,7 @@ class LogsService
                 $reason = null;
                 $concatenate = false;
 
-                if ($log['properties']['attributes']['reason_to_reject'] != null) {
+                if ($log['properties']['attributes']['reason_to_reject_id'] != null) {
                     $reason = $log['properties']['attributes']['reason_to_reject']['title'];
                     $concatenate = true;
                 }
@@ -84,11 +84,11 @@ class LogsService
 
                 $retorno[] = [
                     'type' => $status,
-                    'createdAt' => $log['created_at'],
-                    'description' => $log['description'],
-                    'causerUser' => $log['causer_object']['name'],
-                    'causerUserRole' => $log['causer_object']['role']['title'],
-                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? null,
+                    'createdAt' => $log['created_at'] ?? '',
+                    'description' => $log['description'] ?? '',
+                    'causerUser' => $log['causer_object']['name'] ?? '',
+                    'causerUserRole' => $log['causer_object']['role']['title'] ?? '',
+                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? '',
                     'motive' => $reason,
                 ];
             } else if ($log['log_name'] == 'payment_request') {

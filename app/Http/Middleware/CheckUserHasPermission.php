@@ -97,7 +97,11 @@ class CheckUserHasPermission
             case 'bank-account';
                 $routeAccessed = 'provider';
                 break;
+            case 'installment';
+                $routeAccessed = 'payment-request';
+                break;
         }
+
 
         foreach ($roles as $role) {
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);

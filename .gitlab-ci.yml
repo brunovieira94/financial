@@ -46,7 +46,7 @@ deploy_staging:
     - aws s3 cp s3://fincanc-staging-s3/autoscaling-deploy-dev.sh /tmp/autoscaling-deploy-dev.sh
     - chmod 0400 /tmp/financ-staging.pem
     - chmod 755 /tmp/autoscaling-deploy-dev.sh
-    - bash /tmp/autoscaling-deploy-dev.sh terraform-20220531173316692400000005 staging /tmp/financ-staging.pem 0 80 /var/www/html/dev-api
+    - bash /tmp/autoscaling-deploy-dev.sh terraform-20220531173316692400000005 staging /tmp/financ-staging.pem 0 80 /home/admin/dev-api
   only:
     - staging
 

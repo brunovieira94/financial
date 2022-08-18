@@ -157,7 +157,7 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->payment_request->id,
             $query->parcel_number,
             $query->payment_request->provider->trade_name ?? '',
-            $query->cost_center ? $query->cost_center->title : $query->cost_center,
+            $query->payment_request->cost_center->title ?? '',
             $query->due_date,
             $query->extension_date,
             $query->competence_date,
@@ -167,6 +167,8 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->discount,
             $query->portion_amount,
             $query->note,
+            $query->payment_request->approval->approval_flow_first['title'],
+            Config::get('constants.statusPt.'.$query->payment_request->approval->status)
         ];
     }
 
@@ -186,6 +188,8 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             'Desconto',
             'Valor Final',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

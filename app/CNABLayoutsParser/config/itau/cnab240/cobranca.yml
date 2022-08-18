@@ -94,10 +94,6 @@ remessa:
       pos: [167,171]
       picture: '9(5)'
       default: '00000'
-    zeros_03:
-      pos: [167,171]
-      picture: '9(5)'
-      default: '00000'
     brancos_06:
       pos: [172,240]
       picture: 'X(69)'

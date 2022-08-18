@@ -277,4 +277,10 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->updateInstallment($id, $request);
     }
+
+    public function getInstallment($id)
+    {
+        return $this->paymentRequestService->getInstallment($id);
+    }
+
 }

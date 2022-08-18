@@ -260,6 +260,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     //Restful route -> Payment Request
     Route::prefix('payment-request')->group(function () {
+        Route::get('/installment/{id}', [PaymentRequestController::class, 'getInstallment']);
         Route::get('/all', [PaymentRequestController::class, 'getAllPaymentRequest']);
         Route::post('/import', [PaymentRequestController::class, 'import']);
         Route::get('/group-form-payment', [PaymentRequestController::class, 'groupFormPayment']);
@@ -315,6 +316,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/payment-requests-paid/export', [ReportController::class, 'paymentRequestPaidExport']);
         Route::post('/payment-requests-finished/export', [ReportController::class, 'paymentRequestFinishedExport']);
         Route::post('/approved-installment/export', [ReportController::class, 'approvedInstallmentExport']);
+        Route::post('/due-installments/export', [ReportController::class, 'dueInstallmentsExport']);
         Route::post('/installments-payable/export', [ReportController::class, 'installmentsPayableExport']);
     });
 
@@ -368,7 +370,13 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [PurchaseOrderController::class, 'store']);
         Route::post('/{id}', [PurchaseOrderController::class, 'update']);
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
+        Route::get('/listinvoice/{id}', [PurchaseOrderController::class, 'listinvoice']);
+        Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
+        //Route::get('/getdelivery/{id}', [PurchaseOrderController::class, 'getDelivery']);
+        //Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
     });
+
+    Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
 
     Route::prefix('purchase-request')->group(function () {
         Route::get('/', [PurchaseRequestController::class, 'index']);
@@ -408,5 +416,4 @@ Route::prefix('/auth')->group(function () {
 
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
-
 

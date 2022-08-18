@@ -8,7 +8,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
 
 
-class AccountsPayableApprovalFlow extends Model
+class AccountsPayableApprovalFlowClean extends Model
 {
     // Logs
     use LogsActivity;
@@ -26,21 +26,21 @@ class AccountsPayableApprovalFlow extends Model
     protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
-    protected $appends = ['approver_stage', 'approval_flow_first'];
+    protected $appends = ['approver_stage'];
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['purchase_order', 'group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment']);
+        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id');//->with(['purchase_order', 'group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment']);
     }
 
     public function payment_request_trashed()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
+        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id')->withTrashed();//->with(['group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
     }
 
     public function installment_payment_request()
     {
-        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'payment_request_id')->with(['payment_request']);
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'payment_request_id');//->with(['payment_request']);
     }
 
     public function approval_flow()
@@ -51,28 +51,6 @@ class AccountsPayableApprovalFlow extends Model
     public function reason_to_reject()
     {
         return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
-    }
-
-    public function getApprovalFlowFirstAttribute()
-    {
-        if (ApprovalFlow::with('role')
-            ->where('order', $this->order)
-            ->orderBy('id', 'ASC')
-            ->whereRelation('role', 'deleted_at', '=', null)->exists()
-        ) {
-            $approvalFlow = ApprovalFlow::with('role')
-                ->where('order', $this->order)
-                ->orderBy('id', 'ASC')
-                ->whereRelation('role', 'deleted_at', '=', null)
-                ->first();
-            return [
-                'title' => $approvalFlow->role->title
-            ];
-        } else {
-            return [
-                'title' => ''
-            ];
-        }
     }
 
     public function getApproverStageAttribute()
