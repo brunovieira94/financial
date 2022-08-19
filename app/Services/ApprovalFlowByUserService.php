@@ -22,6 +22,7 @@ use Config;
 use CreateUserHasPaymentRequest;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Response;
 
 class ApprovalFlowByUserService
 {
@@ -176,57 +177,65 @@ class ApprovalFlowByUserService
 
     public function multipleApproval($requestInfo)
     {
-        foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
-            //gerar log de aprovação da conta
-            $accountApprovalFlow = AccountsPayableApprovalFlow::where('payment_request_id', $idPaymentRequest)->first();
-            $accountApprovalFlow->status = 0;
-            $accountApprovalFlow->action = 1;
-            $accountApprovalFlow->save();
-            $nameUsers = '';
-            $concatenate = false;
-            foreach ($requestInfo['users'] as $idUser) {
-                if (auth()->user()->id != $idUser) {
-                    if (!UserHasPaymentRequest::where('user_id', $idUser)->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
-                        UserHasPaymentRequest::create([
-                            'user_id' => $idUser,
-                            'payment_request_id' => $idPaymentRequest,
-                            'status' => 0
-                        ]);
-                        if (!$concatenate) {
-                            $nameUsers = User::findOrFail($idUser)->name;
-                            $concatenate = true;
-                        } else {
-                            $nameUsers = $nameUsers . ', ' . User::findOrFail($idUser)->name;
+        if (auth()->user()->role->transfer_approval) {
+            foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
+                //gerar log de aprovação da conta
+                $accountApprovalFlow = AccountsPayableApprovalFlow::where('payment_request_id', $idPaymentRequest)->first();
+                $accountApprovalFlow->status = 0;
+                $accountApprovalFlow->action = 1;
+                $accountApprovalFlow->save();
+                $nameUsers = '';
+                $concatenate = false;
+                foreach ($requestInfo['users'] as $idUser) {
+                    if (auth()->user()->id != $idUser) {
+                        if (!UserHasPaymentRequest::where('user_id', $idUser)->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
+                            UserHasPaymentRequest::create([
+                                'user_id' => $idUser,
+                                'payment_request_id' => $idPaymentRequest,
+                                'status' => 0
+                            ]);
+                            if (!$concatenate) {
+                                $nameUsers = User::findOrFail($idUser)->name;
+                                $concatenate = true;
+                            } else {
+                                $nameUsers = $nameUsers . ', ' . User::findOrFail($idUser)->name;
+                            }
                         }
                     }
                 }
+                $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
+                $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
+                $accountsPayableApprovalFlow->reason = $nameUsers;
+                $accountsPayableApprovalFlow->save();
             }
-            $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
-            $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
-            $accountsPayableApprovalFlow->reason = $nameUsers;
-            $accountsPayableApprovalFlow->save();
+            return true;
+        } else {
+            return Response()->json(['error' => 'O perfil deste usuário não pode transferir e/ou solicitar dupla aprovação'], 422);
         }
-        return true;
     }
 
     public function transferApproval($requestInfo)
     {
-        foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
-            if (!UserHasPaymentRequest::where('user_id', $requestInfo['user'])->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
-                if (auth()->user()->id != $requestInfo['user']) {
-                    UserHasPaymentRequest::create([
-                        'user_id' => $requestInfo['user'],
-                        'payment_request_id' => $idPaymentRequest,
-                        'status' => 0
-                    ]);
-                    $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
-                    $accountsPayableApprovalFlow->status = Config::get('constants.status.transfer approval');
-                    $accountsPayableApprovalFlow->reason = User::findOrFail($requestInfo['user'])->name;
-                    $accountsPayableApprovalFlow->save();
+        if (auth()->user()->role->transfer_approval) {
+            foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
+                if (!UserHasPaymentRequest::where('user_id', $requestInfo['user'])->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
+                    if (auth()->user()->id != $requestInfo['user']) {
+                        UserHasPaymentRequest::create([
+                            'user_id' => $requestInfo['user'],
+                            'payment_request_id' => $idPaymentRequest,
+                            'status' => 0
+                        ]);
+                        $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
+                        $accountsPayableApprovalFlow->status = Config::get('constants.status.transfer approval');
+                        $accountsPayableApprovalFlow->reason = User::findOrFail($requestInfo['user'])->name;
+                        $accountsPayableApprovalFlow->save();
+                    }
                 }
             }
+            return true;
+        } else {
+            return Response()->json(['error' => 'O perfil deste usuário não pode transferir e/ou solicitar dupla aprovação'], 422);
         }
-        return true;
     }
 
     public function paymentRequestAddedUser($idPaymentRequest)
