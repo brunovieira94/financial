@@ -14,6 +14,7 @@ use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
+use App\Models\User;
 use App\Models\UserHasCostCenter;
 use App\Models\UserHasPaymentRequest;
 use Illuminate\Http\Request;
@@ -181,6 +182,8 @@ class ApprovalFlowByUserService
             $accountApprovalFlow->status = 0;
             $accountApprovalFlow->action = 1;
             $accountApprovalFlow->save();
+            $nameUsers = '';
+            $concatenate = false;
             foreach ($requestInfo['users'] as $idUser) {
                 if (auth()->user()->id != $idUser) {
                     if (!UserHasPaymentRequest::where('user_id', $idUser)->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
@@ -189,12 +192,19 @@ class ApprovalFlowByUserService
                             'payment_request_id' => $idPaymentRequest,
                             'status' => 0
                         ]);
-                        $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
-                        $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
-                        $accountsPayableApprovalFlow->save();
+                        if (!$concatenate) {
+                            $nameUsers = User::findOrFail($idUser)->name;
+                            $concatenate = true;
+                        } else {
+                            $nameUsers = $nameUsers . ', ' . User::findOrFail($idUser)->name;
+                        }
                     }
                 }
             }
+            $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
+            $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
+            $accountsPayableApprovalFlow->reason = $nameUsers;
+            $accountsPayableApprovalFlow->save();
         }
         return true;
     }
@@ -211,6 +221,7 @@ class ApprovalFlowByUserService
                     ]);
                     $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
                     $accountsPayableApprovalFlow->status = Config::get('constants.status.transfer approval');
+                    $accountsPayableApprovalFlow->reason = User::findOrFail($requestInfo['user'])->name;
                     $accountsPayableApprovalFlow->save();
                 }
             }
