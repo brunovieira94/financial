@@ -176,14 +176,11 @@ class ApprovalFlowByUserService
     public function multipleApproval($requestInfo)
     {
         foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
+            //gerar log de aprovação da conta
             $accountApprovalFlow = AccountsPayableApprovalFlow::where('payment_request_id', $idPaymentRequest)->first();
             $accountApprovalFlow->status = 0;
-            $accountApprovalFlow->order += 1;
+            $accountApprovalFlow->action = 1;
             $accountApprovalFlow->save();
-            activity()->disableLogging();
-            $accountApprovalFlow->order -= 1;
-            $accountApprovalFlow->save();
-            activity()->enableLogging();
             foreach ($requestInfo['users'] as $idUser) {
                 if (auth()->user()->id != $idUser) {
                     if (!UserHasPaymentRequest::where('user_id', $idUser)->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
