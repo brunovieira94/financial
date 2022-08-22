@@ -219,7 +219,7 @@ class ReportService
     public function getAllPaymentRequestsDeleted($requestInfo)
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
-        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request_trashed', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
         return Utils::pagination(

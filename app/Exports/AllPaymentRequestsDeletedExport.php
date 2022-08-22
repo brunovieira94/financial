@@ -28,7 +28,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
     {
         $requestInfo = $this->requestInfo;
         $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request_trashed']);
-        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request_trashed', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
         return $accountsPayableApprovalFlow
