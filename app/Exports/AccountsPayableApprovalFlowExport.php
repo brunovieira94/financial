@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
@@ -48,7 +49,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         });
         $idsPaymentRequestOrder = [];
         foreach ($approvalFlowUserOrder as $approvalOrder) {
-            $accountApprovalFlow = AccountsPayableApprovalFlow::where('order', $approvalOrder['order'])->with('payment_request');
+            $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])->with('payment_request');
             $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalOrder) {
                 $query->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id']);
             })->get('payment_request_id');
@@ -56,9 +57,13 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         }
         $paymentRequest = $paymentRequest->whereIn('id', $idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
-        $paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest) {
+        $paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
             $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
-            $query->whereIn('id', $ids);
+            $paymentRequestMultiple = PaymentRequest::withoutGlobalScopes()->whereIn('id', $ids);
+            $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
+            $paymentRequestMultiple->get('id');
+            $ids = $paymentRequestMultiple->pluck('id')->toArray();
+            $query->orWhere('id', $ids);
         });
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';

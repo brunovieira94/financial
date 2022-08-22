@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PaymentRequestHasInstallments;
+use App\Services\Utils;
 use Config;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -38,6 +39,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
                 $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
             }
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
 
         return $query->get();
