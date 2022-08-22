@@ -22,7 +22,7 @@ class AccountsPayableApprovalFlow extends Model
         $activity->causer_object = $user;
     }
 
-    protected $table='accounts_payable_approval_flows';
+    protected $table = 'accounts_payable_approval_flows';
     protected $fillable = ['group_approval_flow_id', 'action', 'reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
@@ -82,21 +82,28 @@ class AccountsPayableApprovalFlow extends Model
 
     public function getApproverStageFirstAttribute()
     {
-        if (ApprovalFlow::with('role')
-            ->where('order', $this->order)
-            ->where('group_approval_flow_id', $this->group_approval_flow_id)
-            ->orderBy('id', 'ASC')
-            ->whereRelation('role', 'deleted_at', '=', null)->exists()
-        ) {
-            $approvalFlow = ApprovalFlow::with('role')
+        $statusOrder = [0, 2, 8, 9];
+        if (in_array($this->status, $statusOrder)) {
+            if (ApprovalFlow::with('role')
                 ->where('order', $this->order)
                 ->where('group_approval_flow_id', $this->group_approval_flow_id)
                 ->orderBy('id', 'ASC')
-                ->whereRelation('role', 'deleted_at', '=', null)
-                ->first();
-            return [
-                'title' => $approvalFlow->role->title
-            ];
+                ->whereRelation('role', 'deleted_at', '=', null)->exists()
+            ) {
+                $approvalFlow = ApprovalFlow::with('role')
+                    ->where('order', $this->order)
+                    ->where('group_approval_flow_id', $this->group_approval_flow_id)
+                    ->orderBy('id', 'ASC')
+                    ->whereRelation('role', 'deleted_at', '=', null)
+                    ->first();
+                return [
+                    'title' => $approvalFlow->role->title
+                ];
+            } else {
+                return [
+                    'title' => ''
+                ];
+            }
         } else {
             return [
                 'title' => ''
