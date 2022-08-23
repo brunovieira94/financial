@@ -74,7 +74,7 @@ class ApprovalFlowByUserService
             $ids = $paymentRequestMultiple->pluck('id')->toArray();
             $query->where('id', $ids);
         });
-        $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
+        $paymentRequest = $paymentRequest->withoutGlobalScopes()->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
         return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo)); //;
     }
