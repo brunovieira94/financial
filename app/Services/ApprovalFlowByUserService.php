@@ -209,6 +209,11 @@ class ApprovalFlowByUserService
                 $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
                 $accountsPayableApprovalFlow->reason = $nameUsers;
                 $accountsPayableApprovalFlow->save();
+                if (UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->exists()) {
+                    $userHasPaymentRequest = UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->first();
+                    $userHasPaymentRequest->status = 1;
+                    $userHasPaymentRequest->save();
+                }
             }
             return true;
         } else {
@@ -220,6 +225,11 @@ class ApprovalFlowByUserService
     {
         if (auth()->user()->role->transfer_approval) {
             foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
+                if (UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->exists()) {
+                    $userHasPaymentRequest = UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->first();
+                    $userHasPaymentRequest->status = 1;
+                    $userHasPaymentRequest->save();
+                }
                 if (!UserHasPaymentRequest::where('user_id', $requestInfo['user'])->where('payment_request_id', $idPaymentRequest)->where('status', 0)->exists()) {
                     if (auth()->user()->id != $requestInfo['user']) {
                         UserHasPaymentRequest::create([
