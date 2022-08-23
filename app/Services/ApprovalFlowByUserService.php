@@ -66,15 +66,17 @@ class ApprovalFlowByUserService
         }
         $paymentRequest = $paymentRequest->whereIn('id', $idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
-        $paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
-            $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
-            $paymentRequestMultiple = PaymentRequest::withoutGlobalScopes()->whereIn('id', $ids);
-            $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
-            $paymentRequestMultiple->get('id');
-            $ids = $paymentRequestMultiple->pluck('id')->toArray();
-            $query->where('id', $ids);
-        });
-        $paymentRequest = $paymentRequest->withoutGlobalScopes()->with($this->paymentRequestCleanWith);
+        //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
+        $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
+        $paymentRequestMultiple = PaymentRequest::withoutGlobalScopes()->whereIn('id', $ids);
+        $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
+        $paymentRequestMultiple->get('id');
+        $ids = $paymentRequestMultiple->pluck('id')->toArray();
+        //union ids payment request
+        $paymentRequestIDs = $paymentRequest->get('id');
+        $paymentRequestIDs = $paymentRequest->pluck('id')->toArray();
+        $ids = array_merge($ids, $paymentRequestIDs);
+        $paymentRequest = $this->paymentRequestClean->withoutGlobalScopes()->whereIn('id', $ids)->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
         return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo)); //;
     }
