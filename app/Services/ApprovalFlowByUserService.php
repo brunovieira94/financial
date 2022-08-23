@@ -72,7 +72,7 @@ class ApprovalFlowByUserService
             $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
             $paymentRequestMultiple->get('id');
             $ids = $paymentRequestMultiple->pluck('id')->toArray();
-            $query->orWhere('id', $ids);
+            $query->where('id', $ids);
         });
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
