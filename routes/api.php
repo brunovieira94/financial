@@ -414,6 +414,7 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
+Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
 
