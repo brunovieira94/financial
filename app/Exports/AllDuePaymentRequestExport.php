@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PaymentRequest;
+use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -25,6 +26,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
     {
         $result = PaymentRequest::with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         $requestInfo = $this->requestInfo;
+        $result = Utils::baseFilterReportsPaymentRequest($result, $requestInfo);
         $result = $result->whereHas('installments', function ($query) use ($requestInfo) {
             if (array_key_exists('from', $requestInfo)) {
                 $query = $query->where('extension_date', '>=', $requestInfo['from']);

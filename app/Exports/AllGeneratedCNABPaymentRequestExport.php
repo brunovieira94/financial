@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -23,7 +24,12 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, ShouldAuto
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])
+        $requestInfo = $this->requestInfo;
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request', 'approval_flow', 'reason_to_reject']);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+        });
+        return $accountsPayableApprovalFlow
         ->where('status', 6)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->get();

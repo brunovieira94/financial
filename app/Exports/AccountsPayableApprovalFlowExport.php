@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
@@ -49,7 +50,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         });
         $idsPaymentRequestOrder = [];
         foreach ($approvalFlowUserOrder as $approvalOrder) {
-            $accountApprovalFlow = AccountsPayableApprovalFlow::where('order', $approvalOrder['order'])->with('payment_request');
+            $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])->with('payment_request');
             $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalOrder) {
                 $query->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id']);
             })->get('payment_request_id');
@@ -84,6 +85,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
 
         return [
             $paymentRequest->id,
+            $paymentRequest->company->company_name,
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? 'CNPJ: ' . $paymentRequest->provider->cnpj : 'CPF: ' . $paymentRequest->provider->cpf) : $paymentRequest->provider,
             $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
             $paymentRequest->emission_date,
@@ -115,6 +117,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
     {
         return [
             'Id',
+            'Empresa',
             'Identificação do Fornecedor',
             'Nome do Fornecedor',
             'Data de Emissão',
