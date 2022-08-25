@@ -51,6 +51,7 @@ class ProvidersExport implements FromCollection, ShouldAutoSize, WithMapping, Wi
             $provider->accept_billet_payment,
             $provider->credit_card_payment,
             $provider->international,
+            $provider->allows_registration_without_purchase_order,
         ];
     }
 
@@ -85,7 +86,8 @@ class ProvidersExport implements FromCollection, ShouldAutoSize, WithMapping, Wi
             'Data de Nascimento',
             'Aceitar pagamento por boleto?',
             'Pagamento via cartão de crédito',
-            'Fornecedor Internacional?'
+            'Fornecedor Internacional?',
+            'Permitir pagamento sem vincular Pedido de Compra?'
         ];
     }
 }
