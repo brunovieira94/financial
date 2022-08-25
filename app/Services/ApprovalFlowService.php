@@ -1,33 +1,47 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\ApprovalFlow;
+use App\Models\GroupApprovalFlow;
+use Illuminate\Support\Facades\DB;
 
 class ApprovalFlowService
 {
-    private $with = ['role'];
+    private $with = ['approval_flow'];
     private $approvalFlow;
-    public function __construct(ApprovalFlow $approvalFlow)
+    private $groupApprovalFlow;
+
+    public function __construct(ApprovalFlow $approvalFlow, GroupApprovalFlow $groupApprovalFlow)
     {
         $this->approvalFlow = $approvalFlow;
+        $this->groupApprovalFlow = $groupApprovalFlow;
     }
 
-    public function getAllApprovalFlow()
+    public function getAllApprovalFlow($requestInfo)
     {
-        return $this->approvalFlow->with($this->with)->get();
+        $approvalFlow = Utils::search($this->groupApprovalFlow,$requestInfo);
+        return Utils::pagination($approvalFlow, $requestInfo);
     }
+
+    public function getApprovalFlowById($id)
+    {
+        return $this->groupApprovalFlow->with($this->with)->findOrFail($id);
+    }
+
 
     public function postApprovalFlow($approvalFlowInfo)
     {
-        ApprovalFlow::truncate();
+        $groupApprovalFlow = $this->groupApprovalFlow->create($approvalFlowInfo);
         $approvalFlow = new ApprovalFlow;
         $info = [];
-        foreach($approvalFlowInfo['order'] as $key=>$roles){
+        foreach ($approvalFlowInfo['order'] as $key => $roles) {
             $info['order'] = $key;
             $info['competency'] = $approvalFlowInfo['competency'][$key];
             $info['extension'] = $approvalFlowInfo['extension'][$key];
             $info['filter_cost_center'] = $approvalFlowInfo['filter_cost_center'][$key];
-            foreach($roles as $role){
+            $info['group_approval_flow_id'] = $groupApprovalFlow->id;
+            foreach ($roles as $role) {
                 $info['role_id'] = $role;
                 $approvalFlow->create($info);
             }
@@ -35,5 +49,32 @@ class ApprovalFlowService
         return true;
     }
 
-}
+    public function putApprovalFlow($id, $approvalFlowInfo)
+    {
+        $groupApprovalFlow = $this->groupApprovalFlow->findOrFail($id);
+        $groupApprovalFlow->fill($approvalFlowInfo)->save();
+        DB::table('approval_flow')->where('group_approval_flow_id', $id)->delete();
 
+        $approvalFlow = new ApprovalFlow;
+        $info = [];
+        foreach ($approvalFlowInfo['order'] as $key => $roles) {
+            $info['order'] = $key;
+            $info['competency'] = $approvalFlowInfo['competency'][$key];
+            $info['extension'] = $approvalFlowInfo['extension'][$key];
+            $info['filter_cost_center'] = $approvalFlowInfo['filter_cost_center'][$key];
+            $info['group_approval_flow_id'] = $groupApprovalFlow->id;
+            foreach ($roles as $role) {
+                $info['role_id'] = $role;
+                $approvalFlow->create($info);
+            }
+        }
+        return true;
+    }
+
+    public function deleteApprovalFlow($id)
+    {
+        $this->groupApprovalFlow->findOrFail($id)->delete();
+        DB::table('approval_flow')->where('group_approval_flow_id', $id)->delete();
+        return true;
+    }
+}

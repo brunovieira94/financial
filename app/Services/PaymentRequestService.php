@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
 use App\Models\BankAccount;
+use App\Models\CostCenter;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasAttachments;
@@ -39,7 +40,7 @@ class PaymentRequestService
     private $paymentRequestClean;
     private $installmentClean;
 
-    private $with = ['purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
     private $installmentWith = ['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'];
 
     public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
@@ -115,7 +116,7 @@ class PaymentRequestService
 
     public function getPaymentRequest($id)
     {
-        $paymentRequest = $this->paymentRequestClean->with($this->with)->withoutGlobalScopes()->withTrashed()->findOrFail($id);
+        $paymentRequest = $this->paymentRequestClean->with($this->with)->withTrashed()->withoutGlobalScopes()->findOrFail($id);
         foreach ($paymentRequest->purchase_order as $purchaseOrder) {
             foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                 $installment = [
@@ -143,6 +144,8 @@ class PaymentRequestService
     {
         $paymentRequestInfo = $request->all();
         $paymentRequestInfo['user_id'] = auth()->user()->id;
+
+        $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
             $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
@@ -179,6 +182,7 @@ class PaymentRequestService
             'payment_request_id' => $paymentRequest->id,
             'order' => 1,
             'status' => 0,
+            'group_approval_flow_id' => $paymentRequest->group_approval_flow_id,
         ]);
         activity()->enableLogging();
 
@@ -198,7 +202,7 @@ class PaymentRequestService
     {
         $paymentRequestInfo = $request->all();
         $paymentRequest = $this->paymentRequest->findOrFail($id);
-        $maxOrder = $this->approvalFlow->max('order');
+        $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $paymentRequest->group_approval_flow_id)->max('order');
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
         activity()->disableLogging();
@@ -223,6 +227,16 @@ class PaymentRequestService
             }
             $approval->reason_to_reject_id = null;
             $approval->reason = null;
+        }
+
+        if($paymentRequest->cost_center_id != $paymentRequestInfo['cost_center_id']){
+            $costCenter = CostCenter::findOrFail($paymentRequestInfo['cost_center_id']);
+            if($paymentRequest->group_form_payment_id != $costCenter->group_approval_flow_id){
+                $paymentRequest->group_approval_flow_id = $costCenter->group_approval_flow_id;
+                $approval->group_approval_flow_id = $costCenter->group_approval_flow_id;
+                $approval->order = 0;
+                $approval->status = 0;
+            }
         }
 
         $approval->save();

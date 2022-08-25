@@ -61,7 +61,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->next_extension_date,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
             $accountsPayableApprovalFlow->payment_request_trashed->note,
-            $accountsPayableApprovalFlow->payment_request_trashed->approval->approval_flow_first['title'],
+            $accountsPayableApprovalFlow->payment_request_trashed->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request_trashed->approval->status)
         ];
     }
