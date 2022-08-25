@@ -22,6 +22,9 @@ class HotelService
     public function getAllHotel($requestInfo)
     {
         $hotel = Utils::search($this->hotel, $requestInfo);
+        if (array_key_exists('isValid', $requestInfo)) {
+            $hotel->where('is_valid', $requestInfo['isValid']);
+        }
         return Utils::pagination($hotel->with($this->with), $requestInfo);
     }
 

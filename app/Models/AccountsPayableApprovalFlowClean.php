@@ -82,21 +82,28 @@ class AccountsPayableApprovalFlowClean extends Model
 
     public function getApproverStageFirstAttribute()
     {
-        if (ApprovalFlow::with('role')
-            ->where('order', $this->order)
-            ->where('group_approval_flow_id', $this->group_approval_flow_id)
-            ->orderBy('id', 'ASC')
-            ->whereRelation('role', 'deleted_at', '=', null)->exists()
-        ) {
-            $approvalFlow = ApprovalFlow::with('role')
+        $statusOrder = [0, 2, 8, 9];
+        if (in_array($this->status, $statusOrder)) {
+            if (ApprovalFlow::with('role')
                 ->where('order', $this->order)
                 ->where('group_approval_flow_id', $this->group_approval_flow_id)
                 ->orderBy('id', 'ASC')
-                ->whereRelation('role', 'deleted_at', '=', null)
-                ->first();
-            return [
-                'title' => $approvalFlow->role->title
-            ];
+                ->whereRelation('role', 'deleted_at', '=', null)->exists()
+            ) {
+                $approvalFlow = ApprovalFlow::with('role')
+                    ->where('order', $this->order)
+                    ->where('group_approval_flow_id', $this->group_approval_flow_id)
+                    ->orderBy('id', 'ASC')
+                    ->whereRelation('role', 'deleted_at', '=', null)
+                    ->first();
+                return [
+                    'title' => $approvalFlow->role->title
+                ];
+            } else {
+                return [
+                    'title' => ''
+                ];
+            }
         } else {
             return [
                 'title' => ''

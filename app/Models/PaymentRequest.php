@@ -225,28 +225,4 @@ class PaymentRequest extends Model
     {
         static::addGlobalScope(new ProfileCostCenterScope);
     }
-
-    public function getApprovalFlowFirstNewAttribute()
-    {
-        if (ApprovalFlow::with('role')
-            ->where('order', $this->order)
-            ->where('group_approval_flow_id', $this->group_approval_flow_id)
-            ->orderBy('id', 'ASC')
-            ->whereRelation('role', 'deleted_at', '=', null)->exists()
-        ) {
-            $approvalFlow = ApprovalFlow::with('role')
-                ->where('order', $this->order)
-                ->where('group_approval_flow_id', $this->group_approval_flow_id)
-                ->orderBy('id', 'ASC')
-                ->whereRelation('role', 'deleted_at', '=', null)
-                ->first();
-            return [
-                'title' => $approvalFlow->role->title
-            ];
-        } else {
-            return [
-                'title' => ''
-            ];
-        }
-    }
 }
