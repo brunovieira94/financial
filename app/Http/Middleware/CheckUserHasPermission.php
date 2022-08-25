@@ -41,7 +41,9 @@ class CheckUserHasPermission
             'all',
             'filter-user',
             'approve-many',
-            'update-installment'
+            'update-installment',
+            'multiple-approval',
+            'transfer-approval'
         ];
 
         $routeAccessed = $route[count($route) - 1];
@@ -97,7 +99,11 @@ class CheckUserHasPermission
             case 'bank-account';
                 $routeAccessed = 'provider';
                 break;
+            case 'installment';
+                $routeAccessed = 'payment-request';
+                break;
         }
+
 
         foreach ($roles as $role) {
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);

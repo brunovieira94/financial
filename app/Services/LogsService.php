@@ -63,6 +63,12 @@ class LogsService
                     case 1:
                         $status = 'approved';
                         break;
+                    case 8:
+                        $status = 'multiple-approval';
+                        break;
+                    case 9:
+                        $status = 'transfer-approval';
+                        break;
                     default:
                         $status = 'default';
                 }
@@ -70,7 +76,7 @@ class LogsService
                 $reason = null;
                 $concatenate = false;
 
-                if ($log['properties']['attributes']['reason_to_reject'] != null) {
+                if ($log['properties']['attributes']['reason_to_reject_id'] != null) {
                     $reason = $log['properties']['attributes']['reason_to_reject']['title'];
                     $concatenate = true;
                 }
@@ -84,12 +90,13 @@ class LogsService
 
                 $retorno[] = [
                     'type' => $status,
-                    'createdAt' => $log['created_at'],
-                    'description' => $log['description'],
-                    'causerUser' => $log['causer_object']['name'],
-                    'causerUserRole' => $log['causer_object']['role']['title'],
-                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? null,
+                    'createdAt' => $log['created_at'] ?? '',
+                    'description' => $log['description'] ?? '',
+                    'causerUser' => $log['causer_object']['name'] ?? '',
+                    'causerUserRole' => $log['causer_object']['role']['title'] ?? '',
+                    'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? '',
                     'motive' => $reason,
+                    'stage' => isset($log['properties']['old']['order']) ? $log['properties']['old']['order'] + 1 : '', //front exibe a etapa com adição de 1
                 ];
             } else if ($log['log_name'] == 'payment_request') {
                 $retorno[] = [

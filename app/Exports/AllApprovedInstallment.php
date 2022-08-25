@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PaymentRequestHasInstallments;
+use App\Services\Utils;
 use Config;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -30,6 +31,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);
             });
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
 
         if (!array_key_exists('company_id', $requestInfo)) {
@@ -58,7 +60,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->discount,
             $installment->portion_amount,
             $installment->note,
-            $installment->payment_request->approval->approval_flow_first['title'],
+            $installment->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.'.$installment->payment_request->approval->status)
         ];
     }

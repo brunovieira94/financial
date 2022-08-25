@@ -24,6 +24,8 @@ class StoreApprovalFlowRequest extends FormRequest
     public function rules()
     {
         return [
+            'title' => 'required|max:250',
+            'description' => 'max:250',
             'order' => 'required|array',
             'competency' => 'required|array',
             'extension' => 'required|array',

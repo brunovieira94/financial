@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\ApprovalFlow;
 use App\Models\CostCenter;
 use App\Models\ChartOfAccounts;
+use App\Models\GroupApprovalFlow;
 
 use function PHPSTORM_META\map;
 use function PHPUnit\Framework\isNull;
@@ -11,6 +13,7 @@ use function PHPUnit\Framework\isNull;
 class CostCenterService
 {
     private $costCenter;
+    private $with = ['group_approval_flow.approval_flow'];
     // private $chartOfAccounts;
     public function __construct(CostCenter $costCenter)
     {
@@ -24,13 +27,20 @@ class CostCenterService
         $costCenters = Utils::pagination($costCenter->where('parent', null), $requestInfo);
         //$costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
+        foreach($nestable as $nest){
+            $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->first();
+        }
         return $nestable;
     }
 
     public function getCostCenter($id)
     {
-        $costCenter = $this->costCenter->findOrFail($id)->where('id', $id)->get();
+        $costCenter = $this->costCenter->with($this->with)->findOrFail($id)->where('id', $id)->get();
         $nestable = $this->costCenter->nestable($costCenter);
+        $costCenter = $this->costCenter->with($this->with)->findOrFail($id);
+        foreach($nestable as $nest){
+            $nest->group_approval_flow = GroupApprovalFlow::where('id', $costCenter->group_approval_flow_id)->with('approval_flow')->first();
+        }
         return $nestable;
     }
 
@@ -46,6 +56,9 @@ class CostCenterService
             ->whereIn('id', $costCenterID)
             , $requestInfo);
             $nestable = $this->costCenter->nestable($costCenters);
+            foreach($nestable as $nest){
+                $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->first();
+            }
             return $nestable;
         }else
         {
@@ -60,7 +73,8 @@ class CostCenterService
         if (array_key_exists('parent', $costCenterInfo) && is_numeric($costCenterInfo['parent'])) {
             $this->costCenter->findOrFail($costCenterInfo['parent'])->get();
         }
-        return $costCenter->create($costCenterInfo);
+        $costCenter = $costCenter->create($costCenterInfo);
+        return $this->costCenter->with($this->with)->findOrFail($costCenter->id);
     }
 
     public function putCostCenter($id, $costCenterInfo)
@@ -92,7 +106,7 @@ class CostCenterService
     public function allCostCenters($costCenterInfo)
     {
         $costCenters = Utils::search($this->costCenter, $costCenterInfo);
-        $costCenters = Utils::pagination($costCenters, $costCenterInfo);
+        $costCenters = Utils::pagination($costCenters->with('group_approval_flow'), $costCenterInfo);
 
         //foreach ($costCenters as $costCenter)
         //{
