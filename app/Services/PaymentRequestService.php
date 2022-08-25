@@ -61,6 +61,7 @@ class PaymentRequestService
         $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
         $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency'])->where('user_id', auth()->user()->id), $requestInfo);
         /*foreach ($paymentRequests as $paymentRequest) {
+>>>>>>> main
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
