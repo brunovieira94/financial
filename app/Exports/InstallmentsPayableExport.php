@@ -26,9 +26,14 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
 
     public function collection()
     {
+        $requestInfo = $this->requestInfo;
         $query = PaymentRequestHasInstallments::query();
         $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
-        $requestInfo = $this->requestInfo;
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
+            $query = $query->with(['payment_request' => function ($query) {
+                return $query->withTrashed();
+            },]);
+        }
         $query = $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
@@ -52,7 +57,7 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->portion_amount,
             $query->note,
             $query->payment_request->approval->approver_stage_first['title'],
-            Config::get('constants.statusPt.'.$query->payment_request->approval->status)
+            Config::get('constants.statusPt.' . $query->payment_request->approval->status)
         ];
     }
 
