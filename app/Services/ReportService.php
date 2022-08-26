@@ -71,6 +71,11 @@ class ReportService
     {
         $result = Utils::search($this->installmentClean, $requestInfo);
         $result = $result->with($this->installmentCleanWith)->has('payment_request');
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
+            $result = $result->with(['payment_request' => function ($query) {
+                return $query->withTrashed();
+            },]);
+        }
         $result = $result->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
@@ -112,7 +117,11 @@ class ReportService
     {
         $installment = Utils::search($this->installmentClean, $requestInfo);
         $installment = $installment->with($this->installmentCleanWith);
-
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
+            $installment = $installment->with(['payment_request' => function ($query) {
+                return $query->withTrashed();
+            },]);
+        }
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);
@@ -289,6 +298,11 @@ class ReportService
     {
         $query = $this->installmentClean->query();
         $query = $query->with($this->installmentCleanWith);
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
+            $query = $query->with(['payment_request' => function ($query) {
+                return $query->withTrashed();
+            },]);
+        }
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
