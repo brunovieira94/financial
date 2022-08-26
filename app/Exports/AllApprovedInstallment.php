@@ -33,15 +33,10 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             });
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
+        if (!array_key_exists('company', $requestInfo))
+            return [];
 
-        if (!array_key_exists('company_id', $requestInfo)) {
-            return $installment->get();
-        } else {
-            $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->where('company_id', $requestInfo['company_id']);
-            });
-            return $installment->get();
-        }
+        return $installment->get();
     }
 
     public function map($installment): array
@@ -61,7 +56,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->portion_amount,
             $installment->note,
             $installment->payment_request->approval->approver_stage_first['title'],
-            Config::get('constants.statusPt.'.$installment->payment_request->approval->status)
+            Config::get('constants.statusPt.' . $installment->payment_request->approval->status)
         ];
     }
 

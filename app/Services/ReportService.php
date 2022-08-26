@@ -94,112 +94,18 @@ class ReportService
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
-
-        if ((!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $requestInfo)) {
-            return Utils::pagination($accountsPayableApprovalFlow
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                ->where('status', 1), $requestInfo);
-            foreach ($query as $accountsPayableApprovalFlow) {
-                foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                    foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                        $installment = [
-                            'id' => $installment->installment_purchase->id,
-                            'amount_received' => $installment->amount_received,
-                            'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                            'parcel_number' => $installment->installment_purchase->parcel_number,
-                            'portion_amount' => $installment->installment_purchase->portion_amount,
-                            'due_date' => $installment->installment_purchase->due_date,
-                            'note' => $installment->installment_purchase->note,
-                            'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                            'money_discount' => $installment->installment_purchase->money_discount,
-                            'invoice_received' => $installment->installment_purchase->invoice_received,
-                            'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                            'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                            'amount_paid' => $installment->installment_purchase->amount_paid,
-                        ];
-                        $purchaseOrder->purchase_order_installments[$key] = $installment;
-                    }
-                }
-            }
-            return $query;
-        } elseif (!array_key_exists('form_payment_id', $requestInfo) || $requestInfo['form_payment_id'] == 0) {
-            return Utils::pagination($accountsPayableApprovalFlow
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->where('status', 1), $requestInfo);
-            foreach ($query as $accountsPayableApprovalFlow) {
-                foreach ($accountsPayableApprovalFlow['payment_request']['purchase_order'] as $purchaseOrder) {
-                    foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                        $installment = [
-                            'id' => $installment->installment_purchase->id,
-                            'amount_received' => $installment->amount_received,
-                            'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                            'parcel_number' => $installment->installment_purchase->parcel_number,
-                            'portion_amount' => $installment->installment_purchase->portion_amount,
-                            'due_date' => $installment->installment_purchase->due_date,
-                            'note' => $installment->installment_purchase->note,
-                            'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                            'money_discount' => $installment->installment_purchase->money_discount,
-                            'invoice_received' => $installment->installment_purchase->invoice_received,
-                            'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                            'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                            'amount_paid' => $installment->installment_purchase->amount_paid,
-                        ];
-                        $purchaseOrder->purchase_order_installments[$key] = $installment;
-                    }
-                }
-            }
-            return $query;
+        if (!array_key_exists('company', $requestInfo)) {
+            return response()->json([
+                'current_page' => 1,
+                'data' => [],
+                'from' => null,
+                'last_page' => 1,
+                'per_page' => 20,
+                'to' => null,
+                'total' => 0
+            ], 200);
         }
-
-        $formPayment = FormPayment::findOrFail($requestInfo['form_payment_id']);
-
-        if ($formPayment->group_form_payment_id == 1) {
-            if ($formPayment->same_ownership) {
-                if (!array_key_exists('company_id', $requestInfo)) {
-                    return Utils::pagination($accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                        ->where('status', 1), $requestInfo);
-                } else {
-                    return Utils::pagination($accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                        ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                        ->where('status', 1), $requestInfo);
-                }
-            } else {
-                if (!array_key_exists('company_id', $requestInfo)) {
-                    return Utils::pagination($accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                        ->where('status', 1), $requestInfo);
-                } else {
-                    return Utils::pagination($accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                        ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                        ->where('status', 1), $requestInfo);
-                }
-            }
-        } else {
-            if (!array_key_exists('company_id', $requestInfo)) {
-                return Utils::pagination($accountsPayableApprovalFlow
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->where('status', 1), $requestInfo);
-            } else {
-                return Utils::pagination($accountsPayableApprovalFlow
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'company_id', '=', $requestInfo['company_id'])
-                    ->where('status', 1), $requestInfo);
-            }
-        }
+        return Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
     }
 
     public function getAllApprovedInstallment($requestInfo)
@@ -213,15 +119,18 @@ class ReportService
             });
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
-
-        if (!array_key_exists('company_id', $requestInfo)) {
-            return Utils::pagination($installment, $requestInfo);
-        } else {
-            $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->where('company_id', $requestInfo['company_id']);
-            });
-            return Utils::pagination($installment, $requestInfo);
+        if (!array_key_exists('company', $requestInfo)) {
+            return response()->json([
+                'current_page' => 1,
+                'data' => [],
+                'from' => null,
+                'last_page' => 1,
+                'per_page' => 20,
+                'to' => null,
+                'total' => 0
+            ], 200);
         }
+        return Utils::pagination($installment, $requestInfo);
     }
 
     public function getAllGeneratedCNABPaymentRequest($requestInfo)
