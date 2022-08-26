@@ -32,73 +32,10 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
 
-        if ((!array_key_exists('form_payment_id', $this->requestInfo) || $this->requestInfo['form_payment_id'] == 0) && array_key_exists('company_id', $this->requestInfo)) {
-            return $accountsPayableApprovalFlow
-                ->where('status', 1)
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
-                ->get();
-        } elseif (!array_key_exists('form_payment_id', $this->requestInfo) || $this->requestInfo['form_payment_id'] == 0) {
-            return $accountsPayableApprovalFlow
-                ->where('status', 1)
-                ->whereRelation('payment_request', 'deleted_at', '=', null)
-                ->get();
-        }
+        if (!array_key_exists('company', $requestInfo))
+            return [];
 
-        $formPayment = FormPayment::findOrFail($this->requestInfo['form_payment_id']);
-
-        if ($formPayment->group_form_payment_id == 1) {
-            if ($formPayment->same_ownership) {
-                if (!array_key_exists('company_id', $this->requestInfo)) {
-                    return $accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                        ->where('status', 1)
-                        ->get();
-                } else {
-                    return $accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'like', "{$formPayment->bank_code}%")
-                        ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
-                        ->where('status', 1)
-                        ->get();
-                }
-            } else {
-                if (!array_key_exists('company_id', $this->requestInfo)) {
-                    return $accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                        ->where('status', 1)
-                        ->get();
-                } else {
-                    return $accountsPayableApprovalFlow
-                        ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id)
-                        ->whereRelation('payment_request', 'deleted_at', '=', null)
-                        ->whereRelation('payment_request', 'bar_code', 'not like', "{$formPayment->bank_code}%")
-                        ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
-                        ->where('status', 1)
-                        ->get();
-                }
-            }
-        } else {
-            if (!array_key_exists('company_id', $this->requestInfo)) {
-                return $accountsPayableApprovalFlow
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->where('status', 1)
-                    ->get();
-            } else {
-                return $accountsPayableApprovalFlow
-                    ->whereRelation('payment_request', 'group_form_payment_id', '=', $formPayment->group_form_payment_id) // arrumar
-                    ->whereRelation('payment_request', 'deleted_at', '=', null)
-                    ->whereRelation('payment_request', 'company_id', '=', $this->requestInfo['company_id'])
-                    ->where('status', 1)
-                    ->get();
-            }
-        }
+        return $accountsPayableApprovalFlow->get();
     }
 
     public function map($accountsPayableApprovalFlow): array

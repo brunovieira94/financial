@@ -366,6 +366,9 @@ class Utils
         }
 
         if (array_key_exists('status', $requestInfo)) {
+            if ($requestInfo['status'] == 3) {
+                $paymentRequest = $paymentRequest->withTrashed();
+            }
             $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
                 if ($requestInfo['status'] == 0) {
                     $query->whereIn('status', [0, 8, 9]);
