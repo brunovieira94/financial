@@ -287,4 +287,11 @@ class PaymentRequestController extends Controller
         return $this->paymentRequestService->getInstallment($id);
     }
 
+    public function paymentApproval()
+    {
+        return PaymentRequest::withOutGlobalScopes()->withTrashed()->where('group_approval_flow_id', null)->get();
+    }
+
+
+
 }

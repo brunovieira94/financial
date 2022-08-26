@@ -419,6 +419,7 @@ Route::prefix('/auth')->group(function () {
 });
 
 Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
+Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
 
