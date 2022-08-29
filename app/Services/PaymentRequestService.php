@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\reports\RoutePaymentRequestAllResource;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
@@ -89,30 +90,7 @@ class PaymentRequestService
     public function getAllPaymentRequest($requestInfo)
     {
         $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
-        $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency']), $requestInfo);
-        /*foreach ($paymentRequests as $paymentRequest) {
-            foreach ($paymentRequest->purchase_order as $purchaseOrder) {
-                foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
-                    $installment = [
-                        'id' => $installment->installment_purchase->id,
-                        'amount_received' => $installment->amount_received,
-                        'purchase_order_id' => $installment->installment_purchase->purchase_order_id,
-                        'parcel_number' => $installment->installment_purchase->parcel_number,
-                        'portion_amount' => $installment->installment_purchase->portion_amount,
-                        'due_date' => $installment->installment_purchase->due_date,
-                        'note' => $installment->installment_purchase->note,
-                        'percentage_discount' => $installment->installment_purchase->percentage_discount,
-                        'money_discount' => $installment->installment_purchase->money_discount,
-                        'invoice_received' => $installment->installment_purchase->invoice_received,
-                        'invoice_paid' => $installment->installment_purchase->invoice_paid,
-                        'payment_request_id' => $installment->installment_purchase->payment_request_id,
-                        'amount_paid' => $installment->installment_purchase->amount_paid,
-                    ];
-                    $purchaseOrder->purchase_order_installments[$key] = $installment;
-                }
-            }
-        }*/
-        return $paymentRequests;
+        return RoutePaymentRequestAllResource::collection(Utils::pagination($paymentRequests->withTrashed()->withoutGlobalScopes(), $requestInfo));
     }
 
     public function getPaymentRequest($id)
