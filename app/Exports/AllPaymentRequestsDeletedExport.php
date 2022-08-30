@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -25,7 +26,12 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request_trashed'])
+        $requestInfo = $this->requestInfo;
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request_trashed']);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request_trashed', function ($query) use ($requestInfo) {
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+        });
+        return $accountsPayableApprovalFlow
             ->whereRelation('payment_request_trashed', 'deleted_at', '!=', null)
             ->get();
     }
@@ -61,7 +67,7 @@ class AllPaymentRequestsDeletedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request_trashed->next_extension_date,
             $accountsPayableApprovalFlow->payment_request_trashed->created_at,
             $accountsPayableApprovalFlow->payment_request_trashed->note,
-            $accountsPayableApprovalFlow->payment_request_trashed->approval->approval_flow_first['title'],
+            $accountsPayableApprovalFlow->payment_request_trashed->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request_trashed->approval->status)
         ];
     }

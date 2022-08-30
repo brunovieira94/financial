@@ -23,11 +23,16 @@ class CostCenter extends Model
 
     use SoftDeletes;
     protected $table='cost_center';
-    protected $fillable = ['title','parent','code'];
+    protected $fillable = ['title','parent','code', 'group_approval_flow_id', 'group_approval_flow_supply_id'];
     protected $hidden = ['pivot'];
 
 
     protected $appends = ['linked_costCenters'];
+
+    public function group_approval_flow()
+    {
+        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id');
+    }
 
     public function getLinkedCostCentersAttribute()
     {

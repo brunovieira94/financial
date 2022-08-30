@@ -41,7 +41,9 @@ class CheckUserHasPermission
             'all',
             'filter-user',
             'approve-many',
-            'update-installment'
+            'update-installment',
+            'multiple-approval',
+            'transfer-approval'
         ];
 
         $routeAccessed = $route[count($route) - 1];

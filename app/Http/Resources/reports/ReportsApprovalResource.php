@@ -21,6 +21,7 @@ class ReportsApprovalResource extends JsonResource
             'reason' => $this->reason,
             'approver_stage' =>  $this->approver_stage,
             'approval_flow' => new ReportsApprovalFlowResource($this->approval_flow),
+            'approver_stage_first' => $this->approver_stage_first,
         ];
     }
 }

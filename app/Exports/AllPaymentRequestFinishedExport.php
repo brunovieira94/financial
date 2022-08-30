@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
+use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -23,7 +24,12 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
 
     public function collection()
     {
-        return AccountsPayableApprovalFlow::with(['payment_request'])
+        $requestInfo = $this->requestInfo;
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request']);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+        });
+        return $accountsPayableApprovalFlow
         ->where('status', 7)
         ->whereRelation('payment_request', 'deleted_at', '=', null)
         ->get();
@@ -60,7 +66,7 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
-            $accountsPayableApprovalFlow->payment_request->approval->approval_flow_first['title'],
+            $accountsPayableApprovalFlow->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }
