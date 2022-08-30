@@ -16,6 +16,8 @@ class StoreBillingRequest extends FormRequest
         return [
             'reserve' => 'required|max:150',
             'cangooroo_booking_id' => 'integer',
+            'cangooroo_service_id' => 'integer',
+            'form_of_payment' => 'integer',
             'payment_status' => 'max:150',
             'status_123' => 'max:150',
             'supplier_value' => 'required|numeric',
