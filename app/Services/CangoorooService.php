@@ -90,15 +90,11 @@ class CangoorooService
         if ($cangooroo) {
             $updatedCangooroo = $this->cangooroo->findOrFail($cangooroo['id']);
             $updatedCangooroo->fill($data)->save();
-            $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
-            $cangoorooToReturn['service_id'] = [$cangoorooToReturn['service_id']];
-            return $cangoorooToReturn;
+            return $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
         }
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
-        $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
-        $cangoorooToReturn['service_id'] = [$cangoorooToReturn['service_id']];
-        return $cangoorooToReturn;
+        return $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
     }
 
     public function getCangoorooBookingIDData($reserve, $retrys = 5)
@@ -122,7 +118,7 @@ class CangoorooService
             }
             return [
                 'booking_id' => $apiCall->json()['Reservations'][0]['BookingId'],
-                'service_id' => $serviceIds
+                'multiples_services' => $serviceIds
             ];
         }
         return $apiCall->json()['Reservations'][0]['BookingId'];
