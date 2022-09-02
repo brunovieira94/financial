@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\TemporaryLogUploadPaymentRequest;
 use DB;
 use Illuminate\Http\Request;
 
@@ -28,5 +29,10 @@ class InfoController extends Controller
             'cpf' => $cpfDuplicate,
             'tax' => $taxDuplicate
         ], 200);
+    }
+
+    public function temporaryLogUploadPaymentRequest(Request $request)
+    {
+        return TemporaryLogUploadPaymentRequest::orderBy('id', 'desc')->limit(10)->get();
     }
 }

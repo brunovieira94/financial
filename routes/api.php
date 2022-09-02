@@ -422,4 +422,7 @@ Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 
 Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
+Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'temporaryLogUploadPaymentRequest']);
+
+
 
