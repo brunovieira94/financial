@@ -279,31 +279,32 @@ class PaymentRequestService
         }
 
         foreach ($archives as $archive) {
+
+            $generatedName = null;
+            $data = uniqid(date('HisYmd'));
+            if (is_array($archive)) {
+                $archive = $archive['attachment'];
+            }
+            $originalName  = explode('.', $archive->getClientOriginalName());
+            $extension = $originalName[count($originalName) - 1];
+            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
+            //$upload = $archive->storeAs($folder, $generatedName);
+            $s3Client = new S3Client([
+                'region' => env('AWS_DEFAULT_REGION'),
+                'version' => '2006-03-01'
+            ]);
+            $bucket = env('AWS_BUCKET');
+            $key = $folder . '/' . $generatedName;
+            // Using stream instead of file path
+            $source = fopen($archive, 'rb');
+            $uploader = new ObjectUploader(
+                $s3Client,
+                $bucket,
+                $key,
+                $source
+            );
             try {
-                $generatedName = null;
-                $data = uniqid(date('HisYmd'));
-                if (is_array($archive)) {
-                    $archive = $archive['attachment'];
-                }
-                $originalName  = explode('.', $archive->getClientOriginalName());
-                $extension = $originalName[count($originalName) - 1];
-                $generatedName = "{$originalName[0]}_{$data}.{$extension}";
-                //$upload = $archive->storeAs($folder, $generatedName);
-                $s3Client = new S3Client([
-                    'region' => env('AWS_DEFAULT_REGION'),
-                    'version' => '2006-03-01'
-                ]);
-                $bucket = env('AWS_BUCKET');
-                $key = $folder .'/'. $generatedName;
-                // Using stream instead of file path
-                $source = fopen($archive, 'rb');
-                $uploader = new ObjectUploader(
-                    $s3Client,
-                    $bucket,
-                    $key,
-                    $source
-                );
-                $result = $uploader->upload();
+                $uploader->upload();
                 array_push($nameFiles, $generatedName);
             } catch (Exception $e) {
                 TemporaryLogUploadPaymentRequest::create([
