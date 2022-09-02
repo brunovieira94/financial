@@ -150,13 +150,13 @@ class PaymentRequestService
         $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? '';
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? null;
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? '';
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? '';
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? null;
         }
 
         if (!array_key_exists('bar_code', $paymentRequestInfo)) {
@@ -245,16 +245,16 @@ class PaymentRequestService
         activity()->enableLogging();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? '';
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? null;
         }
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $this->putAttachments($id, $paymentRequestInfo, $request);
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? '';
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? null;
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? '';
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
 
         $paymentRequest->fill($paymentRequestInfo)->save();
@@ -335,7 +335,7 @@ class PaymentRequestService
             foreach ($paymentRequestInfo['installments'] as $key => $installments) {
 
                 if (array_key_exists('billet_file', $installments)) {
-                    $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0];
+                    $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0] ?? null;
                 }
                 if (array_key_exists('portion_amount', $installments)) {
                     if ($installments['portion_amount'] <= 0) {
@@ -464,7 +464,7 @@ class PaymentRequestService
 
         foreach ($paymentRequestInfo['attachments'] as $key => $attachment) {
             $paymentRequestHasAttachment = new PaymentRequestHasAttachments;
-            $attachment['attachment'] = $this->storeArchive($request->attachments[$key], 'attachment-payment-request')[0];
+            $attachment['attachment'] = $this->storeArchive($request->attachments[$key], 'attachment-payment-request')[0] ?? null;
             $paymentRequestHasAttachment = $paymentRequestHasAttachment->create([
                 'payment_request_id' => $id,
                 'attachment' => $attachment['attachment'],
@@ -602,7 +602,7 @@ class PaymentRequestService
         $requestInfo = $request->all();
         $installment = $this->installments->findOrFail($id);
         if (array_key_exists('billet_file', $requestInfo)) {
-            $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+            $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
         $installment->fill($requestInfo)->save();
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
