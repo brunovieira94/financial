@@ -24,10 +24,12 @@ use App\Models\Provider;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
 use App\Models\TemporaryLogUploadPaymentRequest;
-use AWS\CRT\HTTP\Response;
 use Config;
 use Exception;
-use ZipStream\Option\Archive;
+use Aws\S3\S3Client;
+use Aws\Exception\AwsException;
+use Aws\S3\ObjectUploader;
+use Illuminate\Support\Facades\Storage;
 
 use function PHPUnit\Framework\isNull;
 
@@ -277,22 +279,32 @@ class PaymentRequestService
         }
 
         foreach ($archives as $archive) {
+
+            $generatedName = null;
+            $data = uniqid(date('HisYmd'));
+            if (is_array($archive)) {
+                $archive = $archive['attachment'];
+            }
+            $originalName  = explode('.', $archive->getClientOriginalName());
+            $extension = $originalName[count($originalName) - 1];
+            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
+            //$upload = $archive->storeAs($folder, $generatedName);
+            $s3Client = new S3Client([
+                'region' => env('AWS_DEFAULT_REGION'),
+                'version' => '2006-03-01'
+            ]);
+            $bucket = env('AWS_BUCKET');
+            $key = $folder . '/' . $generatedName;
+            // Using stream instead of file path
+            $source = fopen($archive, 'rb');
+            $uploader = new ObjectUploader(
+                $s3Client,
+                $bucket,
+                $key,
+                $source
+            );
             try {
-                $generatedName = null;
-                $data = uniqid(date('HisYmd'));
-
-                if (is_array($archive)) {
-                    $archive = $archive['attachment'];
-                }
-                $originalName  = explode('.', $archive->getClientOriginalName());
-                $extension = $originalName[count($originalName) - 1];
-                $generatedName = "{$originalName[0]}_{$data}.{$extension}";
-
-                $upload = $archive->storeAs($folder, $generatedName);
-
-                if (!$upload)
-                    return response('Falha ao realizar o upload do arquivo.', 500)->send();
-
+                $uploader->upload();
                 array_push($nameFiles, $generatedName);
             } catch (Exception $e) {
                 TemporaryLogUploadPaymentRequest::create([
@@ -302,7 +314,6 @@ class PaymentRequestService
                 error_log($e->getMessage());
             }
         }
-
         return $nameFiles;
     }
 
