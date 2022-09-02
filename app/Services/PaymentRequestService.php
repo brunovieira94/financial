@@ -437,7 +437,9 @@ class PaymentRequestService
         $destroyCollection = [];
 
         if (array_key_exists('attachments_ids', $paymentRequestInfo)) {
-            $updateAttachments[] = $paymentRequestInfo['attachments_ids'];
+            foreach ($paymentRequestInfo['attachments_ids'] as $key => $attachment) {
+                $updateAttachments[] = $attachment;
+            }
         }
 
         foreach ($paymentRequestInfo['attachments'] as $key => $attachment) {

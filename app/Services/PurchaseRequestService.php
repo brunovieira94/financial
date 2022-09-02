@@ -305,7 +305,9 @@ class PurchaseRequestService
         $destroyCollection = [];
 
         if (array_key_exists('attachments_ids', $purchaseRequestInfo)) {
-            $updateAttachments[] = $purchaseRequestInfo['attachments_ids'];
+            foreach ($purchaseRequestInfo['attachments_ids'] as $key => $attachment) {
+                $updateAttachments[] = $attachment;
+            }
         }
         if (array_key_exists('attachments', $purchaseRequestInfo)) {
             foreach ($purchaseRequestInfo['attachments'] as $key => $attachment) {
