@@ -22,6 +22,7 @@ use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Provider;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasInstallments;
+use App\Models\TemporaryLogUploadPaymentRequest;
 use AWS\CRT\HTTP\Response;
 use Config;
 use Exception;
@@ -149,13 +150,13 @@ class PaymentRequestService
         $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? '';
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0];
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? '';
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? '';
         }
 
         if (!array_key_exists('bar_code', $paymentRequestInfo)) {
@@ -230,9 +231,9 @@ class PaymentRequestService
             $approval->reason = null;
         }
 
-        if($paymentRequest->cost_center_id != $paymentRequestInfo['cost_center_id']){
+        if ($paymentRequest->cost_center_id != $paymentRequestInfo['cost_center_id']) {
             $costCenter = CostCenter::findOrFail($paymentRequestInfo['cost_center_id']);
-            if($paymentRequest->group_form_payment_id != $costCenter->group_approval_flow_id){
+            if ($paymentRequest->group_form_payment_id != $costCenter->group_approval_flow_id) {
                 $paymentRequest->group_approval_flow_id = $costCenter->group_approval_flow_id;
                 $approval->group_approval_flow_id = $costCenter->group_approval_flow_id;
                 $approval->order = 0;
@@ -244,15 +245,17 @@ class PaymentRequestService
         activity()->enableLogging();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0];
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? '';
         }
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $this->putAttachments($id, $paymentRequestInfo, $request);
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0];
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? '';
         }
-
+        if (array_key_exists('billet_file', $paymentRequestInfo)) {
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? '';
+        }
 
         $paymentRequest->fill($paymentRequestInfo)->save();
         $this->putTax($id, $paymentRequestInfo);
@@ -296,22 +299,30 @@ class PaymentRequestService
         }
 
         foreach ($archives as $archive) {
-            $generatedName = null;
-            $data = uniqid(date('HisYmd'));
+            try {
+                $generatedName = null;
+                $data = uniqid(date('HisYmd'));
 
-            if (is_array($archive)) {
-                $archive = $archive['attachment'];
+                if (is_array($archive)) {
+                    $archive = $archive['attachment'];
+                }
+                $originalName  = explode('.', $archive->getClientOriginalName());
+                $extension = $originalName[count($originalName) - 1];
+                $generatedName = "{$originalName[0]}_{$data}.{$extension}";
+
+                $upload = $archive->storeAs($folder, $generatedName);
+
+                if (!$upload)
+                    return response('Falha ao realizar o upload do arquivo.', 500)->send();
+
+                array_push($nameFiles, $generatedName);
+            } catch (Exception $e) {
+                TemporaryLogUploadPaymentRequest::create([
+                    'error' => $e->getMessage(),
+                    'folder' => $folder
+                ]);
+                error_log($e->getMessage());
             }
-            $originalName  = explode('.', $archive->getClientOriginalName());
-            $extension = $originalName[count($originalName) - 1];
-            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
-
-            $upload = $archive->storeAs($folder, $generatedName);
-
-            if (!$upload)
-                return response('Falha ao realizar o upload do arquivo.', 500)->send();
-
-            array_push($nameFiles, $generatedName);
         }
 
         return $nameFiles;
@@ -330,7 +341,7 @@ class PaymentRequestService
                     if ($installments['portion_amount'] <= 0) {
                         $installments['portion_amount'] = $installments['initial_value'];
                     }
-                }else {
+                } else {
                     $installments['portion_amount'] = $installments['initial_value'];
                 }
                 if (array_key_exists('id', $installments)) {
@@ -347,7 +358,7 @@ class PaymentRequestService
                         if ($installments['portion_amount'] <= 0) {
                             $installments['portion_amount'] = $installments['initial_value'];
                         }
-                    }else {
+                    } else {
                         $installments['portion_amount'] = $installments['initial_value'];
                     }
                     if ($updateCompetence) {
