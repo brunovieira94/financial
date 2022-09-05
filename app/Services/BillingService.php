@@ -4,6 +4,7 @@ namespace App\Services;
 
 
 use App\Models\Billing;
+use App\Models\Cangooroo;
 use App\Models\PaidBillingInfo;
 use App\Models\Hotel;
 use Config;
@@ -26,7 +27,52 @@ class BillingService
 
     public function getAllBilling($requestInfo, $approvalStatus)
     {
-        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
+        if($approvalStatus == 'billing-all'){
+            $billing = Utils::search($this->billing, $requestInfo);
+        }
+        else{
+            $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
+        }
+        if (array_key_exists('payment_status', $requestInfo)){
+            $billing->where('payment_status', $requestInfo['payment_status']);
+        }
+        if (array_key_exists('status_123', $requestInfo)){
+            $billing->where('status_123', $requestInfo['status_123']);
+        }
+        if (array_key_exists('status_cangooroo', $requestInfo)){
+            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
+                $query->where('status', $requestInfo['status_cangooroo']);
+            });
+        }
+        if (array_key_exists('id_hotel_cangooroo', $requestInfo)){
+            $billing->whereHas('cangooroo', function ($queryCangooroo) use ($requestInfo) {
+                $queryCangooroo->whereHas('hotel', function ($queryHotel) use ($requestInfo) {
+                    $queryHotel->where('id_hotel_cangooroo', $requestInfo['id_hotel_cangooroo']);
+                });
+            });
+        }
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $billing->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $billing->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $billing->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
+                $billing->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
+                $billing->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                $billing->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
@@ -60,7 +106,7 @@ class BillingService
         $cangooroo = $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
         $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billing['reserve']);
-        $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
+        $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
         $billing->fill($billingInfo)->save();
@@ -69,22 +115,31 @@ class BillingService
 
     public function postBilling($billingInfo)
     {
-        $billing = new Billing;
         $billingInfo['user_id'] = auth()->user()->id;
         $billingInfo['approval_status'] =  Config::get('constants.status.open');
         $billingInfo['order'] =  1;
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve']);
-        if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve'], $billingInfo['cangooroo_booking_id'], $billingInfo['cangooroo_service_id']);
+        if (is_array($cangooroo) && (array_key_exists('error', $cangooroo) || array_key_exists('invalid_hotel', $cangooroo))) {
             return response()->json([
-                'error' => $cangooroo['error'],
+                'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
             ], 422);
         }
-        $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
+        //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
+        //$billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
         $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billingInfo['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
+        if(array_key_exists('preview', $billingInfo) && $billingInfo['preview']){
+            return [
+                'status_123' => $billingInfo['status_123'],
+                'payment_status' => $billingInfo['payment_status'],
+                'suggestion' => $billingInfo['suggestion'],
+                'suggestion_reason' => $billingInfo['suggestion_reason'],
+            ];
+        }
+        $billing = new Billing;
         $billing = $billing->create($billingInfo);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -97,21 +152,30 @@ class BillingService
                 'error' => 'Pedido previamente cancelado',
             ], 422);
         }
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve']);
-        if (is_array($cangooroo) && array_key_exists('error', $cangooroo)) {
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve'], $billingInfo['cangooroo_booking_id'], $billingInfo['cangooroo_service_id']);
+        if (is_array($cangooroo) && (array_key_exists('error', $cangooroo) || array_key_exists('invalid_hotel', $cangooroo))) {
             return response()->json([
-                'error' => $cangooroo['error'],
+                'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
             ], 422);
         }
         $billingInfo['approval_status'] =  Config::get('constants.status.open');
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
-        $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
+        //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
+        // $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
         $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billingInfo['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
+        if(array_key_exists('preview', $billingInfo) && $billingInfo['preview']){
+            return [
+                'status_123' => $billingInfo['status_123'],
+                'payment_status' => $billingInfo['payment_status'],
+                'suggestion' => $billingInfo['suggestion'],
+                'suggestion_reason' => $billingInfo['suggestion_reason'],
+            ];
+        }
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -152,6 +216,9 @@ class BillingService
         }
         if($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido'){
             $suggestionReason = $suggestionReason.' | Reserva não emitida no Admin';
+        }
+        if($this->billing->where('reserve', $billingInfo['reserve'])->whereIn('approval_status', [0,1])->first()){
+            $suggestionReason = $suggestionReason.' | Reserva cadastrada em duplicidade';
         }
         // id123 deve ser diferente de 0 (implementar q o mesmo não pode ser igual a 0 ao salvar)
         if(($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']){
