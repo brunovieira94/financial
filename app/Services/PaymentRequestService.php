@@ -295,15 +295,15 @@ class PaymentRequestService
             ]);
             $bucket = env('AWS_BUCKET');
             $key = $folder . '/' . $generatedName;
-            // Using stream instead of file path
-            $source = fopen($archive, 'rb');
-            $uploader = new ObjectUploader(
-                $s3Client,
-                $bucket,
-                $key,
-                $source
-            );
             try {
+                // Using stream instead of file path
+                $source = fopen($archive, 'rb');
+                $uploader = new ObjectUploader(
+                    $s3Client,
+                    $bucket,
+                    $key,
+                    $source
+                );
                 $uploader->upload();
                 array_push($nameFiles, $generatedName);
             } catch (Exception $e) {
