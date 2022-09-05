@@ -84,7 +84,7 @@ class CangoorooService
                 "selling_price" => $room['SellingPrice']['Value'],
             ];
 
-        if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id']];
+        if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id'], 'id_hotel_cangooroo' => $data['hotel_id']];
 
         $cangooroo = $this->cangooroo->where('service_id', $data['service_id'])->first('id');
         if ($cangooroo) {
