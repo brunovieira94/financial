@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\TemporaryLogUploadPaymentRequest;
+use Aws\S3\ObjectUploader;
+use Aws\S3\S3Client;
 use DB;
+use Exception;
 use Illuminate\Http\Request;
-
+use Storage;
 
 class InfoController extends Controller
 {
@@ -34,5 +37,55 @@ class InfoController extends Controller
     public function temporaryLogUploadPaymentRequest(Request $request)
     {
         return TemporaryLogUploadPaymentRequest::orderBy('id', 'desc')->limit(10)->get();
+    }
+
+    public function storageUpload(Request $request)
+    {
+        $nameFiles = [];
+        $archives = $request->archive;
+        $folder = 'teste';
+
+        if (!is_array($archives)) {
+            $archives = [
+                $archives
+            ];
+        }
+
+        foreach ($archives as $archive) {
+            $generatedName = null;
+            $data = uniqid(date('HisYmd'));
+            if (is_array($archive)) {
+                $archive = $archive['attachment'];
+            }
+            $originalName  = explode('.', $archive->getClientOriginalName());
+            $extension = $originalName[count($originalName) - 1];
+            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
+            //$upload = $archive->storeAs($folder, $generatedName);
+            $s3Client = new S3Client([
+                'region' => env('AWS_DEFAULT_REGION'),
+                'version' => '2006-03-01'
+            ]);
+            $bucket = env('AWS_BUCKET');
+            $key = $folder . '/' . $generatedName;
+            try {
+                // Using stream instead of file path
+                $source = fopen($archive, 'rb');
+                $uploader = new ObjectUploader(
+                    $s3Client,
+                    $bucket,
+                    $key,
+                    $source
+                );
+                $uploader->upload();
+                array_push($nameFiles, $generatedName);
+            } catch (Exception $e) {
+                TemporaryLogUploadPaymentRequest::create([
+                    'error' => $e->getMessage(),
+                    'folder' => $folder
+                ]);
+                error_log($e->getMessage());
+            }
+        }
+        return Storage::disk('s3')->temporaryUrl("teste/{$nameFiles[0]}", now()->addMinutes(30));
     }
 }
