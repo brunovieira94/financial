@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PaymentRequestHasTax;
 use App\Models\TemporaryLogUploadPaymentRequest;
+use App\Models\TypeOfTax;
 use Aws\S3\ObjectUploader;
 use Aws\S3\S3Client;
 use DB;
@@ -87,5 +89,20 @@ class InfoController extends Controller
             }
         }
         return Storage::disk('s3')->temporaryUrl("teste/{$nameFiles[0]}", now()->addMinutes(30));
+    }
+
+    public function taxDelete(Request $request)
+    {
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [9])->update(['type_of_tax_id' => 2]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [10])->update(['type_of_tax_id' => 3]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [12])->update(['type_of_tax_id' => 5]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [14])->update(['type_of_tax_id' => 7]);
+        TypeOfTax::destroy([9,10,12,14]);
+        PaymentRequestHasTax::whereIn('type_of_tax_id', [11,4])->update(['type_of_tax_id' => 15]);
+        TypeOfTax::destroy([11,4]);
+
+        return response()->json([
+            'sucess' => 'taxas deletadas e atualizadas'
+        ], 200);
     }
 }
