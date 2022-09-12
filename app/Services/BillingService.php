@@ -45,10 +45,8 @@ class BillingService
             });
         }
         if (array_key_exists('id_hotel_cangooroo', $requestInfo)){
-            $billing->whereHas('cangooroo', function ($queryCangooroo) use ($requestInfo) {
-                $queryCangooroo->whereHas('hotel', function ($queryHotel) use ($requestInfo) {
-                    $queryHotel->where('id_hotel_cangooroo', $requestInfo['id_hotel_cangooroo']);
-                });
+            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
+                $query->where('hotel_id', $requestInfo['id_hotel_cangooroo']);
             });
         }
         if (array_key_exists('created_at', $requestInfo)) {
