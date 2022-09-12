@@ -39,7 +39,7 @@ class AuthService
             $permission->route = $module->route;
         }
 
-        $user->role = $this->role->where('id', $user->role_id)->get(['id', 'title'])->first();
+        $user->role = $this->role->where('id', $user->role_id)->get(['id', 'title', 'transfer_approval'])->first();
 
         unset($user->role_id);
         $user->permissions = $permissions;

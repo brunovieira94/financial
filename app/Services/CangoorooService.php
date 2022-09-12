@@ -16,10 +16,11 @@ class CangoorooService
         $this->cangooroo = $cangooroo;
     }
 
-    public function updateCangoorooData($reserve)
+    public function updateCangoorooData($reserve, $bookingId = null, $serviceId = null)
     {
-        $bookingId = $this->getCangoorooBookingIDData($reserve);
-        if(!$bookingId) return ['error' => 'Código de reserva inválido'];
+        $bookingId = $bookingId ? $bookingId : $this->getCangoorooBookingIDData($reserve);
+        if(is_array($bookingId)) return $bookingId;
+        if (!$bookingId) return ['error' => 'Código de reserva inválido'];
         $apiCall = Http::post(env('CANGOOROO_URL', "http://123milhas.cangooroo.net/API/REST/CangoorooBackOffice.svc/GetBookingDetail"), [
             'Credential' => [
                 "Username" => env('CANGOOROO_USERNAME', "Backoffice_Financeiro_IN8"),
@@ -29,18 +30,23 @@ class CangoorooService
         ]);
         if ($apiCall->status() == 400) return (object) [];
         $response = $apiCall->json()['BookingDetail'];
-        //dd($apiCall->json());
 
         $roomIndex = null;
         $possibleRooms = [];
         foreach ($response['Rooms'] as $key => $room) {
             array_push($possibleRooms, explode('-', $room['SupplierReservationCode'])[0]);
             if (strpos($room['SupplierReservationCode'], $reserve) !== false && strlen($reserve) > 4) {
-                $roomIndex = $key;
+                if($serviceId){
+                    if($serviceId == $room['ServiceId']) $roomIndex = $key;
+                }
+                else{
+                    $roomIndex = $key;
+                }
+
             }
         }
         if ($roomIndex === null) {
-            return ['error' => 'Dados de reserva inválidos. Possíveis números de reserva para esse  Id: ' . implode(', ', $possibleRooms)];
+            return ['error' => 'Dados de reserva inválidos. Possíveis números de reserva para esse bookingId: ' . implode(', ', $possibleRooms)];
         }
 
         $room = $response['Rooms'][$roomIndex];
@@ -58,7 +64,7 @@ class CangoorooService
                     fn ($e) => $e['Name'] . ' ' . $e['Surname'],
                     $room['Paxs']
                 )),
-                "service_id" => $room['ServiceId'],
+                "service_id" => intval($room['ServiceId']),
                 "supplier_reservation_code" => $room['SupplierReservationCode'],
                 "status" => $room['Status'],
                 "reservation_date" => $room['ReservationDate'],
@@ -78,19 +84,21 @@ class CangoorooService
                 "selling_price" => $room['SellingPrice']['Value'],
             ];
 
-        if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) {
-            return ['error' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id']];
-        }
+        if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id'], 'id_hotel_cangooroo' => $data['hotel_id']];
 
-        $cangooroo = $this->cangooroo->where('booking_id', $bookingId)->first('id');
+        $cangooroo = $this->cangooroo->where('service_id', $data['service_id'])->first('id');
         if ($cangooroo) {
             $updatedCangooroo = $this->cangooroo->findOrFail($cangooroo['id']);
             $updatedCangooroo->fill($data)->save();
-            return $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
+            $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
+            $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+            return $cangoorooToReturn;
         }
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
-        return $cangooroo;
+        $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
+        $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+        return $cangoorooToReturn;
     }
 
     public function getCangoorooBookingIDData($reserve, $retrys = 5)
@@ -107,7 +115,16 @@ class CangoorooService
         ]);
         if ($retrys > 0 && array_key_exists('Error', $apiCall->json()) && $apiCall->json()['Error']['Message'] == 'Object reference not set to an instance of an object.') return $this->getCangoorooBookingIDData($reserve, $retrys);
         if ($apiCall->status() == 400 || $apiCall->json()['TotalResults'] < 1) return false;
-        $response = $apiCall->json()['Reservations'];
-        return $response[0]['BookingId'];
+        if ($apiCall->json()['TotalResults'] > 1){
+            $serviceIds = [];
+            foreach ($apiCall->json()['Reservations'] as $key => $reservation) {
+                array_push($serviceIds, $reservation['ServiceId']);
+            }
+            return [
+                'booking_id' => $apiCall->json()['Reservations'][0]['BookingId'],
+                'multiples_services' => $serviceIds
+            ];
+        }
+        return $apiCall->json()['Reservations'][0]['BookingId'];
     }
 }

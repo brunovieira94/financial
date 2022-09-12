@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\ApprovalFlowByUserService;
 use App\Http\Requests\PutAccountsPayableApprovalFlowRequest;
 use App\Exports\AccountsPayableApprovalFlowExport;
+use App\Http\Requests\MultipleApproval;
 
 class ApprovalFlowByUserController extends Controller
 {
@@ -53,5 +54,16 @@ class ApprovalFlowByUserController extends Controller
         $this->accountsPayableApprovalFlowService->cancelAccount($id, $request);
         return response('Conta cancelada');
     }
+
+    public function multipleApproval(MultipleApproval $request)
+    {
+        return $this->accountsPayableApprovalFlowService->multipleApproval($request->all());
+    }
+
+    public function transferApproval(Request $request)
+    {
+        return $this->accountsPayableApprovalFlowService->transferApproval($request->all());
+    }
+
 
 }

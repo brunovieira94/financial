@@ -11,5 +11,18 @@ return [
         'error' => '5',
         'cnab generated' => '6',
         'finished' => '7',
+        'multiple approval' => '8',
+        'transfer approval' => '9'
+    ],
+    '123_secret' => 'Vrdq63SvNe3Jkwwq3OMHtYrj7mksZTL4s1WjeiJq',
+    'statusPt' => [
+        'Em Processo',
+        'Aprovada',
+        'Reprovada',
+        'Cancelada',
+        'Paga',
+        'Erro',
+        'CNAB Gerado',
+        'Finalizada',
     ]
 ];

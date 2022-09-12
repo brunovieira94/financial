@@ -2,20 +2,24 @@
 
 namespace App\Exports;
 
+use App\Helpers\Util;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\ApprovalFlow;
+use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Config;
 
 class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $totalTax;
 
-    public function __construct($requestInfo){
+    public function __construct($requestInfo)
+    {
         $this->requestInfo = $requestInfo;
     }
 
@@ -27,11 +31,15 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
 
         if (!$approvalFlowUserOrder)
             return response([], 404);
-
-        return AccountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
+        $requestInfo = $this->requestInfo;
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request', 'approval_flow', 'reason_to_reject']);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+        });
+        return $accountsPayableApprovalFlow::whereIn('order', $approvalFlowUserOrder->toArray())
             ->where('status', 2)
             ->whereRelation('payment_request', 'deleted_at', '=', null)
-            ->with(['payment_request', 'approval_flow', 'reason_to_reject'])->get();
+            ->with()->get();
     }
 
     public function map($accountsPayableApprovalFlow): array
@@ -43,7 +51,7 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
 
         return [
             $accountsPayableApprovalFlow->payment_request->id,
-            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: '.$accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: '. $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: ' . $accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: ' . $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->emission_date,
             $accountsPayableApprovalFlow->payment_request->pay_date,
@@ -65,6 +73,8 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
             $accountsPayableApprovalFlow->payment_request->next_extension_date,
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
+            $accountsPayableApprovalFlow->payment_request->approval->approver_stage_first['title'],
+            Config::get('constants.statusPt.' . $accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }
 
@@ -94,6 +104,8 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
             'Pŕoxima data de prorrogação',
             'Data de Criação',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

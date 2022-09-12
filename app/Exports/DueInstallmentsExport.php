@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PaymentRequestHasInstallments;
+use App\Services\Utils;
 use Config;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -27,7 +28,11 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
         $query = PaymentRequestHasInstallments::query();
         $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
         $requestInfo = $this->requestInfo;
-
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
+            $query = $query->with(['payment_request' => function ($query) {
+                return $query->withTrashed();
+            },]);
+        }
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('from', $requestInfo)) {
                 $query = $query->where('extension_date', '>=', $requestInfo['from']);
@@ -38,6 +43,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
                 $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
             }
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
 
         return $query->get();
@@ -49,7 +55,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             $query->payment_request->id,
             $query->parcel_number,
             $query->payment_request->provider->trade_name ?? '',
-            $query->cost_center ? $query->cost_center->title : $query->cost_center,
+            $query->payment_request->cost_center->title ?? '',
             $query->due_date,
             $query->extension_date,
             $query->competence_date,
@@ -59,6 +65,8 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             $query->discount,
             $query->portion_amount,
             $query->note,
+            $query->payment_request->approval->approver_stage_first['title'],
+            Config::get('constants.statusPt.'.$query->payment_request->approval->status)
         ];
     }
 
@@ -78,6 +86,8 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             'Desconto',
             'Valor Final',
             'Observações',
+            'Etapa Atual',
+            'Status Atual'
         ];
     }
 }

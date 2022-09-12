@@ -22,6 +22,9 @@ class HotelService
     public function getAllHotel($requestInfo)
     {
         $hotel = Utils::search($this->hotel, $requestInfo);
+        if (array_key_exists('isValid', $requestInfo)) {
+            $hotel->where('is_valid', $requestInfo['isValid']);
+        }
         return Utils::pagination($hotel->with($this->with), $requestInfo);
     }
 
@@ -32,8 +35,16 @@ class HotelService
 
     public function postHotel($hotelInfo)
     {
-        $hotel = new Hotel;
-        $hotel = $hotel->create($hotelInfo);
+        $hotel = Hotel::withTrashed()->where('id_hotel_cangooroo', $hotelInfo['id_hotel_cangooroo'])->first();
+
+        if($hotel){
+            $hotel['deleted_at'] = null;
+            $hotel->fill($hotelInfo)->save();
+        }
+        else{
+            $hotel = new Hotel;
+            $hotel = $hotel->create($hotelInfo);
+        }
 
         $this->syncBankAccounts($hotel, $hotelInfo);
         return $this->hotel->with($this->with)->findOrFail($hotel->id);

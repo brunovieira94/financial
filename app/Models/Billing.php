@@ -41,8 +41,12 @@ class Billing extends Model
         'reason',
         'reason_to_reject_id',
         'order',
+        'suggestion',
+        'suggestion_reason',
+        'form_of_payment',
+        'cangooroo_service_id'
     ];
-    protected $hidden = ['user_id', 'cangooroo_booking_id', 'reason_to_reject_id'];
+    protected $hidden = ['user_id', 'cangooroo_booking_id', 'reason_to_reject_id', 'cangooroo_service_id'];
 
     public function user()
     {
@@ -51,7 +55,7 @@ class Billing extends Model
 
     public function cangooroo()
     {
-        return $this->hasOne(Cangooroo::class, 'booking_id', 'cangooroo_booking_id')->with('hotel');
+        return $this->hasOne(Cangooroo::class, 'service_id', 'cangooroo_service_id')->with('hotel');
     }
 
     public function approval_flow()
