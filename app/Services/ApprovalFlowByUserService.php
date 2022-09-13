@@ -14,6 +14,7 @@ use App\Models\ApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
+use App\Models\ReasonToReject;
 use App\Models\User;
 use App\Models\UserHasCostCenter;
 use App\Models\UserHasPaymentRequest;
@@ -129,6 +130,8 @@ class ApprovalFlowByUserService
                         } else {
                             $accountApproval->action = 1;
                             $accountApproval->save();
+                            $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+                            Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'approved', null, $description, $accountApproval->order, auth()->user()->id, null);
                             $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, auth()->user()->id, 1);
                         }
                     } else {
@@ -166,11 +169,15 @@ class ApprovalFlowByUserService
 
     public function cancelAccount($id, Request $request)
     {
-        $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($id);
+        $accountApproval = $this->accountsPayableApprovalFlow->where('payment_request_id', $id)->first();
         $accountApproval->status = Config::get('constants.status.canceled');
         $accountApproval->fill($request->all())->save();
         activity()->disableLogging();
-        PaymentRequest::withoutGlobalScopes()->findOrFail($accountApproval->payment_request->id)->delete();
+        PaymentRequest::withoutGlobalScopes()->findOrFail($accountApproval->payment_request_id)->delete();
+        $requestInfo = $request->all();
+        $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+        $motive = isset($requestInfo['reason_to_reject_id']) ? ReasonToReject::findOrFail($request->all()['reason_to_reject_id'])->title : null;
+        Utils::createLogApprovalFlowLogPaymentRequest($id, 'deleted', $motive, $description, $accountApproval->order, auth()->user()->id, null);
         activity()->enableLogging();
         return response()->json([
             'Sucesso' => 'Conta cancelada',
@@ -209,6 +216,7 @@ class ApprovalFlowByUserService
                 $accountsPayableApprovalFlow->status = Config::get('constants.status.multiple approval');
                 $accountsPayableApprovalFlow->reason = $nameUsers;
                 $accountsPayableApprovalFlow->save();
+                Utils::createLogApprovalFlowLogPaymentRequest($idPaymentRequest, 'multiple-approval', null, null, $accountsPayableApprovalFlow->order, auth()->user()->id, $nameUsers);
                 if (UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->exists()) {
                     $userHasPaymentRequest = UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->first();
                     $userHasPaymentRequest->status = 1;
@@ -239,7 +247,9 @@ class ApprovalFlowByUserService
                         ]);
                         $accountsPayableApprovalFlow = $this->accountsPayableApprovalFlowClean->where('payment_request_id', $idPaymentRequest)->first();
                         $accountsPayableApprovalFlow->status = Config::get('constants.status.transfer approval');
-                        $accountsPayableApprovalFlow->reason = User::findOrFail($requestInfo['user'])->name;
+                        $userTransfer = User::findOrFail($requestInfo['user'])->name;
+                        $accountsPayableApprovalFlow->reason = $userTransfer;
+                        Utils::createLogApprovalFlowLogPaymentRequest($idPaymentRequest, 'transfer-approval', null, null, $accountsPayableApprovalFlow->order, auth()->user()->id, $userTransfer);
                         $accountsPayableApprovalFlow->save();
                     }
                 }
@@ -281,6 +291,8 @@ class ApprovalFlowByUserService
     public function approveOrDisapprove($accountApproval, $approve, $maxOrder, $requestInfo)
     {
         if ($approve) {
+            $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+            Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'approved', null, $description, $accountApproval->order, auth()->user()->id, null);
             if ($accountApproval->order >= $maxOrder) {
                 $accountApproval->status = Config::get('constants.status.approved');
             } else {
@@ -290,6 +302,9 @@ class ApprovalFlowByUserService
             $accountApproval->action = 1;
             $accountApproval->save();
         } else {
+            $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+            $reason = isset($requestInfo['reason_to_reject_id']) ? ReasonToReject::findOrFail($requestInfo['reason_to_reject_id'])->title : null;
+            Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'rejected', $reason, $description, $accountApproval->order, auth()->user()->id, null);
             if ($accountApproval->order > $maxOrder) {
                 $accountApproval->order = Config::get('constants.status.open');
             } else if ($accountApproval->order != 0) {

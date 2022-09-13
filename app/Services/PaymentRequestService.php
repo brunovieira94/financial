@@ -177,6 +177,7 @@ class PaymentRequestService
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
         $this->syncProviderGeneric($paymentRequestInfo);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'created', null, null, 0, $paymentRequestInfo['user_id'], null);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -186,6 +187,7 @@ class PaymentRequestService
         $paymentRequest = $this->paymentRequest->findOrFail($id);
         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $paymentRequest->group_approval_flow_id)->max('order');
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
+        $stageAccount = $approval->order;
 
         activity()->disableLogging();
 
@@ -246,6 +248,7 @@ class PaymentRequestService
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
         $this->syncProviderGeneric($paymentRequestInfo, $id);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -254,12 +257,13 @@ class PaymentRequestService
         $paymentRequest = $this->paymentRequest->findOrFail($id);
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
 
-        if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0)) {
+        if ($approval->order == 0 || ($approval->order == 1 && $approval->status == 0 || auth()->user()->role->id == 1)) {
             $this->paymentRequest->findOrFail($id)->delete();
             activity()->disableLogging();
             $approval->status = 3;
             $approval->save();
             activity()->enableLogging();
+            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'deleted', null, null, $approval->order, auth()->user()->id, null);
             return true;
         } else {
             return response()->json([

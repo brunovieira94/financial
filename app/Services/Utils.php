@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
+use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
+use App\Models\User;
 use Carbon\Carbon;
 use Config;
 use DB;
@@ -472,5 +474,40 @@ class Utils
             });
         }
         return $paymentRequest;
+    }
+
+    public static function createLogApprovalFlowLogPaymentRequest($paymentRequestID, $type, $motive, $description, $stage, $userID, $recipient, $createdAt = null)
+    {
+        $user = User::withTrashed()->with('role')->find($userID);
+        if ($createdAt == null) {
+            AccountsPayableApprovalFlowLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'payment_request_id' => $paymentRequestID,
+                    'recipient' => $recipient,
+                ]
+            );
+        } else {
+            AccountsPayableApprovalFlowLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'payment_request_id' => $paymentRequestID,
+                    'recipient' => $recipient,
+                    'created_at' => $createdAt
+                ]
+            );
+        }
     }
 }

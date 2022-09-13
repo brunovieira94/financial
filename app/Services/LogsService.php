@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Http\Resources\reports\RouteAccountsApprovalFlowLog;
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
 use App\Models\LogActivity;
 use App\Models\SupplyApprovalFlow;
@@ -172,5 +174,11 @@ class LogsService
             }
         }
         return $retorno;
+    }
+
+    public function getAccountsPayableApprovalFlowLog($id, $requestInfo)
+    {
+        $dataLogs = RouteAccountsApprovalFlowLog::collection(AccountsPayableApprovalFlowLog::where('payment_request_id', $id)->orderBy('created_at', 'asc')->get());
+        return $dataLogs->collection->toArray();
     }
 }
