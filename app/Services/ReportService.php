@@ -96,6 +96,7 @@ class ReportService
     {
         $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->with($this->accountsPayableApprovalFlowCleanWith);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->where('status', 1);
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });

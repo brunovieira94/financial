@@ -28,6 +28,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
     {
         $requestInfo = $this->requestInfo;
         $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request']);
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->where('status', 1);
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
