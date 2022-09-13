@@ -246,7 +246,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
-        Route::get('/log-payment-request/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+        Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+        Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
@@ -425,6 +426,6 @@ Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
 Route::get('/delete-tax', [InfoController::class, 'taxDelete']);
 Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'temporaryLogUploadPaymentRequest']);
 Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
-
-
-
+Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
+Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);

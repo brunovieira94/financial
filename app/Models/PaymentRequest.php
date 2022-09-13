@@ -193,9 +193,12 @@ class PaymentRequest extends Model
     public function getApplicantCanEditAttribute()
     {
         if (isset($this->approval)) {
+            if(auth()->user()->role->id == 1 && $this->approval->status == 2 || $this->approval->status == 0){
+                return true;
+            }
             if ($this->approval->order == 1 && $this->approval->status == 0) {
                 return true;
-            } else if ($this->approval->order == 0) {
+            } else if ($this->approval->order == 0 && $this->approval->status != 3) {
                 return true;
             } else {
                 return false;

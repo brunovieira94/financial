@@ -35,4 +35,9 @@ class LogsController extends Controller
         return $this->logsService->getPurchaseOrderLogs($id, $request->all());
     }
 
+    public function getAccountsPayableApprovalFlowLog(Request $request, $id)
+    {
+        return $this->logsService->getAccountsPayableApprovalFlowLog($id, $request->all());
+    }
+
 }
