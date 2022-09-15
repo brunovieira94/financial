@@ -504,6 +504,8 @@ class PaymentRequestService
             $paymentRequestHasInstallments->fill($installment)->save();
         }
 
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
+
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
         ], 200);
@@ -600,6 +602,10 @@ class PaymentRequestService
             $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
         $installment->fill($requestInfo)->save();
+
+        $paymentRequest = PaymentRequest::with('approval')->findOrFail($installment->payment_request_id);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
+
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
 
