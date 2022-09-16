@@ -6,6 +6,7 @@ namespace App\Services;
 use App\Models\Billing;
 use App\Models\Cangooroo;
 use App\Models\PaidBillingInfo;
+use App\Models\BankAccount;
 use App\Models\Hotel;
 use Config;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class BillingService
     private $billing;
     private $cangoorooService;
 
-    private $with = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow'];
+    private $with = ['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow'];
 
     public function __construct(Billing $billing, CangoorooService $cangoorooService)
     {
@@ -139,6 +140,12 @@ class BillingService
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
         }
+        if(array_key_exists('bank_account', $billingInfo))
+        {
+            $bankAccount = new BankAccount;
+            $bankAccount = $bankAccount->create($billingInfo['bank_account']);
+            $billingInfo['bank_account_id'] = $bankAccount->id;
+        }
         $billing = new Billing;
         $billing = $billing->create($billingInfo);
         return $this->billing->with($this->with)->findOrFail($billing->id);
@@ -175,6 +182,16 @@ class BillingService
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
+        }
+        if(array_key_exists('bank_account', $billingInfo))
+        {
+            $bankAccount = BankAccount::where('id', $billing['bank_account_id'])->first();
+            if($bankAccount) $bankAccount->fill($billingInfo['bank_account'])->save();
+            else{
+                $bankAccount = new BankAccount;
+                $bankAccount = $bankAccount->create($billingInfo['bank_account']);
+                $billingInfo['bank_account_id'] = $bankAccount->id;
+            }
         }
         $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($billing->id);
