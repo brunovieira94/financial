@@ -24,5 +24,13 @@ return [
         'Erro',
         'CNAB Gerado',
         'Finalizada',
-    ]
+    ],
+    'billingStatus' => [
+        'open' => '0',
+        'approved' => '1',
+        'disapproved' => '2',
+        'canceled' => '3',
+        'paid out' => '4',
+        'finished' => '5',
+    ],
 ];

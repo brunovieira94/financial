@@ -77,7 +77,7 @@ class BillingService
     public function approve($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $billing->approval_status = Config::get('constants.status.approved');
+        $billing->approval_status = Config::get('constants.billingStatus.approved');
         $billing->reason = null;
         $billing->reason_to_reject_id = null;
         $billing->save();
@@ -89,7 +89,7 @@ class BillingService
     public function reprove($id, Request $request)
     {
         $billing = $this->billing->findOrFail($id);
-        $billing->approval_status = Config::get('constants.status.disapproved');
+        $billing->approval_status = Config::get('constants.billingStatus.disapproved');
         $billing->reason = $request->reason;
         $billing->reason_to_reject_id = $request->reason_to_reject_id;
         $billing->save();
@@ -114,7 +114,7 @@ class BillingService
     public function postBilling($billingInfo)
     {
         $billingInfo['user_id'] = auth()->user()->id;
-        $billingInfo['approval_status'] =  Config::get('constants.status.open');
+        $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
         $billingInfo['order'] =  1;
         $cangooroo = $this->cangoorooService->updateCangoorooData($billingInfo['reserve'], $billingInfo['cangooroo_booking_id'], $billingInfo['cangooroo_service_id']);
         if (is_array($cangooroo) && (array_key_exists('error', $cangooroo) || array_key_exists('invalid_hotel', $cangooroo))) {
@@ -145,7 +145,7 @@ class BillingService
     public function putBilling($id, $billingInfo)
     {
         $billing = $this->billing->findOrFail($id);
-        if ($billing->approval_status == Config::get('constants.status.canceled')) {
+        if ($billing->approval_status == Config::get('constants.billingStatus.canceled')) {
             return response()->json([
                 'error' => 'Pedido previamente cancelado',
             ], 422);
@@ -156,7 +156,7 @@ class BillingService
                 'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
             ], 422);
         }
-        $billingInfo['approval_status'] =  Config::get('constants.status.open');
+        $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
@@ -181,7 +181,7 @@ class BillingService
     public function deleteBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $billing->approval_status =  Config::get('constants.status.canceled');
+        $billing->approval_status =  Config::get('constants.billingStatus.canceled');
         $billing->save();
         return true;
     }
@@ -215,12 +215,15 @@ class BillingService
         if($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido'){
             $suggestionReason = $suggestionReason.' | Reserva não emitida no Admin';
         }
-        if($this->billing->where('reserve', $billingInfo['reserve'])->whereIn('approval_status', [0,1])->first()){
+        if($this->billing->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
             $suggestionReason = $suggestionReason.' | Reserva cadastrada em duplicidade';
         }
         // id123 deve ser diferente de 0 (implementar q o mesmo não pode ser igual a 0 ao salvar)
         if(($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']){
             $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
+        }
+        if(!$cangooroo->hotel->is_valid){
+            $suggestionReason = $suggestionReason.' | Hotel não validado';
         }
         // tipo de faturamento deve ser diferente de vcn
         // $hotel = Hotel::where('id_hotel_cangooroo', $cangooroo['hotel_id'])->first();
