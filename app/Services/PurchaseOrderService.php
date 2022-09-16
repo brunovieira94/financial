@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Module;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasPurchaseOrders;
+use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderClean;
 use App\Models\PurchaseOrderDelivery;
@@ -39,7 +40,7 @@ class PurchaseOrderService
     private $paymentRequest;
     private $purchaseOrderClean;
 
-    private $with = ['user', 'installments', 'approval', 'cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests', 'payment_requests'];
+    private $with = ['user', 'installments', 'approval', 'cost_centers', 'attachments', 'services', 'products', 'company', 'currency', 'provider', 'purchase_requests'];
 
     public function __construct(PurchaseOrderClean $purchaseOrderClean, PurchaseOrder $purchaseOrder, PurchaseRequest $purchaseRequest, PurchaseRequestHasProducts $purchaseRequestHasProducts, PurchaseOrderHasProducts $purchaseOrderHasProducts, PurchaseOrderHasCompanies $purchaseOrderHasCompanies, PurchaseOrderHasServices $purchaseOrderHasServices, PurchaseOrderHasCostCenters $purchaseOrderHasCostCenters, PurchaseOrderHasAttachments $attachments, PurchaseOrderServicesHasInstallments $purchaseOrderServicesHasInstallments, PurchaseOrderHasPurchaseRequests $purchaseOrderHasPurchaseRequests, PurchaseOrderHasInstallments $purchaseOrderHasInstallments, PaymentRequestHasPurchaseOrders $paymentRequestHasPurchaseOrders, PaymentRequest $paymentRequest)
     {
@@ -146,6 +147,16 @@ class PurchaseOrderService
             $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
                 $query->where('product_id', $requestInfo['product']);
             });
+        }
+
+        if (array_key_exists('status', $requestInfo)) {
+            $deliveryIds = [];
+            foreach (PurchaseOrderDelivery::where('status', $requestInfo['status'])->get() as $getPurchaseOrderId) {
+                if (!in_array($getPurchaseOrderId->purchase_order_id, $deliveryIds)) {
+                    $deliveryIds[] = $getPurchaseOrderId->purchase_order_id;
+                }
+            }
+            $purchaseOrder->whereIn('id', $deliveryIds);
         }
 
         if (array_key_exists('billing_date', $requestInfo)) {
@@ -379,7 +390,6 @@ class PurchaseOrderService
 
     public function putServices($id, $purchaseOrderInfo)
     {
-
         $updateServices = [];
         $createdServices = [];
 
@@ -733,18 +743,46 @@ class PurchaseOrderService
 
     public function getListInvoicePurchaseOrder($id)
     {
-        $getListPaymentRequestIds = $this->paymentRequestHasPurchaseOrders::where('purchase_order_id', $id)->get(['payment_request_id']);
+        $getListPaymentRequestIds = $this->paymentRequestHasPurchaseOrders::join('payment_requests', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.id')
+            ->select('payment_request_has_purchase_orders.purchase_order_id', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.payment_type')
+            ->where([
+                'payment_request_has_purchase_orders.purchase_order_id' => $id,
+                'payment_requests.payment_type' => 0
+            ])
+            ->get(['payment_request_has_purchase_orders.payment_request_id']);
 
         $listInvoice = [];
         foreach ($getListPaymentRequestIds as $getListPaymentRequestId) {
+            $status = 'n';
+            $delivered = 0;
+            $total = 0;
             $getPaymentRequest = $this->paymentRequest->where([
                 'id' => $getListPaymentRequestId->payment_request_id,
                 'payment_type' => 0
             ])->first();
             if ($getPaymentRequest != null) {
+                $getPurchaseOrderDeliverys = PurchaseOrderDelivery::where([
+                    'payment_request_id' => $getPaymentRequest['id'],
+                    'purchase_order_id' => $id
+                ])->get();
+                if ($getPurchaseOrderDeliverys != null) {
+                    foreach ($getPurchaseOrderDeliverys as $getPurchaseOrderDelivery) {
+                        if ($getPurchaseOrderDelivery->status == 0) {
+                            $status = " "; //new
+                        }
+                        if ($getPurchaseOrderDelivery->status == 1) {
+                            $status = "*"; //pendente
+                        }
+                        if ($getPurchaseOrderDelivery->status == 2) {
+                            $status = "*"; //concluido
+                        }
+                    }
+                }
                 $listInvoice[] = [
                     'id' => $getPaymentRequest->id,
-                    'emission_date' => $getPaymentRequest->emission_date
+                    'invoice_number' => $getPaymentRequest->invoice_number,
+                    'emission_date' => $getPaymentRequest->emission_date,
+                    'status' => $status
                 ];
             }
         }
@@ -754,55 +792,58 @@ class PurchaseOrderService
     public function getInvoicePurchaseOrder($id)
     {
         $getPaymentRequests = $this->paymentRequest::where('id', $id)->with('purchase_order')->get();
-
         if (!$getPaymentRequests->isEmpty()) {
             $response = [];
             $products = [];
-            $services = [];
+            $balance_quantity = 0;
             foreach ($getPaymentRequests as $getPaymentRequest) {
                 $pay_id = $getPaymentRequest->id;
                 foreach ($getPaymentRequest->purchase_order as $getPaymentRequestsPurchaseOrder) {
                     $pur_id = $getPaymentRequestsPurchaseOrder->purchase_order_id;
-                    foreach ($getPaymentRequestsPurchaseOrder->purchase_order->products as $getPaymentRequestsPurchaseOrderProduct) {
-                        $quantidade_prod = PurchaseOrderDelivery::where([
-                            'payment_request_id' =>  $pay_id,
-                            'purchase_order_id' =>  $pur_id,
-                            'product_id' => $getPaymentRequestsPurchaseOrderProduct->product->id
-                        ])->first(['delivery_quantity']);
-                        $products[] = [
-                            'product_id' => $getPaymentRequestsPurchaseOrderProduct->product->id,
-                            'product_name' => $getPaymentRequestsPurchaseOrderProduct->product->title,
-                            'quantity' => $getPaymentRequestsPurchaseOrderProduct->quantity,
-                            'unitary_value' => $getPaymentRequestsPurchaseOrderProduct->unitary_value,
-                            'percentage_discount' => $getPaymentRequestsPurchaseOrderProduct->percentage_discount,
-                            'money_discount' => $getPaymentRequestsPurchaseOrderProduct->money_discount,
-                            'delivery_quantity' => $quantidade_prod['delivery_quantity'] ?? 0
-                        ];
-                    }
-                    foreach ($getPaymentRequestsPurchaseOrder->purchase_order->services as $getPaymentRequestsPurchaseOrderService) {
-                        $serv_id = $getPaymentRequestsPurchaseOrderService->service->id;
-                        $quantidade_serv = PurchaseOrderDelivery::where([
-                            'payment_request_id' =>  $pay_id,
-                            'purchase_order_id' =>  $pur_id,
-                            'service_id' => $getPaymentRequestsPurchaseOrderService->service->id
-                        ])->first(['delivery_quantity']);
-                        $services[] = [
-                            'product_id' => $getPaymentRequestsPurchaseOrderService->service->id,
-                            'product_name' => $getPaymentRequestsPurchaseOrderService->service->title,
-                            'quantity' => $getPaymentRequestsPurchaseOrderService->quantity,
-                            'unitary_value' => $getPaymentRequestsPurchaseOrderService->unitary_value,
-                            'percentage_discount' => $getPaymentRequestsPurchaseOrderService->percentage_discount,
-                            'money_discount' => $getPaymentRequestsPurchaseOrderService->money_discount,
-                            'delivery_quantity' => $quantidade_serv['delivery_quantity'] ?? 0
-                        ];
+                    if (PurchaseOrder::where('id', $pur_id)->exists()) {
+                        foreach ($getPaymentRequestsPurchaseOrder->purchase_order->products as $getPaymentRequestsPurchaseOrderProduct) {
+                            $quantidade_prod = PurchaseOrderDelivery::where([
+                                'payment_request_id' =>  $pay_id,
+                                'purchase_order_id' =>  $pur_id,
+                                'product_id' => $getPaymentRequestsPurchaseOrderProduct->product->id
+                            ])->first(['delivery_quantity']);
+
+                            $balances = PurchaseOrderDelivery::where([
+                                'purchase_order_id' =>  $pur_id,
+                                'product_id' => $getPaymentRequestsPurchaseOrderProduct->product->id
+                            ])->get(['delivery_quantity']);
+
+                            if (!$balances->isEmpty()) {
+
+                                foreach ($balances as $balance) {
+                                    $balance_quantity += $balance->delivery_quantity;
+                                }
+                            }
+
+                            $products[] = [
+                                'product_id' => $getPaymentRequestsPurchaseOrderProduct->product->id,
+                                'product_name' => $getPaymentRequestsPurchaseOrderProduct->product->title,
+                                'quantity' => $getPaymentRequestsPurchaseOrderProduct->quantity,
+                                'unitary_value' => $getPaymentRequestsPurchaseOrderProduct->unitary_value,
+                                'percentage_discount' => $getPaymentRequestsPurchaseOrderProduct->percentage_discount,
+                                'money_discount' => $getPaymentRequestsPurchaseOrderProduct->money_discount,
+                                'delivery_quantity' => $quantidade_prod['delivery_quantity'] ?? 0,
+                                'total_delivery_quantity' => $balance_quantity
+                            ];
+
+                            $balance_quantity = 0;
+                        }
+                    } else {
+                        return response()->json([
+                            'error' => 'Pedido de compra ' . $pur_id . ' não existe.',
+                        ], 422);
                     }
                 }
             }
             $response[] = [
                 'payment_request_id' => $pay_id,
                 'purchase_order_id' => $pur_id,
-                'products' => $products,
-                'services' => $services
+                'products' => $products
             ];
             return $response;
         } else {
@@ -812,92 +853,162 @@ class PurchaseOrderService
 
     public function putPurchaseOrderDelivery($purchaseOrderDeliveryInfo)
     {
-        foreach ($purchaseOrderDeliveryInfo['delivery'] as $delivery) {
-            try {
-                if (array_key_exists('product_id', $delivery)) {
-                    $purchaseOrderDeliveryProduct =  PurchaseOrderDelivery::where([
-                        'payment_request_id' => $delivery['payment_request_id'],
-                        'purchase_order_id' =>  $delivery['purchase_order_id'],
-                        'product_id' => $delivery['product_id']
-                    ])->first();
-                    if ($purchaseOrderDeliveryProduct  != null) {
-                        $purchaseOrderDeliveryProduct->update([
-                            'delivery_quantity' => $delivery['delivery_quantity']
-                        ]);
-                    } else {
-                        PurchaseOrderDelivery::create([
-                            'payment_request_id' => $delivery['payment_request_id'],
-                            'purchase_order_id' =>  $delivery['purchase_order_id'],
-                            'product_id' => $delivery['product_id'],
-                            'delivery_quantity' => $delivery['delivery_quantity']
-                        ]);
-                    }
-                }
-
-                if (array_key_exists('service_id', $delivery)) {
-                    $purchaseOrderDeliveryService =  PurchaseOrderDelivery::where([
-                        'payment_request_id' => $delivery['payment_request_id'],
-                        'purchase_order_id' =>  $delivery['purchase_order_id'],
-                        'service_id' => $delivery['service_id']
-                    ])->first();
-                    if ($purchaseOrderDeliveryService  != null) {
-                        $purchaseOrderDeliveryService->update([
-                            'delivery_quantity' => $delivery['delivery_quantity']
-                        ]);
-                    } else {
-                        PurchaseOrderDelivery::create([
-                            'payment_request_id' => $delivery['payment_request_id'],
-                            'purchase_order_id' =>  $delivery['purchase_order_id'],
-                            'service_id' => $delivery['service_id'],
-                            'delivery_quantity' => $delivery['delivery_quantity']
-                        ]);
-                    }
-                }
-            } catch (\Exception $e) {
-                return response()->json([
-                    'error' => 'Falha ao salvar os dados no banco de dados'
-                ], 500);
-            }
-        }
-        return response()->json([
-            'sucesss' => 'Dados salvos no banco de dados'
-        ], 200);
-    }
-
-    /*public function getPurchaseOrderDeliver($requestInfo, $id)
-    {
         $response = [];
+        $totalDeliveryQuantity = 0;
+        $totalQuantity = 0;
+        $ids = [];
+        try {
+            if (array_key_exists('products', $purchaseOrderDeliveryInfo)) {
+                foreach ($purchaseOrderDeliveryInfo['products'] as $product) {
+                    $ids[] = $product['product_id'];
+                    $purchaseOrderDeliveryProduct =  PurchaseOrderDelivery::where([
+                        'payment_request_id' => $purchaseOrderDeliveryInfo['payment_request_id'],
+                        'purchase_order_id' =>  $purchaseOrderDeliveryInfo['purchase_order_id'],
+                        'product_id' => $product['product_id']
+                    ])->first();
 
-        if (array_key_exists('product_id', $requestInfo)) {
-            $quantity_prod = PurchaseOrderDelivery::where([
-                'payment_request_id' =>  $id,
-                'purchase_order_id' =>  $requestInfo['purchase_order_id'],
-                'product_id' => $requestInfo['product_id']
-            ])->first(['delivery_quantity']);
+                    if ($purchaseOrderDeliveryProduct != null) {
+                        $purchaseOrderDeliveryProduct->update([
+                            'delivery_quantity' => $product['delivery_quantity'],
+                            'quantity' => $product['quantity']
+                        ]);
+                        $response[] = $purchaseOrderDeliveryProduct;
+                    } else {
+                        $purchaseOrderDelivery = PurchaseOrderDelivery::create([
+                            'payment_request_id' => $purchaseOrderDeliveryInfo['payment_request_id'],
+                            'purchase_order_id' =>  $purchaseOrderDeliveryInfo['purchase_order_id'],
+                            'product_id' => $product['product_id'],
+                            'delivery_quantity' => $product['delivery_quantity'],
+                            'quantity' => $product['quantity']
+                        ]);
+                        $response[] = $purchaseOrderDelivery;
+                    }
+                }
 
-            if ($quantity_prod != null) {
-                $response = [
-                    'product_id' => $requestInfo['product_id'],
-                    'delivery_quantity' => $quantity_prod['delivery_quantity']
-                ];
+                //update status
+                $totalDeliveryQuantity = PurchaseOrderDelivery::where(
+                    'purchase_order_id',
+                    $purchaseOrderDeliveryInfo['purchase_order_id']
+                )
+                    ->whereIn('product_id', $ids)
+                    ->sum('delivery_quantity');
+
+                if ($totalDeliveryQuantity != null) {
+                    $totalQuantity =  PurchaseOrderHasProducts::where(
+                        'purchase_order_id',
+                        $purchaseOrderDeliveryInfo['purchase_order_id']
+                    )->whereIn('product_id', $ids)->sum('quantity');
+                    PurchaseOrderDelivery::where([
+                        'purchase_order_id' => $purchaseOrderDeliveryInfo['purchase_order_id'],
+                        'payment_request_id' => $purchaseOrderDeliveryInfo['payment_request_id']
+                    ])
+                        ->whereIn('product_id', $ids)
+                        ->update(
+                            [
+                                'status' => ($totalQuantity - $totalDeliveryQuantity) == 0 ? 2 : 1,
+                            ]
+                        );
+                }
             }
-        }
-
-        if (array_key_exists('service_id', $requestInfo)) {
-            $quantity_serv = PurchaseOrderDelivery::where([
-                'payment_request_id' =>  $id,
-                'purchase_order_id' =>  $requestInfo['purchase_order_id'],
-                'service_id' => $requestInfo['service_id']
-            ])->first(['delivery_quantity']);
-
-            if ($quantity_serv != null) {
-                $response = [
-                    'service_id' => $requestInfo['service_id'],
-                    'delivery_quantity' => $quantity_serv['delivery_quantity']
-                ];
-            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Erro ao salvar os dados no banco de dados'
+            ], 500);
         }
 
         return $response;
-    }*/
+        /*return response()->json([
+            'sucesss' => 'Dados salvos no banco de dados'
+        ], 200);*/
+    }
+
+    /* public function getStatusDelivery($status)
+    {
+        $deliverysIdN = [];
+        $deliverysIdP = [];
+        $deliverysIdC = [];
+        $deliveryN = 0;
+        $deliveryP = 0;
+        $deliveryC = 0;
+        $delivered = 0;
+
+        $getAllPaymentRequests = PaymentRequestHasPurchaseOrders::join('payment_requests', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.id')
+            ->select('payment_request_has_purchase_orders.purchase_order_id', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.payment_type')
+            ->where([
+                'payment_requests.payment_type' => 0
+            ])
+            ->groupBy([
+                'payment_request_has_purchase_orders.payment_request_id',
+                'payment_request_has_purchase_orders.purchase_order_id',
+                'payment_requests.payment_type'
+            ])
+            ->get(['payment_request_has_purchase_orders.payment_request_id']);
+
+        //dd($getAllPaymentRequests);
+
+        if (!$getAllPaymentRequests->isEmpty()) {
+            foreach ($getAllPaymentRequests as $getAllPaymentRequest) {
+                $getPurchaseOrderDeliverys = PurchaseOrderDelivery::where([
+                    'payment_request_id' => $getAllPaymentRequest->payment_request_id,
+                    'purchase_order_id' => $getAllPaymentRequest->purchase_order_id
+                ])->get();
+
+                if (!$getPurchaseOrderDeliverys->isEmpty()) {
+                    foreach ($getPurchaseOrderDeliverys as $getPurchaseOrderDelivery) {
+                        if ($getPurchaseOrderDelivery->product_id != null) {
+                            $getQuantityProduct = PurchaseOrderHasProducts::where([
+                                'product_id' => $getPurchaseOrderDelivery->product_id,
+                                'purchase_order_id' => $getAllPaymentRequest->purchase_order_id
+                            ])->first(['quantity']);
+                            if ($getQuantityProduct != null) {
+                                $total = $getQuantityProduct->quantity;
+                                $delivered += $getPurchaseOrderDelivery->delivery_quantity;
+                            }
+                        }
+                    }
+                } else {
+                    $deliveryN = $getAllPaymentRequest->purchase_order_id; //new
+                }
+
+                if ($delivered < $total) {
+                    $deliveryP = $getAllPaymentRequest->purchase_order_id; //pendente
+                } else if ($delivered == $total && ($total != 0)) {
+                    $deliveryC = $getAllPaymentRequest->purchase_order_id; //concluido
+                }
+
+                if ($status == 1) {
+                    if (!in_array($deliveryP, $deliverysIdP)) {
+                        $deliverysIdP[] = $deliveryP;
+                    }
+                }
+                if ($status == 2) {
+                    if (!in_array($deliveryC, $deliverysIdC)) {
+                        $deliverysIdC[] = $deliveryC;
+                    }
+                }
+                if ($status == 0) {
+                    if (!in_array($deliveryN, $deliverysIdN)) {
+                        $deliverysIdN[] = $deliveryN;
+                    }
+                }
+            }
+        }
+
+        if ($status == 1) {
+            if (($key = array_search("0", $deliverysIdP)) !== false) {
+                unset($deliverysIdP[$key]);
+            }
+            return $deliverysIdP;
+        } else if ($status == 2) {
+            if (($key = array_search("0", $deliverysIdC)) !== false) {
+                unset($deliverysIdC[$key]);
+            }
+            return $deliverysIdC;
+        } else if ($status == 0) {
+            if (($key = array_search("0", $deliverysIdN)) !== false) {
+                unset($deliverysIdN[$key]);
+            }
+            return $deliverysIdN;
+        }
+    } */
 }
