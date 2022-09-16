@@ -192,12 +192,16 @@ class PaymentRequestClean extends Model
     public function getApplicantCanEditAttribute()
     {
         if (isset($this->approval)) {
-            if(auth()->user()->role->id == 1 && $this->approval->status == 2 || $this->approval->status == 0){
+            // Super Admin pode (em processamento ou rejeitada)
+            if (auth()->user()->role->id == 1 && ($this->approval->status == 2 || $this->approval->status == 0)) {
                 return true;
             }
+            // Pode se acabou de ser criada
             if ($this->approval->order == 1 && $this->approval->status == 0) {
                 return true;
-            } else if ($this->approval->order == 0 && $this->approval->status != 3) {
+            }
+            // Tá na etapa solicitante (depois de ser rejeitada)
+            else if ($this->approval->order == 0 && $this->approval->status != 3) {
                 return true;
             } else {
                 return false;
