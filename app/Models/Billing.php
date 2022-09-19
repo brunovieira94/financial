@@ -11,7 +11,7 @@ class Billing extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow', '*'];
+    protected static $logAttributes = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow', 'bank_account', '*'];
     protected static $logName = 'billing';
     public function tapActivity(Activity $activity)
     {
@@ -44,9 +44,10 @@ class Billing extends Model
         'suggestion',
         'suggestion_reason',
         'form_of_payment',
-        'cangooroo_service_id'
+        'cangooroo_service_id',
+        'bank_account_id',
     ];
-    protected $hidden = ['user_id', 'cangooroo_booking_id', 'reason_to_reject_id', 'cangooroo_service_id'];
+    protected $hidden = ['bank_account_id', 'user_id', 'cangooroo_booking_id', 'reason_to_reject_id', 'cangooroo_service_id'];
 
     public function user()
     {
@@ -66,6 +67,11 @@ class Billing extends Model
     public function reason_to_reject()
     {
         return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
+    }
+
+    public function bank_account()
+    {
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_id')->with(['bank']);
     }
 
     public static function boot()
