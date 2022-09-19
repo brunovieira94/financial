@@ -482,6 +482,7 @@ class PaymentRequestService
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($requestInfo['payment_request_id']);
         $approvalFlow = ApprovalFlow::where('role_id', auth()->user()->role_id)
             ->where('order', $paymentRequest->approval->order)
+            ->where('group_approval_flow_id',  $paymentRequest->group_form_payment_id)
             ->first();
 
         foreach ($requestInfo['installments'] as $installment) {
