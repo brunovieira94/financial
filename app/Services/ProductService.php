@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\Product;
 use App\Models\ProductHasAttributes;
 
@@ -17,13 +18,23 @@ class ProductService
 
     public function getAllProduct($requestInfo)
     {
-        $product = Utils::search($this->product,$requestInfo);
-        return Utils::pagination($product->with($this->with),$requestInfo);
+        if (array_key_exists('search', $requestInfo)) {
+            if (strlen($requestInfo["search"]) >= 4) {
+                if (substr($requestInfo["search"], 0, 2) == 50) {
+                    $requestInfo['search'] = substr($requestInfo["search"], 2, strlen($requestInfo["search"]));
+                } else if (substr($requestInfo["search"], 0, 2) > 50) {
+                    $requestInfo['search'] =  substr($requestInfo["search"], 1, strlen($requestInfo["search"]));
+                }
+            }
+        }
+
+        $product = Utils::search($this->product, $requestInfo);
+        return Utils::pagination($product->with($this->with), $requestInfo);
     }
 
     public function getProduct($id)
     {
-      return $this->product->with($this->with)->findOrFail($id);
+        return $this->product->with($this->with)->findOrFail($id);
     }
 
     public function postProduct($productInfo)
@@ -44,13 +55,14 @@ class ProductService
 
     public function deleteProduct($id)
     {
-      $this->product->findOrFail($id)->delete();
-      return true;
+        $this->product->findOrFail($id)->delete();
+        return true;
     }
 
-    public function syncAttributes($product, $productInfo){
-        if(array_key_exists('attributes', $productInfo)){
-            foreach($productInfo['attributes'] as $attribute){
+    public function syncAttributes($product, $productInfo)
+    {
+        if (array_key_exists('attributes', $productInfo)) {
+            foreach ($productInfo['attributes'] as $attribute) {
                 $productHasAttributes = new ProductHasAttributes;
                 $productHasAttributes = $productHasAttributes->create([
                     'product_id' => $product->id,
@@ -61,14 +73,15 @@ class ProductService
         }
     }
 
-    public function putAttributes($id, $productInfo){
+    public function putAttributes($id, $productInfo)
+    {
 
         $updateAttributes = [];
         $createdAttributes = [];
 
-        if(array_key_exists('attributes', $productInfo)){
-            foreach($productInfo['attributes'] as $attribute){
-                if (array_key_exists('id', $attribute)){
+        if (array_key_exists('attributes', $productInfo)) {
+            foreach ($productInfo['attributes'] as $attribute) {
+                if (array_key_exists('id', $attribute)) {
                     $productHasAttributes = $this->productHasAttributes->findOrFail($attribute['id']);
                     $productHasAttributes->fill($attribute)->save();
                     $updateAttributes[] = $attribute['id'];
@@ -86,5 +99,4 @@ class ProductService
             $this->productHasAttributes->destroy($collection->toArray());
         }
     }
-
 }

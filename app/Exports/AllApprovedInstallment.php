@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\PaymentRequestHasInstallments;
+use App\Services\Utils;
 use Config;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -25,21 +26,21 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
     {
         $requestInfo = $this->requestInfo;
         $installment = PaymentRequestHasInstallments::with(['payment_request', 'group_payment', 'bank_account_provider']);
-
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
+            $installment = $installment->with(['payment_request' => function ($query) {
+                return $query->withTrashed();
+            },]);
+        }
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);
             });
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
+        if (!array_key_exists('company', $requestInfo))
+            return [];
 
-        if (!array_key_exists('company_id', $requestInfo)) {
-            return $installment->get();
-        } else {
-            $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
-                $query->where('company_id', $requestInfo['company_id']);
-            });
-            return $installment->get();
-        }
+        return $installment->get();
     }
 
     public function map($installment): array
@@ -58,8 +59,8 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->discount,
             $installment->portion_amount,
             $installment->note,
-            $installment->payment_request->approval->approval_flow_first['title'],
-            Config::get('constants.statusPt.'.$installment->payment_request->approval->status)
+            $installment->payment_request->approval->approver_stage_first['title'],
+            Config::get('constants.statusPt.' . $installment->payment_request->approval->status)
         ];
     }
 

@@ -31,6 +31,7 @@ class CheckUserHasPermission
             'cnab',
             'update-user',
             'update-date-installment',
+            'delivery'
         ];
 
         $unverifiedSubRoutes = [
@@ -41,7 +42,12 @@ class CheckUserHasPermission
             'all',
             'filter-user',
             'approve-many',
-            'update-installment'
+            'update-installment',
+            'multiple-approval',
+            'transfer-approval',
+            'listinvoice',
+            'getinvoice'
+
         ];
 
         $routeAccessed = $route[count($route) - 1];

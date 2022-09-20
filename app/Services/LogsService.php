@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Http\Resources\reports\RouteAccountsApprovalFlowLog;
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
 use App\Models\LogActivity;
 use App\Models\SupplyApprovalFlow;
@@ -63,6 +65,12 @@ class LogsService
                     case 1:
                         $status = 'approved';
                         break;
+                    case 8:
+                        $status = 'multiple-approval';
+                        break;
+                    case 9:
+                        $status = 'transfer-approval';
+                        break;
                     default:
                         $status = 'default';
                 }
@@ -90,6 +98,7 @@ class LogsService
                     'causerUserRole' => $log['causer_object']['role']['title'] ?? '',
                     'createdUser' => $log['properties']['attributes']['payment_request']['user']['name'] ?? '',
                     'motive' => $reason,
+                    'stage' => isset($log['properties']['old']['order']) ? $log['properties']['old']['order'] + 1 : '', //front exibe a etapa com adição de 1
                 ];
             } else if ($log['log_name'] == 'payment_request') {
                 $retorno[] = [
@@ -165,5 +174,11 @@ class LogsService
             }
         }
         return $retorno;
+    }
+
+    public function getAccountsPayableApprovalFlowLog($id, $requestInfo)
+    {
+        $dataLogs = RouteAccountsApprovalFlowLog::collection(AccountsPayableApprovalFlowLog::where('payment_request_id', $id)->orderBy('created_at', 'asc')->get());
+        return $dataLogs->collection->toArray();
     }
 }

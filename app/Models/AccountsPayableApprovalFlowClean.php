@@ -22,25 +22,25 @@ class AccountsPayableApprovalFlowClean extends Model
         $activity->causer_object = $user;
     }
 
-    protected $table='accounts_payable_approval_flows';
-    protected $fillable = ['reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
+    protected $table = 'accounts_payable_approval_flows';
+    protected $fillable = ['group_approval_flow_id', 'reason_to_reject_id', 'payment_request_id', 'order', 'status', 'reason'];
     public $timestamps = false;
     protected $hidden = ['payment_request_id', 'reason_to_reject_id'];
-    protected $appends = ['approver_stage'];
+    protected $appends = ['approver_stage', 'approver_stage_first'];
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id');//->with(['purchase_order', 'group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment']);
+        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id'); //->with(['purchase_order', 'group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment']);
     }
 
     public function payment_request_trashed()
     {
-        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id')->withTrashed();//->with(['group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
+        return $this->hasOne(PaymentRequestClean::class, 'id', 'payment_request_id')->withTrashed(); //->with(['group_payment', 'company', 'attachments', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax', 'group_payment'])->withTrashed();
     }
 
     public function installment_payment_request()
     {
-        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'payment_request_id');//->with(['payment_request']);
+        return $this->hasMany(PaymentRequestHasInstallments::class, 'payment_request_id', 'payment_request_id'); //->with(['payment_request']);
     }
 
     public function approval_flow()
@@ -57,27 +57,57 @@ class AccountsPayableApprovalFlowClean extends Model
     {
 
         $approverStage = [];
-        $roles = ApprovalFlow::where('order', $this->order)->with('role')->get();
-        $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->first()->cost_center_id;
+        $roles = ApprovalFlow::where('order', $this->order)->where('group_approval_flow_id', $this->group_approval_flow_id)->with('role')->get();
+        $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->withoutGlobalScopes()->first()->cost_center_id;
         foreach ($roles as $role) {
-            if($role->role->id != 1)
-            {
+            if ($role->role->id != 1) {
                 $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->get();
                 $names = [];
                 foreach ($checkUser as $user) {
-                    foreach ($user->cost_center as $userCostCenter){
-                        if($userCostCenter->id == $costCenterId){
+                    foreach ($user->cost_center as $userCostCenter) {
+                        if ($userCostCenter->id == $costCenterId) {
                             $names[] = $user->name;
                         }
                     }
                 }
                 $approverStage[] = [
                     'title' => $role->role->title,
-                    'name' => count($names) > 0 ? $names[0]: '',
+                    'name' => count($names) > 0 ? $names[0] : '',
                     'names' => $names,
                 ];
             }
         }
         return $approverStage;
+    }
+
+    public function getApproverStageFirstAttribute()
+    {
+        $statusOrder = [0, 2, 8, 9];
+        if (in_array($this->status, $statusOrder)) {
+            if (ApprovalFlow::with('role')
+                ->where('order', $this->order)
+                ->where('group_approval_flow_id', $this->group_approval_flow_id)
+                ->orderBy('id', 'ASC')
+                ->whereRelation('role', 'deleted_at', '=', null)->exists()
+            ) {
+                $approvalFlow = ApprovalFlow::with('role')
+                    ->where('order', $this->order)
+                    ->where('group_approval_flow_id', $this->group_approval_flow_id)
+                    ->orderBy('id', 'ASC')
+                    ->whereRelation('role', 'deleted_at', '=', null)
+                    ->first();
+                return [
+                    'title' => $approvalFlow->role->title
+                ];
+            } else {
+                return [
+                    'title' => ''
+                ];
+            }
+        } else {
+            return [
+                'title' => ''
+            ];
+        }
     }
 }

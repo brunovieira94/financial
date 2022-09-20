@@ -159,7 +159,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowController::class, 'index']);
         Route::post('/', [ApprovalFlowController::class, 'store']);
-        Route::get('/all', [ApprovalFlowController::class, 'index']);
+        Route::put('/{id}', [ApprovalFlowController::class, 'update']);
+        Route::delete('/{id}', [ApprovalFlowController::class, 'destroy']);
+        Route::get('/{id}', [ApprovalFlowController::class, 'show']);
     });
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {
@@ -183,9 +185,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::prefix('billing')->group(function () {
-        Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
-        Route::get('/{id}', [BillingController::class, 'show']);
+        Route::get('/show/{id}', [BillingController::class, 'show']);
+        Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
         Route::put('/approve/{id}', [BillingController::class, 'approve']);
@@ -244,7 +246,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('logs')->group(function () {
         Route::get('/', [LogsController::class, 'index']);
-        Route::get('/log-payment-request/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+        Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+        Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
@@ -276,6 +279,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('account-payable-approval-flow')->group(function () {
         Route::get('/', [ApprovalFlowByUserController::class, 'accountsApproveUser']);
+        Route::put('/transfer-approval', [ApprovalFlowByUserController::class, 'transferApproval']);
+        Route::put('/multiple-approval', [ApprovalFlowByUserController::class, 'multipleApproval']);
         Route::put('/approve-many', [ApprovalFlowByUserController::class, 'approveManyAccounts']);
         Route::put('/approve/{id}', [ApprovalFlowByUserController::class, 'approveAccount']);
         Route::put('/reprove/{id}', [ApprovalFlowByUserController::class, 'reproveAccount']);
@@ -372,8 +377,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [PurchaseOrderController::class, 'destroy']);
         Route::get('/listinvoice/{id}', [PurchaseOrderController::class, 'listinvoice']);
         Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
-        //Route::get('/getdelivery/{id}', [PurchaseOrderController::class, 'getDelivery']);
-        //Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
     });
 
     Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
@@ -414,5 +417,13 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
+Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
+Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
 Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
+Route::get('/delete-tax', [InfoController::class, 'taxDelete']);
+Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'temporaryLogUploadPaymentRequest']);
+Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
+Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
+Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
+Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);

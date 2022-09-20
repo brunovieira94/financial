@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+
 use App\Models\Service;
 
 class ServiceService
@@ -13,13 +14,23 @@ class ServiceService
 
     public function getAllService($requestInfo)
     {
-        $service = Utils::search($this->service,$requestInfo);
-        return Utils::pagination($service->with('chart_of_account'),$requestInfo);
+        if (array_key_exists('search', $requestInfo)) {
+            if (strlen($requestInfo["search"]) >= 4) {
+                if (substr($requestInfo["search"], 0, 2) == 00) {
+                    $requestInfo['search'] = substr($requestInfo["search"], 2, strlen($requestInfo["search"]));
+                } else if (substr($requestInfo["search"], 0, 2) > 00) {
+                    $requestInfo['search'] =  substr($requestInfo["search"], 1, strlen($requestInfo["search"]));
+                }
+            }
+        }
+
+        $service = Utils::search($this->service, $requestInfo);
+        return Utils::pagination($service->with('chart_of_account'), $requestInfo);
     }
 
     public function getService($id)
     {
-      return $this->service->with('chart_of_account')->findOrFail($id);
+        return $this->service->with('chart_of_account')->findOrFail($id);
     }
 
     public function postService($serviceInfo)
@@ -38,8 +49,7 @@ class ServiceService
 
     public function deleteService($id)
     {
-      $this->service->findOrFail($id)->delete();
-      return true;
+        $this->service->findOrFail($id)->delete();
+        return true;
     }
-
 }

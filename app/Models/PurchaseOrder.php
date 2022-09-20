@@ -27,7 +27,7 @@ class PurchaseOrder extends Model
     protected $table = 'purchase_orders';
     protected $fillable = ['user_id', 'order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount', 'initial_date', 'company_id'];
     protected $hidden = ['currency_id', 'provider_id', 'user_id', 'company_id'];
-    protected $appends = ['applicant_can_edit', 'approver_stage'];
+    protected $appends = ['applicant_can_edit', 'approver_stage', 'payment_requests'];
 
     public function attachments()
     {
@@ -116,7 +116,6 @@ class PurchaseOrder extends Model
         return false;
     }
 
-
     public function getApproverStageAttribute()
     {
         $approverStage = [];
@@ -165,8 +164,46 @@ class PurchaseOrder extends Model
         }
     }
 
-    public function payment_requests()
+    public function getPaymentRequestsAttribute()
     {
-        return $this->hasMany(PaymentRequestHasPurchaseOrders::class);
+        $approverStage = [];
+        $status = 0;
+        if (PaymentRequestHasPurchaseOrders::where('purchase_order_id', $this->id)->exists()) {
+            $getAllPaymentRequests = PaymentRequestHasPurchaseOrders::join('payment_requests', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.id')
+                ->select('payment_request_has_purchase_orders.purchase_order_id', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.payment_type')
+                ->where([
+                    'payment_request_has_purchase_orders.purchase_order_id' => $this->id,
+                    'payment_requests.payment_type' => 0
+                ])
+                ->groupBy([
+                    'payment_request_has_purchase_orders.payment_request_id',
+                    'payment_request_has_purchase_orders.purchase_order_id',
+                    'payment_requests.payment_type'
+                ])
+                ->get(['payment_request_has_purchase_orders.payment_request_id']);
+
+            if (!$getAllPaymentRequests->isEmpty()) {
+                foreach ($getAllPaymentRequests as $getAllPaymentRequest) {
+
+                    $getPurchaseOrderDeliverys = PurchaseOrderDelivery::where([
+                        'payment_request_id' => $getAllPaymentRequest->payment_request_id,
+                        'purchase_order_id' => $this->id
+                    ])->get();
+                    if (!$getPurchaseOrderDeliverys->isEmpty()) {
+                        foreach ($getPurchaseOrderDeliverys as $getPurchaseOrderDelivery) {
+                            if ($getPurchaseOrderDelivery->product_id != null) {
+                                $status = $getPurchaseOrderDelivery->status;
+                            }
+                        }
+                    }
+                }
+                $approverStage[] = [
+                    'status' => $status
+                ];
+            }
+            return $approverStage;
+        } else {
+            return $approverStage;
+        }
     }
 }

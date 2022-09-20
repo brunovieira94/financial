@@ -30,6 +30,7 @@ class PaymentRequest extends Model
     protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'group_approval_flow_id',
         'company_id',
         'group_form_payment_id',
         'note',
@@ -56,6 +57,11 @@ class PaymentRequest extends Model
         'form_payment',
         'payment_type',
     ];
+
+    public function group_approval_flow()
+    {
+        return $this->hasOne(GroupApprovalFlow::class, 'id', 'group_approval_flow_id');
+    }
 
     public function purchase_order()
     {
@@ -187,9 +193,16 @@ class PaymentRequest extends Model
     public function getApplicantCanEditAttribute()
     {
         if (isset($this->approval)) {
+            // Super Admin pode (em processamento ou rejeitada)
+            if (auth()->user()->role->id == 1 && ($this->approval->status == 2 || $this->approval->status == 0)) {
+                return true;
+            }
+            // Pode se acabou de ser criada
             if ($this->approval->order == 1 && $this->approval->status == 0) {
                 return true;
-            } else if ($this->approval->order == 0) {
+            }
+            // Tá na etapa solicitante (depois de ser rejeitada)
+            else if ($this->approval->order == 0 && $this->approval->status != 3) {
                 return true;
             } else {
                 return false;

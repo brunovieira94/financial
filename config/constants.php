@@ -11,6 +11,8 @@ return [
         'error' => '5',
         'cnab generated' => '6',
         'finished' => '7',
+        'multiple approval' => '8',
+        'transfer approval' => '9'
     ],
     '123_secret' => 'Vrdq63SvNe3Jkwwq3OMHtYrj7mksZTL4s1WjeiJq',
     'statusPt' => [
@@ -22,5 +24,13 @@ return [
         'Erro',
         'CNAB Gerado',
         'Finalizada',
-    ]
+    ],
+    'billingStatus' => [
+        'open' => '0',
+        'approved' => '1',
+        'disapproved' => '2',
+        'canceled' => '3',
+        'paid out' => '4',
+        'finished' => '5',
+    ],
 ];

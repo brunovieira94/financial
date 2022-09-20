@@ -18,8 +18,8 @@ class TypeOfTax extends Model
     protected $fillable = ['title'];
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $user = auth()->user();
-        $activity->causer_id = $user->id;
+        $user = auth()->user() ?? '';
+        $activity->causer_id = $user->id ?? '';
     }
     use SoftDeletes;
     protected $table='type_of_tax';
