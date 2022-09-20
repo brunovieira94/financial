@@ -8,6 +8,7 @@ use App\Models\Cangooroo;
 use App\Models\PaidBillingInfo;
 use App\Models\BankAccount;
 use App\Models\Hotel;
+use App\Models\HotelApprovalFlow;
 use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -17,60 +18,26 @@ class BillingService
 
     private $billing;
     private $cangoorooService;
+    private $approvalFlow;
 
     private $with = ['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow'];
 
-    public function __construct(Billing $billing, CangoorooService $cangoorooService)
+    public function __construct(Billing $billing, CangoorooService $cangoorooService, HotelApprovalFlow $approvalFlow)
     {
         $this->billing = $billing;
         $this->cangoorooService = $cangoorooService;
+        $this->approvalFlow = $approvalFlow;
     }
 
     public function getAllBilling($requestInfo, $approvalStatus)
     {
-        if($approvalStatus == 'billing-all'){
-            $billing = Utils::search($this->billing, $requestInfo);
-        }
-        else{
-            $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
-        }
-        if (array_key_exists('payment_status', $requestInfo)){
-            $billing->where('payment_status', $requestInfo['payment_status']);
-        }
-        if (array_key_exists('status_123', $requestInfo)){
-            $billing->where('status_123', $requestInfo['status_123']);
-        }
-        if (array_key_exists('status_cangooroo', $requestInfo)){
-            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
-                $query->where('status', $requestInfo['status_cangooroo']);
-            });
-        }
-        if (array_key_exists('id_hotel_cangooroo', $requestInfo)){
-            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
-                $query->where('hotel_id', $requestInfo['id_hotel_cangooroo']);
-            });
-        }
-        if (array_key_exists('created_at', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['created_at'])) {
-                $billing->where('created_at', '>=', $requestInfo['created_at']['from']);
-            }
-            if (array_key_exists('to', $requestInfo['created_at'])) {
-                $billing->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
-            }
-            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
-                $billing->whereBetween('created_at', [now()->addMonths(-1), now()]);
-            }
-        }
-        if (array_key_exists('pay_date', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['pay_date'])) {
-                $billing->where('pay_date', '>=', $requestInfo['pay_date']['from']);
-            }
-            if (array_key_exists('to', $requestInfo['pay_date'])) {
-                $billing->where('pay_date', '<=', $requestInfo['pay_date']['to']);
-            }
-            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
-                $billing->whereBetween('pay_date', [now(), now()->addMonths(1)]);
-            }
+        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
+        if($approvalStatus == 'billing-open')
+        {
+            $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
+            if (!$approvalFlowUserOrder) return response([], 404);
+            $billing->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->where('deleted_at', '=', null);
         }
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
@@ -83,19 +50,38 @@ class BillingService
         $billing->reason_to_reject_id = null;
         $billing->save();
         return response()->json([
-            'Sucesso' => 'Pedido aprovado',
+            'Sucesso' => 'Faturamento aprovado',
         ], 200);
     }
 
     public function reprove($id, Request $request)
     {
         $billing = $this->billing->findOrFail($id);
+        $maxOrder = $this->approvalFlow->max('order');
+
+        // if ($this->approvalFlow
+        //     ->where('order', $billing->order)
+        //     ->where('role_id', auth()->user()->role_id)
+        //     ->doesntExist()
+        // ) {
+        //     return response()->json([
+        //         'error' => 'Não é permitido a esse usuário reprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+        //     ], 422);
+        // }
+
         $billing->approval_status = Config::get('constants.billingStatus.disapproved');
+
+        if ($billing->order > $maxOrder) {
+            $billing->approval_status = Config::get('constants.billingStatus.open');
+        } else if ($billing->order != 0) {
+            $billing->order -= 1;
+        }
+
         $billing->reason = $request->reason;
         $billing->reason_to_reject_id = $request->reason_to_reject_id;
         $billing->save();
         return response()->json([
-            'Sucesso' => 'Pedido reprovado',
+            'Sucesso' => 'Faturamento reprovado',
         ], 200);
     }
 
@@ -266,7 +252,7 @@ class BillingService
         if($token){
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
-            ])->withToken($token)->get(env('API_123_STATUS_URL', "http://teste31.123milhas.com/api/v3/hotel/booking/status")."/".$hotelId."/".$reserve);
+            ])->withToken($token)->get(env('API_123_STATUS_URL', "http://teste33.123milhas.com/api/v3/hotel/booking/status")."/".$hotelId."/".$reserve);
             if ($apiCall->status() != 200) return null; // N.D dados de reserva inválidos na base 123
             $response = $apiCall->json();
             return $response['status'];
@@ -280,7 +266,7 @@ class BillingService
     {
         $apiCall = Http::withHeaders([
             'secret' => env('API_123_SECRET', Config::get('constants.123_secret')),
-        ])->get(env('API_123_AUTH_URL', "http://teste31.123milhas.com/api/v3/client/auth"));
+        ])->get(env('API_123_AUTH_URL', "http://teste33.123milhas.com/api/v3/client/auth"));
         if ($apiCall->status() != 200) return false;
         $response = $apiCall->json();
         return $response['access_token'];
