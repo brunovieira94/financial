@@ -517,7 +517,7 @@ class Utils
     public static function baseFilterReportsInstallment($installment, $requestInfo)
     {
         if (array_key_exists('net_value', $requestInfo)) {
-            $installment = $installment->where('portion_amount', $requestInfo['net_value']);
+            $installment = $installment->where('initial_value', $requestInfo['net_value']);
         }
         if (array_key_exists('extension_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['extension_date'])) {
