@@ -35,8 +35,9 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             },]);
         }
         $query = $query->whereHas('payment_request', function ($query) use ($requestInfo) {
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
+        $query = Utils::baseFilterReportsInstallment($query, $requestInfo);
         return $query->get();
     }
 

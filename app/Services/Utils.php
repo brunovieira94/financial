@@ -290,13 +290,15 @@ class Utils
         "billing-finished"
     ];
 
-    public static function baseFilterReportsPaymentRequest($paymentRequest, $requestInfo)
+    public static function baseFilterReportsPaymentRequest($paymentRequest, $requestInfo, $installment = false)
     {
         if (array_key_exists('provider', $requestInfo)) {
             $paymentRequest = $paymentRequest->where('provider_id', $requestInfo['provider']);
         }
         if (array_key_exists('net_value', $requestInfo)) {
-            $paymentRequest = $paymentRequest->where('net_value', $requestInfo['net_value']);
+            if (!$installment) {
+                $paymentRequest = $paymentRequest->where('net_value', $requestInfo['net_value']);
+            }
         }
         if (array_key_exists('company', $requestInfo)) {
             $paymentRequest = $paymentRequest->where('company_id', $requestInfo['company']);
@@ -340,7 +342,7 @@ class Utils
                 $paymentRequest = $paymentRequest->whereBetween('pay_date', [now(), now()->addMonths(1)]);
             }
         }
-        if (array_key_exists('extension_date', $requestInfo)) {
+        /*if (array_key_exists('extension_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['extension_date'])) {
                 $paymentRequest = $paymentRequest->whereHas('installments', function ($installments) use ($requestInfo) {
                     if (array_key_exists('from', $requestInfo['extension_date'])) {
@@ -354,7 +356,7 @@ class Utils
                     }
                 });
             }
-        }
+        }*/
         if (array_key_exists('days_late', $requestInfo)) {
             $paymentRequest = $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
                 $query->where('status', '!=', Config::get('constants.status.paid out'))->orWhereNull('status')->whereDate("due_date", "<=", Carbon::now()->subDays($requestInfo['days_late']));
@@ -424,8 +426,8 @@ class Utils
             }
         }
         if (array_key_exists('extension_date', $requestInfo)) {
-
-            $installments = DB::select("SELECT id as id_payment_request, (select
+            if (!$installment) {
+                $installments = DB::select("SELECT id as id_payment_request, (select
             id as id_payment_requests_installments
             FROM api.payment_requests_installments
             WHERE payment_request_id = id_payment_request
@@ -435,27 +437,28 @@ class Utils
             LIMIT 1) AS id_installment
             FROM api.payment_requests");
 
-            $installmentIDs = [];
+                $installmentIDs = [];
 
-            foreach ($installments as $installment) {
-                if ($installment->id_installment != null) {
-                    array_push($installmentIDs, $installment->id_installment);
+                foreach ($installments as $installment) {
+                    if ($installment->id_installment != null) {
+                        array_push($installmentIDs, $installment->id_installment);
+                    }
                 }
+                $requestInfo['installmentsIds'] = $installmentIDs;
+
+                $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
+                    $query->whereIn('id', $requestInfo['installmentsIds']);
+                    if (array_key_exists('from', $requestInfo['extension_date'])) {
+                        $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['extension_date'])) {
+                        $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+                    }
+                    if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                        $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+                    }
+                });
             }
-            $requestInfo['installmentsIds'] = $installmentIDs;
-
-            $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
-                $query->whereIn('id', $requestInfo['installmentsIds']);
-                if (array_key_exists('from', $requestInfo['extension_date'])) {
-                    $query->where('extension_date', '>=', $requestInfo['extension_date']['from']);
-                }
-                if (array_key_exists('to', $requestInfo['extension_date'])) {
-                    $query->where('extension_date', '<=', $requestInfo['extension_date']['to']);
-                }
-                if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
-                    $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
-                }
-            });
         }
 
         if (array_key_exists('cnab_date', $requestInfo)) {
@@ -509,5 +512,24 @@ class Utils
                 ]
             );
         }
+    }
+
+    public static function baseFilterReportsInstallment($installment, $requestInfo)
+    {
+        if (array_key_exists('net_value', $requestInfo)) {
+            $installment = $installment->where('portion_amount', $requestInfo['net_value']);
+        }
+        if (array_key_exists('extension_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['extension_date'])) {
+                $installment->where('extension_date', '>=', $requestInfo['extension_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['extension_date'])) {
+                $installment->where('extension_date', '<=', $requestInfo['extension_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['extension_date']) && !array_key_exists('from', $requestInfo['extension_date'])) {
+                $installment->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        return $installment;
     }
 }
