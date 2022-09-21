@@ -756,7 +756,7 @@ class PurchaseOrderService
             $status = 'n';
             $delivered = 0;
             $total = 0;
-            $getPaymentRequest = $this->paymentRequest->where([
+            $getPaymentRequest = $this->paymentRequest->withoutGlobalScopes()->where([
                 'id' => $getListPaymentRequestId->payment_request_id,
                 'payment_type' => 0
             ])->first();
@@ -791,7 +791,7 @@ class PurchaseOrderService
 
     public function getInvoicePurchaseOrder($id)
     {
-        $getPaymentRequests = $this->paymentRequest::where('id', $id)->with('purchase_order')->get();
+        $getPaymentRequests = $this->paymentRequest::withoutGlobalScopes()->where('id', $id)->with('purchase_order')->get();
         if (!$getPaymentRequests->isEmpty()) {
             $response = [];
             $products = [];
