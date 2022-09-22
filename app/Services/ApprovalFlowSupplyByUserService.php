@@ -139,7 +139,10 @@ class ApprovalFlowSupplyByUserService
         } else {
             $accountApproval->order += 1;
         }
-
+        $accountApproval->purchase_order->update([
+            'approved_total_value' => $accountApproval->purchase_order->installments_total_value,
+            'approved_installment_value' => $accountApproval->purchase_order->installments_total_value
+        ]);
         $accountApproval->reason = null;
         $accountApproval->save();
         return response()->json([
