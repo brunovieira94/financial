@@ -25,9 +25,9 @@ class PurchaseOrder extends Model
 
     use SoftDeletes;
     protected $table = 'purchase_orders';
-    protected $fillable = ['user_id', 'order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount', 'initial_date', 'company_id'];
+    protected $fillable = ['user_id', 'order_type', 'provider_id', 'currency_id', 'exchange_rate', 'billing_date', 'payment_condition', 'observations', 'percentage_discount_services', 'money_discount_services', 'percentage_discount_products', 'money_discount_products', 'increase_tolerance', 'unique_product_discount', 'frequency_of_installments', 'installments_quantity', 'unique_discount', 'initial_date', 'company_id', 'justification', 'negotiated_total_value', 'installments_total_value', 'approved_total_value', 'approved_installment_value'];
     protected $hidden = ['currency_id', 'provider_id', 'user_id', 'company_id'];
-    protected $appends = ['applicant_can_edit', 'approver_stage', 'payment_requests'];
+    protected $appends = ['applicant_can_edit', 'approver_stage', 'payment_requests', 'final_total_value'];
 
     public function attachments()
     {
@@ -205,5 +205,29 @@ class PurchaseOrder extends Model
         } else {
             return $approverStage;
         }
+    }
+
+    public function getFinalTotalValueAttribute()
+    {
+        $getPurchaseOrder = PurchaseOrder::findOrFail($this->id);
+        //soma produtos = ((unitary_value * quantity) - money_discount) - money_discount_products(purchase)
+        /* $sumProducts = PurchaseOrderHasProducts::where('purchase_order_id', $this->id)
+            ->sum(\DB::raw('unitary_value * quantity - money_discount'));
+        $finalSumProducts = $sumProducts - $getPurchaseOrder['money_discount_products'];
+
+        $sumServices = PurchaseOrderHasServices::where('purchase_order_id', $this->id)
+            ->sum(\DB::raw('unitary_value * quantity - money_discount'));
+        $finalSumServices = $sumServices - $getPurchaseOrder['money_discount_services'];
+
+        $finalTotal = $finalSumProducts + $finalSumServices;
+
+         return $finalTotal;*/
+
+        $currentValue = 0;
+        foreach (PurchaseOrderHasInstallments::where('purchase_order_id', $this->id)->get() as $key => $purchaseOrderHasInstallments) {
+            $currentValue += $purchaseOrderHasInstallments['portion_amount'] + $purchaseOrderHasInstallments['money_discount'];
+        }
+
+        return $getPurchaseOrder->approved_installment_value ?? $currentValue;
     }
 }

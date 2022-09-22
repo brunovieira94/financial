@@ -62,56 +62,6 @@ class PurchaseOrderService
 
     public function getAllPurchaseOrder($requestInfo)
     {
-        /*
-        $purchaseOrder = Utils::search($this->purchaseOrderClean, $requestInfo);
-
-        if (auth()->user()->role->filter_cost_center_supply) {
-            $purchaseOrderIds = [];
-            foreach (auth()->user()->cost_center as $userCostCenter) {
-                $purchaseOrderCostCenters = PurchaseOrderHasCostCenters::where('cost_center_id', $userCostCenter->id)->get(['purchase_order_id']);
-                foreach ($purchaseOrderCostCenters as $purchaseOrderCostCenter) {
-                    $purchaseOrderIds[] = $purchaseOrderCostCenter->purchase_order_id;
-                }
-            }
-            $purchaseOrder->whereIn('id', $purchaseOrderIds);
-        }
-
-        if (array_key_exists('provider', $requestInfo)) {
-            $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
-                $query->where('provider_id', $requestInfo['provider']);
-            });
-        }
-
-        if (array_key_exists('cost_center', $requestInfo)) {
-            $purchaseOrder->whereHas('cost_centers', function ($query) use ($requestInfo) {
-                $query->where('cost_center_id', $requestInfo['cost_center']);
-            });
-        }
-
-        if (array_key_exists('service', $requestInfo)) {
-            $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
-                $query->where('service_id', $requestInfo['service']);
-            });
-        }
-
-        if (array_key_exists('product', $requestInfo)) {
-            $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
-                $query->where('product_id', $requestInfo['product']);
-            });
-        }
-
-        if (array_key_exists('billing_date', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['billing_date'])) {
-                $purchaseOrder->where('billing_date', '>=', $requestInfo['billing_date']['from']);
-            }
-            if (array_key_exists('to', $requestInfo['billing_date'])) {
-                $purchaseOrder->where('billing_date', '<=', $requestInfo['billing_date']['to']);
-            }
-        }
-
-        return Utils::pagination($purchaseOrder->with(['provider', 'cost_centers', 'approval.approval_flow', 'services', 'products']), $requestInfo);
-        */
-
         $purchaseOrder = Utils::search($this->purchaseOrder, $requestInfo);
 
         if (auth()->user()->role->filter_cost_center_supply) {
@@ -173,12 +123,27 @@ class PurchaseOrderService
 
     public function getPurchaseOrder($id)
     {
-        return $this->purchaseOrder->with($this->with)->findOrFail($id);
+        $getPurchaseOrder = $this->purchaseOrder->with($this->with)->findOrFail($id);
+        //soma produtos = ((unitary_value * quantity) - money_discount) - money_discount_products(purchase)
+        $sumProducts = PurchaseOrderHasProducts::where('purchase_order_id', $id)
+            ->sum(\DB::raw('unitary_value * quantity - money_discount'));
+        $finalSumProducts = $sumProducts - $getPurchaseOrder['money_discount_products'];
+
+        // soma serviçes
+        $sumServices = PurchaseOrderHasServices::where('purchase_order_id', $id)
+            ->sum(\DB::raw('unitary_value * quantity - money_discount'));
+        $finalSumServices = $sumServices - $getPurchaseOrder['money_discount_services'];
+
+        $finalTotal = $finalSumProducts + $finalSumServices;
+
+        $getPurchaseOrder['final_total_value'] = $finalTotal;
+
+        return $getPurchaseOrder;
     }
 
     public function postPurchaseOrder($purchaseOrderInfo, Request $request)
     {
-        /*$discount = 0;
+        /* $discount = 0;
         $new_final_negotiated_total_value = 0;
         foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
             $discount += $installments['discount'];
@@ -190,9 +155,12 @@ class PurchaseOrderService
         }
 
         if ($purchaseOrderInfo['negotiated_total_value'] == $new_final_negotiated_total_value) {
-            */
+        */
         $purchaseOrder = new PurchaseOrder;
         $purchaseOrderInfo['user_id'] = auth()->user()->id;
+        $purchaseOrderInfo['installments_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
+        $purchaseOrderInfo['approved_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
+        $purchaseOrderInfo['approved_instalment_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
         $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
         $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
         $this->syncServices($purchaseOrder, $purchaseOrderInfo);
@@ -211,11 +179,11 @@ class PurchaseOrderService
         activity()->enableLogging();
 
         $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
-        /*} else {
+        /* } else {
             return response()->json([
                 'error' => 'O valor total inicial e o valor total das parcelas não são iguais. Por favor validar o valor das parcelas.',
             ], 422);
-        }*/
+        } */
 
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
@@ -259,22 +227,36 @@ class PurchaseOrderService
                 $purchaseOrderInfo['billing_date'] = null;
             }
 
-            $oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+            //$oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+            //$oldValue = $purchaseOrder->negotiated_total_value;
+            //$oldInstallmentValue = $purchaseOrder->installments_total_value;
+            $approvedTotalValue = $purchaseOrder->approved_installment_value ?? $this->getPurchaseOrderValue($id);;
+            //$approvedInstallmentValue = $purchaseOrder->approved_installment_value;
 
+            if ($purchaseOrder->approved_installment_value == null) {
+                $purchaseOrderInfo['approved_installment_value'] = $this->getPurchaseOrderValue($id);
+            }
+
+            $purchaseOrderInfo['installments_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
             $purchaseOrder->fill($purchaseOrderInfo)->save();
             $this->putProducts($id, $purchaseOrderInfo);
             $this->putServices($id, $purchaseOrderInfo);
 
-            $newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
+            //$newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
 
-            // caso o valor for maior do que o antigo o pedido deve voltar para o início da aprovação
-            if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
+            // caso o valor for maior do que o Aprovado o pedido deve voltar para o início da aprovação
+            //if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
+            if ($purchaseOrderInfo['negotiated_total_value'] > $approvedTotalValue || $purchaseOrderInfo['final_negotiated_total_value'] > $approvedTotalValue) {
                 $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
-                $supplyApprovalFlow['order'] = 0;
+                $supplyApprovalFlow['order'] = 1;
                 if ($newStatus != '') {
                     $supplyApprovalFlow['status'] = $newStatus;
                 }
                 $supplyApprovalFlow->save();
+                /* $purchaseOrder->update([
+                    'approved_total_value' => $purchaseOrderInfo['negotiated_total_value'],
+                    'approved_installment_value' => $purchaseOrderInfo['final_negotiated_total_value'],
+                ]); */
             }
 
             $this->putCompanies($id, $purchaseOrderInfo);
@@ -283,10 +265,31 @@ class PurchaseOrderService
 
             $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
 
-            //validar valor total das parcelas
-            /*$discount = 0;
+            /* $discount = 0;
             $new_final_negotiated_total_value = 0;
             foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
+                if (array_key_exists('id', $installments)) {
+                    $getInstallmentInfo = $this->purchaseOrderHasInstallments->where('id', $installments['id'])->first();
+                    if ($getInstallmentInfo != null) {
+                        if ($getInstallmentInfo->amount_paid > 0) {
+                            $totalInstallment = $installments['portion_amount'] - $installments['discount'];
+                            if ($totalInstallment < $getInstallmentInfo->amount_paid) {
+                                $index = $key + 1;
+                                $getCurrency = $this->purchaseOrder->where('id', $installments['purchase_order_id'])->with(['currency'])->first();
+                                if ($getCurrency != null) {
+                                    return response()->json([
+                                        'error' => 'O valor final da parcela ' . $index . ' não pode ser menor que o valor já vinculado (' . $getCurrency['currency']['currency_symbol'] . ' ' . $getInstallmentInfo->amount_paid . ') da parcela',
+                                    ], 422);
+                                } else {
+                                    return response()->json([
+                                        'error' => 'O valor final da parcela ' . $index . ' não pode ser menor que o valor já vinculado (' . $getInstallmentInfo->amount_paid . ') da parcela',
+                                    ], 422);
+                                }
+                            }
+                        }
+                    }
+                }
+
                 $discount += $installments['discount'];
             }
             if ($discount > 0) {
@@ -294,15 +297,14 @@ class PurchaseOrderService
             } else {
                 $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'];
             }
-
             if ($purchaseOrderInfo['negotiated_total_value'] == $new_final_negotiated_total_value) {
                 $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
             } else {
                 return response()->json([
                     'error' => 'O valor total inicial e o valor total das parcelas não são iguais. Por favor validar o valor das parcelas.',
                 ], 422);
-            }*/
-
+            }
+            */
             return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
         } else {
             return response()->json([
@@ -336,10 +338,8 @@ class PurchaseOrderService
 
     public function putProducts($id, $purchaseOrderInfo)
     {
-
         $updateProducts = [];
         $createdProducts = [];
-
         if (array_key_exists('products', $purchaseOrderInfo)) {
             foreach ($purchaseOrderInfo['products'] as $product) {
                 if (array_key_exists('id', $product)) {
@@ -358,10 +358,9 @@ class PurchaseOrderService
                     $createdProducts[] = $purchaseOrderHasProducts->id;
                 }
             }
+            $collection = $this->purchaseOrderHasProducts->where('purchase_order_id', $id)->whereNotIn('id', $updateProducts)->whereNotIn('id', $createdProducts)->get(['id']);
+            $this->purchaseOrderHasProducts->destroy($collection->toArray());
         }
-
-        $collection = $this->purchaseOrderHasProducts->where('purchase_order_id', $id)->whereNotIn('id', $updateProducts)->whereNotIn('id', $createdProducts)->get(['id']);
-        $this->purchaseOrderHasProducts->destroy($collection->toArray());
     }
 
     public function syncServices($purchaseOrder, $purchaseOrderInfo)
@@ -392,7 +391,6 @@ class PurchaseOrderService
     {
         $updateServices = [];
         $createdServices = [];
-
         if (array_key_exists('services', $purchaseOrderInfo)) {
             foreach ($purchaseOrderInfo['services'] as $service) {
                 if (array_key_exists('id', $service)) {
@@ -418,10 +416,9 @@ class PurchaseOrderService
                 }
                 // $this->syncInstallments($purchaseOrderHasServices, $service);
             }
+            $collection = $this->purchaseOrderHasServices->where('purchase_order_id', $id)->whereNotIn('id', $updateServices)->whereNotIn('id', $createdServices)->get(['id']);
+            $this->purchaseOrderHasServices->destroy($collection->makeHidden(['end_contract_date'])->toArray());
         }
-
-        $collection = $this->purchaseOrderHasServices->where('purchase_order_id', $id)->whereNotIn('id', $updateServices)->whereNotIn('id', $createdServices)->get(['id']);
-        $this->purchaseOrderHasServices->destroy($collection->makeHidden(['end_contract_date'])->toArray());
     }
 
     // public function destroyInstallments($purchaseOrderHasServices)
@@ -449,7 +446,7 @@ class PurchaseOrderService
     //     }
     // }
 
-    public function syncInstallments($purchaseOrder, $purchaseOrderInfo)
+    /* public function syncInstallments($purchaseOrder, $purchaseOrderInfo)
     {
         if (array_key_exists('installments', $purchaseOrderInfo)) {
             $this->destroyInstallments($purchaseOrder);
@@ -466,12 +463,28 @@ class PurchaseOrderService
                 }
             }
         }
-    }
+    } */
 
-    public function destroyInstallments($purchaseOrder)
+    public function syncInstallments($purchaseOrder, $purchaseOrderInfo)
     {
-        $collection = $this->purchaseOrderHasInstallments->where('purchase_order_id', $purchaseOrder['id'])->get(['id']);
-        $this->purchaseOrderHasInstallments->destroy($collection->toArray());
+        $updateInstallments = [];
+        $createdInstallments = [];
+        if (array_key_exists('installments', $purchaseOrderInfo)) {
+            foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
+                if (array_key_exists('id', $installments)) {
+                    $purchaseOrderHasInstallments = $this->purchaseOrderHasInstallments->findOrFail($installments['id']);
+                    $purchaseOrderHasInstallments->fill($installments)->save();
+                    $updateInstallments[] = $installments['id'];
+                } else {
+                    $installments['purchase_order_id'] = $purchaseOrder['id'];
+                    $installments['parcel_number'] = $key + 1;
+                    $purchaseOrderHasInstallments = $this->purchaseOrderHasInstallments->create($installments);
+                    $createdInstallments[] = $purchaseOrderHasInstallments->id;
+                }
+            }
+            $collection = $this->purchaseOrderHasInstallments->where('purchase_order_id', $purchaseOrder['id'])->whereNotIn('id', $updateInstallments)->whereNotIn('id', $createdInstallments)->get(['id']);
+            $this->purchaseOrderHasInstallments->destroy($collection->toArray());
+        }
     }
 
     public function syncCostCenters($purchaseOrder, $purchaseOrderInfo)
@@ -555,7 +568,6 @@ class PurchaseOrderService
             }
         }
     }
-
 
     // public function isPartialRequest($purchaseOrderInfo, $purchaseRequest)
     // {
@@ -710,9 +722,15 @@ class PurchaseOrderService
         }
     }
 
-    public function getPurchaseOrderValue($purchaseOrder, $id)
+    public function getPurchaseOrderValue($id)
     {
         $currentValue = 0;
+        foreach ($this->purchaseOrderHasInstallments->where('purchase_order_id', $id)->get() as $key => $purchaseOrderHasInstallments) {
+            $currentValue += $purchaseOrderHasInstallments['portion_amount'] + $purchaseOrderHasInstallments['money_discount'];
+        }
+        return $currentValue;
+
+        /* $currentValue = 0;
         foreach ($this->purchaseOrderHasServices->with('installments')->where('purchase_order_id', $id)->get() as $key => $purchaseOrderHasServices) {
             $serviceValue = 0;
             $serviceDiscount = 0;
@@ -738,7 +756,7 @@ class PurchaseOrderService
         if ($purchaseOrder['unique_product_discount']) {
             $currentValue -= $purchaseOrder['money_discount_products'];
         }
-        return $currentValue;
+        return $currentValue;*/
     }
 
     public function getListInvoicePurchaseOrder($id)
