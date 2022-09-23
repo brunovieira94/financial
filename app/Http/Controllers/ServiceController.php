@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ServicesExport;
 use App\Imports\ServicesImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreServiceRequest;
@@ -47,5 +48,13 @@ class ServiceController extends Controller
     {
         (new ServicesImport)->import(request()->file('import_file'));
         return response('');
+    }
+
+    public function export(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
+            return (new ServicesExport($request->all()))->download('serviços.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        }
+        return (new ServicesExport($request->all()))->download('serviços.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

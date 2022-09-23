@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ProductsExport;
 use App\Imports\ProductsImport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreProductRequest;
@@ -50,4 +51,11 @@ class ProductController extends Controller
         return response('');
     }
 
+    public function export(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
+            return (new ProductsExport($request->all()))->download('produtos.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        }
+        return (new ProductsExport($request->all()))->download('produtos.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
 }
