@@ -332,6 +332,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::post('/import', [ProductController::class, 'import']);
+        Route::post('/export', [ProductController::class, 'export']);
     });
 
     Route::prefix('service')->group(function () {
@@ -341,6 +342,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ServiceController::class, 'update']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
         Route::post('/import', [ServiceController::class, 'import']);
+        Route::post('/export', [ServiceController::class, 'export']);
     });
 
     Route::prefix('measurement-unit')->group(function () {
