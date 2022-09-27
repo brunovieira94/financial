@@ -78,4 +78,9 @@ class BillingController extends Controller
         }
         return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
+
+    public function refreshStatuses($id)
+    {
+        return $this->billingService->refreshStatuses($id);
+    }
 }
