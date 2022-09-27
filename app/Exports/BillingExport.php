@@ -70,6 +70,7 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             $hotel->cpf_cnpj,
             $hotel->is_valid ? 'Sim' : 'Não',
             $cangooroo->selling_price,
+            $billing->pax_in_house ? 'Sim' : 'Não',
             $billing->created_at,
         ];
     }
@@ -106,6 +107,7 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             'CPF/CNPJ',
             'CNPJ Válido?',
             'Valor Cangooroo',
+            'Pax In House',
             'Data de Criação',
         ];
     }
