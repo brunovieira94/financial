@@ -46,6 +46,7 @@ class Billing extends Model
         'form_of_payment',
         'cangooroo_service_id',
         'bank_account_id',
+        'pax_in_house',
     ];
     protected $hidden = ['bank_account_id', 'user_id', 'cangooroo_booking_id', 'reason_to_reject_id', 'cangooroo_service_id'];
 
