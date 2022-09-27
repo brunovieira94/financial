@@ -88,7 +88,7 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $cangooroo = $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
         $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billing['reserve']);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo);
@@ -270,5 +270,26 @@ class BillingService
         if ($apiCall->status() != 200) return false;
         $response = $apiCall->json();
         return $response['access_token'];
+    }
+
+    public function refreshStatuses($id)
+    {
+        $billingInfo = [];
+        $billing = $this->billing->findOrFail($id);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
+        if (is_array($cangooroo) && (array_key_exists('error', $cangooroo) || array_key_exists('invalid_hotel', $cangooroo))) {
+            return response()->json([
+                'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
+            ], 422);
+        }
+        $status['cangooroo'] = $cangooroo['status'];
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billing['reserve']);
+        $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo);
+        $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
+        $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
+        $billing->fill($billingInfo)->save();
+        $billingInfo['cangooroo'] = $cangooroo['status'];
+        return $billingInfo;
     }
 }
