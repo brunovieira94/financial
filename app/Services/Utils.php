@@ -6,9 +6,6 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
-use App\Models\ApprovalFlowSupply;
-use App\Models\PurchaseOrderDelivery;
-use App\Models\SupplyApprovalFlow;
 use App\Models\User;
 use Carbon\Carbon;
 use Config;
@@ -512,104 +509,5 @@ class Utils
                 ]
             );
         }
-    }
-
-    public static function baseFilterPurchaseOrder($purchaseOrder, $requestInfo)
-    {
-
-        if (array_key_exists('provider', $requestInfo)) {
-            $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
-                $query->where('provider_id', $requestInfo['provider']);
-            });
-        }
-
-        if (array_key_exists('cost_center', $requestInfo)) {
-            $purchaseOrder->whereHas('cost_centers', function ($query) use ($requestInfo) {
-                $query->where('cost_center_id', $requestInfo['cost_center']);
-            });
-        }
-
-        if (array_key_exists('service', $requestInfo)) {
-            $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
-                $query->where('service_id', $requestInfo['service']);
-            });
-        }
-
-        if (array_key_exists('product', $requestInfo)) {
-            $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
-                $query->where('product_id', $requestInfo['product']);
-            });
-        }
-
-        if (array_key_exists('status', $requestInfo)) {
-            $deliveryIds = [];
-            foreach (PurchaseOrderDelivery::where('status', $requestInfo['status'])->get() as $getPurchaseOrderId) {
-                if (!in_array($getPurchaseOrderId->purchase_order_id, $deliveryIds)) {
-                    $deliveryIds[] = $getPurchaseOrderId->purchase_order_id;
-                }
-            }
-            $purchaseOrder->whereIn('id', $deliveryIds);
-        }
-
-        if (array_key_exists('billing_date', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['billing_date'])) {
-                $purchaseOrder->where('billing_date', '>=', $requestInfo['billing_date']['from']);
-            }
-            if (array_key_exists('to', $requestInfo['billing_date'])) {
-                $purchaseOrder->where('billing_date', '<=', $requestInfo['billing_date']['to']);
-            }
-        }
-
-        //New
-        if (array_key_exists('initial_total_value', $requestInfo)) {
-            $purchaseOrder = $purchaseOrder->where('initial_total_value', $requestInfo['initial_total_value']);
-        }
-
-        if (array_key_exists('negotiated_total_value', $requestInfo)) {
-            $purchaseOrder = $purchaseOrder->where('negotiated_total_value', $requestInfo['negotiated_total_value']);
-        }
-
-        if (array_key_exists('cpfcnpj', $requestInfo)) {
-            $purchaseOrder = $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
-                $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
-            });
-        }
-
-        if (array_key_exists('company', $requestInfo)) {
-            $purchaseOrder = $purchaseOrder->where('company_id', $requestInfo['company']);
-        }
-
-        if (array_key_exists('created_at', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['created_at'])) {
-                $purchaseOrder = $purchaseOrder->where('created_at', '>=', $requestInfo['created_at']['from']);
-            }
-            if (array_key_exists('to', $requestInfo['created_at'])) {
-                $purchaseOrder = $purchaseOrder->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
-            }
-            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
-                $purchaseOrder = $purchaseOrder->whereBetween('created_at', [now()->addMonths(-1), now()]);
-            }
-        }
-
-        if (array_key_exists('role', $requestInfo)) {
-            $approvalFlowOrders = ApprovalFlowSupply::where('role_id', $requestInfo['role'])->get(['order']);
-
-            $purchaseOrderIDs = [];
-            foreach ($approvalFlowOrders as $approvalFlowOrder) {
-                $supplyApprovalFlow = SupplyApprovalFlow::where('order', $approvalFlowOrder['order'])->get();
-                $purchaseOrderIDs = array_merge($purchaseOrderIDs, $supplyApprovalFlow->pluck('id_purchase_order')->toArray());
-            }
-            $purchaseOrder = $purchaseOrder->whereIn('id', $purchaseOrderIDs);
-        }
-
-        if (array_key_exists('user', $requestInfo)) {
-            $purchaseOrder = $purchaseOrder->where('user_id', $requestInfo['user']);
-        }
-
-        if (array_key_exists('purchase_order', $requestInfo)) {
-            $purchaseOrder = $purchaseOrder->where('id', $requestInfo['purchase_order']);
-        }
-
-        return $purchaseOrder;
     }
 }

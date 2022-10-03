@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ApprovalFlowSupply;
 use App\Models\Module;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasPurchaseOrders;
@@ -76,7 +75,48 @@ class PurchaseOrderService
             $purchaseOrder->whereIn('id', $purchaseOrderIds);
         }
 
-        $purchaseOrder = Utils::baseFilterPurchaseOrder($purchaseOrder, $requestInfo);
+        if (array_key_exists('provider', $requestInfo)) {
+            $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $purchaseOrder->whereHas('cost_centers', function ($query) use ($requestInfo) {
+                $query->where('cost_center_id', $requestInfo['cost_center']);
+            });
+        }
+
+        if (array_key_exists('service', $requestInfo)) {
+            $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
+                $query->where('service_id', $requestInfo['service']);
+            });
+        }
+
+        if (array_key_exists('product', $requestInfo)) {
+            $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
+                $query->where('product_id', $requestInfo['product']);
+            });
+        }
+
+        if (array_key_exists('status', $requestInfo)) {
+            $deliveryIds = [];
+            foreach (PurchaseOrderDelivery::where('status', $requestInfo['status'])->get() as $getPurchaseOrderId) {
+                if (!in_array($getPurchaseOrderId->purchase_order_id, $deliveryIds)) {
+                    $deliveryIds[] = $getPurchaseOrderId->purchase_order_id;
+                }
+            }
+            $purchaseOrder->whereIn('id', $deliveryIds);
+        }
+
+        if (array_key_exists('billing_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['billing_date'])) {
+                $purchaseOrder->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['billing_date'])) {
+                $purchaseOrder->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+            }
+        }
 
         return Utils::pagination($purchaseOrder->with($this->with), $requestInfo);
     }
