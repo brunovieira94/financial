@@ -23,6 +23,7 @@ class PutChartOfAccountsRequest extends FormRequest
             'group_title' => 'nullable|max:255',
             'referential_title' => 'nullable|max:255',
             'group' => 'nullable|integer',
+            'active' => 'boolean'
         ];
     }
 

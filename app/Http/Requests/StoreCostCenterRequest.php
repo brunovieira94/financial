@@ -25,10 +25,11 @@ class StoreCostCenterRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required|max:255' ,
+            'title' => 'required|max:255',
             'parent' => 'nullable|integer|exists:cost_center,id',
             'code' => new DuplicateRoleCostCenter(request()->input('parent')),
-            'group_approval_flow_id' => 'required|integer|exists:group_approval_flow,id'
+            'group_approval_flow_id' => 'required|integer|exists:group_approval_flow,id',
+            'active' => 'boolean'
         ];
     }
 
