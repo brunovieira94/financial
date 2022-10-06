@@ -31,14 +31,12 @@ class BillingService
 
     public function getAllBilling($requestInfo, $approvalStatus)
     {
-        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
-        if($approvalStatus == 'billing-open')
-        {
-            $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
-            if (!$approvalFlowUserOrder) return response([], 404);
-            $billing->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->where('deleted_at', '=', null);
+        if ($approvalStatus == 'billing-all') {
+            $billing = Utils::search($this->billing, $requestInfo);
+        } else {
+            $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
         }
+        $billing = Utils::baseFilterBilling($billing, $requestInfo);
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
