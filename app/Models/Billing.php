@@ -67,7 +67,7 @@ class Billing extends Model
 
     public function reason_to_reject()
     {
-        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
+        return $this->hasOne(HotelReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
     }
 
     public function bank_account()
@@ -82,4 +82,10 @@ class Billing extends Model
             $billing->cangooroo()->delete();
         });
     }
+
+    public array $formsOfPayment = [
+        "Boleto",
+        "Pix",
+        "Ted",
+    ];
 }

@@ -35,6 +35,7 @@ use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
 use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
+use App\Http\Controllers\HotelReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\PaidBillingInfoController;
@@ -412,6 +413,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ReasonToRejectController::class, 'store']);
         Route::put('/{id}', [ReasonToRejectController::class, 'update']);
         Route::delete('/{id}', [ReasonToRejectController::class, 'destroy']);
+    });
+
+    Route::prefix('hotel-reason-to-reject')->group(function () {
+        Route::get('/', [HotelReasonToRejectController::class, 'index']);
+        Route::get('/{id}', [HotelReasonToRejectController::class, 'show']);
+        Route::post('/', [HotelReasonToRejectController::class, 'store']);
+        Route::put('/{id}', [HotelReasonToRejectController::class, 'update']);
+        Route::delete('/{id}', [HotelReasonToRejectController::class, 'destroy']);
     });
 });
 
