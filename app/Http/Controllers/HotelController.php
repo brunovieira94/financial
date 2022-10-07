@@ -42,8 +42,7 @@ class HotelController extends Controller
 
     public function destroy($id)
     {
-        $this->hotelService->deleteHotel($id);
-        return response('');
+        return $this->hotelService->deleteHotel($id);
     }
 
     public function import()

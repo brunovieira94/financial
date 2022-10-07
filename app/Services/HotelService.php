@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Hotel;
 use App\Models\BankAccount;
+use App\Models\Billing;
 use App\Models\HotelHasBankAccounts;
 
 class HotelService
@@ -60,10 +61,21 @@ class HotelService
 
     public function deleteHotel($id)
     {
-        $hotels = $this->hotel->findOrFail($id)->delete();
-        $collection = $this->hotelHasBankAccounts->where('hotel_id', $id)->get(['bank_account_id']);
-        $this->bankAccount->destroy($collection->toArray());
-        return true;
+        $hotel = $this->hotel->findOrFail($id);
+        $billing = Billing::whereHas('cangooroo', function ($query) use ($hotel) {
+            $query->where('hotel_id', $hotel->id_hotel_cangooroo);
+        })->first();
+        if(!$billing){
+            $hotel->delete();
+            $collection = $this->hotelHasBankAccounts->where('hotel_id', $id)->get(['bank_account_id']);
+            $this->bankAccount->destroy($collection->toArray());
+            return '';
+        }
+        else{
+            return response()->json([
+                'error' => 'Existem reservas abertas para esse hotel',
+            ], 422);
+        }
     }
 
     public function putBankAccounts($id, $hotelInfo)
