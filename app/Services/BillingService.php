@@ -70,6 +70,73 @@ class BillingService
         ], 200);
     }
 
+    public function approveMany($requestInfo)
+    {
+        if (array_key_exists('ids', $requestInfo)) {
+            if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
+                foreach ($requestInfo['ids'] as $value) {
+                    $billing = $this->billing->findOrFail($value);
+                    $maxOrder = $this->approvalFlow->max('order');
+
+                    // if ($this->approvalFlow
+                    //     ->where('order', $billing->order)
+                    //     ->where('role_id', auth()->user()->role_id)
+                    //     ->doesntExist()
+                    // ) {
+                    //     return response()->json([
+                    //         'error' => 'Não é permitido a esse usuário reprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+                    //     ], 422);
+                    // }
+
+                    $billing->approval_status = Config::get('constants.billingStatus.disapproved');
+
+                    if ($billing->order > $maxOrder) {
+                        $billing->approval_status = Config::get('constants.billingStatus.open');
+                    } else if ($billing->order != 0) {
+                        $billing->order -= 1;
+                    }
+
+                    $billing->reason = null;
+                    $billing->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Faturamentos reprovados',
+                ], 200);
+            } else {
+                foreach ($requestInfo['ids'] as $value) {
+                    $billing = $this->billing->findOrFail($value);
+                    // if ($this->approvalFlow
+                    //     ->where('order', $billing->order)
+                    //     ->where('role_id', auth()->user()->role_id)
+                    //     ->doesntExist()
+                    // ) {
+                    //     return response()->json([
+                    //         'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+                    //     ], 422);
+                    // }
+
+                    $maxOrder = $this->approvalFlow->max('order');
+                    if ($billing->order >= $maxOrder) {
+                        $billing->approval_status = Config::get('constants.billingStatus.approved');
+                    } else {
+                        $billing->order += 1;
+                    }
+                    //$billing->approval_status = Config::get('constants.status.approved');
+                    $billing->reason = null;
+                    $billing->reason_to_reject_id = null;
+                    $billing->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Faturamentos aprovados',
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'error' => 'Nenhum faturamento selecionado',
+            ], 422);
+        }
+    }
+
     public function reprove($id, Request $request)
     {
         $billing = $this->billing->findOrFail($id);
