@@ -95,7 +95,9 @@ class ApprovalFlowByUserService
         if (array_key_exists('ids', $requestInfo)) {
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
-                    $accountApproval = $this->accountsPayableApprovalFlow->findOrFail($value);
+                    $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
+                        $query->withoutGlobalScopes();
+                    }]))->findOrFail($value);
                     $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
                     $accountApproval->status = Config::get('constants.status.disapproved');
                     if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
@@ -120,7 +122,9 @@ class ApprovalFlowByUserService
                 ], 200);
             } else {
                 foreach ($requestInfo['ids'] as $value) {
-                    $accountApproval = $this->accountsPayableApprovalFlow->with('payment_request')->findOrFail($value);
+                    $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
+                        $query->withoutGlobalScopes();
+                    }]))->findOrFail($value);
                     $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
                     $accountApproval->status = 0;
                     if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
