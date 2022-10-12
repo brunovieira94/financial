@@ -35,8 +35,9 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);
             });
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
+        $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
         if (!array_key_exists('company', $requestInfo))
             return [];
 

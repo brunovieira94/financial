@@ -43,8 +43,9 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
             if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
                 $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
             }
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
+        $query = Utils::baseFilterReportsInstallment($query, $requestInfo);
 
         return $query->get();
     }
