@@ -532,4 +532,50 @@ class Utils
         }
         return $installment;
     }
+
+    public static function baseFilterBilling($billing, $requestInfo)
+    {
+        if (array_key_exists('payment_status', $requestInfo)) {
+            $billing->where('payment_status', $requestInfo['payment_status']);
+        }
+        if (array_key_exists('status_123', $requestInfo)) {
+            $billing->where('status_123', $requestInfo['status_123']);
+        }
+        if (array_key_exists('status_cangooroo', $requestInfo)) {
+            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
+                $query->where('status', $requestInfo['status_cangooroo']);
+            });
+        }
+        if (array_key_exists('id_hotel_cangooroo', $requestInfo)) {
+            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
+                $query->where('hotel_id', $requestInfo['id_hotel_cangooroo']);
+            });
+        }
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $billing->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $billing->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $billing->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
+                $billing->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
+                $billing->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                $billing->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        if (array_key_exists('pax_in_house', $requestInfo)) {
+            $billing->where('pax_in_house', $requestInfo['pax_in_house']);
+        }
+        return $billing;
+    }
 }

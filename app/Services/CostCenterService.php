@@ -24,10 +24,15 @@ class CostCenterService
     public function getAllCostCenter($requestInfo)
     {
         $costCenter = Utils::search($this->costCenter, $requestInfo);
+        if (array_key_exists('display_assets', $requestInfo)) {
+            if ($requestInfo['display_assets']) {
+                $costCenter = $costCenter->where('active', true);
+            }
+        }
         $costCenters = Utils::pagination($costCenter->where('parent', null), $requestInfo);
         //$costCenters = $this->costCenter->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         $nestable = $this->costCenter->nestable($costCenters);
-        foreach($nestable as $nest){
+        foreach ($nestable as $nest) {
             $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->first();
         }
         return $nestable;
@@ -38,7 +43,7 @@ class CostCenterService
         $costCenter = $this->costCenter->with($this->with)->findOrFail($id)->where('id', $id)->get();
         $nestable = $this->costCenter->nestable($costCenter);
         $costCenter = $this->costCenter->with($this->with)->findOrFail($id);
-        foreach($nestable as $nest){
+        foreach ($nestable as $nest) {
             $nest->group_approval_flow = GroupApprovalFlow::where('id', $costCenter->group_approval_flow_id)->with('approval_flow')->first();
         }
         return $nestable;
@@ -51,17 +56,23 @@ class CostCenterService
             $costCenterID = auth()->user()->cost_center->pluck('id');
 
             $costCenter = Utils::search($this->costCenter, $requestInfo);
-            $costCenters = Utils::pagination($costCenter
-            ->where('parent', null)
-            ->whereIn('id', $costCenterID)
-            , $requestInfo);
+            if (array_key_exists('display_assets', $requestInfo)) {
+                if ($requestInfo['display_assets']) {
+                    $costCenter = $costCenter->where('active', true);
+                }
+            }
+            $costCenters = Utils::pagination(
+                $costCenter
+                    ->where('parent', null)
+                    ->whereIn('id', $costCenterID),
+                $requestInfo
+            );
             $nestable = $this->costCenter->nestable($costCenters);
-            foreach($nestable as $nest){
+            foreach ($nestable as $nest) {
                 $nest->group_approval_flow = GroupApprovalFlow::where('id', $nest->group_approval_flow_id)->first();
             }
             return $nestable;
-        }else
-        {
+        } else {
             return self::getAllCostCenter($requestInfo);
         }
     }
@@ -106,6 +117,11 @@ class CostCenterService
     public function allCostCenters($costCenterInfo)
     {
         $costCenters = Utils::search($this->costCenter, $costCenterInfo);
+        if (array_key_exists('display_assets', $costCenterInfo)) {
+            if ($costCenterInfo['display_assets']) {
+                $costCenters = $costCenters->where('active', true);
+            }
+        }
         $costCenters = Utils::pagination($costCenters->with('group_approval_flow'), $costCenterInfo);
 
         //foreach ($costCenters as $costCenter)

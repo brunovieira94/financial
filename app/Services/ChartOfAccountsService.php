@@ -18,6 +18,11 @@ class ChartOfAccountsService
         // $order = $requestInfo['order'] ?? Utils::defaultOrder;
         // $perPage = $requestInfo['perPage'] ?? Utils::defaultPerPage;
         $chartOfAccounts = Utils::search($this->chartOfAccounts,$requestInfo);
+        if (array_key_exists('display_assets', $requestInfo)) {
+            if ($requestInfo['display_assets']) {
+                $chartOfAccounts = $chartOfAccounts->where('active', true);
+            }
+        }
         $charts = Utils::pagination($chartOfAccounts->where('parent', null),$requestInfo);
         //$charts =  $chartOfAccounts->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
         //$charts = $this->chartOfAccounts->where('parent', null)->orderBy($orderBy, $order)->paginate($perPage);
@@ -68,6 +73,11 @@ class ChartOfAccountsService
     public function allChartOfAccounts($chartOfAccountsInfo)
     {
         $chartOfAccounts = Utils::search($this->chartOfAccounts, $chartOfAccountsInfo);
+        if (array_key_exists('display_assets', $chartOfAccountsInfo)) {
+            if ($chartOfAccountsInfo['display_assets']) {
+                $chartOfAccounts = $chartOfAccounts->where('active', true);
+            }
+        }
         $chartOfAccounts = Utils::pagination($chartOfAccounts, $chartOfAccountsInfo);
 
         foreach ($chartOfAccounts as $chartOfAccount)

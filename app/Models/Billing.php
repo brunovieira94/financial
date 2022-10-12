@@ -46,6 +46,7 @@ class Billing extends Model
         'form_of_payment',
         'cangooroo_service_id',
         'bank_account_id',
+        'pax_in_house',
     ];
     protected $hidden = ['bank_account_id', 'user_id', 'cangooroo_booking_id', 'reason_to_reject_id', 'cangooroo_service_id'];
 
@@ -66,7 +67,7 @@ class Billing extends Model
 
     public function reason_to_reject()
     {
-        return $this->hasOne(ReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
+        return $this->hasOne(HotelReasonToReject::class, 'id', 'reason_to_reject_id')->withTrashed();
     }
 
     public function bank_account()
@@ -81,4 +82,10 @@ class Billing extends Model
             $billing->cangooroo()->delete();
         });
     }
+
+    public array $formsOfPayment = [
+        "Boleto",
+        "Pix",
+        "Ted",
+    ];
 }

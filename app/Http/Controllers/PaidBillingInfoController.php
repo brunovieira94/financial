@@ -40,7 +40,6 @@ class PaidBillingInfoController extends Controller
     public function import()
     {
         $this->paidBillingInfoImport->import(request()->file('import_file'));
-        return response('');
         return response([
             'not_imported' => $this->paidBillingInfoImport->not_imported,
             'imported' => $this->paidBillingInfoImport->imported,

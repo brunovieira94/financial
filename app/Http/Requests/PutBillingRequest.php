@@ -30,6 +30,7 @@ class PutBillingRequest extends FormRequest
             'reason_to_reject_id' => 'prohibited',
             'approval_status' => 'prohibited',
             'reason' => 'prohibited',
+            'pax_in_house' => 'boolean',
         ];
     }
 }

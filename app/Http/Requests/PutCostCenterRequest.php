@@ -15,6 +15,7 @@ class PutCostCenterRequest extends FormRequest
     public function rules()
     {
         return [
+            'active' => 'boolean',
             'title' => 'required|max:255',
             'parent' => 'nullable|integer|exists:cost_center,id',
             'code' => new PutDuplicateRoleCostCenter(request()->input('parent'), \Request::instance()->id),

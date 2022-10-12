@@ -35,6 +35,7 @@ use App\Http\Controllers\PurchaseRequestController;
 use App\Http\Controllers\ApprovalFlowSupplyController;
 use App\Http\Controllers\ApprovalFlowSupplyByUserController;
 use App\Http\Controllers\ReasonToRejectController;
+use App\Http\Controllers\HotelReasonToRejectController;
 use App\Http\Controllers\HotelController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\PaidBillingInfoController;
@@ -186,7 +187,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('billing')->group(function () {
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
+        Route::put('/approve-many', [BillingController::class, 'approveMany']);
         Route::get('/show/{id}', [BillingController::class, 'show']);
+        Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
         Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/', [BillingController::class, 'store']);
         Route::put('/{id}', [BillingController::class, 'update']);
@@ -332,6 +335,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::post('/import', [ProductController::class, 'import']);
+        Route::post('/export', [ProductController::class, 'export']);
     });
 
     Route::prefix('service')->group(function () {
@@ -341,6 +345,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [ServiceController::class, 'update']);
         Route::delete('/{id}', [ServiceController::class, 'destroy']);
         Route::post('/import', [ServiceController::class, 'import']);
+        Route::post('/export', [ServiceController::class, 'export']);
     });
 
     Route::prefix('measurement-unit')->group(function () {
@@ -409,6 +414,14 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/', [ReasonToRejectController::class, 'store']);
         Route::put('/{id}', [ReasonToRejectController::class, 'update']);
         Route::delete('/{id}', [ReasonToRejectController::class, 'destroy']);
+    });
+
+    Route::prefix('hotel-reason-to-reject')->group(function () {
+        Route::get('/', [HotelReasonToRejectController::class, 'index']);
+        Route::get('/{id}', [HotelReasonToRejectController::class, 'show']);
+        Route::post('/', [HotelReasonToRejectController::class, 'store']);
+        Route::put('/{id}', [HotelReasonToRejectController::class, 'update']);
+        Route::delete('/{id}', [HotelReasonToRejectController::class, 'destroy']);
     });
 });
 

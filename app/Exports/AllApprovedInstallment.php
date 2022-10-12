@@ -58,7 +58,6 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->fees,
             $installment->fine,
             $installment->discount,
-            $installment->portion_amount,
             $installment->note,
             $installment->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.' . $installment->payment_request->approval->status)
@@ -79,7 +78,6 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             'Juros',
             'Multa',
             'Desconto',
-            'Valor Final',
             'Observações',
             'Etapa Atual',
             'Status Atual'

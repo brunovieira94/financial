@@ -23,7 +23,7 @@ class ChartOfAccounts extends Model
 
     use SoftDeletes;
     protected $table='chart_of_accounts';
-    protected $fillable = ['title', 'parent', 'code', 'group', 'managerial_code', 'managerial_title', 'group_title', 'group_code', 'referential_title', 'referential_code'];
+    protected $fillable = ['active', 'title', 'parent', 'code', 'group', 'managerial_code', 'managerial_title', 'group_title', 'group_code', 'referential_title', 'referential_code'];
 
     protected $appends = ['linked_chartOfAccounts'];
 

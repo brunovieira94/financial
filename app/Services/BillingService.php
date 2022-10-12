@@ -31,27 +31,108 @@ class BillingService
 
     public function getAllBilling($requestInfo, $approvalStatus)
     {
-        $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
-        if($approvalStatus == 'billing-open')
-        {
-            $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
-            if (!$approvalFlowUserOrder) return response([], 404);
-            $billing->whereIn('order', $approvalFlowUserOrder->toArray())
-            ->where('deleted_at', '=', null);
+        if ($approvalStatus == 'billing-all') {
+            $billing = Utils::search($this->billing, $requestInfo);
+        } else {
+            $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
         }
+        $billing = Utils::baseFilterBilling($billing, $requestInfo);
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
     public function approve($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $billing->approval_status = Config::get('constants.billingStatus.approved');
+        // if ($this->approvalFlow
+        //     ->where('order', $billing->order)
+        //     ->where('role_id', auth()->user()->role_id)
+        //     ->doesntExist()
+        // ) {
+        //     return response()->json([
+        //         'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+        //     ], 422);
+        // }
+
+        $maxOrder = $this->approvalFlow->max('order');
+        if ($billing->order >= $maxOrder) {
+            $billing->approval_status = Config::get('constants.billingStatus.approved');
+        } else {
+            $billing->order += 1;
+        }
+        //$billing->approval_status = Config::get('constants.status.approved');
         $billing->reason = null;
         $billing->reason_to_reject_id = null;
         $billing->save();
         return response()->json([
             'Sucesso' => 'Faturamento aprovado',
         ], 200);
+    }
+
+    public function approveMany($requestInfo)
+    {
+        if (array_key_exists('ids', $requestInfo)) {
+            if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
+                foreach ($requestInfo['ids'] as $value) {
+                    $billing = $this->billing->findOrFail($value);
+                    $maxOrder = $this->approvalFlow->max('order');
+
+                    // if ($this->approvalFlow
+                    //     ->where('order', $billing->order)
+                    //     ->where('role_id', auth()->user()->role_id)
+                    //     ->doesntExist()
+                    // ) {
+                    //     return response()->json([
+                    //         'error' => 'Não é permitido a esse usuário reprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+                    //     ], 422);
+                    // }
+
+                    $billing->approval_status = Config::get('constants.billingStatus.disapproved');
+
+                    if ($billing->order > $maxOrder) {
+                        $billing->approval_status = Config::get('constants.billingStatus.open');
+                    } else if ($billing->order != 0) {
+                        $billing->order -= 1;
+                    }
+
+                    $billing->reason = null;
+                    $billing->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Faturamentos reprovados',
+                ], 200);
+            } else {
+                foreach ($requestInfo['ids'] as $value) {
+                    $billing = $this->billing->findOrFail($value);
+                    // if ($this->approvalFlow
+                    //     ->where('order', $billing->order)
+                    //     ->where('role_id', auth()->user()->role_id)
+                    //     ->doesntExist()
+                    // ) {
+                    //     return response()->json([
+                    //         'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+                    //     ], 422);
+                    // }
+
+                    $maxOrder = $this->approvalFlow->max('order');
+                    if ($billing->order >= $maxOrder) {
+                        $billing->approval_status = Config::get('constants.billingStatus.approved');
+                    } else {
+                        $billing->order += 1;
+                    }
+                    //$billing->approval_status = Config::get('constants.status.approved');
+                    $billing->reason = null;
+                    $billing->reason_to_reject_id = null;
+                    $billing->save();
+                }
+                return response()->json([
+                    'Sucesso' => 'Faturamentos aprovados',
+                ], 200);
+            }
+        } else {
+            return response()->json([
+                'error' => 'Nenhum faturamento selecionado',
+            ], 422);
+        }
     }
 
     public function reprove($id, Request $request)
@@ -88,7 +169,7 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $cangooroo = $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
         $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billing['reserve']);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo);
@@ -270,5 +351,26 @@ class BillingService
         if ($apiCall->status() != 200) return false;
         $response = $apiCall->json();
         return $response['access_token'];
+    }
+
+    public function refreshStatuses($id)
+    {
+        $billingInfo = [];
+        $billing = $this->billing->findOrFail($id);
+        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
+        if (is_array($cangooroo) && (array_key_exists('error', $cangooroo) || array_key_exists('invalid_hotel', $cangooroo))) {
+            return response()->json([
+                'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
+            ], 422);
+        }
+        $status['cangooroo'] = $cangooroo['status'];
+        $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['hotel_id'],$billing['reserve']);
+        $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo);
+        $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
+        $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
+        $billing->fill($billingInfo)->save();
+        $billingInfo['cangooroo'] = $cangooroo['status'];
+        return $billingInfo;
     }
 }

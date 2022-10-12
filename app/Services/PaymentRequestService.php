@@ -478,35 +478,34 @@ class PaymentRequestService
 
     public function updateDateInstallment($requestInfo)
     {
-        $permissionChange = true;
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($requestInfo['payment_request_id']);
-        $approvalFlow = ApprovalFlow::where('role_id', auth()->user()->role_id)
-            ->where('order', $paymentRequest->approval->order)
-            ->where('group_approval_flow_id',  $paymentRequest->group_form_payment_id)
-            ->first();
 
-        foreach ($requestInfo['installments'] as $installment) {
-            if (array_key_exists('extension_date', $installment)) {
-                if ($approvalFlow->extension == false) {
-                    $permissionChange = false;
-                    break;
-                }
+        if (auth()->user()->role_id != 1) {
+            if (ApprovalFlow::where('role_id', auth()->user()->role_id)
+                ->where('order', $paymentRequest->approval->order)
+                ->where('group_approval_flow_id',  $paymentRequest->group_approval_flow_id)->exists()
+            ) {
+                $approvalFlow = ApprovalFlow::where('role_id', auth()->user()->role_id)
+                    ->where('order', $paymentRequest->approval->order)
+                    ->where('group_approval_flow_id',  $paymentRequest->group_approval_flow_id)
+                    ->first();
+            } else {
+                return response()->json([
+                    'error' => 'Permissão não localizada.'
+                ], 422);
             }
-        }
-
-        if (!$permissionChange) {
-            return response()->json([
-                'error' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
-            ], 422);
+            if (!$approvalFlow->extension) {
+                return response()->json([
+                    'error' => 'Não foi possível atualizar as informações da conta. Verifique as permissões e a etapa em que a conta está.'
+                ], 422);
+            }
         }
 
         foreach ($requestInfo['installments'] as $installment) {
             $paymentRequestHasInstallments = PaymentRequestHasInstallments::findOrFail($installment['id']);
             $paymentRequestHasInstallments->fill($installment)->save();
         }
-
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
-
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
         ], 200);

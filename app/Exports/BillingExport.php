@@ -6,6 +6,7 @@ use App\Models\Billing;
 use App\Models\Cangooroo;
 use App\Models\Hotel;
 use App\Models\BankAccount;
+use App\Models\HotelReasonToReject;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -29,7 +30,13 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
 
     public function collection()
     {
-        return Billing::with(['cangooroo.hotel.bank_account', 'user'])->where('approval_status', array_search($this->approvalStatus, Utils::$approvalStatus))->get();
+        if ($this->approvalStatus == 'billing-all') {
+            $query = Billing::query()->with(['cangooroo.hotel.bank_account', 'user', 'reason_to_reject', 'bank_account']);
+        } else {
+            $query = Billing::query()->with(['cangooroo.hotel.bank_account', 'user', 'reason_to_reject', 'bank_account'])->where('approval_status', array_search($this->approvalStatus, Utils::$approvalStatus));
+        }
+        $query = Utils::baseFilterBilling($query, $this->requestInfo);
+        return $query->get();
     }
 
     public function map($billing): array
@@ -37,14 +44,16 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
         /** @var Cangooroo*/
         $cangooroo = $billing->cangooroo;
         /** @var Hotel*/
-        $hotel = $cangooroo->hotel;
+        $hotel = !is_null($cangooroo) ? $cangooroo->hotel : null;
         /** @var BankAccount*/
-        $bankAccount = $hotel->bank_account->first();
+        $bankAccount = $billing->bank_account;
+        /** @var HotelReasonToReject*/
+        $reasonToReject = $billing->reason_to_reject;
         return [
-            $billing->user->name,
+            !is_null($billing->user) ? $billing->user->name : '',
             $billing->reserve,
             $billing->payment_status,
-            $cangooroo->status,
+            !is_null($cangooroo) ? $cangooroo->status : '',
             $billing->status_123,
             $billing->supplier_value,
             $billing->boleto_value,
@@ -52,25 +61,28 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             $billing->boleto_code,
             $billing->remark,
             $billing->oracle_protocol,
-            $cangooroo['123_id'],
-            $cangooroo->supplier_name,
-            $cangooroo->reservation_date,
-            $cangooroo->check_in,
-            $cangooroo->check_out,
-            $cangooroo->hotel_id,
-            $cangooroo->supplier_hotel_id,
-            $cangooroo->hotel_name,
-            !is_null($hotel->billing_type) ? $hotel->billingTypes[$hotel->billing_type] : '',
-            !is_null($bankAccount) ? $bankAccount->bank->title : '',
-            !is_null($bankAccount) ? $bankAccount->bank->bank_code : '',
-            !is_null($bankAccount) ? $bankAccount->agency_number : '',
+            !is_null($cangooroo) ? $cangooroo['123_id'] : '',
+            !is_null($cangooroo) ? $cangooroo->supplier_name : '',
+            !is_null($cangooroo) ? $cangooroo->reservation_date : '',
+            !is_null($cangooroo) ? $cangooroo->check_in : '',
+            !is_null($cangooroo) ? $cangooroo->check_out : '',
+            !is_null($cangooroo) ? $cangooroo->hotel_id : '',
+            !is_null($cangooroo) ? $cangooroo->supplier_hotel_id : '',
+            !is_null($cangooroo) ? $cangooroo->hotel_name : '',
+            (!is_null($hotel) && !is_null($hotel->billing_type)) ? $hotel->billingTypes[$hotel->billing_type] : '',
+            !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
+            !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->title : '') : '',
+            !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->bank_code : '') : '',
+            !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) ? $bankAccount->agency_number.'-'.$bankAccount->agency_check_number : $bankAccount->agency_number) : '',
             !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypes[$bankAccount->account_type] : '',
-            !is_null($hotel->form_of_payment) ? $hotel->formsOfPayment[$hotel->form_of_payment] : '',
-            $hotel->holder_full_name,
-            $hotel->cpf_cnpj,
-            $hotel->is_valid ? 'Sim' : 'Não',
-            $cangooroo->selling_price,
+            !is_null($bankAccount) ? (!!($bankAccount->account_check_number) ? $bankAccount->account_number.'-'.$bankAccount->account_check_number : $bankAccount->account_number) : '',
+            !is_null($hotel) ? $hotel->holder_full_name : '',
+            !is_null($hotel) ? $hotel->cpf_cnpj : '',
+            !is_null($hotel) ? ($hotel->is_valid ? 'Sim' : 'Não') : '',
+            !is_null($cangooroo) ? $cangooroo->selling_price : '',
+            $billing->pax_in_house ? 'Sim' : 'Não',
             $billing->created_at,
+            !is_null($reasonToReject) ? $reasonToReject->title : '',
         ];
     }
 
@@ -97,16 +109,19 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             'ID Hotel - Parceiro',
             'Nome do Hotel',
             'Tipo de Faturamento',
+            'Forma de pagamento',
             'Banco',
             'Código do Banco',
             'Agência',
             'Tipo de Conta',
-            'Forma de pagamento',
+            'Conta',
             'Nome Completo do Titular',
             'CPF/CNPJ',
             'CNPJ Válido?',
             'Valor Cangooroo',
+            'Pax In House',
             'Data de Criação',
+            'Motivo de Rejeição',
         ];
     }
 }

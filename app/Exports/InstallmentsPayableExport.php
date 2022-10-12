@@ -55,7 +55,6 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             $query->fees,
             $query->fine,
             $query->discount,
-            $query->portion_amount,
             $query->note,
             $query->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.' . $query->payment_request->approval->status)
@@ -76,7 +75,6 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
             'Juros',
             'Multa',
             'Desconto',
-            'Valor Final',
             'Observações',
             'Etapa Atual',
             'Status Atual'

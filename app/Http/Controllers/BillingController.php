@@ -45,6 +45,11 @@ class BillingController extends Controller
         return $this->billingService->approve($id);
     }
 
+    public function approveMany(Request $request)
+    {
+        return $this->billingService->approveMany($request->all());
+    }
+
     public function reprove($id, Request $request)
     {
         return $this->billingService->reprove($id, $request);
@@ -77,5 +82,10 @@ class BillingController extends Controller
             return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
         }
         return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function refreshStatuses($id)
+    {
+        return $this->billingService->refreshStatuses($id);
     }
 }
