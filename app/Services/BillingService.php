@@ -123,6 +123,10 @@ class BillingService
                     $maxOrder = $this->approvalFlow->max('order');
                     if ($billing->order >= $maxOrder) {
                         $billing->approval_status = Config::get('constants.billingStatus.approved');
+                        $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
+                        if($billingPayment){
+                            $this->openOrApprovePaymentBilling($billingPayment, $billing);
+                        }
                     } else {
                         $billing->order += 1;
                     }
