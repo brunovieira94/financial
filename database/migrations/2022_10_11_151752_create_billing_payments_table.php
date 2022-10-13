@@ -17,7 +17,6 @@ class CreateBillingPaymentsTable extends Migration
             $table->string('recipient_name')->nullable();
             $table->string('oracle_protocol')->nullable();
             $table->string('cnpj')->nullable();
-            $table->string('boleto_value')->nullable();
             $table->integer('form_of_payment')->nullable();
             $table->integer('status')->default(0);
             $table->string('hotel_id')->nullable();
