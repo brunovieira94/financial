@@ -417,7 +417,10 @@ class BillingService
             $findBillingPayment = BillingPayment::where('boleto_code', $billingInfo['boleto_code'])->where('status', 0)->first();
             if($findBillingPayment){
                 foreach ($fields as $field) {
-                    if($billingInfo[$field] != $findBillingPayment[$field]) return false;
+                    if($field == 'pay_date'){
+                        if(strtotime($billingInfo[$field]) != strtotime($findBillingPayment[$field])) return false;
+                    }
+                    else if($billingInfo[$field] != $findBillingPayment[$field]) return false;
                 }
                 $findBillingPayment->status = Config::get('constants.billingStatus.open');
                 $findBillingPayment->save();
