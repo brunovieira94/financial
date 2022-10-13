@@ -77,8 +77,9 @@ class ReportService
             },]);
         }
         $result = $result->whereHas('payment_request', function ($query) use ($requestInfo) {
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
+        $result = Utils::baseFilterReportsInstallment($result, $requestInfo);
 
         if (array_key_exists('from', $requestInfo)) {
             $result = $result->where('extension_date', '>=', $requestInfo['from']);
@@ -127,8 +128,9 @@ class ReportService
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);
             });
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
+        $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
         if (!array_key_exists('company', $requestInfo)) {
             return response()->json([
                 'current_page' => 1,
@@ -305,8 +307,9 @@ class ReportService
             },]);
         }
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
+        $query = Utils::baseFilterReportsInstallment($query, $requestInfo);
         return Utils::pagination($query, $requestInfo);
     }
 
