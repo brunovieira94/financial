@@ -14,9 +14,9 @@ class BillingPaymentController extends Controller
         $this->billingPaymentService = $billingPaymentService;
     }
 
-    public function index(Request $request, $approvalStatus)
+    public function index(Request $request)
     {
-        return $this->billingPaymentService->getAllBillingPayment($request->all(), $approvalStatus);
+        return $this->billingPaymentService->getAllBillingPayment($request->all());
     }
 
     public function show($id)

@@ -8,7 +8,7 @@ use Config;
 class BillingPaymentService
 {
     private $billingPayment;
-    private $with = ['billings'];
+    private $with = ['billings', 'hotel'];
     public function __construct(BillingPayment $billingPayment)
     {
         $this->billingPayment = $billingPayment;
