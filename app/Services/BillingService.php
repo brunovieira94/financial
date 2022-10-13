@@ -424,14 +424,14 @@ class BillingService
                 return $findBillingPayment->id;
             }
             else{
-                $billingPayment = new BillingPayment;
-                $billingPayment->create($billingInfo);
+                $billingPayment = new BillingPayment();
+                $billingPayment = $billingPayment->create($billingInfo);
                 return $billingPayment->id;
             }
         }
         else{
-            $billingPayment = new BillingPayment;
-            $billingPayment->create($billingInfo);
+            $billingPayment = new BillingPayment();
+            $billingPayment = $billingPayment->create($billingInfo);
             return $billingPayment->id;
         }
     }
