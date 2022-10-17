@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\ApprovalFlow;
 use App\Models\GroupApprovalFlow;
-use Illuminate\Support\Facades\DB;
+use DB;
 
 class ApprovalFlowService
 {
@@ -20,7 +20,7 @@ class ApprovalFlowService
 
     public function getAllApprovalFlow($requestInfo)
     {
-        $approvalFlow = Utils::search($this->groupApprovalFlow,$requestInfo);
+        $approvalFlow = Utils::search($this->groupApprovalFlow, $requestInfo);
         return Utils::pagination($approvalFlow, $requestInfo);
     }
 
@@ -32,6 +32,11 @@ class ApprovalFlowService
 
     public function postApprovalFlow($approvalFlowInfo)
     {
+        if (array_key_exists('default', $approvalFlowInfo)) {
+            if ($approvalFlowInfo['default']) {
+                DB::table('group_approval_flow')->update(['default' => 0]);
+            }
+        }
         $groupApprovalFlow = $this->groupApprovalFlow->create($approvalFlowInfo);
         $approvalFlow = new ApprovalFlow;
         $info = [];
@@ -52,6 +57,11 @@ class ApprovalFlowService
     public function putApprovalFlow($id, $approvalFlowInfo)
     {
         $groupApprovalFlow = $this->groupApprovalFlow->findOrFail($id);
+        if (array_key_exists('default', $approvalFlowInfo)) {
+            if ($approvalFlowInfo['default']) {
+                DB::table('group_approval_flow')->update(['default' => 0]);
+            }
+        }
         $groupApprovalFlow->fill($approvalFlowInfo)->save();
         DB::table('approval_flow')->where('group_approval_flow_id', $id)->delete();
 

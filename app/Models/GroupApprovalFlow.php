@@ -24,7 +24,7 @@ class GroupApprovalFlow extends Model
 
     use SoftDeletes;
     protected $table='group_approval_flow';
-    protected $fillable = ['title', 'description'];
+    protected $fillable = ['title', 'description', 'default'];
 
     public function approval_flow()
     {
