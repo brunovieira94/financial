@@ -6,10 +6,13 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\User;
 use Carbon\Carbon;
 use Config;
 use DB;
+use Exception;
+use Faker\Provider\ar_EG\Payment;
 
 class Utils
 {
@@ -82,67 +85,74 @@ class Utils
 
     public static function groupInstallments($installments, $bankCode)
     {
-
         $groupInstallment = [];
-
         foreach ($installments as $installment) {
-            foreach ($installment->group_payment->form_payment as $payment_form) {
-                if ($payment_form->bank_code == $bankCode) {
-                    if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
-                    {
-                        if (array_key_exists('45', $groupInstallment)) {
-                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                            break;
-                        } else {
-                            $groupInstallment['45'] = [$installment];
-                            break;
-                        }
-                    } elseif ($payment_form->group_form_payment_id == 1) {
-                        if (substr($installment->bar_code, 0, 3) == $bankCode) {
-                            if ($payment_form->same_ownership) {
-                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+            try {
+                foreach ($installment->group_payment->form_payment as $payment_form) {
+
+                    if ($payment_form->bank_code == $bankCode) {
+                        if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
+                        {
+                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider.bank')->where('id', $installment['id'])->exists()) {
+                                if (array_key_exists('45', $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
                                 } else {
-                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                    $groupInstallment['45'] = [$installment];
                                     break;
+                                }
+                            } else {
+                                PaymentRequestHasInstallmentsClean::where('id', $installment['id'])->update(['status' => Config::get('constants.status.error')]);
+                            }
+                        } elseif ($payment_form->group_form_payment_id == 1) {
+                            if (substr($installment->bar_code, 0, 3) == $bankCode) {
+                                if ($payment_form->same_ownership) {
+                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                        break;
+                                    } else {
+                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                        break;
+                                    }
+                                }
+                            } else {
+                                if (!$payment_form->same_ownership) {
+                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                        break;
+                                    } else {
+                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                        break;
+                                    }
                                 }
                             }
                         } else {
-                            if (!$payment_form->same_ownership) {
-                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                    break;
-                                } else {
-                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                    break;
+                            if ($installment->bank_account_provider->bank->bank_code == $bankCode) {
+                                if ($payment_form->same_ownership) {
+                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                        break;
+                                    } else {
+                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                        break;
+                                    }
                                 }
-                            }
-                        }
-                    } else {
-                        if ($installment->bank_account_provider->bank->bank_code == $bankCode) {
-                            if ($payment_form->same_ownership) {
-                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                    break;
-                                } else {
-                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                    break;
-                                }
-                            }
-                        } else {
-                            if (!$payment_form->same_ownership) {
-                                if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                    array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                    break;
-                                } else {
-                                    $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                    break;
+                            } else {
+                                if (!$payment_form->same_ownership) {
+                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                        break;
+                                    } else {
+                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
+            } catch (Exception $e) {
+                PaymentRequestHasInstallmentsClean::where('id', $installment['id'])->update(['status' => Config::get('constants.status.error')]);
             }
         }
         return $groupInstallment;

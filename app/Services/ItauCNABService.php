@@ -20,6 +20,7 @@ use App\CNABLayoutsParser\CnabParser\Remessa\Remessa as GerarRemessa;
 use App\Models\CnabGenerated;
 use App\Models\CnabGeneratedHasPaymentRequests;
 use App\Models\CnabPaymentRequestsHasInstallments;
+use App\Models\PaymentRequestHasInstallmentsClean;
 
 class ItauCNABService
 {
@@ -243,9 +244,22 @@ class ItauCNABService
 
     public function cnabParse($requestInfo)
     {
-
         $company = $this->company->with($this->withCompany)->findOrFail($requestInfo['company_id']);
         $bankAccount = BankAccount::with('bank')->findOrFail($requestInfo['bank_account_id']);
+
+        if ($requestInfo['all']) {
+            $installment = PaymentRequestHasInstallmentsClean::with('payment_request');
+            $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+                $query->whereHas('approval', function ($query) use ($requestInfo) {
+                    $query->where('status', 1);
+                });
+                $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo['filters']);
+            })->get();
+
+            $requestInfo['installments_ids'] = $installment->pluck('id')->toArray();
+            $requestInfo['payment_request_ids'] = array_unique($installment->pluck('payment_request_id')->toArray());
+        }
+
         $allInstallments = $this->installments
             ->with(['payment_request', 'group_payment', 'bank_account_provider'])
             ->whereIn('id', $requestInfo['installments_ids'])
