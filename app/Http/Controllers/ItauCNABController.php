@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShippingCnabParse;
 use Illuminate\Http\Request;
 use App\Http\Requests\ShippingItauCNAB240Request;
 use App\Services\ItauCNABService as ItauCNABService;
@@ -25,7 +26,7 @@ class ItauCNABController extends Controller
         return $this->cnabService->receiveCNAB240($request);
     }
 
-    public function cnabParse(Request $request)
+    public function cnabParse(ShippingCnabParse $request)
     {
         return $this->cnabService->cnabParse($request->all());
     }
