@@ -325,7 +325,9 @@ class ItauCNABService
             [
                 'user_id' => auth()->user()->id,
                 'file_date' => Carbon::now()->format('Y/m/d H:i:s'),
-                'file_name' => $archiveName
+                'file_name' => $archiveName,
+                'company_id' => $company->id,
+                'bank_account_company_id' => $bankAccount->id
             ]
         );
 
