@@ -10,7 +10,7 @@ class CnabGenerated extends Model
 {
     protected $table='cnab_generated';
     public $timestamps = false;
-    protected $fillable = ['user_id', 'user_id', 'file_date', 'status', 'file_name'];
+    protected $fillable = ['user_id', 'user_id', 'file_date', 'status', 'file_name', 'company_id', 'bank_account_company_id'];
     protected $hidden = ['pivot'];
     protected $appends = ['cnab_link'];
 
@@ -30,5 +30,15 @@ class CnabGenerated extends Model
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+
+    public function company()
+    {
+        return $this->hasOne(Company::class, 'id', 'company_id');
+    }
+
+    public function bank_account_company()
+    {
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_company_id');
     }
 }
