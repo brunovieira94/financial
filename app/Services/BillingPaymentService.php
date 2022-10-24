@@ -47,6 +47,9 @@ class BillingPaymentService
         if (array_key_exists('status', $requestInfo)) {
             $billingPayment->where('status', $requestInfo['status']);
         }
+        if (array_key_exists('form_of_payment', $requestInfo)) {
+            $billingPayment->where('form_of_payment', $requestInfo['form_of_payment']);
+        }
         return Utils::pagination($billingPayment->with($this->with), $requestInfo);
     }
 
