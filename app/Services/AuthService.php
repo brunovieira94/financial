@@ -15,7 +15,8 @@ class AuthService
     private $user;
 
 
-    public function __construct(Module $module, RoleHasModule $roleHasModule, Role $role, User $user){
+    public function __construct(Module $module, RoleHasModule $roleHasModule, Role $role, User $user)
+    {
         $this->module = $module;
         $this->roleHasModule = $roleHasModule;
         $this->role = $role;
@@ -25,14 +26,18 @@ class AuthService
     public function getUser($id, $tokenResponse)
     {
         $user = $this->user->findOrFail($id);
-
+        if ($user->status != 0) {
+            return response()->json([
+                'error' => 'O usuário encontra-se desativado, suspenso ou em férias.'
+            ], 422);
+        }
         $permissions = $this->roleHasModule->with('module')->where('role_id', $user->role_id);
 
         $permissions = $permissions->whereHas('module', function ($query) {
             $query->where('active', true);
         })->get(['create', 'read', 'update', 'delete', 'import', 'export', 'module_id']);
 
-        foreach($permissions as $permission){
+        foreach ($permissions as $permission) {
             $this->module->withoutAppends = true;
             $module = $this->module->where('id', $permission->module_id)->get(['route'])->first();
             unset($permission->module_id);
@@ -46,8 +51,4 @@ class AuthService
 
         return response(['user' => $user, 'access_token' => $tokenResponse->access_token, 'refresh_token' => $tokenResponse->refresh_token]);
     }
-
 }
-
-
-

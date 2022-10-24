@@ -14,6 +14,7 @@ class PutUserRequest extends FormRequest
     public function rules()
     {
         return [
+            'status' => 'integer',
             'name' => 'max:150',
             'role_id' => 'integer|exists:role,id',
             'phone' => 'string',
