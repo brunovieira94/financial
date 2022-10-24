@@ -209,7 +209,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/', [PaidBillingInfoController::class, 'index']);
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
-        Route::post('/import', [PaidBillingInfoController::class, 'import']);
+        Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
+        Route::post('/initial-import', [PaidBillingInfoController::class, 'import']);
         //Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
