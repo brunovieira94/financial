@@ -191,6 +191,17 @@ class ApprovalFlowByUserService
     public function multipleApproval($requestInfo)
     {
         if (auth()->user()->role->transfer_approval) {
+            foreach ($requestInfo['users'] as $idUser) {
+                $user = User::findOrFail($idUser);
+                if ($user->status != 0) {
+                    return Response()->json(
+                        [
+                            'error' => 'O usuário ' . $user->name . ' não está ativo no sistema.'
+                        ],
+                        422
+                    );
+                }
+            }
             foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
                 //gerar log de aprovação da conta
                 $accountApprovalFlow = AccountsPayableApprovalFlow::where('payment_request_id', $idPaymentRequest)->first();
@@ -236,6 +247,15 @@ class ApprovalFlowByUserService
     public function transferApproval($requestInfo)
     {
         if (auth()->user()->role->transfer_approval) {
+            $user = User::findOrFail($requestInfo['user']);
+            if ($user->status != 0) {
+                return Response()->json(
+                    [
+                        'error' => 'O usuário ' . $user->name . ' não está ativo no sistema.'
+                    ],
+                    422
+                );
+            }
             foreach ($requestInfo['payment_requests'] as $idPaymentRequest) {
                 if (UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->exists()) {
                     $userHasPaymentRequest = UserHasPaymentRequest::where('payment_request_id', $idPaymentRequest)->where('user_id', auth()->user()->id)->where('status', 0)->first();

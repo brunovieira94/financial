@@ -25,6 +25,9 @@ class UserService
     public function getAllUser($requestInfo)
     {
         $user = Utils::search($this->user, $requestInfo);
+        if (array_key_exists('status', $requestInfo)) {
+            $user = $user->where('status', $requestInfo['status']);
+        }
         return Utils::pagination($user->with($this->with), $requestInfo);
     }
 
