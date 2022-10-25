@@ -36,7 +36,7 @@ class BillingPayment extends Model
         'hotel_id',
     ];
 
-    protected $appends = ['ready_to_pay'];
+    protected $appends = ['ready_to_pay', 'invoiced_value'];
 
     public function billings()
     {
@@ -61,6 +61,15 @@ class BillingPayment extends Model
             if($this->status == Config::get('constants.billingStatus.approved')) return true;
         }
         return false;
+    }
+
+    public function getInvoicedValueAttribute()
+    {
+        $sum = 0;
+        foreach ($this->billings as $billing){
+            $sum += $billing->supplier_value;
+        }
+        return $sum;
     }
 
     public array $formsOfPayment = [
