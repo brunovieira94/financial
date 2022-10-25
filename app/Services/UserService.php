@@ -25,6 +25,11 @@ class UserService
     public function getAllUser($requestInfo)
     {
         $user = Utils::search($this->user, $requestInfo);
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $user = $user->whereHas('cost_center', function ($query) use ($requestInfo) {
+                $query->where('cost_center_id', $requestInfo['cost_center']);
+            });
+        }
         if (array_key_exists('status', $requestInfo)) {
             $user = $user->where('status', $requestInfo['status']);
         }
