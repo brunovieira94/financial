@@ -25,7 +25,7 @@ class DailyPaidBillingInfoImport implements ToCollection, WithValidation, WithHe
         {
             $date = str_replace("/", "-", $row['date_time']);
 
-            if($row['response_msg'] == 'Aprovado')
+            if($row['response_msg'] == 'Aprovado' && $row['status'] == 'USED')
             {
                 PaidBillingInfo::create([
                     'created_at' => $row['date_time'] ? date('Y-m-d H:i', strtotime($date)) : Carbon::now(),
