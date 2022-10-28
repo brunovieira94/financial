@@ -368,7 +368,7 @@ class BillingService
         if($token){
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
-            ])->withToken($token)->get(env('API_123_STATUS_URL', "http://teste33.123milhas.com/api/v3/hotel/booking/status")."/".$hotelId."/".$reserve);
+            ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3.1/hotel/booking/status/").$hotelId."/".$reserve);
             if ($apiCall->status() != 200) return null; // N.D dados de reserva inválidos na base 123
             $response = $apiCall->json();
             return $response['status'];
@@ -382,7 +382,7 @@ class BillingService
     {
         $apiCall = Http::withHeaders([
             'secret' => env('API_123_SECRET', Config::get('constants.123_secret')),
-        ])->get(env('API_123_AUTH_URL', "http://teste33.123milhas.com/api/v3/client/auth"));
+        ])->get(env('API_123_AUTH_URL', "https://api.123milhas.com/api/v3.1/client/auth"));
         if ($apiCall->status() != 200) return false;
         $response = $apiCall->json();
         return $response['access_token'];

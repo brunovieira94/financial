@@ -14,7 +14,7 @@ return [
         'multiple approval' => '8',
         'transfer approval' => '9'
     ],
-    '123_secret' => 'Vrdq63SvNe3Jkwwq3OMHtYrj7mksZTL4s1WjeiJq',
+    '123_secret' => 'aTShrHeIPXCuNPKLKOalzQrLxYESlodQI2Nbr2jg',
     'statusPt' => [
         'Em Processo',
         'Aprovada',
