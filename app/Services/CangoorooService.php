@@ -57,6 +57,8 @@ class CangoorooService
                 $supplierName = $customField['Value'];
         }
 
+        $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
+
         $data =
             [
                 "booking_id" => $bookingId,
@@ -72,6 +74,8 @@ class CangoorooService
                 "check_out" => $room['CheckOut'],
                 "cancellation_policies_start_date" => $room['CancellationPolicies'][0]['StartDate'],
                 "cancellation_policies_value" => $room['CancellationPolicies'][0]['Value']['Value'],
+                "cancellation_date" => $room['CancellationDate'],
+                "last_update" => date('Y-m-d H:i:s', $lastUpdate*0.001),
                 "number_of_nights" => $room['NumberOfNights'],
                 "supplier_hotel_id" => $room['SupplierHotelId'],
                 "hotel_id" => $room['HotelId'],

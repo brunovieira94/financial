@@ -54,6 +54,9 @@ class HotelService
     public function putHotel($id, $hotelInfo)
     {
         $hotel = $this->hotel->findOrFail($id);
+        if($hotelInfo['cpf_cnpj'] != $hotel['cpf_cnpj'] || $hotelInfo['holder_full_name'] != $hotel['holder_full_name'] || ($hotelInfo['cnpj_extra'] && ($hotelInfo['cnpj_extra'] != $hotel['cnpj_extra']))){
+            $hotelInfo['is_valid'] = false;
+        }
         $hotel->fill($hotelInfo)->save();
         $this->putBankAccounts($id, $hotelInfo);
         return $this->hotel->with($this->with)->findOrFail($hotel->id);

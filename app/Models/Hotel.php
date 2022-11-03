@@ -37,7 +37,8 @@ class Hotel extends Model
         'is_valid',
         'cnpj_hotel',
         'observations',
-        'form_of_payment'
+        'form_of_payment',
+        'cnpj_extra'
     ];
     protected $hidden = ['bank_account_id', 'group_form_payment_id'];
 

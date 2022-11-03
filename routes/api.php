@@ -203,6 +203,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('billing-payment')->group(function () {
         Route::get('/', [BillingPaymentController::class, 'index']);
         Route::get('/{id}', [BillingPaymentController::class, 'show']);
+        Route::delete('/{id}', [BillingPaymentController::class, 'destroy']);
     });
 
     Route::prefix('paid-billing-info')->group(function () {

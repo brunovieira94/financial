@@ -22,7 +22,7 @@ class BillingService
     private $approvalFlow;
     private $billingPayment;
 
-    private $with = ['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow'];
+    private $with = ['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow', 'billing_payment'];
 
     public function __construct(Billing $billing, CangoorooService $cangoorooService, HotelApprovalFlow $approvalFlow, BillingPayment $billingPayment)
     {
@@ -325,11 +325,9 @@ class BillingService
     public function getBillingSuggestion($billingInfo, $cangooroo)
     {
         $suggestionReason = '';
+        $cancellationValueToUse = 0;
         if($billingInfo['payment_status'] != 'Não Pago'){
             $suggestionReason = $suggestionReason.' | Reserva deve estar em aberto';
-        }
-        if($cangooroo['status'] != 'Confirmed'){
-            $suggestionReason = $suggestionReason.' | Reserva não confirmada no Cangooroo';
         }
         if($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido'){
             $suggestionReason = $suggestionReason.' | Reserva não emitida no Admin';
@@ -337,18 +335,34 @@ class BillingService
         if($this->billing->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
             $suggestionReason = $suggestionReason.' | Reserva cadastrada em duplicidade';
         }
-        // id123 deve ser diferente de 0 (implementar q o mesmo não pode ser igual a 0 ao salvar)
-        if(($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']){
-            $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
+        if($cangooroo['status'] == 'Cancelled'){
+            $cancellationDate = (!$cangooroo['cancellation_date'] || strtotime($cangooroo['cancellation_date']) <= 1) ? $cangooroo['last_update'] : $cangooroo['cancellation_date'];
+            $cancellationStartDate = (strtotime($cangooroo['check_in']) > strtotime("+5 days",strtotime($cangooroo['reservation_date']))) ? strtotime("+3 days",strtotime($cangooroo['cancellation_policies_start_date'])) : strtotime($cangooroo['cancellation_policies_start_date']);
+            if(strtotime($cancellationDate) > strtotime($cangooroo['check_in'])){
+                $cancellationValueToUse = $cangooroo['selling_price'];
+            }
+            else if(strtotime($cancellationDate) > $cancellationStartDate){
+                $cancellationValueToUse = $cangooroo['cancellation_policies_value'];
+            }
+            if($cancellationValueToUse != $billingInfo['supplier_value']){
+                $suggestionReason = $suggestionReason.' | Valor informado diferente do valor de Cancelamento: R$ '.$cancellationValueToUse;
+            }
+        }
+        else{
+            if($cangooroo['status'] != 'Confirmed'){
+                $suggestionReason = $suggestionReason.' | Reserva não confirmada no Cangooroo';
+            }
+            // if(($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']){
+            if($cangooroo['selling_price'] != $billingInfo['supplier_value']){
+                $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
+            }
         }
         if(!$cangooroo->hotel->is_valid){
             $suggestionReason = $suggestionReason.' | Hotel não validado';
         }
-        // tipo de faturamento deve ser diferente de vcn
-        // $hotel = Hotel::where('id_hotel_cangooroo', $cangooroo['hotel_id'])->first();
-        // if($hotel['billing_type'] == 2){
-        //     $suggestionReason = $suggestionReason.' | Tipo de faturamento deve ser diferente de VCN';
-        // }
+        if($cangooroo->hotel->cpf_cnpj != $billingInfo['cnpj'] && $cangooroo->hotel->cnpj_extra != $billingInfo['cnpj']){
+            $suggestionReason = $suggestionReason.' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
+        }
         if($suggestionReason == ''){
             $suggestion = true;
         }

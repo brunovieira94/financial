@@ -23,4 +23,9 @@ class BillingPaymentController extends Controller
     {
         return $this->billingPaymentService->getBillingPayment($id);
     }
+
+    public function destroy($id)
+    {
+        return $this->billingPaymentService->deleteBillingPayment($id);
+    }
 }
