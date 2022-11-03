@@ -159,8 +159,8 @@ class PurchaseOrderService
         $purchaseOrder = new PurchaseOrder;
         $purchaseOrderInfo['user_id'] = auth()->user()->id;
         $purchaseOrderInfo['installments_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
-        $purchaseOrderInfo['approved_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
-        $purchaseOrderInfo['approved_instalment_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
+        //$purchaseOrderInfo['approved_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
+        //$purchaseOrderInfo['approved_instalment_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
         $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
         $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
         $this->syncServices($purchaseOrder, $purchaseOrderInfo);
@@ -230,12 +230,12 @@ class PurchaseOrderService
             //$oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
             //$oldValue = $purchaseOrder->negotiated_total_value;
             //$oldInstallmentValue = $purchaseOrder->installments_total_value;
-            $approvedTotalValue = $purchaseOrder->approved_installment_value ?? $this->getPurchaseOrderValue($id);;
-            //$approvedInstallmentValue = $purchaseOrder->approved_installment_value;
+            $approvedTotalValue = $purchaseOrder->approved_total_value;
+            $approvedInstallmentValue = $purchaseOrder->approved_installment_value ?? $this->getPurchaseOrderValue($id);
 
-            if ($purchaseOrder->approved_installment_value == null) {
+            /*if ($purchaseOrder->approved_installment_value == null) {
                 $purchaseOrderInfo['approved_installment_value'] = $this->getPurchaseOrderValue($id);
-            }
+            }*/
 
             $purchaseOrderInfo['installments_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
             $purchaseOrder->fill($purchaseOrderInfo)->save();
@@ -246,7 +246,7 @@ class PurchaseOrderService
 
             // caso o valor for maior do que o Aprovado o pedido deve voltar para o início da aprovação
             //if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
-            if ($purchaseOrderInfo['negotiated_total_value'] > $approvedTotalValue || $purchaseOrderInfo['final_negotiated_total_value'] > $approvedTotalValue) {
+            if ((($purchaseOrderInfo['negotiated_total_value'] > $approvedInstallmentValue) && ($purchaseOrderInfo['negotiated_total_value'] > $approvedTotalValue)) || $purchaseOrderInfo['final_negotiated_total_value'] > $approvedInstallmentValue) {
                 $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
                 $supplyApprovalFlow['order'] = 1;
                 if ($newStatus != '') {
@@ -726,7 +726,7 @@ class PurchaseOrderService
     {
         $currentValue = 0;
         foreach ($this->purchaseOrderHasInstallments->where('purchase_order_id', $id)->get() as $key => $purchaseOrderHasInstallments) {
-            $currentValue += $purchaseOrderHasInstallments['portion_amount'] + $purchaseOrderHasInstallments['money_discount'];
+            $currentValue += $purchaseOrderHasInstallments['portion_amount'] - $purchaseOrderHasInstallments['money_discount'];
         }
         return $currentValue;
 

@@ -140,7 +140,7 @@ class ApprovalFlowSupplyByUserService
             $accountApproval->order += 1;
         }
         $accountApproval->purchase_order->update([
-            'approved_total_value' => $accountApproval->purchase_order->installments_total_value,
+            'approved_total_value' => $accountApproval->purchase_order->negotiated_total_value,
             'approved_installment_value' => $accountApproval->purchase_order->installments_total_value
         ]);
         $accountApproval->reason = null;
@@ -203,6 +203,11 @@ class ApprovalFlowSupplyByUserService
                     } else {
                         $accountApproval->order += 1;
                     }
+
+                    $accountApproval->purchase_order->update([
+                        'approved_total_value' => $accountApproval->purchase_order->negotiated_total_value,
+                        'approved_installment_value' => $accountApproval->purchase_order->installments_total_value
+                    ]);
 
                     $accountApproval->reason = null;
                     //$accountApproval->reason_to_reject_id = null;
