@@ -209,23 +209,11 @@ class PurchaseOrder extends Model
 
     public function getFinalTotalValueAttribute()
     {
-        $getPurchaseOrder = PurchaseOrder::findOrFail($this->id);
-        //soma produtos = ((unitary_value * quantity) - money_discount) - money_discount_products(purchase)
-        /* $sumProducts = PurchaseOrderHasProducts::where('purchase_order_id', $this->id)
-            ->sum(\DB::raw('unitary_value * quantity - money_discount'));
-        $finalSumProducts = $sumProducts - $getPurchaseOrder['money_discount_products'];
-
-        $sumServices = PurchaseOrderHasServices::where('purchase_order_id', $this->id)
-            ->sum(\DB::raw('unitary_value * quantity - money_discount'));
-        $finalSumServices = $sumServices - $getPurchaseOrder['money_discount_services'];
-
-        $finalTotal = $finalSumProducts + $finalSumServices;
-
-         return $finalTotal;*/
+        $getPurchaseOrder = PurchaseOrder::withTrashed()->findOrFail($this->id);
 
         $currentValue = 0;
         foreach (PurchaseOrderHasInstallments::where('purchase_order_id', $this->id)->get() as $key => $purchaseOrderHasInstallments) {
-            $currentValue += $purchaseOrderHasInstallments['portion_amount'] + $purchaseOrderHasInstallments['money_discount'];
+            $currentValue += $purchaseOrderHasInstallments['portion_amount'] - $purchaseOrderHasInstallments['money_discount'];
         }
 
         return $getPurchaseOrder->approved_installment_value ?? $currentValue;
