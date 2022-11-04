@@ -3,8 +3,10 @@
 namespace App\Services;
 
 use App\Http\Resources\reports\RouteAccountsApprovalFlowLog;
+use App\Http\Resources\reports\RouteBillingLog;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowLog;
+use App\Models\BillingLog;
 use App\Models\ApprovalFlow;
 use App\Models\LogActivity;
 use App\Models\SupplyApprovalFlow;
@@ -176,9 +178,73 @@ class LogsService
         return $retorno;
     }
 
+    // public function getBillingLogs($id, $requestInfo)
+    // {
+
+    //     $logBilling =  LogActivity::where([
+    //         ['log_name', 'billing'],
+    //         ['subject_id', $id]
+    //     ])->orderBy('created_at', 'asc')->get();
+    //     $retorno = [];
+
+    //     foreach ($logBilling as $log) {
+    //         $status = '';
+    //         switch ($log['properties']['attributes']['approval_status']) {
+    //             case 0:
+    //                 $status = 'approved';
+    //                 break;
+    //             case 2:
+    //                 $status = 'rejected';
+    //                 break;
+    //             case 3:
+    //                 $status = 'canceled';
+    //                 break;
+    //             case 1:
+    //                 $status = 'approved';
+    //                 break;
+    //             default:
+    //                 $status = 'default';
+    //         }
+
+    //         $reason = null;
+    //         $concatenate = false;
+
+    //         if ($log['properties']['attributes']['reason_to_reject_id'] != null) {
+    //             $reason = $log['properties']['attributes']['reason_to_reject']['title'];
+    //             $concatenate = true;
+    //         }
+    //         if ($log['properties']['attributes']['reason'] != null) {
+    //             if ($concatenate) {
+    //                 $reason = $reason . ' - ' . $log['properties']['attributes']['reason'];
+    //             } else {
+    //                 $reason = $log['properties']['attributes']['reason'];
+    //             }
+    //         }
+
+    //         $retorno[] = [
+    //             'type' => $status,
+    //             'createdAt' => $log['created_at'],
+    //             'description' => $log['description'],
+    //             'causerUser' => $log['causer_object']['name'],
+    //             'causerUserRole' => isset($log['causer_object']['role']) ? $log['causer_object']['role']['title'] : '',
+    //             'createdUser' => $log['properties']['attributes']['user']['name'] ?? '',
+    //             'motive' => $reason,
+    //             'stage' => isset($log['properties']['old']['order']) ? $log['properties']['old']['order'] + 1 : '',
+    //         ];
+    //     }
+    //     return $retorno;
+    // }
+
+
     public function getAccountsPayableApprovalFlowLog($id, $requestInfo)
     {
         $dataLogs = RouteAccountsApprovalFlowLog::collection(AccountsPayableApprovalFlowLog::where('payment_request_id', $id)->orderBy('created_at', 'asc')->get());
+        return $dataLogs->collection->toArray();
+    }
+
+    public function getBillingLogs($id, $requestInfo)
+    {
+        $dataLogs = RouteBillingLog::collection(BillingLog::where('billing_id', $id)->orderBy('created_at', 'asc')->get());
         return $dataLogs->collection->toArray();
     }
 }

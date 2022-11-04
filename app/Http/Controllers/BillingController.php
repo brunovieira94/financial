@@ -25,6 +25,11 @@ class BillingController extends Controller
         return $this->billingService->getAllBilling($request->all(), $approvalStatus);
     }
 
+    public function getBillingsForApproval(Request $request)
+    {
+        return $this->billingService->getAllBillingsForApproval($request->all());
+    }
+
     public function show($id)
     {
         return $this->billingService->getBilling($id);

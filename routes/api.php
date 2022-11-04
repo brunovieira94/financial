@@ -189,6 +189,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('billing')->group(function () {
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
         Route::put('/approve-many', [BillingController::class, 'approveMany']);
+        Route::get('/get-billing-for-approve', [BillingController::class, 'getBillingsForApproval']);
         Route::get('/show/{id}', [BillingController::class, 'show']);
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
         Route::get('/{approvalStatus}', [BillingController::class, 'index']);
@@ -260,6 +261,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
         Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
+        Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 

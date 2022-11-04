@@ -10,6 +10,7 @@ use App\Models\PaidBillingInfo;
 use App\Models\BankAccount;
 use App\Models\Hotel;
 use App\Models\HotelApprovalFlow;
+use App\Models\HotelReasonToReject;
 use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -43,6 +44,26 @@ class BillingService
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
+    public function getAllBillingsForApproval($requestInfo)
+    {
+        $approvalFlowUserOrders = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
+
+        if (!$approvalFlowUserOrders)
+            return response([], 404);
+
+        $billing = Utils::search($this->billing, $requestInfo);
+        $billing = Utils::baseFilterBilling($billing, $requestInfo);
+
+        $billing->where('approval_status', 0)->where('deleted_at', '=', null);
+        $billingIDs = [];
+        foreach ($approvalFlowUserOrders as $approvalFlowOrder) {
+            $billingApprovalFlow = $this->billing->where('order', $approvalFlowOrder['order']);
+            $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
+        }
+        $billing = $billing->whereIn('id', $billingIDs);
+        return Utils::pagination($billing->with($this->with), $requestInfo);
+    }
+
     public function approve($id)
     {
         $billing = $this->billing->findOrFail($id);
@@ -70,6 +91,7 @@ class BillingService
         $billing->reason = null;
         $billing->reason_to_reject_id = null;
         $billing->save();
+        Utils::createBillingLog($billing->id, 'approved', null, null, $billing->order, auth()->user()->id);
         return response()->json([
             'Sucesso' => 'Faturamento aprovado',
         ], 200);
@@ -103,6 +125,7 @@ class BillingService
 
                     $billing->reason = null;
                     $billing->save();
+                    Utils::createBillingLog($billing->id, 'rejected', null, null, $billing->order, auth()->user()->id);
                 }
                 return response()->json([
                     'Sucesso' => 'Faturamentos reprovados',
@@ -134,6 +157,7 @@ class BillingService
                     $billing->reason = null;
                     $billing->reason_to_reject_id = null;
                     $billing->save();
+                    Utils::createBillingLog($billing->id, 'approved', null, null, $billing->order, auth()->user()->id);
                 }
                 return response()->json([
                     'Sucesso' => 'Faturamentos aprovados',
@@ -177,6 +201,8 @@ class BillingService
         $billing->reason = $request->reason;
         $billing->reason_to_reject_id = $request->reason_to_reject_id;
         $billing->save();
+        $motive = isset($request->reason_to_reject_id) ? HotelReasonToReject::findOrFail($request->all()['reason_to_reject_id'])->title : null;
+        Utils::createBillingLog($billing->id, 'rejected', $motive, null, $billing->order, auth()->user()->id);
         return response()->json([
             'Sucesso' => 'Faturamento reprovado',
         ], 200);
@@ -235,6 +261,7 @@ class BillingService
         }
         $billing = new Billing;
         $billing = $billing->create($billingInfo);
+        Utils::createBillingLog($billing->id, 'created', null, null, 0, $billingInfo['user_id']);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
@@ -286,6 +313,7 @@ class BillingService
             }
         }
         $billing->fill($billingInfo)->save();
+        Utils::createBillingLog($billing->id, 'updated', null, null, $billing->order, auth()->user()->id);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
@@ -302,6 +330,7 @@ class BillingService
         $billing->billing_payment_id = null;
         $billing->approval_status =  Config::get('constants.billingStatus.canceled');
         $billing->save();
+        Utils::createBillingLog($billing->id, 'deleted', null, null, $billing->order, auth()->user()->id);
         return true;
     }
 
