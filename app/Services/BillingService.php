@@ -67,15 +67,15 @@ class BillingService
     public function approve($id)
     {
         $billing = $this->billing->findOrFail($id);
-        // if ($this->approvalFlow
-        //     ->where('order', $billing->order)
-        //     ->where('role_id', auth()->user()->role_id)
-        //     ->doesntExist()
-        // ) {
-        //     return response()->json([
-        //         'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
-        //     ], 422);
-        // }
+        if ($this->approvalFlow
+            ->where('order', $billing->order)
+            ->where('role_id', auth()->user()->role_id)
+            ->doesntExist()
+        ) {
+            return response()->json([
+                'error' => 'Não é permitido a esse usuário aprovar o faturamento ' . $billing->id . ', modifique o fluxo de aprovação.',
+            ], 422);
+        }
 
         $maxOrder = $this->approvalFlow->max('order');
         if ($billing->order >= $maxOrder) {
@@ -105,15 +105,15 @@ class BillingService
                     $billing = $this->billing->findOrFail($value);
                     $maxOrder = $this->approvalFlow->max('order');
 
-                    // if ($this->approvalFlow
-                    //     ->where('order', $billing->order)
-                    //     ->where('role_id', auth()->user()->role_id)
-                    //     ->doesntExist()
-                    // ) {
-                    //     return response()->json([
-                    //         'error' => 'Não é permitido a esse usuário reprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
-                    //     ], 422);
-                    // }
+                    if ($this->approvalFlow
+                        ->where('order', $billing->order)
+                        ->where('role_id', auth()->user()->role_id)
+                        ->doesntExist()
+                    ) {
+                        return response()->json([
+                            'error' => 'Não é permitido a esse usuário reprovar o faturamento ' . $billing->id . ', modifique o fluxo de aprovação.',
+                        ], 422);
+                    }
 
                     $billing->approval_status = Config::get('constants.billingStatus.disapproved');
 
