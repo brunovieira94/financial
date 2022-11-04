@@ -622,6 +622,9 @@ class Utils
         if (array_key_exists('pax_in_house', $requestInfo)) {
             $billing->where('pax_in_house', $requestInfo['pax_in_house']);
         }
+        if (array_key_exists('suggestion', $requestInfo)) {
+            $billing->where('suggestion', $requestInfo['suggestion']);
+        }
         if (array_key_exists('form_of_payment', $requestInfo)) {
             $billing->where('form_of_payment', $requestInfo['form_of_payment']);
         }
