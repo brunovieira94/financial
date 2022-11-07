@@ -214,4 +214,9 @@ class PaymentRequestClean extends Model
     {
         static::addGlobalScope(new ProfileCostCenterScope);
     }
+
+    public function log_approval_flow()
+    {
+        return $this->hasMany(AccountsPayableApprovalFlowLog::class, 'payment_request_id', 'id');
+    }
 }
