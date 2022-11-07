@@ -212,7 +212,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
-        Route::post('/initial-import', [PaidBillingInfoController::class, 'import']);
         //Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
@@ -450,3 +449,4 @@ Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
