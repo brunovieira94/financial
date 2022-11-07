@@ -34,7 +34,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
         });
 
         if (!array_key_exists('company', $requestInfo))
-            return [];
+            return collect([]);
 
         return $accountsPayableApprovalFlow->get();
     }

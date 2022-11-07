@@ -2,9 +2,11 @@
 
 namespace App\Services;
 
+use App\Http\Resources\reports\RouteApprovalUserResource;
 use App\Http\Resources\reports\RouteBillToPayResource;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
+use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
 use App\Models\CnabGenerated;
 use App\Models\FormPayment;
@@ -29,12 +31,14 @@ class ReportService
     private $paymentRequestClean;
     private $accountsPayableApprovalFlowClean;
     private $installmentClean;
+    private $accountsPayableApprovalFlowLog;
 
     private $paymentRequestCleanWith = ['provider', 'cost_center', 'approval.approval_flow', 'installments', 'currency', 'cnab_payment_request.cnab_generated'];
     private $installmentCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'cnab_generated_installment.generated_cnab', 'bank_account_provider', 'group_payment.form_payment'];
     private $accountsPayableApprovalFlowCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'payment_request.cnab_payment_request.cnab_generated'];
+    private $logPaymentRequestWith = ['user', 'payment_request.provider'];
 
-    public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
+    public function __construct(AccountsPayableApprovalFlowLog $accountsPayableApprovalFlowLog, PaymentRequestHasInstallmentsClean $installmentClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasInstallments $installment, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, SupplyApprovalFlow $supplyApprovalFlow, CnabGenerated $cnabGenerated)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
@@ -45,6 +49,7 @@ class ReportService
         $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
         $this->paymentRequestClean = $paymentRequestClean;
         $this->installmentClean = $installmentClean;
+        $this->accountsPayableApprovalFlowLog = $accountsPayableApprovalFlowLog;
     }
 
     public function getAllDuePaymentRequest($requestInfo)
@@ -362,5 +367,44 @@ class ReportService
     public function getCnabGenerate($requestInfo, $id)
     {
         return $this->cnabGenerated->with(['user', 'company', 'payment_requests', 'bank_account_company.bank'])->findOrFail($id);
+    }
+
+    public function getUserApprovalsReport($requestInfo)
+    {
+        $logPaymentRequest = Utils::search($this->accountsPayableApprovalFlowLog, $requestInfo);
+        $logPaymentRequest = $logPaymentRequest->with($this->logPaymentRequestWith);
+        if (!array_key_exists('user_approval_id', $requestInfo)) {
+            return response()->json([
+                'current_page' => 1,
+                'data' => [],
+                'from' => null,
+                'last_page' => 1,
+                'per_page' => 20,
+                'to' => null,
+                'total' => 0
+            ], 200);
+        }
+        $logPaymentRequest = $logPaymentRequest->where('user_id',  $requestInfo['user_approval_id']);
+        $logPaymentRequest = $logPaymentRequest->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+        });
+
+        if (array_key_exists('date_approval', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['date_approval'])) {
+                $logPaymentRequest = $logPaymentRequest->where('created_at', '>=', $requestInfo['date_approval']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['date_approval'])) {
+                $logPaymentRequest = $logPaymentRequest->where('created_at', '<=', $requestInfo['date_approval']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['date_approval']) && !array_key_exists('from', $requestInfo['date_approval'])) {
+                $logPaymentRequest = $logPaymentRequest->whereBetween('created_at', [now(), now()->addMonths(1)]);
+            }
+        }
+
+        if (array_key_exists('status_approval', $requestInfo)) {
+            $logPaymentRequest = $logPaymentRequest->where('type',  $requestInfo['status_approval']);
+        }
+
+        return RouteApprovalUserResource::collection(Utils::pagination($logPaymentRequest, $requestInfo));
     }
 }
