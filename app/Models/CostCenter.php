@@ -27,7 +27,7 @@ class CostCenter extends Model
     protected $hidden = ['pivot'];
 
 
-    protected $appends = ['linked_costCenters'];
+    protected $appends = ['linked_costCenters', 'vice_presidents', 'managers'];
 
     public function group_approval_flow()
     {
@@ -55,5 +55,27 @@ class CostCenter extends Model
         }
 
         return $costCenters;
+    }
+
+    public function vice_presidents()
+    {
+        return $this->hasMany(CostCenterHasVicePresident::class, 'cost_center_id', 'id');
+    }
+
+    public function managers()
+    {
+        return $this->hasMany(CostCenterHasManager::class, 'cost_center_id', 'id');
+    }
+
+    public function getVicePresidentsAttribute()
+    {
+        $userIDs = CostCenterHasVicePresident::where('cost_center_id', $this->id)->get('vice_president_user_id');
+        return User::with('role')->whereIn('id', $userIDs->pluck('vice_president_user_id'))->get();
+    }
+
+    public function getManagersAttribute()
+    {
+        $userIDs = CostCenterHasManager::where('cost_center_id', $this->id)->get('manager_user_id');
+        return User::with('role')->whereIn('id', $userIDs->pluck('manager_user_id'))->get();
     }
 }

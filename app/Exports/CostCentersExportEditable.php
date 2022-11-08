@@ -23,11 +23,34 @@ class CostCentersExportEditable implements FromCollection, ShouldAutoSize, WithM
 
     public function map($costCenterExport): array
     {
+        $nameManager = '';
+        $nameManagerConcat = false;
+        $nameVicePresident = '';
+        $nameVicePresidentConcat = false;
+        foreach ($costCenterExport->vice_presidents as $vp){
+            if($nameVicePresidentConcat){
+                $nameVicePresident = $nameVicePresident . ' ,' . $vp->name;
+            }else {
+                $nameVicePresident = $vp->name;
+                $nameVicePresidentConcat = true;
+            }
+        }
+        foreach ($costCenterExport->managers as $m){
+            if($nameManagerConcat){
+                $nameManager = $nameVicePresident . ' ,' . $m->name;
+            }else {
+                $nameManager = $m->name;
+                $nameManagerConcat = true;
+            }
+        }
+
         return [
             $costCenterExport->id,
             $costCenterExport->code,
             $costCenterExport->title,
             $costCenterExport->active ? 'Sim' : 'Não',
+            $nameVicePresident,
+            $nameManager,
         ];
     }
 
@@ -38,6 +61,8 @@ class CostCentersExportEditable implements FromCollection, ShouldAutoSize, WithM
             'Codigo',
             'Descricao do centro de custo',
             'Ativo',
+            'Vice Presidente',
+            'Gestor',
         ];
     }
 }
