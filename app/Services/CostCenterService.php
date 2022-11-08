@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\ApprovalFlow;
 use App\Models\CostCenter;
-use App\Models\ChartOfAccounts;
+use App\Models\CostCenterHasManager;
+use App\Models\CostCenterHasVicePresident;
 use App\Models\GroupApprovalFlow;
 
 use function PHPSTORM_META\map;
@@ -85,6 +85,7 @@ class CostCenterService
             $this->costCenter->findOrFail($costCenterInfo['parent'])->get();
         }
         $costCenter = $costCenter->create($costCenterInfo);
+        $this->synVicePresidentsManagers($costCenter->id, $costCenterInfo);
         return $this->costCenter->with($this->with)->findOrFail($costCenter->id);
     }
 
@@ -100,6 +101,7 @@ class CostCenterService
             }
         }
         $costCenter->fill($costCenterInfo)->save();
+        $this->synVicePresidentsManagers($id, $costCenterInfo);
         return $costCenter;
     }
 
@@ -122,7 +124,7 @@ class CostCenterService
                 $costCenters = $costCenters->where('active', true);
             }
         }
-        $costCenters = Utils::pagination($costCenters->with('group_approval_flow'), $costCenterInfo);
+        $costCenters = Utils::pagination($costCenters->with($this->with), $costCenterInfo);
 
         //foreach ($costCenters as $costCenter)
         //{
@@ -132,5 +134,28 @@ class CostCenterService
         //    }
         //}
         return $costCenters;
+    }
+
+    public function synVicePresidentsManagers($id, $requestInfo)
+    {
+        if (array_key_exists('vice_presidents', $requestInfo)) {
+            CostCenterHasVicePresident::where('cost_center_id', $id)->delete();
+            foreach ($requestInfo['vice_presidents'] as $idUser) {
+                CostCenterHasVicePresident::create([
+                    'cost_center_id' => $id,
+                    'vice_president_user_id' => $idUser,
+                ]);
+            }
+        }
+
+        if (array_key_exists('managers', $requestInfo)) {
+            CostCenterHasManager::where('cost_center_id', $id)->delete();
+            foreach ($requestInfo['managers'] as $idUser) {
+                CostCenterHasManager::create([
+                    'cost_center_id' => $id,
+                    'manager_user_id' => $idUser,
+                ]);
+            }
+        }
     }
 }
