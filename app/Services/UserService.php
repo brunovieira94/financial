@@ -26,12 +26,18 @@ class UserService
     {
         $user = Utils::search($this->user, $requestInfo);
         if (array_key_exists('cost_center', $requestInfo)) {
-            $user = $user->whereHas('cost_center', function ($query) use ($requestInfo) {
-                $query->where('cost_center_id', $requestInfo['cost_center']);
-            });
+            if (!empty($requestInfo['cost_center'])) {
+                $user = $user->whereHas('cost_center', function ($query) use ($requestInfo) {
+                    $query->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
         }
         if (array_key_exists('status', $requestInfo)) {
-            $user = $user->where('status', $requestInfo['status']);
+            if (!empty($requestInfo['status']) or $requestInfo['status'] == 0) {
+                if (!is_null($requestInfo['status'])) {
+                    $user = $user->where('status', $requestInfo['status']);
+                }
+            }
         }
         return Utils::pagination($user->with($this->with), $requestInfo);
     }

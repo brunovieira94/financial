@@ -23,11 +23,23 @@ class UsersExport implements FromCollection, ShouldAutoSize, WithMapping, WithHe
     public function collection()
     {
         $requestInfo = $this->requestInfo;
-        return User::with($this->with)->whereHas('cost_center', function ($query) use ($requestInfo) {
-            if (array_key_exists('cost_center', $requestInfo)) {
-                $query->where('cost_center_id', $requestInfo['cost_center']);
+        $user = User::with($this->with);
+
+        if (array_key_exists('status', $requestInfo)) {
+            if (!empty($requestInfo['status']) or $requestInfo['status'] == 0) {
+                if (!is_null($requestInfo['status'])) {
+                    $user = $user->where('status', $requestInfo['status']);
+                }
             }
-        })->get();
+        }
+        if (array_key_exists('cost_center', $requestInfo)) {
+            if (!empty($requestInfo['cost_center'])) {
+                $user->whereHas('cost_center', function ($query) use ($requestInfo) {
+                    $query->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
+        }
+        return $user->get();
     }
 
     public function map($user): array
@@ -36,9 +48,26 @@ class UsersExport implements FromCollection, ShouldAutoSize, WithMapping, WithHe
         foreach ($user->cost_center as $key => $costCenter) {
             if ($key == 0) {
                 $nameCostCenter = $costCenter->title;
-            }else{
+            } else {
                 $nameCostCenter = $nameCostCenter . ', ' . $costCenter->title;
             }
+        }
+
+        switch ($user->status) {
+            case 0:
+                $user->status = "Ativo";
+                break;
+            case 1:
+                $user->status = "Férias";
+                break;
+            case 2:
+                $user->status = "Desativado";
+                break;
+            case 3:
+                $user->status = "Suspenso";
+                break;
+            default:
+                $user->status = "Error";
         }
 
         return [
@@ -47,8 +76,9 @@ class UsersExport implements FromCollection, ShouldAutoSize, WithMapping, WithHe
             $user->phone,
             $user->extension,
             $user->role ? $user->role->title : $user->role,
-            $user->created_at,
             $nameCostCenter,
+            $user->status,
+            $user->created_at,
         ];
     }
 
@@ -60,8 +90,9 @@ class UsersExport implements FromCollection, ShouldAutoSize, WithMapping, WithHe
             'Telefone',
             'Ramal',
             'Perfil de Acesso',
+            'Centro de Custo',
+            'Status',
             'Data de Criação',
-            'Centro de Custo'
         ];
     }
 }
