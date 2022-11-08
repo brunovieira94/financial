@@ -22,7 +22,7 @@ class Role extends Model
         $activity->causer_object = $user;
     }
     use SoftDeletes;
-    protected $fillable = ['transfer_approval', 'title', 'filter_cost_center', 'filter_cost_center_supply'];
+    protected $fillable = ['financial_analyst', 'transfer_approval', 'title', 'filter_cost_center', 'filter_cost_center_supply'];
     protected $table='role';
 
     public function modules()

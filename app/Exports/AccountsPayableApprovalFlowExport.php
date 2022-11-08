@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Utils as ExportsUtils;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
@@ -85,7 +86,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
 
         return [
             $paymentRequest->id,
-            $paymentRequest->company->company_name,
+            $paymentRequest->company->company_name ?? '',
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? 'CNPJ: ' . $paymentRequest->provider->cnpj : 'CPF: ' . $paymentRequest->provider->cpf) : $paymentRequest->provider,
             $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
             $paymentRequest->emission_date,
@@ -109,7 +110,9 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             $paymentRequest->created_at,
             $paymentRequest->note,
             $paymentRequest->approval->approver_stage_first['title'],
-            Config::get('constants.statusPt.'.$paymentRequest->approval->status)
+            Config::get('constants.statusPt.'.$paymentRequest->approval->status),
+            ExportsUtils::logFirstApprovalFinancialAnalyst($paymentRequest)['user_name'],
+            ExportsUtils::logFirstApprovalFinancialAnalyst($paymentRequest)['created_at'],
         ];
     }
 
@@ -141,7 +144,9 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             'Data de Criação',
             'Observações',
             'Etapa Atual',
-            'Status Atual'
+            'Status Atual',
+            'Nome - Aprovação Analista Financeiro',
+            'Data - Aprovação Analista Financeiro',
         ];
     }
 }

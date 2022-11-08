@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Exports\Utils as ExportsUtils;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Services\Utils;
@@ -69,7 +70,9 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             $paymentRequest->created_at,
             $paymentRequest->note,
             $paymentRequest->approval->approver_stage_first['title'],
-            Config::get('constants.statusPt.'.$paymentRequest->approval->status)
+            Config::get('constants.statusPt.'.$paymentRequest->approval->status),
+            ExportsUtils::logFirstApprovalFinancialAnalyst($paymentRequest)['user_name'],
+            ExportsUtils::logFirstApprovalFinancialAnalyst($paymentRequest)['created_at'],
         ];
     }
 
@@ -100,7 +103,9 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
             'Data de Criação',
             'Observações',
             'Etapa Atual',
-            'Status Atual'
+            'Status Atual',
+            'Nome - Aprovação Analista Financeiro',
+            'Data - Aprovação Analista Financeiro',
         ];
     }
 }

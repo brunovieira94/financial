@@ -26,6 +26,7 @@ class PutRoleRequest extends FormRequest
         return [
             'title' => 'max:255',
             'modules' => 'array',
+            'financial_analyst' => 'boolean',
         ];
     }
 }
