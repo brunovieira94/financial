@@ -23,4 +23,16 @@ class AccountsPayableApprovalFlowLog extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id')->withTrashed();
     }
+
+    public function groupApprovalFlow()
+    {
+        return $this->hasOneThrough(
+            GroupApprovalFlow::class,
+            PaymentRequest::class,
+            'id',
+            'id',
+            'payment_request_id',
+            'group_approval_flow_id',
+        );
+    }
 }

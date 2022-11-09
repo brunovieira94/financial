@@ -37,7 +37,8 @@ class RouteAccountsApprovalFlowLog extends JsonResource
             'createdUser' => $this->user_name,
             'motive' => $reason,
             'recipient' => $this->recipient,
-            'stage' => $this->stage
+            'stage' => $this->stage,
+            'totalStages' => $this->totalStages,
         ];
     }
 }
