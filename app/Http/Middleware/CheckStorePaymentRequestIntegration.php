@@ -41,7 +41,11 @@ class CheckStorePaymentRequestIntegration
                 }
             }
 
-            if ($amountReceived != $paymentRequestInfo['amount']) {
+            //solve error float value PHP
+            $value1 = floatval($amountReceived);
+            $value2 = floatval($paymentRequestInfo['amount']);
+
+            if (strval($value1) != strval($value2)) {
                 return response()->json([
                     'error' => 'A soma dos valores recebidos da parcela não confere com o valor total da solicitação de pagamento.'
                 ], 422);

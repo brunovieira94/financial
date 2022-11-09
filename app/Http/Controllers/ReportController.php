@@ -16,7 +16,7 @@ use App\Exports\AllPaymentRequestFinishedExport;
 use App\Exports\DueInstallmentsExport;
 use App\Exports\InstallmentsPayableExport;
 use App\Exports\UserApprovalsReportExport;
-use App\Http\Requests\UserApprovalsReportRequest;
+
 
 class ReportController extends Controller
 {
@@ -233,7 +233,7 @@ class ReportController extends Controller
     {
         if (array_key_exists('exportFormat', $request->all())) {
             if ($request->all()['exportFormat'] == 'csv') {
-                return (new UserApprovalsReportExport($request->all()))->download('relatórioAprovações.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+                return (new userApprovalsReportExport($request->all()))->download('relatórioAprovações.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
         return (new UserApprovalsReportExport($request->all()))->download('relatórioAprovações.xlsx', \Maatwebsite\Excel\Excel::XLSX);
