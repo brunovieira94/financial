@@ -302,6 +302,17 @@ class ReportService
                     $query->where('billing_date', '<=', $requestInfo['billing_date']['to']);
                 }
             }
+
+            if (array_key_exists('approval_date', $requestInfo)) {
+                $query->whereHas('approval', function ($approval) use ($requestInfo) {
+                    if (array_key_exists('from', $requestInfo['approval_date'])) {
+                        $approval->whereDate('updated_at', '>=', $requestInfo['approval_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['approval_date'])) {
+                        $approval->whereDate('updated_at', '<=', $requestInfo['approval_date']['to']);
+                    }
+                });
+            }
         });
 
         return Utils::pagination($accountApproval

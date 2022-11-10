@@ -24,8 +24,8 @@ class SupplyApprovalFlow extends Model
     protected $table = 'supply_approval_flows';
     protected $fillable = ['id_purchase_order', 'order', 'status', 'reason'];
     public $timestamps = false;
-    //protected $hidden = ['id_purchase_order'];
-    protected $appends = ['approver_stage'];
+    protected $hidden = ['created_at', 'updated_at'];
+    protected $appends = ['approver_stage', 'approval_date'];
 
     public function purchase_order()
     {
@@ -82,6 +82,13 @@ class SupplyApprovalFlow extends Model
             return $approverStage;
         } else {
             return $approverStage;
+        }
+    }
+
+    public function getApprovalDateAttribute()
+    {
+        if ($this->status == 1 && $this->updated_at != null) {
+            return date('Y-m-d', strtotime($this->updated_at));
         }
     }
 }
