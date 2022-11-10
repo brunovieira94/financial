@@ -15,13 +15,7 @@ class ServiceService
     public function getAllService($requestInfo)
     {
         if (array_key_exists('search', $requestInfo)) {
-            if (strlen($requestInfo["search"]) >= 4) {
-                if (substr($requestInfo["search"], 0, 2) == 00) {
-                    $requestInfo['search'] = substr($requestInfo["search"], 2, strlen($requestInfo["search"]));
-                } else if (substr($requestInfo["search"], 0, 2) > 00) {
-                    $requestInfo['search'] =  substr($requestInfo["search"], 1, strlen($requestInfo["search"]));
-                }
-            }
+            $requestInfo['search'] =  ltrim($requestInfo["search"], 0);
         }
 
         $service = Utils::search($this->service, $requestInfo);
