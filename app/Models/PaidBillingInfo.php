@@ -13,12 +13,12 @@ class PaidBillingInfo extends Model
     use LogsActivity;
     protected static $logAttributes = ['user_id','*'];
     protected static $logName = 'paid_billing_info';
-    public function tapActivity(Activity $activity)
-    {
-        $user = auth()->user();
-        $activity->causer_id = $user->id;
-        $activity->causer_object = $user;
-    }
+    // public function tapActivity(Activity $activity)
+    // {
+    //     $user = auth()->user();
+    //     $activity->causer_id = $user->id;
+    //     $activity->causer_object = $user;
+    // }
 
     // Model attributes
     use SoftDeletes;

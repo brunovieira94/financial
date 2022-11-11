@@ -36,7 +36,8 @@ class RouteBillingLog extends JsonResource
             'causerUserRole' => $this->user_role,
             'createdUser' => $this->user_name,
             'motive' => $reason,
-            'stage' => $this->stage
+            'stage' => $this->stage,
+            'totalStages' => $this->totalStages
         ];
     }
 }

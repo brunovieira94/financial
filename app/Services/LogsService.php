@@ -8,6 +8,7 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\BillingLog;
 use App\Models\ApprovalFlow;
+use App\Models\HotelApprovalFlow;
 use App\Models\LogActivity;
 use App\Models\SupplyApprovalFlow;
 
@@ -244,7 +245,21 @@ class LogsService
 
     public function getBillingLogs($id, $requestInfo)
     {
-        $dataLogs = RouteBillingLog::collection(BillingLog::where('billing_id', $id)->orderBy('created_at', 'asc')->get());
+        $billingLogs = BillingLog::where('billing_id', $id)->orderBy('created_at', 'asc')->get();
+
+        $totalStages = null;
+
+        if (!is_null($billingLogs) && !is_null($billingLogs->first())) {
+            $maxOrder = HotelApprovalFlow::max('order');
+            $totalStages = strval($maxOrder);
+        }
+
+        $billingLogs->map(function ($item) use ($totalStages) {
+            $item['totalStages'] = $totalStages;
+            return $item;
+        });
+
+        $dataLogs = RouteBillingLog::collection($billingLogs);
         return $dataLogs->collection->toArray();
     }
 }

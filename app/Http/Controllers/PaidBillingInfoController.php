@@ -39,6 +39,8 @@ class PaidBillingInfoController extends Controller
 
     public function import()
     {
+        ini_set('memory_limit','1024M');
+        ini_set('max_execution_time', 1200);
         $this->paidBillingInfoImport->import(request()->file('import_file'));
         return response([
             'not_imported' => $this->paidBillingInfoImport->not_imported,

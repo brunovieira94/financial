@@ -67,6 +67,7 @@ class BillingService
     public function approve($id)
     {
         $billing = $this->billing->findOrFail($id);
+        $stage = 0;
         if ($this->approvalFlow
             ->where('order', $billing->order)
             ->where('role_id', auth()->user()->role_id)
@@ -84,14 +85,16 @@ class BillingService
             if($billingPayment){
                 $this->openOrApprovePaymentBilling($billingPayment, $billing);
             }
+            $stage = $billing->order;
         } else {
             $billing->order += 1;
+            $stage = $billing->order - 1;
         }
         //$billing->approval_status = Config::get('constants.status.approved');
         $billing->reason = null;
         $billing->reason_to_reject_id = null;
         $billing->save();
-        Utils::createBillingLog($billing->id, 'approved', null, null, $billing->order, auth()->user()->id);
+        Utils::createBillingLog($billing->id, 'approved', null, null, $stage, auth()->user()->id);
         return response()->json([
             'Sucesso' => 'Faturamento aprovado',
         ], 200);
@@ -104,6 +107,7 @@ class BillingService
                 foreach ($requestInfo['ids'] as $value) {
                     $billing = $this->billing->findOrFail($value);
                     $maxOrder = $this->approvalFlow->max('order');
+                    $stage = 0;
 
                     if ($this->approvalFlow
                         ->where('order', $billing->order)
@@ -119,13 +123,15 @@ class BillingService
 
                     if ($billing->order > $maxOrder) {
                         $billing->approval_status = Config::get('constants.billingStatus.open');
+                        $stage = $billing->order;
                     } else if ($billing->order != 0) {
                         $billing->order -= 1;
+                        $stage = $billing->order - 1;
                     }
 
                     $billing->reason = null;
                     $billing->save();
-                    Utils::createBillingLog($billing->id, 'rejected', null, null, $billing->order, auth()->user()->id);
+                    Utils::createBillingLog($billing->id, 'rejected', null, null, $stage, auth()->user()->id);
                 }
                 return response()->json([
                     'Sucesso' => 'Faturamentos reprovados',
@@ -133,15 +139,16 @@ class BillingService
             } else {
                 foreach ($requestInfo['ids'] as $value) {
                     $billing = $this->billing->findOrFail($value);
-                    // if ($this->approvalFlow
-                    //     ->where('order', $billing->order)
-                    //     ->where('role_id', auth()->user()->role_id)
-                    //     ->doesntExist()
-                    // ) {
-                    //     return response()->json([
-                    //         'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
-                    //     ], 422);
-                    // }
+                    $stage = 0;
+                    if ($this->approvalFlow
+                        ->where('order', $billing->order)
+                        ->where('role_id', auth()->user()->role_id)
+                        ->doesntExist()
+                    ) {
+                        return response()->json([
+                            'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+                        ], 422);
+                    }
 
                     $maxOrder = $this->approvalFlow->max('order');
                     if ($billing->order >= $maxOrder) {
@@ -150,14 +157,16 @@ class BillingService
                         if($billingPayment){
                             $this->openOrApprovePaymentBilling($billingPayment, $billing);
                         }
+                        $stage = $billing->order;
                     } else {
                         $billing->order += 1;
+                        $stage = $billing->order - 1;
                     }
                     //$billing->approval_status = Config::get('constants.status.approved');
                     $billing->reason = null;
                     $billing->reason_to_reject_id = null;
                     $billing->save();
-                    Utils::createBillingLog($billing->id, 'approved', null, null, $billing->order, auth()->user()->id);
+                    Utils::createBillingLog($billing->id, 'approved', null, null, $stage, auth()->user()->id);
                 }
                 return response()->json([
                     'Sucesso' => 'Faturamentos aprovados',
@@ -174,16 +183,16 @@ class BillingService
     {
         $billing = $this->billing->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
-
-        // if ($this->approvalFlow
-        //     ->where('order', $billing->order)
-        //     ->where('role_id', auth()->user()->role_id)
-        //     ->doesntExist()
-        // ) {
-        //     return response()->json([
-        //         'error' => 'Não é permitido a esse usuário reprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
-        //     ], 422);
-        // }
+        $stage = 0;
+        if ($this->approvalFlow
+            ->where('order', $billing->order)
+            ->where('role_id', auth()->user()->role_id)
+            ->doesntExist()
+        ) {
+            return response()->json([
+                'error' => 'Não é permitido a esse usuário reprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
+            ], 422);
+        }
 
         $billing->approval_status = Config::get('constants.billingStatus.disapproved');
 
@@ -194,15 +203,17 @@ class BillingService
         }
         if ($billing->order > $maxOrder) {
             $billing->approval_status = Config::get('constants.billingStatus.open');
+            $stage = $billing->order;
         } else if ($billing->order != 0) {
             $billing->order -= 1;
+            $stage = $billing->order - 1;
         }
 
         $billing->reason = $request->reason;
         $billing->reason_to_reject_id = $request->reason_to_reject_id;
         $billing->save();
         $motive = isset($request->reason_to_reject_id) ? HotelReasonToReject::findOrFail($request->all()['reason_to_reject_id'])->title : null;
-        Utils::createBillingLog($billing->id, 'rejected', $motive, null, $billing->order, auth()->user()->id);
+        Utils::createBillingLog($billing->id, 'rejected', $motive, null, $stage, auth()->user()->id);
         return response()->json([
             'Sucesso' => 'Faturamento reprovado',
         ], 200);
