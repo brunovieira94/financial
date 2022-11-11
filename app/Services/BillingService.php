@@ -224,7 +224,7 @@ class BillingService
         $billing = $this->billing->findOrFail($id);
         $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
-        $billingInfo['status_123'] = $this->get123Status($cangooroo['service_id']);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['123_id']);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
@@ -245,7 +245,7 @@ class BillingService
         }
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
         //$billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['status_123'] = $this->get123Status($cangooroo['service_id']);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['123_id']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
@@ -300,7 +300,7 @@ class BillingService
         $billingInfo['reason_to_reject_id'] = null;
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
         // $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['status_123'] = $this->get123Status($cangooroo['service_id']);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['123_id']);
         $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
@@ -422,13 +422,13 @@ class BillingService
         ];
     }
 
-    public function get123Status($serviceID)
+    public function get123Status($id123)
     {
         $token = $this->get123Token();
         if($token){
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
-            ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/").$serviceID);
+            ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/").$id123);
             if ($apiCall->status() != 200) return null; // N.D dados de reserva inválidos na base 123
             $response = $apiCall->json();
             return $response['status'];
@@ -460,7 +460,7 @@ class BillingService
         }
         $status['cangooroo'] = $cangooroo['status'];
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
-        $billingInfo['status_123'] = $this->get123Status($cangooroo['service_id']);
+        $billingInfo['status_123'] = $this->get123Status($cangooroo['123_id']);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
