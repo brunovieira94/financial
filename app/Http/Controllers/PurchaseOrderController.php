@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PurchaseOrderExport;
 use Illuminate\Http\Request;
 use App\Http\Requests\StorePurchaseOrderRequest;
 use App\Http\Requests\PutPurchaseOrderRequest;
@@ -53,13 +54,18 @@ class PurchaseOrderController extends Controller
         return $this->purchaseOrderService->getInvoicePurchaseOrder($id);
     }
 
-    /*public function getDelivery(Request $request, $id)
-    {
-        return $this->purchaseOrderService->getPurchaseOrderDeliver($request->all(), $id);
-    }*/
-
     public function delivery(Request $request)
     {
         return $this->purchaseOrderService->putPurchaseOrderDelivery($request->all());
+    }
+
+    public function export(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new PurchaseOrderExport($request->all()))->download('pedidosDeCompra.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new PurchaseOrderExport($request->all()))->download('pedidosDeCompra.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }

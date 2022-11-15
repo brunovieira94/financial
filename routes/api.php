@@ -391,6 +391,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
     });
 
+    Route::post('/purchase-order-export', [PurchaseOrderController::class, 'export']);
     Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
 
     Route::prefix('purchase-request')->group(function () {
@@ -405,6 +406,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/', [ApprovalFlowSupplyController::class, 'index']);
         Route::post('/', [ApprovalFlowSupplyController::class, 'store']);
         Route::get('/all', [ApprovalFlowSupplyController::class, 'index']);
+        Route::get('/get-users', [ApprovalFlowSupplyController::class, 'getUsers']);
     });
 
     Route::prefix('supply-approval-flow')->group(function () {
