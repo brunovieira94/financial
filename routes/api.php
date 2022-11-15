@@ -42,6 +42,7 @@ use App\Http\Controllers\PaidBillingInfoController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
+use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
@@ -381,6 +382,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
             Route::post('/return', [ItauCNABController::class, 'return240']);
             Route::post('/cnab-parse', [ItauCNABController::class, 'cnabParse']);
         });
+    });
+
+    Route::prefix('provider-quotation')->group(function () {
+        Route::get('/', [ProviderQuotationController::class, 'index']);
+        Route::get('/{id}', [ProviderQuotationController::class, 'show']);
+        Route::post('/', [ProviderQuotationController::class, 'store']);
+        Route::put('/{id}', [ProviderQuotationController::class, 'update']);
+        Route::delete('/{id}', [ProviderQuotationController::class, 'destroy']);
+        Route::post('/export', [ProviderQuotationController::class, 'export']);
     });
 
     Route::prefix('purchase-order')->group(function () {
