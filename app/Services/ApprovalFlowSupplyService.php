@@ -32,4 +32,29 @@ class ApprovalFlowSupplyService
         }
         return true;
     }
+
+    public function getAllApprovalFlowSupplyUsers($requestInfo)
+    {
+        if (array_key_exists('search', $requestInfo)) {
+            if (array_key_exists('searchFields', $requestInfo)) {
+                $users = ApprovalFlowSupply::join('users', 'approval_flow_supply.role_id', '=', 'users.role_id')
+                    ->whereLike($requestInfo['searchFields'], "%{$requestInfo['search']}%")
+                    ->where('users.deleted_at', null)
+                    ->get(['users.id', 'users.name']);
+            } else {
+                $users = ApprovalFlowSupply::join('users', 'approval_flow_supply.role_id', '=', 'users.role_id')
+                    ->where('users.deleted_at', null)
+                    ->get(['users.id', 'users.name']);
+            }
+        } else {
+            $users = ApprovalFlowSupply::join('users', 'approval_flow_supply.role_id', '=', 'users.role_id')
+                ->where('users.deleted_at', null)
+                ->get(['users.id', 'users.name']);
+        }
+
+        $data = [
+            "data" => $users->unique()
+        ];
+        return $data;
+    }
 }
