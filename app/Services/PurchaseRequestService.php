@@ -158,7 +158,7 @@ class PurchaseRequestService
             foreach ($purchaseRequestInfo['services'] as $service) {
                 $purchaseRequestHasServices = new PurchaseRequestHasServices;
                 if ($service['contract_type'] == 2 || $service['contract_type'] == 3) {
-                    $service['contract_duration'] = 0;
+                    $service['contract_duration'] = 12;
                 }
                 $purchaseRequestHasServices = $purchaseRequestHasServices->create([
                     'purchase_request_id' => $purchaseRequest->id,

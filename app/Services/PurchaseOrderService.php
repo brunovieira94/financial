@@ -7,6 +7,10 @@ use App\Models\Module;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Product;
+use App\Models\ProviderQuotation;
+use App\Models\ProviderQuotationHasProducts;
+use App\Models\ProviderQuotationHasServices;
+use App\Models\ProviderQuotationItems;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderClean;
 use App\Models\PurchaseOrderDelivery;
@@ -125,6 +129,26 @@ class PurchaseOrderService
 
         $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
 
+        if (array_key_exists('quotation_id', $purchaseOrderInfo)) {
+            $finalStatus = $this->getPurchaseOrderStatus($purchaseOrderInfo);
+
+            ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->update(['status' => $finalStatus]);
+            $providerQuotationId = ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->first();
+            if ($providerQuotationId != null) {
+                PurchaseRequest::whereIn('id', $providerQuotationId->request_ids)->update(['status' => $finalStatus + 1]);
+            }
+
+            if ($finalStatus == 2) {
+                ProviderQuotationItems::where('provider_quotation_id', $purchaseOrderInfo['quotation_id'])->update([
+                    'block_purchase_order' => true
+                ]);
+            }
+        }
+
+        if (array_key_exists('quotation_item_id', $purchaseOrderInfo)) {
+            ProviderQuotationItems::where('id', $purchaseOrderInfo['quotation_item_id'])->update(['block_purchase_order' => true]);
+        }
+
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
 
@@ -202,7 +226,27 @@ class PurchaseOrderService
 
     public function deletePurchaseOrder($id)
     {
+        $q_item_id = $this->purchaseOrder->findOrFail($id);
+
         $this->purchaseOrder->findOrFail($id)->delete();
+
+        if ($q_item_id->quotation_id != null) {
+
+            $purchaseOrderInfo = ['quotation_id' => $q_item_id->quotation_id];
+
+            $finalStatus = $this->getPurchaseOrderStatus($purchaseOrderInfo);
+
+            ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->update(['status' => $finalStatus - 1]);
+            $providerQuotationId = ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->first();
+            if ($providerQuotationId != null) {
+                PurchaseRequest::whereIn('id', $providerQuotationId->request_ids)->update(['status' => $finalStatus]);
+            }
+        }
+
+        if ($q_item_id->quotation_item_id != null) {
+            ProviderQuotationItems::where('id', $q_item_id->quotation_item_id)->update(['block_purchase_order' => false]);
+        }
+
         return true;
     }
 
@@ -698,6 +742,43 @@ class PurchaseOrderService
             return response()->json([
                 'error' => 'Erro ao salvar os dados no banco de dados'
             ], 500);
+        }
+
+        return $response;
+    }
+
+    public function getPurchaseOrderStatus($purchaseOrderInfo)
+    {
+        $response = 1;
+        // validar Servicos e produtos
+        $quotationItemsIds = ProviderQuotationItems::where('provider_quotation_id', $purchaseOrderInfo['quotation_id'])->get(['id']);
+        $countServices = 0;
+        $countProducts = 0;
+        $SumProducts = 0;
+        foreach ($quotationItemsIds as $quotationItemsId) {
+            $countServices = ProviderQuotationHasServices::where('provider_quotation_item_id', $quotationItemsId->id)->count();
+            $countProducts = ProviderQuotationHasProducts::where('provider_quotation_item_id', $quotationItemsId->id)->count();
+            $SumProducts = ProviderQuotationHasProducts::where('provider_quotation_item_id', $quotationItemsId->id)->sum('quantity');
+        }
+
+        $purchaseOrderIds = PurchaseOrder::where('quotation_id', $purchaseOrderInfo['quotation_id'])->get(['id']);
+        $totalServices = 0;
+        $totalListProducts = [];
+        $totalProducts = 0;
+        $totalSumProducts = 0;
+        foreach ($purchaseOrderIds as $purchaseOrderId) {
+            $totalServices += PurchaseOrderHasServices::where('purchase_order_id', $purchaseOrderId->id)->count();
+            $totalProducts = PurchaseOrderHasProducts::select('product_id', \DB::raw('count(*) as total'))->where('purchase_order_id', $purchaseOrderId->id)->groupBy('product_id')->get();
+            foreach ($totalProducts as $totalProduct) {
+                if (!in_array($totalProduct->product_id, $totalListProducts)) {
+                    $totalListProducts[] = $totalProduct->product_id;
+                }
+            }
+            $totalSumProducts += PurchaseOrderHasProducts::where('purchase_order_id', $purchaseOrderId->id)->sum('quantity');
+        }
+        //validacao final
+        if (($countServices == $totalServices) && ($countProducts == count($totalListProducts)) && ($SumProducts == $totalSumProducts)) {
+            $response = 2;
         }
 
         return $response;
