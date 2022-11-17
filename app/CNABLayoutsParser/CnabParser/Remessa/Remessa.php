@@ -62,6 +62,13 @@ class Remessa
                     $lotQuantityDetails++;
                     $detalhe->segmento_j->lote_servico = $lote->sequencial;
                     $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
+
+                    if (strlen(Utils::onlyNumbers($installment->bar_code) > 45)) {
+                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                    }else {
+                        $detalhe->segmento_j->codigo_barras = Utils::onlyNumbers($installment->bar_code);
+                    }
+
                     $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                     $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
                     $dataVencimento = new Carbon($installment->due_date); // data vendimento
@@ -97,7 +104,7 @@ class Remessa
                     $detalhe->segmento_a->verificador_agencia_favorecido = $installment->bank_account_provider->agency_check_number ?? '';
                     $detalhe->segmento_a->conta_favorecido = $installment->bank_account_provider->account_number;
                     $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number ?? '';
-                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name :$installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
                     $dataPagamento = new Carbon($installment->due_date);
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');

@@ -111,9 +111,13 @@ remessa:
       picture: 'X(20)'
       default: ''
     exclusivo_febraban_03:
-      pos: [212,240]
+      pos: [212,225]
       picture: 'X(29)'
       default: ''
+    exclusivo_febraban_04:
+      pos: [226,240]
+      picture: 'X(29)'
+      default: 000000000000000
 
   trailer_arquivo:
     codigo_banco:
