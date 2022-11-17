@@ -239,7 +239,7 @@ class Utils
 
     public static function codigoBarrasBB($linhaDigitavel)
     {
-        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 9, 6) . substr($linhaDigitavel, 16, 4) . substr($linhaDigitavel, 21, 10);
+        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 10, 10) . substr($linhaDigitavel, 21, 10);
     }
 
     public static function identificacaoTipoTransferencia($tipoConta)
