@@ -71,10 +71,10 @@ class Remessa
 
                     $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                     $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
-                    $dataVencimento = new Carbon($installment->due_date); // data vendimento
+                    $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
                     $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
-                    $dataPagamento = new Carbon($installment->due_date); // validar
+                    $dataPagamento = new Carbon($installment->extension_date); // validar
                     $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
                     $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
@@ -106,7 +106,7 @@ class Remessa
                     $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number ?? '';
                     $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
-                    $dataPagamento = new Carbon($installment->due_date);
+                    $dataPagamento = new Carbon($installment->extension_date);
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_a->valor_pagamento = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
 
@@ -206,10 +206,10 @@ class Remessa
                     $detalhe->segmento_j->lote_servico = $lote->sequencial;
                     $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
                     $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
-                    $dataVencimento = new Carbon($installment->due_date); // data vendimento
+                    $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
                     $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
-                    $dataPagamento = new Carbon($installment->due_date); //VALIDAR
+                    $dataPagamento = new Carbon($installment->extension_date); //VALIDAR
                     $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
                     $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
@@ -249,7 +249,7 @@ class Remessa
                     $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number;
                     $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
-                    $dataPagamento = new Carbon($installment->due_date); //validar
+                    $dataPagamento = new Carbon($installment->extension_date); //validar
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_a->valor_pagamento = Utils::formatCnab('9', number_format($installment->portion_amount, 2), 15);
                     $detalhe->segmento_a->identificacao_transferencia = Utils::identificacaoTipoTransferencia($installment->bank_account_provider->account_type ?? 3);
