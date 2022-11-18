@@ -461,3 +461,4 @@ Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
