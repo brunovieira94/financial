@@ -8,15 +8,14 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\WithValidation;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Collection;
 
-class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeadingRow
+class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeadingRow, WithChunkReading, ShouldQueue
 {
 
     use Importable;
-
-    public $not_imported = 0;
-    public $imported = 0;
 
     public function collection(Collection $rows)
     {
@@ -46,8 +45,8 @@ class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeading
                 'payment_method' => $row['metodo_de_pagamento'],
                 'payment_bank' => $row['banco_de_pagamento'],
                 'payment_remark' => $row['observacao_de_pagamento'],
+                // 'service_id' => $row['servico'],
             ]);
-            $this->imported++;
         }
     }
 
@@ -72,6 +71,16 @@ class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeading
             'banco_de_pagamento' => 'max:150',
             'observacao_de_pagamento' => 'max:150',
         ];
+    }
+
+    public function batchSize(): int
+    {
+        return 500;
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 
 }

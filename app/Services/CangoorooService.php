@@ -52,9 +52,12 @@ class CangoorooService
         $room = $response['Rooms'][$roomIndex];
 
         $supplierName = null;
+        $sellingPrice = null;
         foreach ($room['CustomFields'] as $customField) {
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
+            if ($customField['Name'] == 'SupplierPrice.Price')
+                $sellingPrice = $customField['Value'];
         }
 
         $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
@@ -76,6 +79,7 @@ class CangoorooService
                 "cancellation_policies_value" => $room['CancellationPolicies'][0]['Value']['Value'],
                 "cancellation_date" => $room['CancellationDate'],
                 "last_update" => date('Y-m-d H:i:s', $lastUpdate*0.001),
+                "provider_name" => $room['ProviderName'],
                 "number_of_nights" => $room['NumberOfNights'],
                 "supplier_hotel_id" => $room['SupplierHotelId'],
                 "hotel_id" => $room['HotelId'],
@@ -85,7 +89,7 @@ class CangoorooService
                 "supplier_name" => $supplierName,
                 "agency_name" => array_key_exists('AgencyName', $room['CreationUserDetail']) ? $room['CreationUserDetail']['AgencyName'] : $room['CreationUserDetail']['Name'],
                 "creation_user" => $room['CreationUserDetail']['Name'],
-                "selling_price" => $room['SellingPrice']['Value'],
+                "selling_price" => $sellingPrice,
             ];
 
         if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id'], 'id_hotel_cangooroo' => $data['hotel_id']];

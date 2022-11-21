@@ -96,6 +96,8 @@ class CheckUserHasPermission
                 $routeAccessed = 'due-bills';
                 break;
             case 'cangooroo':
+            case 'show':
+            case 'refresh':
                 $routeAccessed = 'billing';
                 break;
             case 'approved-purchase-order-integration';
@@ -106,6 +108,10 @@ class CheckUserHasPermission
             case 'installment';
                 $routeAccessed = 'payment-request';
                 break;
+            // case 'billing-rejected':
+            // case 'billing-open':
+            //     $routeAccessed = 'billing';
+            //     break;
         }
 
 

@@ -35,10 +35,9 @@ class BillingService
 
     public function getAllBilling($requestInfo, $approvalStatus)
     {
-        if ($approvalStatus == 'billing-all') {
-            $billing = Utils::search($this->billing, $requestInfo);
-        } else {
-            $billing = Utils::search($this->billing, $requestInfo)->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
+        $billing = Utils::search($this->billing, $requestInfo);
+        if ($approvalStatus != 'billing-all') {
+            $billing = $billing->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
         }
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
         return Utils::pagination($billing->with($this->with), $requestInfo);
@@ -54,7 +53,8 @@ class BillingService
         $billing = Utils::search($this->billing, $requestInfo);
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
 
-        $billing->where('approval_status', 0)->where('deleted_at', '=', null);
+        $billing = $billing->whereIn('approval_status', [0, 2])->where('deleted_at', '=', null);
+
         $billingIDs = [];
         foreach ($approvalFlowUserOrders as $approvalFlowOrder) {
             $billingApprovalFlow = $this->billing->where('order', $approvalFlowOrder['order']);
@@ -347,8 +347,8 @@ class BillingService
 
     public function getPaymentStatus($billing, $cangooroo)
     {
-        $reserve = $billing['reserve'];
-        $paidReserves = PaidBillingInfo::where('reserve', $reserve)->get();
+        // $paidReserves = PaidBillingInfo::where('reserve', $billing['reserve'])->get();
+        $paidReserves = PaidBillingInfo::where('reserve', $billing['reserve'])->where('service_id', $cangooroo['service_id'])->get();
         if(empty($paidReserves->toArray())){
             return "Não Pago";
         }
@@ -408,6 +408,9 @@ class BillingService
         }
         if($cangooroo->hotel->cpf_cnpj != $billingInfo['cnpj'] && $cangooroo->hotel->cnpj_extra != $billingInfo['cnpj']){
             $suggestionReason = $suggestionReason.' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
+        }
+        if($cangooroo['provider_name'] != 'Omnibees' && $cangooroo['provider_name'] != 'HSystem' && $cangooroo['provider_name'] != 'Trend'){
+            $suggestionReason = $suggestionReason.' | Reserva não pertence a um dos seguintes fornecedores: Omnibees, Trend, HSystem';
         }
         if($suggestionReason == ''){
             $suggestion = true;

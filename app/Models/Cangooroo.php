@@ -46,6 +46,7 @@ class Cangooroo extends Model
         'cancellation_policies_value',
         'cancellation_date',
         'last_update',
+        'provider_name',
     ];
 
     public function hotel()
