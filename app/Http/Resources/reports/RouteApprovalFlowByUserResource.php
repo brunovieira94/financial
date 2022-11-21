@@ -32,6 +32,7 @@ class RouteApprovalFlowByUserResource extends JsonResource
             'invoice_number' => $this->invoice_number,
             'pay_date' => $this->pay_date,
             'currency' => new ReportsCurrencyResource($this->currency),
+            'first_approval_financial_analyst' => new ReportsFirstApprovalPaymentRequestResource($this->first_approval_financial_analyst),
         ];
     }
 }

@@ -7,6 +7,10 @@ use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
 use App\Models\HotelApprovalFlow;
+use App\Models\ApprovalFlowSupply;
+use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderDelivery;
+use App\Models\SupplyApprovalFlow;
 use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\User;
 use App\Models\Billing;
@@ -238,7 +242,7 @@ class Utils
 
     public static function codigoBarrasBB($linhaDigitavel)
     {
-        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 9, 6) . substr($linhaDigitavel, 16, 4) . substr($linhaDigitavel, 21, 10);
+        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 10, 10) . substr($linhaDigitavel, 21, 10);
     }
 
     public static function identificacaoTipoTransferencia($tipoConta)
@@ -558,6 +562,171 @@ class Utils
                 ]
             );
         }
+    }
+    
+    public static function baseFilterPurchaseOrder($purchaseOrder, $requestInfo)
+    {
+
+        if (array_key_exists('provider', $requestInfo)) {
+            $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
+                $query->where('provider_id', $requestInfo['provider']);
+            });
+        }
+
+        if (array_key_exists('cost_center', $requestInfo)) {
+            $purchaseOrder->whereHas('cost_centers', function ($query) use ($requestInfo) {
+                $query->where('cost_center_id', $requestInfo['cost_center']);
+            });
+        }
+
+        if (array_key_exists('service', $requestInfo)) {
+            $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
+                $query->where('service_id', $requestInfo['service']);
+            });
+        }
+
+        if (array_key_exists('product', $requestInfo)) {
+            $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
+                $query->where('product_id', $requestInfo['product']);
+            });
+        }
+
+        if (array_key_exists('status', $requestInfo)) {
+            $deliveryIds = [];
+            foreach (PurchaseOrderDelivery::where('status', $requestInfo['status'])->get() as $getPurchaseOrderId) {
+                if (!in_array($getPurchaseOrderId->purchase_order_id, $deliveryIds)) {
+                    $deliveryIds[] = $getPurchaseOrderId->purchase_order_id;
+                }
+            }
+            $purchaseOrder->whereIn('id', $deliveryIds);
+        }
+
+        if (array_key_exists('billing_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['billing_date'])) {
+                $purchaseOrder->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['billing_date'])) {
+                $purchaseOrder->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+            }
+        }
+
+        //New
+        if (array_key_exists('negotiated_total_value_from', $requestInfo)) {
+            $purchaseOrder = $purchaseOrder->where('negotiated_total_value', '>=', $requestInfo['negotiated_total_value_from']);
+        }
+
+        if (array_key_exists('negotiated_total_value_to', $requestInfo)) {
+            $purchaseOrder = $purchaseOrder->where('negotiated_total_value', '<=', $requestInfo['negotiated_total_value_to']);
+        }
+
+        if (array_key_exists('cpfcnpj', $requestInfo)) {
+            $purchaseOrder = $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
+                $query->where('cpf', $requestInfo['cpfcnpj'])->orWhere('cnpj', $requestInfo['cpfcnpj']);
+            });
+        }
+
+        if (array_key_exists('company', $requestInfo)) {
+            $purchaseOrder = $purchaseOrder->where('company_id', $requestInfo['company']);
+        }
+
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $purchaseOrder = $purchaseOrder->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $purchaseOrder = $purchaseOrder->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $purchaseOrder = $purchaseOrder->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+
+        if (array_key_exists('role', $requestInfo)) {
+            $approvalFlowOrders = ApprovalFlowSupply::where('role_id', $requestInfo['role'])->get(['order']);
+
+            $purchaseOrderIDs = [];
+            foreach ($approvalFlowOrders as $approvalFlowOrder) {
+                $supplyApprovalFlow = SupplyApprovalFlow::where('order', $approvalFlowOrder['order'])->get();
+                $purchaseOrderIDs = array_merge($purchaseOrderIDs, $supplyApprovalFlow->pluck('id_purchase_order')->toArray());
+            }
+            $purchaseOrder = $purchaseOrder->whereIn('id', $purchaseOrderIDs);
+        }
+
+        if (array_key_exists('user', $requestInfo)) {
+            $purchaseOrder = $purchaseOrder->where('user_id', $requestInfo['user']);
+        }
+
+        if (array_key_exists('purchase_order', $requestInfo)) {
+            $purchaseOrder = $purchaseOrder->where('id', $requestInfo['purchase_order']);
+        }
+
+        if (array_key_exists('chart_of_accounts', $requestInfo)) {
+
+            $getPurchaseOrder = new PurchaseOrder();
+            $purchaseOrderIDs = [];
+
+            $getPurchaseOrderHasProductsIDs = $getPurchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
+                $query->whereHas('product',  function ($query2) use ($requestInfo) {
+                    $query2->where('chart_of_accounts_id', $requestInfo['chart_of_accounts']);
+                });
+            })->get('id');
+
+            if ($getPurchaseOrderHasProductsIDs->isNotEmpty()) {
+                $purchaseOrderIDs = array_merge($purchaseOrderIDs, $getPurchaseOrderHasProductsIDs->pluck('id')->toArray());
+            }
+
+            $getPurchaseOrderHasServicesIDs = $getPurchaseOrder->whereHas('services', function ($query3) use ($requestInfo) {
+                $query3->whereHas('service',  function ($query4) use ($requestInfo) {
+                    $query4->where('chart_of_accounts_id', $requestInfo['chart_of_accounts']);
+                });
+            })->get('id');
+
+            if ($getPurchaseOrderHasServicesIDs->isNotEmpty()) {
+                $purchaseOrderIDs = array_merge($purchaseOrderIDs, $getPurchaseOrderHasServicesIDs->pluck('id')->toArray());
+            }
+
+            $purchaseOrder->whereIn('id', $purchaseOrderIDs);
+        }
+
+        if (array_key_exists('approved', $requestInfo)) {
+            if ($requestInfo['approved'] == "true") {
+                $purchaseOrder = $purchaseOrder->whereHas('approval', function ($query) use ($requestInfo) {
+                    $query->where('status', 1);
+                });
+            }
+        }
+        if (array_key_exists('reproved', $requestInfo)) {
+            if ($requestInfo['reproved'] == "true") {
+                $purchaseOrder = $purchaseOrder->whereHas('approval', function ($query) use ($requestInfo) {
+                    $query->where('status', 2);
+                });
+            }
+        }
+        if (array_key_exists('deleted', $requestInfo)) {
+            if ($requestInfo['deleted'] == "true") {
+                $purchaseOrder = $purchaseOrder->withTrashed()->where('deleted_at', '!=', null);
+            }
+        }
+
+        if (array_key_exists('approver_stage_people', $requestInfo)) {
+
+            $getPurchaseOrderApprover = new PurchaseOrder();
+            $purchaseOrderListIDs = [];
+            $getUserName = User::where('id', $requestInfo['approver_stage_people'])->pluck('name')->firstOrFail();
+            $purchases = $getPurchaseOrderApprover->get();
+
+            foreach ($purchases as $purchase) {
+                foreach ($purchase->approver_stage as $purchaseStage) {
+                    if (in_array($getUserName, $purchaseStage['names'])) {
+                        $purchaseOrderListIDs[] = $purchase->id;
+                    }
+                }
+            }
+
+            $purchaseOrder->whereIn('id', $purchaseOrderListIDs);
+        }
+
+        return $purchaseOrder;
     }
 
     public static function baseFilterReportsInstallment($installment, $requestInfo)

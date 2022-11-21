@@ -39,7 +39,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
         });
         $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
         if (!array_key_exists('company', $requestInfo))
-            return [];
+        return collect([]);
 
         return $installment->get();
     }

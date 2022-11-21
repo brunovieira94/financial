@@ -42,6 +42,7 @@ use App\Http\Controllers\PaidBillingInfoController;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
+use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
@@ -335,6 +336,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/approved-installment/export', [ReportController::class, 'approvedInstallmentExport']);
         Route::post('/due-installments/export', [ReportController::class, 'dueInstallmentsExport']);
         Route::post('/installments-payable/export', [ReportController::class, 'installmentsPayableExport']);
+        Route::get('/user-approvals-report', [ReportController::class, 'userApprovalsReport']);
+        Route::post('/user-approvals-report/export', [ReportController::class, 'userApprovalsReportExport']);
     });
 
     Route::prefix('product')->group(function () {
@@ -383,6 +386,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         });
     });
 
+    Route::prefix('provider-quotation')->group(function () {
+        Route::get('/', [ProviderQuotationController::class, 'index']);
+        Route::get('/{id}', [ProviderQuotationController::class, 'show']);
+        Route::post('/', [ProviderQuotationController::class, 'store']);
+        Route::put('/{id}', [ProviderQuotationController::class, 'update']);
+        Route::delete('/{id}', [ProviderQuotationController::class, 'destroy']);
+        Route::post('/export', [ProviderQuotationController::class, 'export']);
+    });
+
     Route::prefix('purchase-order')->group(function () {
         Route::get('/', [PurchaseOrderController::class, 'index']);
         Route::get('/{id}', [PurchaseOrderController::class, 'show']);
@@ -393,6 +405,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/getinvoice/{id}', [PurchaseOrderController::class, 'getinvoice']);
     });
 
+    Route::post('/purchase-order-export', [PurchaseOrderController::class, 'export']);
     Route::post('/delivery', [PurchaseOrderController::class, 'delivery']);
 
     Route::prefix('purchase-request')->group(function () {
@@ -407,6 +420,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/', [ApprovalFlowSupplyController::class, 'index']);
         Route::post('/', [ApprovalFlowSupplyController::class, 'store']);
         Route::get('/all', [ApprovalFlowSupplyController::class, 'index']);
+        Route::get('/get-users', [ApprovalFlowSupplyController::class, 'getUsers']);
     });
 
     Route::prefix('supply-approval-flow')->group(function () {
@@ -451,3 +465,4 @@ Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentR
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
 Route::post('/work', [PaidBillingInfoController::class, 'work']);
+Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);

@@ -27,4 +27,8 @@ class ApprovalFlowSupplyController extends Controller
         return response('', 201);
     }
 
+    public function getUsers(Request $request)
+    {
+        return $this->approvalFlowSupplyService->getAllApprovalFlowSupplyUsers($request->all());
+    }
 }

@@ -144,6 +144,7 @@ class ApprovalFlowSupplyByUserService
             'approved_installment_value' => $accountApproval->purchase_order->installments_total_value
         ]);
         $accountApproval->reason = null;
+        $accountApproval->updated_at = now();
         $accountApproval->save();
         return response()->json([
             'Sucesso' => 'Pedido aprovado',
@@ -211,6 +212,7 @@ class ApprovalFlowSupplyByUserService
 
                     $accountApproval->reason = null;
                     //$accountApproval->reason_to_reject_id = null;
+                    $accountApproval->updated_at = now();
                     $accountApproval->save();
                 }
                 return response()->json([

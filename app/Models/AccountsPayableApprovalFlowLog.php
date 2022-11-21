@@ -16,11 +16,23 @@ class AccountsPayableApprovalFlowLog extends Model
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->withTrashed();
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->withTrashed()->withoutGlobalScopes();
     }
 
     public function user()
     {
         return $this->hasOne(User::class, 'id', 'user_id')->withTrashed();
+    }
+
+    public function groupApprovalFlow()
+    {
+        return $this->hasOneThrough(
+            GroupApprovalFlow::class,
+            PaymentRequest::class,
+            'id',
+            'id',
+            'payment_request_id',
+            'group_approval_flow_id',
+        );
     }
 }

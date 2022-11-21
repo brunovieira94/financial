@@ -2,10 +2,15 @@
 
 namespace App\Services;
 
+use App\Models\ApprovalFlowSupply;
 use App\Models\Module;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Product;
+use App\Models\ProviderQuotation;
+use App\Models\ProviderQuotationHasProducts;
+use App\Models\ProviderQuotationHasServices;
+use App\Models\ProviderQuotationItems;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderClean;
 use App\Models\PurchaseOrderDelivery;
@@ -75,48 +80,7 @@ class PurchaseOrderService
             $purchaseOrder->whereIn('id', $purchaseOrderIds);
         }
 
-        if (array_key_exists('provider', $requestInfo)) {
-            $purchaseOrder->whereHas('provider', function ($query) use ($requestInfo) {
-                $query->where('provider_id', $requestInfo['provider']);
-            });
-        }
-
-        if (array_key_exists('cost_center', $requestInfo)) {
-            $purchaseOrder->whereHas('cost_centers', function ($query) use ($requestInfo) {
-                $query->where('cost_center_id', $requestInfo['cost_center']);
-            });
-        }
-
-        if (array_key_exists('service', $requestInfo)) {
-            $purchaseOrder->whereHas('services', function ($query) use ($requestInfo) {
-                $query->where('service_id', $requestInfo['service']);
-            });
-        }
-
-        if (array_key_exists('product', $requestInfo)) {
-            $purchaseOrder->whereHas('products', function ($query) use ($requestInfo) {
-                $query->where('product_id', $requestInfo['product']);
-            });
-        }
-
-        if (array_key_exists('status', $requestInfo)) {
-            $deliveryIds = [];
-            foreach (PurchaseOrderDelivery::where('status', $requestInfo['status'])->get() as $getPurchaseOrderId) {
-                if (!in_array($getPurchaseOrderId->purchase_order_id, $deliveryIds)) {
-                    $deliveryIds[] = $getPurchaseOrderId->purchase_order_id;
-                }
-            }
-            $purchaseOrder->whereIn('id', $deliveryIds);
-        }
-
-        if (array_key_exists('billing_date', $requestInfo)) {
-            if (array_key_exists('from', $requestInfo['billing_date'])) {
-                $purchaseOrder->where('billing_date', '>=', $requestInfo['billing_date']['from']);
-            }
-            if (array_key_exists('to', $requestInfo['billing_date'])) {
-                $purchaseOrder->where('billing_date', '<=', $requestInfo['billing_date']['to']);
-            }
-        }
+        $purchaseOrder = Utils::baseFilterPurchaseOrder($purchaseOrder, $requestInfo);
 
         return Utils::pagination($purchaseOrder->with($this->with), $requestInfo);
     }
@@ -143,24 +107,9 @@ class PurchaseOrderService
 
     public function postPurchaseOrder($purchaseOrderInfo, Request $request)
     {
-        /* $discount = 0;
-        $new_final_negotiated_total_value = 0;
-        foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
-            $discount += $installments['discount'];
-        }
-        if ($discount > 0) {
-            $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'] + $discount;
-        } else {
-            $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'];
-        }
-
-        if ($purchaseOrderInfo['negotiated_total_value'] == $new_final_negotiated_total_value) {
-        */
         $purchaseOrder = new PurchaseOrder;
         $purchaseOrderInfo['user_id'] = auth()->user()->id;
         $purchaseOrderInfo['installments_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
-        //$purchaseOrderInfo['approved_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
-        //$purchaseOrderInfo['approved_instalment_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
         $purchaseOrder = $purchaseOrder->create($purchaseOrderInfo);
         $this->syncProducts($purchaseOrder, $purchaseOrderInfo);
         $this->syncServices($purchaseOrder, $purchaseOrderInfo);
@@ -179,11 +128,26 @@ class PurchaseOrderService
         activity()->enableLogging();
 
         $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
-        /* } else {
-            return response()->json([
-                'error' => 'O valor total inicial e o valor total das parcelas não são iguais. Por favor validar o valor das parcelas.',
-            ], 422);
-        } */
+
+        if (array_key_exists('quotation_id', $purchaseOrderInfo)) {
+            $finalStatus = $this->getPurchaseOrderStatus($purchaseOrderInfo);
+
+            ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->update(['status' => $finalStatus]);
+            $providerQuotationId = ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->first();
+            if ($providerQuotationId != null) {
+                PurchaseRequest::whereIn('id', $providerQuotationId->request_ids)->update(['status' => $finalStatus + 1]);
+            }
+
+            if ($finalStatus == 2) {
+                ProviderQuotationItems::where('provider_quotation_id', $purchaseOrderInfo['quotation_id'])->update([
+                    'block_purchase_order' => true
+                ]);
+            }
+        }
+
+        if (array_key_exists('quotation_item_id', $purchaseOrderInfo)) {
+            ProviderQuotationItems::where('id', $purchaseOrderInfo['quotation_item_id'])->update(['block_purchase_order' => true]);
+        }
 
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
@@ -227,25 +191,16 @@ class PurchaseOrderService
                 $purchaseOrderInfo['billing_date'] = null;
             }
 
-            //$oldValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
-            //$oldValue = $purchaseOrder->negotiated_total_value;
-            //$oldInstallmentValue = $purchaseOrder->installments_total_value;
             $approvedTotalValue = $purchaseOrder->approved_total_value;
             $approvedInstallmentValue = $purchaseOrder->approved_installment_value ?? $this->getPurchaseOrderValue($id);
-
-            /*if ($purchaseOrder->approved_installment_value == null) {
-                $purchaseOrderInfo['approved_installment_value'] = $this->getPurchaseOrderValue($id);
-            }*/
 
             $purchaseOrderInfo['installments_total_value'] = $purchaseOrderInfo['final_negotiated_total_value'];
             $purchaseOrder->fill($purchaseOrderInfo)->save();
             $this->putProducts($id, $purchaseOrderInfo);
             $this->putServices($id, $purchaseOrderInfo);
 
-            //$newValue = $this->getPurchaseOrderValue($purchaseOrder, $id);
-
             // caso o valor for maior do que o Aprovado o pedido deve voltar para o início da aprovação
-            //if ($newValue > ($oldValue + ($oldValue * $purchaseOrder['increase_tolerance'] / 100))) {
+
             if ((($purchaseOrderInfo['negotiated_total_value'] > $approvedInstallmentValue) && ($purchaseOrderInfo['negotiated_total_value'] > $approvedTotalValue)) || $purchaseOrderInfo['final_negotiated_total_value'] > $approvedInstallmentValue) {
                 $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
                 $supplyApprovalFlow['order'] = 1;
@@ -253,10 +208,6 @@ class PurchaseOrderService
                     $supplyApprovalFlow['status'] = $newStatus;
                 }
                 $supplyApprovalFlow->save();
-                /* $purchaseOrder->update([
-                    'approved_total_value' => $purchaseOrderInfo['negotiated_total_value'],
-                    'approved_installment_value' => $purchaseOrderInfo['final_negotiated_total_value'],
-                ]); */
             }
 
             $this->putCompanies($id, $purchaseOrderInfo);
@@ -265,46 +216,6 @@ class PurchaseOrderService
 
             $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
 
-            /* $discount = 0;
-            $new_final_negotiated_total_value = 0;
-            foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
-                if (array_key_exists('id', $installments)) {
-                    $getInstallmentInfo = $this->purchaseOrderHasInstallments->where('id', $installments['id'])->first();
-                    if ($getInstallmentInfo != null) {
-                        if ($getInstallmentInfo->amount_paid > 0) {
-                            $totalInstallment = $installments['portion_amount'] - $installments['discount'];
-                            if ($totalInstallment < $getInstallmentInfo->amount_paid) {
-                                $index = $key + 1;
-                                $getCurrency = $this->purchaseOrder->where('id', $installments['purchase_order_id'])->with(['currency'])->first();
-                                if ($getCurrency != null) {
-                                    return response()->json([
-                                        'error' => 'O valor final da parcela ' . $index . ' não pode ser menor que o valor já vinculado (' . $getCurrency['currency']['currency_symbol'] . ' ' . $getInstallmentInfo->amount_paid . ') da parcela',
-                                    ], 422);
-                                } else {
-                                    return response()->json([
-                                        'error' => 'O valor final da parcela ' . $index . ' não pode ser menor que o valor já vinculado (' . $getInstallmentInfo->amount_paid . ') da parcela',
-                                    ], 422);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                $discount += $installments['discount'];
-            }
-            if ($discount > 0) {
-                $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'] + $discount;
-            } else {
-                $new_final_negotiated_total_value = $purchaseOrderInfo['final_negotiated_total_value'];
-            }
-            if ($purchaseOrderInfo['negotiated_total_value'] == $new_final_negotiated_total_value) {
-                $this->syncInstallments($purchaseOrder, $purchaseOrderInfo);
-            } else {
-                return response()->json([
-                    'error' => 'O valor total inicial e o valor total das parcelas não são iguais. Por favor validar o valor das parcelas.',
-                ], 422);
-            }
-            */
             return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
         } else {
             return response()->json([
@@ -315,7 +226,27 @@ class PurchaseOrderService
 
     public function deletePurchaseOrder($id)
     {
+        $q_item_id = $this->purchaseOrder->findOrFail($id);
+
         $this->purchaseOrder->findOrFail($id)->delete();
+
+        if ($q_item_id->quotation_id != null) {
+
+            $purchaseOrderInfo = ['quotation_id' => $q_item_id->quotation_id];
+
+            $finalStatus = $this->getPurchaseOrderStatus($purchaseOrderInfo);
+
+            ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->update(['status' => $finalStatus - 1]);
+            $providerQuotationId = ProviderQuotation::where('id', $purchaseOrderInfo['quotation_id'])->first();
+            if ($providerQuotationId != null) {
+                PurchaseRequest::whereIn('id', $providerQuotationId->request_ids)->update(['status' => $finalStatus]);
+            }
+        }
+
+        if ($q_item_id->quotation_item_id != null) {
+            ProviderQuotationItems::where('id', $q_item_id->quotation_item_id)->update(['block_purchase_order' => false]);
+        }
+
         return true;
     }
 
@@ -421,50 +352,6 @@ class PurchaseOrderService
         }
     }
 
-    // public function destroyInstallments($purchaseOrderHasServices)
-    // {
-    //     $collection = $this->purchaseOrderServicesHasInstallments->where('po_services_id', $purchaseOrderHasServices['id'])->get(['id']);
-    //     $this->purchaseOrderServicesHasInstallments->destroy($collection->toArray());
-    // }
-
-    // public function syncInstallments($purchaseOrderHasServices, $service)
-    // {
-    //     if (array_key_exists('installments', $service)) {
-    //         $this->destroyInstallments($purchaseOrderHasServices);
-    //         foreach ($service['installments'] as $key => $installments) {
-    //             $purchaseOrderServicesHasInstallments = new PurchaseOrderServicesHasInstallments;
-    //             $installments['po_services_id'] = $purchaseOrderHasServices['id'];
-    //             $installments['parcel_number'] = $key + 1;
-    //             try {
-    //                 $purchaseOrderServicesHasInstallments = $purchaseOrderServicesHasInstallments->create($installments);
-    //             } catch (\Exception $e) {
-    //                 $this->destroyInstallments($purchaseOrderHasServices);
-    //                 $this->purchaseOrderHasServices->findOrFail($purchaseOrderHasServices->id)->delete();
-    //                 return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
-    //             }
-    //         }
-    //     }
-    // }
-
-    /* public function syncInstallments($purchaseOrder, $purchaseOrderInfo)
-    {
-        if (array_key_exists('installments', $purchaseOrderInfo)) {
-            $this->destroyInstallments($purchaseOrder);
-            foreach ($purchaseOrderInfo['installments'] as $key => $installments) {
-                $purchaseOrderHasInstallments = new PurchaseOrderHasInstallments;
-                $installments['purchase_order_id'] = $purchaseOrder['id'];
-                $installments['parcel_number'] = $key + 1;
-                try {
-                    $purchaseOrderHasInstallments = $purchaseOrderHasInstallments->create($installments);
-                } catch (\Exception $e) {
-                    $this->destroyInstallments($purchaseOrder);
-                    $this->purchaseOrder->findOrFail($purchaseOrder->id)->delete();
-                    return response('Falha ao salvar as parcelas no banco de dados.', 500)->send();
-                }
-            }
-        }
-    } */
-
     public function syncInstallments($purchaseOrder, $purchaseOrderInfo)
     {
         $updateInstallments = [];
@@ -568,55 +455,6 @@ class PurchaseOrderService
             }
         }
     }
-
-    // public function isPartialRequest($purchaseOrderInfo, $purchaseRequest)
-    // {
-    //     foreach ($this->purchaseRequestHasProducts->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->get() as $purchaseRequestHasProducts) {
-    //         foreach ($purchaseOrderInfo['products'] as $product) {
-    //             if($product['product_id'] == $purchaseRequestHasProducts['product_id'] && $product['quantity'] != $purchaseRequestHasProducts['quantity'])
-    //             {
-    //                 $totalQuantity = 0;
-    //                 // criar um array de quantidade ja alocada que o index é o id do produto, subtrair dele
-    //                 $purchaseOrderIdArray = $this->purchaseOrderHasPurchaseRequests->where('purchase_request_id', $purchaseRequest['purchase_request_id'])->pluck('purchase_order_id')->toArray();
-    //                 foreach ($purchaseOrderIdArray as $purchaseOrderId) {
-    //                     foreach ($this->purchaseOrderHasProducts->where('purchase_order_id', $purchaseOrderId)->where('product_id', $product['product_id'])->get() as $productFound) {
-    //                         $totalQuantity += $productFound['quantity'];
-    //                     }
-    //                 }
-    //                 if($totalQuantity < $purchaseRequestHasProducts['quantity']){
-    //                     return true;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return false;
-    // }
-
-    // public function putPurchaseRequests($id, $purchaseOrderInfo)
-    // {
-
-    //     $updatePurchaseRequests = [];
-    //     $createdPurchaseRequests = [];
-
-    //     if (array_key_exists('purchase_requests', $purchaseOrderInfo)) {
-    //         foreach ($purchaseOrderInfo['purchase_requests'] as $purchaseRequest) {
-    //             if (array_key_exists('id', $purchaseRequest)) {
-    //                 $purchaseOrderHasPurchaseRequests = $this->purchaseOrderHasPurchaseRequests->findOrFail($purchaseRequest['id']);
-    //                 $purchaseOrderHasPurchaseRequests->fill($purchaseRequest)->save();
-    //                 $updatePurchaseRequests[] = $purchaseRequest['id'];
-    //             } else {
-    //                 $purchaseOrderHasPurchaseRequests = $this->purchaseOrderHasPurchaseRequests->create([
-    //                     'purchase_order_id' => $id,
-    //                     'purchase_request_id' => $purchaseRequest['purchase_request_id'],
-    //                 ]);
-    //                 $createdPurchaseRequests[] = $purchaseOrderHasPurchaseRequests->id;
-    //             }
-    //         }
-    //     }
-
-    //     $collection = $this->purchaseOrderHasPurchaseRequests->where('purchase_order_id', $id)->whereNotIn('id', $updatePurchaseRequests)->whereNotIn('id', $createdPurchaseRequests)->get(['id']);
-    //     $this->purchaseOrderHasPurchaseRequests->destroy($collection->toArray());
-    // }
 
     public function syncCompanies($purchaseOrder, $purchaseOrderInfo)
     {
@@ -729,34 +567,6 @@ class PurchaseOrderService
             $currentValue += $purchaseOrderHasInstallments['portion_amount'] - $purchaseOrderHasInstallments['money_discount'];
         }
         return $currentValue;
-
-        /* $currentValue = 0;
-        foreach ($this->purchaseOrderHasServices->with('installments')->where('purchase_order_id', $id)->get() as $key => $purchaseOrderHasServices) {
-            $serviceValue = 0;
-            $serviceDiscount = 0;
-            foreach ($purchaseOrderHasServices['installments'] as $value) {
-                $serviceValue += $value['portion_amount'];
-                $serviceDiscount += $value['money_discount'];
-            }
-            if ($purchaseOrder->services[$key]['unique_discount'] == 1) {
-                $serviceDiscount = $purchaseOrder->services[$key]['money_discount'];
-            }
-            $serviceValue -= $serviceDiscount;
-            $currentValue += $serviceValue;
-        }
-        foreach ($this->purchaseOrderHasProducts->where('purchase_order_id', $id)->get() as $value) {
-            $productValue = $value['unitary_value'] * $value['quantity'];
-            $productDiscount = 0;
-            if ($purchaseOrder['unique_product_discount'] == 0) {
-                $productDiscount = $value['money_discount'];
-            }
-            $productValue -= $productDiscount;
-            $currentValue += $productValue;
-        }
-        if ($purchaseOrder['unique_product_discount']) {
-            $currentValue -= $purchaseOrder['money_discount_products'];
-        }
-        return $currentValue;*/
     }
 
     public function getListInvoicePurchaseOrder($id)
@@ -935,98 +745,42 @@ class PurchaseOrderService
         }
 
         return $response;
-        /*return response()->json([
-            'sucesss' => 'Dados salvos no banco de dados'
-        ], 200);*/
     }
 
-    /* public function getStatusDelivery($status)
+    public function getPurchaseOrderStatus($purchaseOrderInfo)
     {
-        $deliverysIdN = [];
-        $deliverysIdP = [];
-        $deliverysIdC = [];
-        $deliveryN = 0;
-        $deliveryP = 0;
-        $deliveryC = 0;
-        $delivered = 0;
-
-        $getAllPaymentRequests = PaymentRequestHasPurchaseOrders::join('payment_requests', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.id')
-            ->select('payment_request_has_purchase_orders.purchase_order_id', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.payment_type')
-            ->where([
-                'payment_requests.payment_type' => 0
-            ])
-            ->groupBy([
-                'payment_request_has_purchase_orders.payment_request_id',
-                'payment_request_has_purchase_orders.purchase_order_id',
-                'payment_requests.payment_type'
-            ])
-            ->get(['payment_request_has_purchase_orders.payment_request_id']);
-
-        //dd($getAllPaymentRequests);
-
-        if (!$getAllPaymentRequests->isEmpty()) {
-            foreach ($getAllPaymentRequests as $getAllPaymentRequest) {
-                $getPurchaseOrderDeliverys = PurchaseOrderDelivery::where([
-                    'payment_request_id' => $getAllPaymentRequest->payment_request_id,
-                    'purchase_order_id' => $getAllPaymentRequest->purchase_order_id
-                ])->get();
-
-                if (!$getPurchaseOrderDeliverys->isEmpty()) {
-                    foreach ($getPurchaseOrderDeliverys as $getPurchaseOrderDelivery) {
-                        if ($getPurchaseOrderDelivery->product_id != null) {
-                            $getQuantityProduct = PurchaseOrderHasProducts::where([
-                                'product_id' => $getPurchaseOrderDelivery->product_id,
-                                'purchase_order_id' => $getAllPaymentRequest->purchase_order_id
-                            ])->first(['quantity']);
-                            if ($getQuantityProduct != null) {
-                                $total = $getQuantityProduct->quantity;
-                                $delivered += $getPurchaseOrderDelivery->delivery_quantity;
-                            }
-                        }
-                    }
-                } else {
-                    $deliveryN = $getAllPaymentRequest->purchase_order_id; //new
-                }
-
-                if ($delivered < $total) {
-                    $deliveryP = $getAllPaymentRequest->purchase_order_id; //pendente
-                } else if ($delivered == $total && ($total != 0)) {
-                    $deliveryC = $getAllPaymentRequest->purchase_order_id; //concluido
-                }
-
-                if ($status == 1) {
-                    if (!in_array($deliveryP, $deliverysIdP)) {
-                        $deliverysIdP[] = $deliveryP;
-                    }
-                }
-                if ($status == 2) {
-                    if (!in_array($deliveryC, $deliverysIdC)) {
-                        $deliverysIdC[] = $deliveryC;
-                    }
-                }
-                if ($status == 0) {
-                    if (!in_array($deliveryN, $deliverysIdN)) {
-                        $deliverysIdN[] = $deliveryN;
-                    }
-                }
-            }
+        $response = 1;
+        // validar Servicos e produtos
+        $quotationItemsIds = ProviderQuotationItems::where('provider_quotation_id', $purchaseOrderInfo['quotation_id'])->get(['id']);
+        $countServices = 0;
+        $countProducts = 0;
+        $SumProducts = 0;
+        foreach ($quotationItemsIds as $quotationItemsId) {
+            $countServices = ProviderQuotationHasServices::where('provider_quotation_item_id', $quotationItemsId->id)->count();
+            $countProducts = ProviderQuotationHasProducts::where('provider_quotation_item_id', $quotationItemsId->id)->count();
+            $SumProducts = ProviderQuotationHasProducts::where('provider_quotation_item_id', $quotationItemsId->id)->sum('quantity');
         }
 
-        if ($status == 1) {
-            if (($key = array_search("0", $deliverysIdP)) !== false) {
-                unset($deliverysIdP[$key]);
+        $purchaseOrderIds = PurchaseOrder::where('quotation_id', $purchaseOrderInfo['quotation_id'])->get(['id']);
+        $totalServices = 0;
+        $totalListProducts = [];
+        $totalProducts = 0;
+        $totalSumProducts = 0;
+        foreach ($purchaseOrderIds as $purchaseOrderId) {
+            $totalServices += PurchaseOrderHasServices::where('purchase_order_id', $purchaseOrderId->id)->count();
+            $totalProducts = PurchaseOrderHasProducts::select('product_id', \DB::raw('count(*) as total'))->where('purchase_order_id', $purchaseOrderId->id)->groupBy('product_id')->get();
+            foreach ($totalProducts as $totalProduct) {
+                if (!in_array($totalProduct->product_id, $totalListProducts)) {
+                    $totalListProducts[] = $totalProduct->product_id;
+                }
             }
-            return $deliverysIdP;
-        } else if ($status == 2) {
-            if (($key = array_search("0", $deliverysIdC)) !== false) {
-                unset($deliverysIdC[$key]);
-            }
-            return $deliverysIdC;
-        } else if ($status == 0) {
-            if (($key = array_search("0", $deliverysIdN)) !== false) {
-                unset($deliverysIdN[$key]);
-            }
-            return $deliverysIdN;
+            $totalSumProducts += PurchaseOrderHasProducts::where('purchase_order_id', $purchaseOrderId->id)->sum('quantity');
         }
-    } */
+        //validacao final
+        if (($countServices == $totalServices) && ($countProducts == count($totalListProducts)) && ($SumProducts == $totalSumProducts)) {
+            $response = 2;
+        }
+
+        return $response;
+    }
 }

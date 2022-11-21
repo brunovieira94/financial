@@ -27,7 +27,7 @@ class PaymentRequestClean extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $appends = ['first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
         'company_id',
@@ -213,5 +213,34 @@ class PaymentRequestClean extends Model
     protected static function booted()
     {
         static::addGlobalScope(new ProfileCostCenterScope);
+    }
+
+    public function getFirstApprovalFinancialAnalystAttribute()
+    {
+        $firstLogFinancialAnalyst = AccountsPayableApprovalFlowLog::where('type', 'approved')->whereHas(
+            'user',
+            function ($query) {
+                $query->whereHas('role', function ($query) {
+                    $query->where('financial_analyst', true);
+                });
+            }
+        )->where('payment_request_id', $this->id)
+            ->orderBy('created_at', 'asc')
+            ->first();
+
+        if ($firstLogFinancialAnalyst != null) {
+            return [
+                'user_name' => $firstLogFinancialAnalyst->user_name,
+                'user_role' => $firstLogFinancialAnalyst->user_role,
+                'created_at' => $firstLogFinancialAnalyst->created_at,
+            ];
+        } else {
+            return null;
+        }
+    }
+
+    public function log_approval_flow()
+    {
+        return $this->hasMany(AccountsPayableApprovalFlowLog::class, 'payment_request_id', 'id');
     }
 }

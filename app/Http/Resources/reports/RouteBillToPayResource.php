@@ -31,6 +31,7 @@ class RouteBillToPayResource extends JsonResource
             'pay_date' => $this->pay_date,
             'currency' => new ReportsCurrencyResource($this->currency),
             'cnab_payment_request' => new ReportsCnabPaymentRequestResource($this->cnab_payment_request),
+            'first_approval_financial_analyst' => new ReportsFirstApprovalPaymentRequestResource($this->first_approval_financial_analyst),
         ];
     }
 }

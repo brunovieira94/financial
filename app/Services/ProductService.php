@@ -20,10 +20,12 @@ class ProductService
     {
         if (array_key_exists('search', $requestInfo)) {
             if (strlen($requestInfo["search"]) >= 4) {
-                if (substr($requestInfo["search"], 0, 2) == 50) {
-                    $requestInfo['search'] = substr($requestInfo["search"], 2, strlen($requestInfo["search"]));
+                if (substr($requestInfo["search"], 0, 3) == 500) {
+                    $requestInfo['search'] = substr($requestInfo["search"], 3, strlen($requestInfo["search"]));
                 } else if (substr($requestInfo["search"], 0, 2) > 50) {
                     $requestInfo['search'] =  substr($requestInfo["search"], 1, strlen($requestInfo["search"]));
+                } else if (substr($requestInfo["search"], 0, 2) == 50) {
+                    $requestInfo['search'] = substr($requestInfo["search"], 2, strlen($requestInfo["search"]));
                 }
             }
         }

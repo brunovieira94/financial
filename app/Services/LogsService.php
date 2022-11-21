@@ -239,7 +239,24 @@ class LogsService
 
     public function getAccountsPayableApprovalFlowLog($id, $requestInfo)
     {
-        $dataLogs = RouteAccountsApprovalFlowLog::collection(AccountsPayableApprovalFlowLog::where('payment_request_id', $id)->orderBy('created_at', 'asc')->get());
+        $approvalFlowLogs = AccountsPayableApprovalFlowLog::where('payment_request_id', $id)->orderBy('created_at', 'asc')->get();
+
+        $totalStages = null;
+
+        if (!is_null($approvalFlowLogs) && !is_null($approvalFlowLogs->first())) {
+            $groupApprovalFlow = $approvalFlowLogs->first()->groupApprovalFlow();
+
+            if (!is_null($groupApprovalFlow) && !is_null($groupApprovalFlow->first())) {
+                $totalStages = strval($groupApprovalFlow->first()->approval_flow()->max('approval_flow.order'));
+            }
+        }
+
+        $approvalFlowLogs->map(function ($item) use ($totalStages) {
+            $item['totalStages'] = $totalStages;
+            return $item;
+        });
+
+        $dataLogs = RouteAccountsApprovalFlowLog::collection($approvalFlowLogs);
         return $dataLogs->collection->toArray();
     }
 

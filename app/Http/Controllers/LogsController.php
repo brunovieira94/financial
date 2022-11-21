@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AccountsPayableApprovalFlowClean;
+use App\Models\PaymentRequestClean;
 use Illuminate\Http\Request;
 use App\Services\LogsService as LogsService;
+use DB;
+use Response;
 
 class LogsController extends Controller
 {
@@ -45,4 +49,26 @@ class LogsController extends Controller
         return $this->logsService->getAccountsPayableApprovalFlowLog($id, $request->all());
     }
 
+    public function approvalManualPaymentRequest(Request $request, $id)
+    {
+        if (DB::table('payment_requests_installments')->where('id', $id)->exists()) {
+            $installment = DB::table('payment_requests_installments')->where('id', $id)->first();
+
+            DB::table('accounts_payable_approval_flows')
+                ->where('payment_request_id', $installment->payment_request_id)
+                ->update(['status' => 1]);
+
+            DB::table('payment_requests_installments')
+                ->where('id', $installment->id)
+                ->update(['status' => 0]);
+
+            return Response([
+                'success' =>   'Conta aprovada'
+            ]);
+        } else {
+            return Response([
+                'error' =>   'Conta não encontrada'
+            ]);
+        }
+    }
 }

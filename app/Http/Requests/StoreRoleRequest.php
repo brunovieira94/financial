@@ -26,6 +26,7 @@ class StoreRoleRequest extends FormRequest
         return [
             'title' => 'required|max:255|unique:role,title,' . $this->id . ',id,deleted_at,NULL',
             'modules' => 'array',
+            'financial_analyst' => 'boolean',
         ];
     }
 
