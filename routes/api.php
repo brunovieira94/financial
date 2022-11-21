@@ -450,3 +450,4 @@ Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
+Route::post('/work', [PaidBillingInfoController::class, 'work']);
