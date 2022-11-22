@@ -15,7 +15,7 @@ class PaymentRequest extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', '*'];
+    protected static $logAttributes = ['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', '*'];
     protected static $logName = 'payment_request';
     public function tapActivity(Activity $activity, string $eventName)
     {
