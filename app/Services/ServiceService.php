@@ -19,6 +19,11 @@ class ServiceService
         }
 
         $service = Utils::search($this->service, $requestInfo);
+
+        if (array_key_exists('chart_of_accounts_id', $requestInfo)) {
+            $service->where('chart_of_accounts_id', $requestInfo['chart_of_accounts_id']);
+        }
+
         return Utils::pagination($service->with('chart_of_account'), $requestInfo);
     }
 
