@@ -31,6 +31,11 @@ class ProductService
         }
 
         $product = Utils::search($this->product, $requestInfo);
+
+        if (array_key_exists('chart_of_accounts_id', $requestInfo)) {
+            $product->where('chart_of_accounts_id', $requestInfo['chart_of_accounts_id']);
+        }
+
         return Utils::pagination($product->with($this->with), $requestInfo);
     }
 

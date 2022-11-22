@@ -13,12 +13,26 @@ class ProductsExport implements FromCollection, ShouldAutoSize, WithMapping, Wit
 {
     use Exportable;
 
+    private $requestInfo;
+
+    public function __construct($requestInfo)
+    {
+        $this->requestInfo = $requestInfo;
+    }
+
     /**
      * @return \Illuminate\Support\Collection
      */
     public function collection()
     {
-        return Product::with(['chart_of_account', 'measurement_unit', 'attributes'])->get();
+        $requestInfo = $this->requestInfo;
+        $product = Product::with(['chart_of_account', 'measurement_unit', 'attributes']);
+
+        if (array_key_exists('chart_of_accounts_id', $requestInfo)) {
+            $product->where('chart_of_accounts_id', $requestInfo['chart_of_accounts_id']);
+        }
+
+        return $product->get();
     }
 
     public function map($product): array
