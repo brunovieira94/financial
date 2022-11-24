@@ -261,6 +261,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/', [LogsController::class, 'index']);
         Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
         Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+        Route::get('/log-payment-request-update/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
