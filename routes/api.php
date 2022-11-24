@@ -218,6 +218,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('hotel-approval-flow')->group(function () {
         Route::get('/', [HotelApprovalFlowController::class, 'index']);
+        Route::get('/roles', [HotelApprovalFlowController::class, 'getHotelApprovalRoles']);
         Route::post('/', [HotelApprovalFlowController::class, 'store']);
         Route::get('/all', [HotelApprovalFlowController::class, 'index']);
     });

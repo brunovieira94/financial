@@ -563,7 +563,7 @@ class Utils
             );
         }
     }
-    
+
     public static function baseFilterPurchaseOrder($purchaseOrder, $requestInfo)
     {
 
@@ -805,6 +805,9 @@ class Utils
                 $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
             }
             $billing = $billing->whereIn('id', $billingIDs);
+        }
+        if (array_key_exists('order', $requestInfo)) {
+            $billing = Billing::where('order', $requestInfo['order']);
         }
         return $billing;
     }

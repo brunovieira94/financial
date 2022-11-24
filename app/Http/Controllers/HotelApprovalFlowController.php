@@ -21,6 +21,11 @@ class HotelApprovalFlowController extends Controller
         return $this->hotelApprovalFlowService->getAllHotelApprovalFlow($request->all());
     }
 
+    public function getHotelApprovalRoles(Request $request)
+    {
+        return $this->hotelApprovalFlowService->getHotelApprovalRoles($request->all());
+    }
+
     public function store(StoreHotelApprovalFlowRequest $request)
     {
         $this->hotelApprovalFlowService->postHotelApprovalFlow($request->all());
