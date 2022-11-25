@@ -75,12 +75,12 @@ class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeading
 
     public function batchSize(): int
     {
-        return 500;
+        return 1000;
     }
 
     public function chunkSize(): int
     {
-        return 500;
+        return 1000;
     }
 
 }
