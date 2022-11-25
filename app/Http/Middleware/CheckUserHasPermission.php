@@ -99,6 +99,7 @@ class CheckUserHasPermission
             case 'cangooroo':
             case 'show':
             case 'refresh':
+            case 'approval-roles':
                 $routeAccessed = 'billing';
                 break;
             case 'approved-purchase-order-integration';
