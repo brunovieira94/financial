@@ -210,6 +210,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('paid-billing-info')->group(function () {
         Route::get('/', [PaidBillingInfoController::class, 'index']);
+        Route::get('/truncate', [PaidBillingInfoController::class, 'truncate']);
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);

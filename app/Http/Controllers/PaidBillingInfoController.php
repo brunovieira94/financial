@@ -7,6 +7,7 @@ use App\Services\PaidBillingInfoService as PaidBillingInfoService;
 //use App\Exports\PaidBillingInfoExport;
 use App\Imports\PaidBillingInfoImport;
 use App\Imports\DailyPaidBillingInfoImport;
+use App\Models\PaidBillingInfo;
 use Illuminate\Support\Facades\Artisan;
 
 class PaidBillingInfoController extends Controller
@@ -58,6 +59,12 @@ class PaidBillingInfoController extends Controller
     {
         ini_set('max_execution_time', 300);
         Artisan::call('queue:work --stop-when-empty', []);
+        return response('');
+    }
+
+    public function truncate()
+    {
+        PaidBillingInfo::truncate();
         return response('');
     }
 
