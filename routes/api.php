@@ -210,7 +210,6 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::prefix('paid-billing-info')->group(function () {
         Route::get('/', [PaidBillingInfoController::class, 'index']);
-        Route::get('/truncate', [PaidBillingInfoController::class, 'truncate']);
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
@@ -468,4 +467,5 @@ Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentR
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
 Route::post('/work', [PaidBillingInfoController::class, 'work']);
+Route::get('/paid-billing-info/truncate', [PaidBillingInfoController::class, 'truncate']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);

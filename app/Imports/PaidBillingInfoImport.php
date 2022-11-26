@@ -53,23 +53,8 @@ class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeading
     public function rules(): array
     {
         return [
-            'operador' => 'max:150',
-            'reserva' => 'required|max:150',
+            'reserva' => 'required',
             'valor_parceiro' => 'required',
-            // 'valor_boleto' => 'nullable|numeric',
-            'codigo_boleto' => 'max:150',
-            'observacao' => 'max:150',
-            'protocolo_oracle' => 'max:150',
-            'banco' => 'max:150',
-            'codigo' => 'max:150',
-            'agencia' => 'max:150',
-            'conta' => 'max:150',
-            'forma_de_pagamento' => 'max:150',
-            'nome_hotel' => 'max:150',
-            'cnpj_cpf' => 'max:150',
-            'metodo_de_pagamento' => 'max:150',
-            'banco_de_pagamento' => 'max:150',
-            'observacao_de_pagamento' => 'max:150',
         ];
     }
 
