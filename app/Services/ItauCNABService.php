@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Config;
-
 use App\CNABLayoutsParser\CnabParser\Parser\Layout;
 use App\CNABLayoutsParser\CnabParser\Model\Remessa;
 use App\CNABLayoutsParser\CnabParser\Output\RemessaFile;
@@ -21,6 +20,11 @@ use App\Models\CnabGenerated;
 use App\Models\CnabGeneratedHasPaymentRequests;
 use App\Models\CnabPaymentRequestsHasInstallments;
 use App\Models\PaymentRequestHasInstallmentsClean;
+use App\CNABLayoutsParser\CnabParser\Model\Retorno;
+use App\CNABLayoutsParser\CnabParser\Input\RetornoFile;
+use App\CNABLayoutsParser\CnabParser\Retorno\BancoBrasil;
+use App\Models\AccountsPayableApprovalFlowClean;
+use App\Models\PaymentRequestClean;
 
 class ItauCNABService
 {
@@ -176,65 +180,70 @@ class ItauCNABService
 
     public function receiveCNAB240($requestInfo)
     {
+        $arrayString = preg_split("/\r\n|\n|\r/", file_get_contents($requestInfo->file('return-file')));
+        $arrayInstallments = [];
+        $arrayPaymentRequest = [];
 
-        $returnFile = $requestInfo->file('return-file');
-
-        $processArchive = new \App\Helpers\Cnab\Retorno\Cnab240\Banco\Itau($returnFile);
-        $processArchive->processar();
-
-        $returnArray = $processArchive->getDetalhes();
-
-        foreach ($returnArray as $batch) {
-            $installments =  $this->installments->findOrFail($batch->numeroDocumento);
-            $installments->status = $batch->ocorrencia;
-            $installments->codBank = $batch->nossoNumero;
-            $installments->amount_received = $batch->valorRecebido;
-            $installments->save();
+        if (!(substr($arrayString[0], 0, 3) == '001')) {
+            return Response()->json([
+                'error' => 'Só é permitido arquivo retorno do Banco do Brasil'
+            ]);
         }
 
-        $idParcelsAlreadyVerified = [];
-        $idUnpaidPayment = [];
-        $idPaidPayment = [];
-        $idPaymentFinished = [];
+        foreach ($arrayString as $line) {
 
-        foreach ($returnArray as $batch) {
+            $recordType = substr($line, 7, 1); // 3
+            $segmentCode = substr($line, 13, 1); // A or J
+            $installmentID = trim(substr($line, 182, 20)); //id installment
+            $codeReturn = trim(substr($line, 230, 2)); //id installment
 
-            if (!in_array($batch->numeroDocumento, $idParcelsAlreadyVerified)) {
-                $paymentRequest = PaymentRequest::with('installments')
-                    ->whereRelation('installments', 'id', '=', $batch->numeroDocumento)
-                    ->first();
+            if ($recordType == '3') {
+                if ($segmentCode == 'A' or $segmentCode == 'J') {
+                    if (PaymentRequestHasInstallments::where('id', (int)$installmentID)->exists()) {
+                        array_push($arrayInstallments, (int)$installmentID);
 
-                $thePaymentHasBeenPaid = true;
+                        if (BancoBrasil::paymentDone($codeReturn)) {
+                            $statusReturnCnab = Config::get('constants.status.paid out');
+                        } else {
+                            $statusReturnCnab = Config::get('constants.status.error');
+                        }
 
-                foreach ($paymentRequest->installments as $installment) {
-                    array_push($idParcelsAlreadyVerified, $installment->id);
+                        $installment = PaymentRequestHasInstallments::findOrFail((int)$installmentID);
 
-                    if ($installment->status != 'BD') {
-                        $thePaymentHasBeenPaid = false;
-                        if (!in_array($paymentRequest->id, $idUnpaidPayment)) {
-                            array_push($idUnpaidPayment, $paymentRequest->id);
+                        $installment->status = $statusReturnCnab;
+                        $installment->status_cnab_code = $codeReturn;
+                        $installment->text_cnab = BancoBrasil::codeReturnBrazilBank($codeReturn);
+                        $installment->save();
+
+                        DB::table('accounts_payable_approval_flows')->where('payment_request_id', $installment->payment_request_id)
+                            ->update(
+                                [
+                                    'status' => Config::get('constants.status.approved'),
+                                ]
+                            );
+
+                        if (!in_array($installment->payment_request_id, $arrayPaymentRequest)) {
+                            array_push($arrayPaymentRequest, $installment->payment_request_id);
                         }
                     }
-                }
 
-                if ($thePaymentHasBeenPaid == true) {
-                    if ($paymentRequest->payment_type == 0) {
-                        array_push($idPaymentFinished, $paymentRequest->id);
-                    } else {
-                        array_push($idPaidPayment, $paymentRequest->id);
+                    foreach ($arrayPaymentRequest as $paymentRequestID) {
+                        if (PaymentRequestClean::withoutGlobalScopes()->where('id', $paymentRequestID)->exists()) {
+                            if (!PaymentRequestClean::withoutGlobalScopes()->where('id', $paymentRequestID)->whereHas('installments', function ($query) {
+                                $query->where('status', '!=', Config::get('constants.status.paid out'));
+                            })->exists()) {
+                                AccountsPayableApprovalFlowClean::where('payment_request_id', $paymentRequestID)
+                                    ->update(
+                                        [
+                                            'status' => Config::get('constants.status.paid out'),
+                                        ]
+                                    );
+                            }
+                        }
                     }
                 }
             }
         }
-
-        AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaidPayment)
-            ->update(['status' => Config::get('constants.status.paid out')]);
-
-        AccountsPayableApprovalFlow::whereIn('payment_request_id', $idPaymentFinished)
-            ->update(['status' => Config::get('constants.status.finished')]);
-
-        AccountsPayableApprovalFlow::whereIn('payment_request_id', $idUnpaidPayment)
-            ->update(['status' => Config::get('constants.status.approved')]);
 
         return response()->json([
             'Sucesso' => 'Processo finalizado.',

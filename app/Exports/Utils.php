@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use Carbon\Carbon;
 
+use Config;
+
 class Utils
 {
     public static function logFirstApprovalFinancialAnalyst($paymentRequest)
@@ -74,6 +76,28 @@ class Utils
         return $date ?? '';
     }
 
+    public static function installmentsCnabGeneratedPaymentDate($paymentRequestInstallment)
+    {
+        $date = null;
+
+        if (isset($paymentRequestInstallment->cnab_generated_installment) && isset($paymentRequestInstallment->cnab_generated_installment->generated_cnab)) {
+            $date = $paymentRequestInstallment->cnab_generated_installment->generated_cnab->file_date;
+        }
+
+        return $date ?? '';
+    }
+
+    public static function installmentsDaysLate($paymentRequestInstallment)
+    {
+        $daysLate = null;
+
+        if (isset($paymentRequestInstallment->extension_date) && $paymentRequestInstallment->status != Config::get('constants.status.paid out')) {
+            $daysLate = date_diff(date_create($paymentRequestInstallment->extension_date), now());
+        }
+
+        return isset($daysLate) ? $daysLate->days : '';
+    }
+
     public static function accountType($paymentRequest)
     {
         if (is_null($paymentRequest->payment_type))
@@ -123,20 +147,58 @@ class Utils
 
     public static function approver($paymentRequest)
     {
+        if ($paymentRequest->approval->status != Config::get('constants.status.open') || $paymentRequest->approval->status == Config::get('constants.status.disapproved'))
+            return '';
+
         $approver = '';
 
         if (isset($paymentRequest->approval) && isset($paymentRequest->approval->approver_stage)) {
             foreach ($paymentRequest->approval->approver_stage as $approver_stage) {
-                $approver = $approver == '' ? $approver_stage['name'] : $approver . ', ' . $approver_stage['name'];
+                $approver = $approver == ''
+                    ? $approver_stage['name']
+                    : ($approver_stage['name'] != '' ? $approver . ', ' . $approver_stage['name'] : $approver);
             }
         }
 
         return $approver;
     }
 
-    public static function barCode($paymentRequest)
+    public static function translatedInstallmentBilletType($paymentRequestInstallment)
     {
-        return preg_match("/[0-9]+/i", $paymentRequest->bar_code) == 1 ? $paymentRequest->bar_code : '';
+        if (is_null($paymentRequestInstallment->type_billet) || is_null($paymentRequestInstallment->billet_number))
+            return '';
+        switch ($paymentRequestInstallment->type_billet) {
+            case 0:
+                return 'Boleto Bancário';
+            case 1:
+                return 'Boleto de Arrecadação';
+            default:
+                return 'Outro';
+        }
+    }
+
+    public static function translatedInstallmentBankAccountType($paymentRequestInstallment)
+    {
+        if (is_null($paymentRequestInstallment->bank_account_provider) || is_null($paymentRequestInstallment->bank_account_provider->account_type))
+            return '';
+        switch ($paymentRequestInstallment->bank_account_provider->account_type) {
+            case 0:
+                return 'Poupança';
+            case 1:
+                return 'Conta Corrente';
+            case 2:
+                return 'Conta Salário';
+            default:
+                return 'Outro';
+        }
+    }
+
+    public static function installmentTotalFinalValue($paymentRequestInstallment)
+    {
+        $total = $paymentRequestInstallment->initial_value ?? $paymentRequestInstallment->portion_amount ?? 0;
+        $total += ($paymentRequestInstallment->fees ?? 0) + ($paymentRequestInstallment->fine ?? 0);
+        $total -= ($paymentRequestInstallment->discount ?? 0);
+        return $total < 0 ? 0 : $total;
     }
 
     /**
