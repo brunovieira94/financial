@@ -25,6 +25,7 @@ class ServicesExport implements FromCollection, ShouldAutoSize, WithMapping, Wit
         return [
             $service->title,
             $service->description,
+            !is_null($service->service_code) ? $service->service_code : '',
             !is_null($service->chart_of_account) ? $service->chart_of_account->title : '',
             $service->created_at,
         ];
@@ -35,6 +36,7 @@ class ServicesExport implements FromCollection, ShouldAutoSize, WithMapping, Wit
         return [
             'Nome do serviço',
             'Descrição',
+            'Código de serviço',
             'Plano de Contas',
             'Data da Criação'
         ];
