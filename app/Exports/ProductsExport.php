@@ -54,6 +54,7 @@ class ProductsExport implements FromCollection, ShouldAutoSize, WithMapping, Wit
             $product->description,
             !is_null($product->measurement_unit) ? $product->measurement_unit->title : '',
             !is_null($product->measurement_unit) ? $product->measurement_unit->unit : '',
+            !is_null($product->ncm) ? $product->ncm : '',
             !is_null($product->chart_of_account) ? $product->chart_of_account->title : '',
             $rows,
             $product->created_at
@@ -67,6 +68,7 @@ class ProductsExport implements FromCollection, ShouldAutoSize, WithMapping, Wit
             'Descrição',
             'Unidade de Medida',
             'Sigla',
+            'NCM',
             'Plano de Contas',
             'Atributos',
             'Data da Criação'

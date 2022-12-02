@@ -22,8 +22,8 @@ class Product extends Model
     }
 
     use SoftDeletes;
-    protected $table='products';
-    protected $fillable = ['title', 'measurement_units_id', 'chart_of_accounts_id', 'description'];
+    protected $table = 'products';
+    protected $fillable = ['title', 'measurement_units_id', 'chart_of_accounts_id', 'description', 'ncm'];
     protected $hidden = ['chart_of_accounts_id', 'measurement_units_id'];
 
     public function chart_of_account()
