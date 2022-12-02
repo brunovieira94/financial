@@ -809,6 +809,9 @@ class Utils
         if (array_key_exists('order', $requestInfo)) {
             $billing = Billing::where('order', $requestInfo['order']);
         }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $billing->where('cnpj', $requestInfo['cnpj']);
+        }
         return $billing;
     }
 }

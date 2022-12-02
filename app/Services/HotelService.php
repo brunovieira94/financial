@@ -26,6 +26,15 @@ class HotelService
         if (array_key_exists('isValid', $requestInfo)) {
             $hotel->where('is_valid', $requestInfo['isValid']);
         }
+        if (array_key_exists('cnpj_hotel', $requestInfo)) {
+            $hotel->where('cnpj_hotel', $requestInfo['cnpj_hotel']);
+        }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $hotel->where(function ($query) use ($requestInfo) {
+                $query->where('cpf_cnpj', $requestInfo['cnpj'])
+                      ->orWhere('cnpj_extra', $requestInfo['cnpj']);
+            });
+        }
         return Utils::pagination($hotel->with($this->with), $requestInfo);
     }
 
