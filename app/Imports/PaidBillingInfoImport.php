@@ -45,7 +45,7 @@ class PaidBillingInfoImport implements ToCollection, WithValidation, WithHeading
                 'payment_method' => $row['metodo_de_pagamento'],
                 'payment_bank' => $row['banco_de_pagamento'],
                 'payment_remark' => $row['observacao_de_pagamento'],
-                // 'service_id' => $row['servico'],
+                'service_id' => $row['id_servico_cangooroo'],
             ]);
         }
     }

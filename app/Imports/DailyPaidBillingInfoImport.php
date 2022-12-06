@@ -39,7 +39,7 @@ class DailyPaidBillingInfoImport implements ToCollection, WithValidation, WithHe
                     'payment_method' => 'VCN',
                     'payment_bank' => 'Cartão Utilizado',
                     'payment_remark' => 'Cartão Utilizado',
-                    // 'service_id' => $row['service_id']
+                    // 'service_id' => $row['id_servico_cangooroo']
                 ]);
                 $this->imported++;
             }

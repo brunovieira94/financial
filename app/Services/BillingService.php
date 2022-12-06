@@ -348,7 +348,7 @@ class BillingService
     public function getPaymentStatus($billing, $cangooroo)
     {
         // $paidReserves = PaidBillingInfo::where('reserve', $billing['reserve'])->get();
-        $paidReserves = PaidBillingInfo::where('reserve', $billing['reserve'])->where('service_id', $cangooroo['service_id'])->get();
+        $paidReserves = PaidBillingInfo::where('service_id', $cangooroo['service_id'])->get();
         if(empty($paidReserves->toArray())){
             return "Não Pago";
         }
