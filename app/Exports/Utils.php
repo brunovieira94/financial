@@ -58,7 +58,7 @@ class Utils
 
         if (isset($paymentRequest->installments)) {
             $amountToPay = $paymentRequest->installments->reduce(function ($carry, $item) {
-                return $carry + $item['portion_amount'];
+                return $carry + Utils::installmentTotalFinalValue($item);
             }, 0);
         }
 
