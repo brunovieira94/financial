@@ -53,10 +53,15 @@ class CheckUserHasPermission
 
         $routeAccessed = $route[count($route) - 1];
 
+
         if ('{id}' == $routeAccessed) {
             $routeAccessed = $route[count($route) - 2];
-            if (in_array($route[count($route) - 2], $unverifiedSubRoutes)) {
+            if ($routeAccessed == 'export' || $routeAccessed == 'import') {
                 $routeAccessed = $route[count($route) - 3];
+            } else {
+                if (in_array($route[count($route) - 2], $unverifiedSubRoutes)) {
+                    $routeAccessed = $route[count($route) - 3];
+                }
             }
         } else if (in_array($routeAccessed, $unverifiedSubRoutes)) {
             $routeAccessed = $route[count($route) - 2];
@@ -66,12 +71,11 @@ class CheckUserHasPermission
             $routeAccessed = $url[count($url) - 1];
         }
 
-
         if (in_array($route[1], $whiteList))
             return $next($request);
 
         if ($user->role_id == 1)
-            return $next($request);
+             return $next($request);
 
         //array de objetos com module id
         $roles = $this->role->where('role_id', $user->role_id);

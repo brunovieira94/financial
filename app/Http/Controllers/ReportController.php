@@ -13,6 +13,7 @@ use App\Exports\AllGeneratedCNABPaymentRequestExport;
 use App\Exports\BillsToPayExport;
 use App\Exports\AllPaymentRequestPaidExport;
 use App\Exports\AllPaymentRequestFinishedExport;
+use App\Exports\CnabGeneratedExport;
 use App\Exports\DueInstallmentsExport;
 use App\Exports\InstallmentsPayableExport;
 use App\Exports\UserApprovalsReportExport;
@@ -60,10 +61,8 @@ class ReportController extends Controller
 
     public function approvedPaymentRequest(Request $request)
     {
-        if(array_key_exists('form_payment_id', $request->all()))
-        {
-            if(!array_key_exists('company_id', $request->all()))
-            {
+        if (array_key_exists('form_payment_id', $request->all())) {
+            if (!array_key_exists('company_id', $request->all())) {
                 return response()->json([
                     'error' => 'A empresa não foi informada'
                 ], 422);
@@ -239,4 +238,13 @@ class ReportController extends Controller
         return (new UserApprovalsReportExport($request->all()))->download('relatórioAprovações.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
+    public function getCnabGenerateExport(Request $request, $id)
+    {
+        if (array_key_exists('exportFormat', $request->all())) {
+            if ($request->all()['exportFormat'] == 'csv') {
+                return (new CnabGeneratedExport($request->all(), $id))->download('CNABGerado.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            }
+        }
+        return (new CnabGeneratedExport($request->all(), $id))->download('CNABGerado.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
 }
