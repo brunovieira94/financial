@@ -209,14 +209,68 @@ class LogsService
 
         $responseLog = [];
 
+        $purchaseOrderOldArray = [];
+        $purchaseOrderNewArray = [];
         foreach ($dataLog as $log) {
+            if (array_key_exists('purchase_order', $log->properties['old'])) {
+                foreach ($log->properties['old']['purchase_order'] as $key => $purchaseOrder) {
+                    $installmentPurchase = [];
+                    foreach ($purchaseOrder['purchase_order_installments'] as $key => $installment) {
+                        $installmentPurchase = [
+                            'id' => $installment['installment_purchase']['id'],
+                            'amount_received' => $installment['amount_received'],
+                            'purchase_order_id' => $installment['installment_purchase']['purchase_order_id'],
+                            'parcel_number' => $installment['installment_purchase']['parcel_number'],
+                            'portion_amount' => $installment['installment_purchase']['portion_amount'],
+                            'due_date' => $installment['installment_purchase']['due_date'],
+                            'note' => $installment['installment_purchase']['note'],
+                            'percentage_discount' => $installment['installment_purchase']['percentage_discount'],
+                            'money_discount' => $installment['installment_purchase']['money_discount'],
+                            'invoice_received' => $installment['installment_purchase']['invoice_received'],
+                            'invoice_paid' => $installment['installment_purchase']['invoice_paid'],
+                            'payment_request_id' => $installment['installment_purchase']['payment_request_id'],
+                            'amount_paid' => $installment['installment_purchase']['amount_paid'],
+                        ];
+                        $purchaseOrder['purchase_order_installments'][$key] = $installmentPurchase;
+                    }
+                    $purchaseOrderOldArray = [$purchaseOrder];
+                }
+            }
+
+            if (array_key_exists('purchase_order', $log->properties['attributes'])) {
+                foreach ($log->properties['attributes']['purchase_order'] as $key => $purchaseOrder) {
+                    $installmentPurchase = [];
+                    foreach ($purchaseOrder['purchase_order_installments'] as $key => $installment) {
+                        $installmentPurchase = [
+                            'id' => $installment['installment_purchase']['id'],
+                            'amount_received' => $installment['amount_received'],
+                            'purchase_order_id' => $installment['installment_purchase']['purchase_order_id'],
+                            'parcel_number' => $installment['installment_purchase']['parcel_number'],
+                            'portion_amount' => $installment['installment_purchase']['portion_amount'],
+                            'due_date' => $installment['installment_purchase']['due_date'],
+                            'note' => $installment['installment_purchase']['note'],
+                            'percentage_discount' => $installment['installment_purchase']['percentage_discount'],
+                            'money_discount' => $installment['installment_purchase']['money_discount'],
+                            'invoice_received' => $installment['installment_purchase']['invoice_received'],
+                            'invoice_paid' => $installment['installment_purchase']['invoice_paid'],
+                            'payment_request_id' => $installment['installment_purchase']['payment_request_id'],
+                            'amount_paid' => $installment['installment_purchase']['amount_paid'],
+                        ];
+                        $purchaseOrder['purchase_order_installments'][$key] = $installmentPurchase;
+                    }
+                    $purchaseOrderNewArray = [$purchaseOrder];
+                }
+            }
+
             array_push(
                 $responseLog,
                 [
                     'old' => $log->properties['old'],
                     'date-log' => $log->created_at,
                     'new' => $log->properties['attributes'],
-                    'causer' => $log->causer_object
+                    'causer' => $log->causer_object,
+                    'old-purchase-order' => $purchaseOrderOldArray,
+                    'new-purchase-order' => $purchaseOrderNewArray
                 ]
             );
         }
