@@ -30,6 +30,7 @@ class PaymentRequest extends Model
     protected $appends = ['first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'edit_counter',
         'group_approval_flow_id',
         'company_id',
         'group_form_payment_id',

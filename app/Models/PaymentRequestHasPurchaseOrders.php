@@ -13,7 +13,7 @@ class PaymentRequestHasPurchaseOrders extends Model
 
     public function purchase_order()
     {
-        return $this->hasOne(PurchaseOrder::class, 'id', 'purchase_order_id')->with('products', 'services');
+        return $this->hasOne(PurchaseOrder::class, 'id', 'purchase_order_id')->with(['products', 'services', 'currency']);
     }
 
     public function purchase_order_installments()

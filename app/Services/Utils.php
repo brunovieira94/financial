@@ -11,12 +11,14 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDelivery;
 use App\Models\SupplyApprovalFlow;
 use App\Models\PaymentRequestHasInstallmentsClean;
+use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
 use Config;
 use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
+use Spatie\Activitylog\Contracts\Activity;
 
 class Utils
 {
@@ -762,5 +764,25 @@ class Utils
             $billing->where('form_of_payment', $requestInfo['form_of_payment']);
         }
         return $billing;
+    }
+
+    public static function createManualLogPaymentRequest($old, $new, $causerID, $model)
+    {
+        activity()
+            ->causedBy(User::findOrFail($causerID))
+            ->performedOn($model)
+            ->withProperties([
+                'old' => $old,
+                'attributes' => $new,
+            ])
+            ->tap(function (Activity $activity) use ($causerID, $new) {
+                $user = User::with(['cost_center', 'business', 'role'])->findOrFail($causerID);
+                $user->role = Role::findOrFail($user->role_id);
+                $activity->causer_id = $user->id;
+                $activity->causer_object = $user;
+                $activity->subject_id = $new->id;
+                $activity->log_name = 'payment_request';
+            })
+            ->log('updated');
     }
 }
