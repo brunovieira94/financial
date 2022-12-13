@@ -377,7 +377,7 @@ class ReportService
 
     public function getCnabGenerate($requestInfo, $id)
     {
-        return $this->cnabGenerated->with(['user', 'company', 'payment_requests', 'bank_account_company.bank'])->findOrFail($id);
+        return $this->cnabGenerated->with(['user', 'company', 'payment_requests.installments_cnab.installment.bank_account_provider', 'bank_account_company.bank'])->findOrFail($id);
     }
 
     public function getUserApprovalsReport($requestInfo)
