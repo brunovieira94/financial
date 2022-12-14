@@ -33,6 +33,9 @@ class PutCompanyRequest extends FormRequest
             'bank_accounts.*.account_type' => 'integer|required_without_all:bank_accounts.*.pix_key|min:0|max:2',
             'managers' => 'array',
             'bank_accounts.*.default_bank' => 'boolean',
+            'cpf_cnpj' => 'max:191|in:F,J',
+            'entity_name' => 'max:191',
+            'entity_type' => 'max:1',
         ];
     }
 }

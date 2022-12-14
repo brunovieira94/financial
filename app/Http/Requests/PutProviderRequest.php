@@ -76,6 +76,9 @@ class PutProviderRequest extends FormRequest
             'full_name' => 'string|max:255|prohibited_if:provider_type,==,J',
             'birth_date' => 'date',
             'international' => 'boolean',
+            'cpf_cnpj' => 'max:191|in:F,J',
+            'entity_name' => 'max:191',
+            'entity_type' => 'max:1',
         ];
     }
 
