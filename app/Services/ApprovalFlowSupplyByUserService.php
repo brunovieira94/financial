@@ -16,11 +16,12 @@ class ApprovalFlowSupplyByUserService
     private $supplyApprovalFlow;
     private $approvalFlow;
 
-    public function __construct(SupplyApprovalFlow $supplyApprovalFlow, ApprovalFlowSupply $approvalFlow, PurchaseOrder $purchaseOrder)
+    public function __construct(SupplyApprovalFlow $supplyApprovalFlow, ApprovalFlowSupply $approvalFlow, PurchaseOrder $purchaseOrder, User $user)
     {
         $this->supplyApprovalFlow = $supplyApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->purchaseOrder = $purchaseOrder;
+        $this->user = $user;
     }
 
     public function getAllAccountsForApproval($requestInfo)
@@ -146,6 +147,9 @@ class ApprovalFlowSupplyByUserService
         $accountApproval->reason = null;
         $accountApproval->updated_at = now();
         $accountApproval->save();
+
+        $this->notifyUsers($accountApproval, $maxOrder, auth()->user());
+
         return response()->json([
             'Sucesso' => 'Pedido aprovado',
         ], 200);
@@ -214,6 +218,8 @@ class ApprovalFlowSupplyByUserService
                     //$accountApproval->reason_to_reject_id = null;
                     $accountApproval->updated_at = now();
                     $accountApproval->save();
+
+                    $this->notifyUsers($accountApproval, $maxOrder, auth()->user());
                 }
                 return response()->json([
                     'Sucesso' => 'Pedido aprovado',
@@ -249,5 +255,35 @@ class ApprovalFlowSupplyByUserService
         $accountApproval->status = Config::get('constants.status.canceled');
         $accountApproval->reason = $request->reason;
         return $accountApproval->save();
+    }
+
+    public function notifyUsers($accountApproval, $maxOrder, $approveUser)
+    {
+        if (($accountApproval->order - 1) >= $maxOrder) {
+            //Gestor da Área, Gestor de Suprimentos e Equipe de Suprimentos
+            $usersMail = [];
+            NotificationService::generateDataSendRedisPurchaseOrder($accountApproval->purchase_order, $usersMail, 'Pedido de Compra totalmente aprovada', 'purchase-order-fully-approved', $approveUser, '');
+        } else {
+            //responsável pela aprovação
+            $approvalFlowOrders = $this->approvalFlow
+                ->where('order', $accountApproval->order)
+                ->get('role_id')->pluck('role_id');
+
+            $usersNotify = $this->user->whereIn('role_id', $approvalFlowOrders)
+                ->where('email_account_approval_notification', true)
+                ->where('deleted_at', null)
+                ->orWhere(function ($query) use ($approvalFlowOrders) {
+                    $query->where('email_account_approval_notification', true);
+                    $query->whereIn('role_id', $approvalFlowOrders);
+                    $query->with((['role' => function ($query) {
+                        $query->where('filter_cost_center', false);
+                    }]));
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
+
+            $usersMail = $usersNotify->pluck('email');
+            NotificationService::generateDataSendRedisPurchaseOrder($accountApproval->purchase_order, $usersMail->toArray(), 'Pedido de Compra pendente de aprovação', 'purchase-order-to-approve', $approveUser, '');
+        }
     }
 }

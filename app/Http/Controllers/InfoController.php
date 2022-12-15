@@ -16,6 +16,7 @@ use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
 use Storage;
 
@@ -180,7 +181,7 @@ class InfoController extends Controller
                     $description = null;
 
                     if (array_key_exists('reason_to_reject_id', $log['properties']['attributes']) && $log['properties']['attributes']['reason_to_reject_id'] != null && array_key_exists('reason_to_reject', $log['properties']['attributes']) && $log['properties']['attributes']['reason_to_reject'] != null) {
-                        $reason = $log['properties']['attributes']['reason_to_reject']['title'] ;
+                        $reason = $log['properties']['attributes']['reason_to_reject']['title'];
                         $concatenate = true;
                         $motive = $log['properties']['attributes']['reason_to_reject']['title'];
                     }
@@ -244,8 +245,21 @@ class InfoController extends Controller
             }
             $counter++;
         }
-         return response()->json([
+        return response()->json([
             'total' => $counter,
         ], 200);
+    }
+
+    public function redisExample(Request $request)
+    {
+        $id = uniqid();
+        Redis::hSet($id, 'name', 'message-job');
+        Redis::hSet($id, 'data', json_encode($request->all()));
+        Redis::hSet($id, 'opts', '{}');
+        Redis::hSet($id, 'delay', 0);
+        Redis::hSet($id, 'processedOn', 'null');
+        Redis::hSet($id, 'timestamp', 'null');
+        Redis::hSet($id, 'priority', 0);
+        Redis::rpush('active', $id);
     }
 }
