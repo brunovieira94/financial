@@ -402,6 +402,12 @@
 
 <body class="antialiased">
     <p><em>{{ env('APP_NAME') }}</em> || <b>Ambiente:</b> {{ env('APP_ENV') }} ||FAST DEPLOY!</p>
+    <p><b>REDIS_CLIENT:</b> {{ env('REDIS_CLIENT') }}</p>
+    <p><b>REDIS_HOST:</b> {{ env('REDIS_HOST') }}</p>
+    <p><b>REDIS_PORT:</b> {{ env('REDIS_PORT') }}</p>
+    <p><b>REDIS_PASSWORD:</b> {{ env('REDIS_PASSWORD') }}</p>
+    <p><b>REDIS_PREFIX:</b> {{ env('REDIS_PREFIX') }}</p>
+    <p><b>QUEUE_CONNECTION:</b> {{ env('QUEUE_CONNECTION') }}</p>
     <div
         class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
         @if (Route::has('login'))
