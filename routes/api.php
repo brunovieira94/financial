@@ -44,6 +44,7 @@ use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
+use App\Http\Controllers\NotificationCatalogController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -327,6 +328,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/approved-purchase-order', [ReportController::class, 'approvedPurchaseOrder']);
         Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
         Route::get('/payment-requests-cnab-generated-list/{id}', [ReportController::class, 'getCnabGenerate']);
+        Route::post('/payment-requests-cnab-generated-list/export/{id}', [ReportController::class, 'getCnabGenerateExport']);
         Route::post('/due-bills/export', [ReportController::class, 'duePaymentRequestExport']);
         Route::post('/approved-payment-request/export', [ReportController::class, 'approvedPaymentRequestExport']);
         Route::post('/disapproved-payment-request/export', [ReportController::class, 'disapprovedPaymentRequestExport']);
@@ -448,6 +450,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [HotelReasonToRejectController::class, 'update']);
         Route::delete('/{id}', [HotelReasonToRejectController::class, 'destroy']);
     });
+
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationCatalogController::class, 'index']);
+        Route::get('/{id}', [NotificationCatalogController::class, 'show']);
+        Route::post('/{id}', [NotificationCatalogController::class, 'update']);
+        Route::put('status', [NotificationCatalogController::class, 'status']);
+    });
+
+    Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
 });
 
 //Restful route -> Login
@@ -468,4 +479,5 @@ Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPaya
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
 Route::post('/work', [PaidBillingInfoController::class, 'work']);
 Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
+Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);

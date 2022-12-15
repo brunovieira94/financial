@@ -5,9 +5,22 @@ namespace App\Models;
 use Exception;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Activity;
 
 class PaymentRequestHasInstallments extends Model
 {
+    use LogsActivity;
+    protected static $logAttributes = ['payment_request', 'group_payment', 'cnab_generated_installment',   '*'];
+    protected static $logName = 'payment_request_installments';
+    public function tapActivity(Activity $activity, string $eventName)
+    {
+        $user = auth()->user();
+        $user->role = Role::findOrFail($user->role_id);
+        $activity->causer_id = $user->id;
+        $activity->causer_object = $user;
+    }
+
     protected $table = 'payment_requests_installments';
     public $timestamps = false;
     protected $fillable = ['text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received'];

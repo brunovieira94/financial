@@ -389,33 +389,37 @@
                 color: rgba(203, 213, 224, var(--text-opacity))
             }
         }
-
     </style>
 
     <style>
         body {
             font-family: 'Nunito', sans-serif;
         }
-
     </style>
 </head>
 
 <body class="antialiased">
     <p><em>{{ env('APP_NAME') }}</em> || <b>Ambiente:</b> {{ env('APP_ENV') }} ||FAST DEPLOY!</p>
+    <p><b>REDIS_CLIENT:</b> {{ env('REDIS_CLIENT') }}</p>
+    <p><b>REDIS_HOST:</b> {{ env('REDIS_HOST') }}</p>
+    <p><b>REDIS_PORT:</b> {{ env('REDIS_PORT') }}</p>
+    <p><b>REDIS_PASSWORD:</b> {{ env('REDIS_PASSWORD') }}</p>
+    <p><b>REDIS_PREFIX:</b> {{ env('REDIS_PREFIX') }}</p>
+    <p><b>QUEUE_CONNECTION:</b> {{ env('QUEUE_CONNECTION') }}</p>
     <div
         class="relative flex items-top justify-center min-h-screen bg-gray-100 dark:bg-gray-900 sm:items-center py-4 sm:pt-0">
         @if (Route::has('login'))
-            <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
-                @auth
-                    <a href="{{ url('/home') }}" class="text-sm text-gray-700 underline">Home</a>
-                @else
-                    <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">Log in</a>
+        <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
+            @auth
+            <a href="{{ url('/home') }}" class="text-sm text-gray-700 underline">Home</a>
+            @else
+            <a href="{{ route('login') }}" class="text-sm text-gray-700 underline">Log in</a>
 
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Register</a>
-                    @endif
-                @endauth
-            </div>
+            @if (Route::has('register'))
+            <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Register</a>
+            @endif
+            @endauth
+        </div>
         @endif
 
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">

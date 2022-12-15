@@ -184,13 +184,14 @@ class PaymentRequestService
     public function putPaymentRequest($id, Request $request)
     {
         $paymentRequestInfo = $request->all();
-        $paymentRequest = $this->paymentRequest->findOrFail($id);
+        $paymentRequest = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
+        $paymentRequestOld = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
+        $paymentRequest->edit_counter += 1;
         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $paymentRequest->group_approval_flow_id)->max('order');
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
         $stageAccount = $approval->order;
 
         activity()->disableLogging();
-
         if ($paymentRequest->payment_type != 0) {
             if (array_key_exists('invoice_number', $paymentRequestInfo)) {
                 if ($approval->status == 4) {
@@ -222,7 +223,6 @@ class PaymentRequestService
                 $approval->status = 0;
             }
         }
-
         $approval->save();
         activity()->enableLogging();
 
@@ -238,8 +238,6 @@ class PaymentRequestService
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
             $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
-
-        $paymentRequest->fill($paymentRequestInfo)->save();
         $this->putTax($id, $paymentRequestInfo);
 
         $updateCompetence = array_key_exists('competence_date', $paymentRequestInfo);
@@ -248,6 +246,13 @@ class PaymentRequestService
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
         $this->syncProviderGeneric($paymentRequestInfo, $id);
+
+        activity()->disableLogging();
+        $paymentRequest->fill($paymentRequestInfo)->save();
+        activity()->enableLogging();
+
+        $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
+        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }

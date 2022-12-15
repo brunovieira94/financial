@@ -40,7 +40,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
         });
         $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
         if (!array_key_exists('company', $requestInfo))
-        return collect([]);
+            return collect([]);
 
         return $installment->get();
     }
@@ -52,9 +52,6 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->parcel_number,
             $installment->payment_request->company->company_name ?? '',
             $installment->payment_request->company->cnpj ?? '',
-            $installment->bank_account_provider->bank->title ?? '',
-            $installment->bank_account_provider->agency_number ?? '',
-            $installment->bank_account_provider->account_number ?? '',
             $installment->payment_request->business->name ?? '',
             $installment->payment_request->chart_of_accounts->title ?? '',
             $installment->payment_request->cost_center->title ?? '',
@@ -76,7 +73,6 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->fine,
             $installment->discount,
             ExportsUtils::installmentTotalFinalValue($installment),
-            $installment->portion_amount ?? '',
             $installment->group_payment->title ?? '',
             $installment->billet_number ?? '',
             ExportsUtils::translatedInstallmentBilletType($installment),
@@ -85,8 +81,11 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             $installment->bank_account_provider->entity_name ?? '',
             $installment->bank_account_provider->cpf_cnpj ?? '',
             $installment->bank_account_provider->bank->title ?? '',
+            $installment->bank_account_provider->agency_number ?? '',
+            $installment->bank_account_provider->agency_check_number ?? '',
             ExportsUtils::translatedInstallmentBankAccountType($installment),
             $installment->bank_account_provider->account_number ?? '',
+            $installment->bank_account_provider->account_check_number ?? '',
             $installment->payment_request->user->name ?? '',
             $installment->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.' . $installment->payment_request->approval->status),
@@ -102,9 +101,6 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             'Parcela',
             'Empresa',
             'CNPJ Empresa',
-            'Banco da Empresa',
-            'Agência da Empresa',
-            'Conta Bancária da Empresa',
             'Negócio',
             'Plano de Contas',
             'Centro de Custo',
@@ -125,7 +121,6 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             'Juros',
             'Multa',
             'Desconto',
-            'Valor Final',
             'Valor a Pagar',
             'Forma de Pagamento',
             'Número do Boleto',
@@ -135,8 +130,11 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
             'Nome/Razão Social',
             'CPF/CNPJ',
             'Banco',
+            'Agência',
+            'Dígito da Agência',
             'Tipo de Conta Bancária',
             'Conta Bancária',
+            'Dígito da Conta Bancária',
             'Usuário',
             'Etapa Atual',
             'Status Atual',
