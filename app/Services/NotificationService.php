@@ -123,7 +123,7 @@ class NotificationService
                 'value' =>  '' ?? '',
             ];
             $causeUser = [
-                'name' =>  'causeUser',
+                'name' =>  'causerUser',
                 'value' =>  $approveUser->name ?? '',
             ];
             $paymentRequestId = [
