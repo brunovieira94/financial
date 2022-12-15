@@ -53,7 +53,7 @@ class CangoorooService
 
         $supplierName = null;
         $sellingPrice = null;
-        $isVcn = null;
+        $isVcn = false;
         foreach ($room['CustomFields'] as $customField) {
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
@@ -93,7 +93,7 @@ class CangoorooService
                 "agency_name" => array_key_exists('AgencyName', $room['CreationUserDetail']) ? $room['CreationUserDetail']['AgencyName'] : $room['CreationUserDetail']['Name'],
                 "creation_user" => $room['CreationUserDetail']['Name'],
                 "selling_price" => $sellingPrice,
-                "selling_price" => $isVcn,
+                "is_vcn" => $isVcn,
             ];
 
         if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id'], 'id_hotel_cangooroo' => $data['hotel_id']];
