@@ -53,11 +53,14 @@ class CangoorooService
 
         $supplierName = null;
         $sellingPrice = null;
+        $isVcn = null;
         foreach ($room['CustomFields'] as $customField) {
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
             if ($customField['Name'] == 'SupplierPrice.Price')
                 $sellingPrice = $customField['Value'];
+            if ($customField['Name'] == 'SupplierVCNpayment')
+                $isVcn = $customField['Value'];
         }
 
         $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
@@ -90,6 +93,7 @@ class CangoorooService
                 "agency_name" => array_key_exists('AgencyName', $room['CreationUserDetail']) ? $room['CreationUserDetail']['AgencyName'] : $room['CreationUserDetail']['Name'],
                 "creation_user" => $room['CreationUserDetail']['Name'],
                 "selling_price" => $sellingPrice,
+                "selling_price" => $isVcn,
             ];
 
         if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id'], 'id_hotel_cangooroo' => $data['hotel_id']];
