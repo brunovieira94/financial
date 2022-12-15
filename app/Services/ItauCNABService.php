@@ -184,12 +184,6 @@ class ItauCNABService
         $arrayInstallments = [];
         $arrayPaymentRequest = [];
 
-        if (!(substr($arrayString[0], 0, 3) == '001')) {
-            return Response()->json([
-                'error' => 'Só é permitido arquivo retorno do Banco do Brasil'
-            ]);
-        }
-
         foreach ($arrayString as $line) {
 
             $recordType = substr($line, 7, 1); // 3
