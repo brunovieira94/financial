@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        'App\Console\Commands\DailyApprovalsReport',
+        'App\Console\Commands\DailyPurchaseOrderRenewal',
     ];
 
     /**
@@ -24,7 +25,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        //desativar mails agendados
+        //$schedule->command('command:payment-request-approvals-email')
+        //->dailyAt('06:00');
+        //$schedule->command('command:purchase-order-renewal')->dailyAt('07:00');
     }
 
     /**

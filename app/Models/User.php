@@ -21,6 +21,8 @@ class User extends Authenticatable
         'password',
         'role_id',
         'status',
+        'email_account_approval_notification',
+        'daily_notification_accounts_approval_mail',
     ];
 
     protected $hidden = [

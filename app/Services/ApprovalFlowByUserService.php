@@ -31,15 +31,17 @@ class ApprovalFlowByUserService
     private $approvalFlow;
     private $accountsPayableApprovalFlowClean;
     private $paymentRequestClean;
+    private $user;
 
     private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
 
-    public function __construct(PaymentRequestClean $paymentRequestClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
+    public function __construct(User $user, PaymentRequestClean $paymentRequestClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
         $this->accountsPayableApprovalFlow = $accountsPayableApprovalFlow;
         $this->approvalFlow = $approvalFlow;
         $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
         $this->paymentRequestClean = $paymentRequestClean;
+        $this->user = $user;
     }
 
     public function getAllAccountsForApproval($requestInfo)
@@ -336,6 +338,37 @@ class ApprovalFlowByUserService
             }
             $accountApproval->action = 2;
             $accountApproval->fill($requestInfo)->save();
+        }
+
+        $this->notifyUsers($accountApproval, $maxOrder);
+    }
+
+    public function notifyUsers($accountApproval, $maxOrder)
+    {
+        if ($accountApproval->order < $maxOrder) {
+            $approvalFlowOrders = $this->approvalFlow
+                ->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)
+                ->where('order', $accountApproval->order)
+                ->get('role_id')->pluck('role_id');
+
+            $usersNotify = $this->user->with((['cost_center' => function ($query) use ($accountApproval) {
+                $query->where('cost_center_id', $accountApproval->payment_request->cost_center_id);
+            }]))
+                ->where('email_account_approval_notification', true)
+                ->whereIn('role_id', $approvalFlowOrders)
+                ->orWhere(function ($query) use ($approvalFlowOrders) {
+                    $query->where('email_account_approval_notification', true);
+                    $query->whereIn('role_id', $approvalFlowOrders);
+                    $query->with((['role' => function ($query) {
+                        $query->where('filter_cost_center', false);
+                    }]));
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
+
+            $usersMail = $usersNotify->pluck('email');
+            $dataSendMail = NotificationService::generateDataSendRedisPaymentRequest($accountApproval->payment_request, $usersMail, 'Conta pendente de aprovação', 'payment-request-to-approve');
+            NotificationService::sendEmail($dataSendMail);
         }
     }
 }

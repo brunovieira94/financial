@@ -44,6 +44,7 @@ use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
+use App\Http\Controllers\NotificationCatalogController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -446,6 +447,15 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('/{id}', [HotelReasonToRejectController::class, 'update']);
         Route::delete('/{id}', [HotelReasonToRejectController::class, 'destroy']);
     });
+
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationCatalogController::class, 'index']);
+        Route::get('/{id}', [NotificationCatalogController::class, 'show']);
+        Route::post('/{id}', [NotificationCatalogController::class, 'update']);
+        Route::put('status', [NotificationCatalogController::class, 'status']);
+    });
+
+    Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
 });
 
 //Restful route -> Login
@@ -463,4 +473,5 @@ Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
