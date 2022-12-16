@@ -207,6 +207,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/', [BillingPaymentController::class, 'index']);
         Route::get('/{id}', [BillingPaymentController::class, 'show']);
         Route::delete('/{id}', [BillingPaymentController::class, 'destroy']);
+        Route::post('/export', [BillingPaymentController::class, 'transfeeraExport']);
     });
 
     Route::prefix('paid-billing-info')->group(function () {

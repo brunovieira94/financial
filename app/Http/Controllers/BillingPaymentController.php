@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\BillingPaymentService as BillingPaymentService;
+use App\Exports\BillingTransfeeraExport;
 
 class BillingPaymentController extends Controller
 {
@@ -27,5 +28,13 @@ class BillingPaymentController extends Controller
     public function destroy($id)
     {
         return $this->billingPaymentService->deleteBillingPayment($id);
+    }
+
+    public function transfeeraExport(Request $request)
+    {
+        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
+            return (new BillingTransfeeraExport($request->all()))->download('transfeera.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        }
+        return (new BillingTransfeeraExport($request->all()))->download('transfeera.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 }
