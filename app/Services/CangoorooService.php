@@ -53,14 +53,14 @@ class CangoorooService
 
         $supplierName = null;
         $sellingPrice = null;
-        $isVcn = false;
+        $isVcn = 0;
         foreach ($room['CustomFields'] as $customField) {
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
             if ($customField['Name'] == 'SupplierPrice.Price')
                 $sellingPrice = $customField['Value'];
             if ($customField['Name'] == 'SupplierVCNpayment')
-                $isVcn = $customField['Value'];
+                $isVcn = $customField['Value'] == 'true' ? 1 : 0;
         }
 
         $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
