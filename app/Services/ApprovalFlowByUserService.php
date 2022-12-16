@@ -23,6 +23,7 @@ use Config;
 use CreateUserHasPaymentRequest;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 use Response;
 
 class ApprovalFlowByUserService
@@ -93,30 +94,33 @@ class ApprovalFlowByUserService
 
     public function approveManyAccounts($requestInfo)
     {
-        $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['group_approval_flow_id']);
         if (array_key_exists('ids', $requestInfo)) {
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
-                    $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
-                        $query->withoutGlobalScopes();
-                    }]))->findOrFail($value);
-                    $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
-                    $accountApproval->status = Config::get('constants.status.disapproved');
-                    if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
-                        $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, null, 2);
-                        $this->approveOrDisapprove($accountApproval, false, $maxOrder, $requestInfo);
-                    } else {
-                        if ($this->approvalFlow
-                            ->where('order', $accountApproval->order)
-                            ->where('role_id', auth()->user()->role_id)
-                            ->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'))
-                            ->doesntExist()
-                        ) {
-                            return response()->json([
-                                'error' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
-                            ], 422);
+                    if (!Redis::exists('h', $value)) {
+                        Redis::hSet('h', $value, 'payment-request');
+                        $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
+                            $query->withoutGlobalScopes();
+                        }]))->findOrFail($value);
+                        $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
+                        $accountApproval->status = Config::get('constants.status.disapproved');
+                        if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
+                            $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, null, 2);
+                            $this->approveOrDisapprove($accountApproval, false, $maxOrder, $requestInfo);
+                        } else {
+                            if ($this->approvalFlow
+                                ->where('order', $accountApproval->order)
+                                ->where('role_id', auth()->user()->role_id)
+                                ->where('group_approval_flow_id', $accountApproval->group_approval_flow_id)
+                                ->doesntExist()
+                            ) {
+                                Redis::del('h', $value);
+                                return response()->json([
+                                    'error' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                                ], 422);
+                            }
+                            $this->approveOrDisapprove($accountApproval, false, $maxOrder, $requestInfo);
                         }
-                        $this->approveOrDisapprove($accountApproval, false, $maxOrder, $requestInfo);
                     }
                 }
                 return response()->json([
@@ -124,34 +128,38 @@ class ApprovalFlowByUserService
                 ], 200);
             } else {
                 foreach ($requestInfo['ids'] as $value) {
-                    $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
-                        $query->withoutGlobalScopes();
-                    }]))->findOrFail($value);
-                    $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
-                    $accountApproval->status = 0;
-                    if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
-                        if (!$this->paymentRequestOnlyApprove($accountApproval->payment_request->id)) {
-                            $this->approveOrDisapprove($accountApproval, true, $maxOrder, $requestInfo);
-                            $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, auth()->user()->id, 1);
+                    if (!Redis::exists('h', $value)) {
+                        Redis::hSet('h', $value, 'payment-request');
+                        $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
+                            $query->withoutGlobalScopes();
+                        }]))->findOrFail($value);
+                        $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
+                        $accountApproval->status = 0;
+                        if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
+                            if (!$this->paymentRequestOnlyApprove($accountApproval->payment_request->id)) {
+                                $this->approveOrDisapprove($accountApproval, true, $maxOrder, $requestInfo);
+                                $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, auth()->user()->id, 1);
+                            } else {
+                                $accountApproval->action = 1;
+                                $accountApproval->save();
+                                $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+                                Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'approved', null, $description, $accountApproval->order, auth()->user()->id, null);
+                                $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, auth()->user()->id, 1);
+                            }
                         } else {
-                            $accountApproval->action = 1;
-                            $accountApproval->save();
-                            $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
-                            Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'approved', null, $description, $accountApproval->order, auth()->user()->id, null);
-                            $this->updatePaymentRequestUserStatus($accountApproval->payment_request->id, auth()->user()->id, 1);
+                            if ($this->approvalFlow
+                                ->where('order', $accountApproval->order)
+                                ->where('role_id', auth()->user()->role_id)
+                                ->where('group_approval_flow_id', $accountApproval->group_approval_flow_id)
+                                ->doesntExist()
+                            ) {
+                                Redis::del('h', $value);
+                                return response()->json([
+                                    'error' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                                ], 422);
+                            }
+                            $this->approveOrDisapprove($accountApproval, true, $maxOrder, $requestInfo);
                         }
-                    } else {
-                        if ($this->approvalFlow
-                            ->where('order', $accountApproval->order)
-                            ->where('role_id', auth()->user()->role_id)
-                            ->whereIn('group_approval_flow_id', $approvalFlowUserOrder->pluck('group_approval_flow_id'))
-                            ->doesntExist()
-                        ) {
-                            return response()->json([
-                                'error' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
-                            ], 422);
-                        }
-                        $this->approveOrDisapprove($accountApproval, true, $maxOrder, $requestInfo);
                     }
                 }
                 return response()->json([
@@ -340,6 +348,7 @@ class ApprovalFlowByUserService
             $accountApproval->fill($requestInfo)->save();
         }
 
+        Redis::del('h', $accountApproval->payment_request_id);
         $this->notifyUsers($accountApproval, $maxOrder);
     }
 
