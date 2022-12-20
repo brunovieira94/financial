@@ -201,6 +201,10 @@ class PaymentRequestService
             }
         }
 
+        if ($approval->status == 1) {
+            $approval->order = $maxOrder;
+        }
+
         if ($approval->status != 7) {
             $approval->status = Config::get('constants.status.open');
         }
