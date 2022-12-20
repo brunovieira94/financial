@@ -63,6 +63,7 @@ class PaymentRequestService
     public function getPaymentRequestByUser($requestInfo)
     {
         $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
+        auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
         $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency'])->where('user_id', auth()->user()->id), $requestInfo);
         /*foreach ($paymentRequests as $paymentRequest) {
 >>>>>>> main

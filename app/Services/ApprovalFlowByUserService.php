@@ -47,6 +47,7 @@ class ApprovalFlowByUserService
 
     public function getAllAccountsForApproval($requestInfo)
     {
+        auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order', 'group_approval_flow_id']);
 
         if (!$approvalFlowUserOrder)
