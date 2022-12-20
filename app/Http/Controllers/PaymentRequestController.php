@@ -108,6 +108,7 @@ class PaymentRequestController extends Controller
         $requestInfo = $request->all();
         $paymentRequest = PaymentRequest::with(['provider', 'installments'])->findOrFail($id);
 
+        /*
         if (!$paymentRequest->applicant_can_edit) {
             $accountApproval = $this->accountsPayableApprovalFlow->where('payment_request_id', $id)->first();
             if ($this->approvalFlow
@@ -120,6 +121,7 @@ class PaymentRequestController extends Controller
                 ], 422);
             }
         }
+        remove validation edition */
 
         if (array_key_exists('invoice_number', $requestInfo)) {
             if ($paymentRequest->invoice_number != $requestInfo['invoice_number']) {
