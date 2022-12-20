@@ -498,6 +498,8 @@ class Utils
     public static function createLogApprovalFlowLogPaymentRequest($paymentRequestID, $type, $motive, $description, $stage, $userID, $recipient, $createdAt = null)
     {
         $user = User::withTrashed()->with('role')->find($userID);
+        $temporary = $user->logged_user_id == null ? false : true;
+        $role = Role::withTrashed()->find(auth()->user()->role_id);
         if ($createdAt == null) {
             AccountsPayableApprovalFlowLog::create(
                 [
@@ -507,9 +509,10 @@ class Utils
                     'stage' => $stage,
                     'user_id' => $user != null ?  $user->id : null,
                     'user_name' => $user != null ? $user->name : null,
-                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'user_role' => $role != null ? $role->title : null,
                     'payment_request_id' => $paymentRequestID,
                     'recipient' => $recipient,
+                    'temporary' => $temporary
                 ]
             );
         } else {
@@ -521,10 +524,11 @@ class Utils
                     'stage' => $stage,
                     'user_id' => $user != null ?  $user->id : null,
                     'user_name' => $user != null ? $user->name : null,
-                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'user_role' => $role != null ? $role : null,
                     'payment_request_id' => $paymentRequestID,
                     'recipient' => $recipient,
-                    'created_at' => $createdAt
+                    'created_at' => $createdAt,
+                    'temporary' => $temporary
                 ]
             );
         }

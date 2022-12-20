@@ -448,6 +448,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [HotelReasonToRejectController::class, 'destroy']);
     });
 
+    Route::post('/change-logged-user/{id}', [AuthController::class, 'changeLogin']);
+
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationCatalogController::class, 'index']);
         Route::get('/{id}', [NotificationCatalogController::class, 'show']);
@@ -457,6 +459,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
     Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
 });
+
+
 
 //Restful route -> Login
 Route::prefix('/auth')->group(function () {

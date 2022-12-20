@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\PaymentRequest;
 use App\Models\Provider;
+use App\Models\User;
 use App\Services\AuthService as AuthService;
 use Exception;
 use Illuminate\Http\Request;
@@ -22,6 +23,15 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        if (User::where('email', $request->username)->exists()) {
+            $user = User::where('email', $request->username)->first();
+            $hash = app('hash');
+            if ($hash->check($request->password, $user->password)) {
+                User::where('id', $user->id)
+                    ->update(['logged_user_id' => null]);
+            }
+        }
+
         $request->request->add([
             'client_id' => env('TOKEN_CLIENT_ID'),
             'client_secret' => env('TOKEN_CLIENT_SECRET')
@@ -42,6 +52,11 @@ class AuthController extends Controller
         $jwtPayload = json_decode($tokenPayload);
 
         return $this->authService->getUser($jwtPayload->sub, $tokenResponse);
+    }
+
+    public function changeLogin(Request $request, $id)
+    {
+        return $this->authService->changeLogin($request, $id);
     }
 
     public function log(Request $request)

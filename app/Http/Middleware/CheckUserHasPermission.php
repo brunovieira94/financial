@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use App\Models\RoleHasModule;
 use App\Models\Module;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 class CheckUserHasPermission
@@ -21,6 +22,9 @@ class CheckUserHasPermission
     public function handle($request, Closure $next)
     {
         $user = $request->user();
+        if ($user->logged_user_id != null) {
+            $user = User::with(['role'])->findOrFail($user->logged_user_id);
+        }
         $uri = Route::current()->uri();
         $url = explode('/', $request->url());
         $route = explode('/', $uri);
@@ -32,7 +36,8 @@ class CheckUserHasPermission
             'update-user',
             'update-date-installment',
             'delivery',
-            'purchase-order-export'
+            'purchase-order-export',
+            'change-logged-user'
         ];
 
         $unverifiedSubRoutes = [
@@ -84,12 +89,6 @@ class CheckUserHasPermission
             $query->where('active', true);
         })->get(['module_id']);
 
-        // if ($request->isMethod('GET')) {
-        //     if (array_key_exists('noAuth', $request->all())){
-        //         return $next($request);
-        //     }
-        // }
-
         switch ($routeAccessed) {
             case 'approved-installment':
                 $routeAccessed = 'approved-payment-request';
@@ -112,7 +111,6 @@ class CheckUserHasPermission
                 $routeAccessed = 'payment-request';
                 break;
         }
-
 
         foreach ($roles as $role) {
             $routesAllowedByUser = $this->module->where('id', $role->module_id)->get(['route']);
