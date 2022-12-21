@@ -191,6 +191,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('billing')->group(function () {
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
         Route::put('/approve-many', [BillingController::class, 'approveMany']);
+        Route::get('/get-billing-for-approve', [BillingController::class, 'getBillingsForApproval']);
         Route::get('/show/{id}', [BillingController::class, 'show']);
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
         Route::get('/{approvalStatus}', [BillingController::class, 'index']);
@@ -205,6 +206,8 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('billing-payment')->group(function () {
         Route::get('/', [BillingPaymentController::class, 'index']);
         Route::get('/{id}', [BillingPaymentController::class, 'show']);
+        Route::delete('/{id}', [BillingPaymentController::class, 'destroy']);
+        Route::post('/export', [BillingPaymentController::class, 'transfeeraExport']);
     });
 
     Route::prefix('paid-billing-info')->group(function () {
@@ -212,12 +215,12 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
-        Route::post('/initial-import', [PaidBillingInfoController::class, 'import']);
         //Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {
         Route::get('/', [HotelApprovalFlowController::class, 'index']);
+        Route::get('/approval-roles', [HotelApprovalFlowController::class, 'getHotelApprovalRoles']);
         Route::post('/', [HotelApprovalFlowController::class, 'store']);
         Route::get('/all', [HotelApprovalFlowController::class, 'index']);
     });
@@ -262,6 +265,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
         Route::get('/log-payment-request-update/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
+        Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
@@ -477,5 +481,8 @@ Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
+Route::post('/work', [PaidBillingInfoController::class, 'work']);
+Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);

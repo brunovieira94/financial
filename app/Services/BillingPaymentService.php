@@ -57,4 +57,11 @@ class BillingPaymentService
     {
         return $this->billingPayment->with($this->with)->findOrFail($id);
     }
+
+    public function deleteBillingPayment($id)
+    {
+        $billingPayment = $this->billingPayment->findOrFail($id);
+        $billingPayment->delete();
+        return '';
+    }
 }

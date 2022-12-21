@@ -26,6 +26,15 @@ class HotelService
         if (array_key_exists('isValid', $requestInfo)) {
             $hotel->where('is_valid', $requestInfo['isValid']);
         }
+        if (array_key_exists('cnpj_hotel', $requestInfo)) {
+            $hotel->where('cnpj_hotel', $requestInfo['cnpj_hotel']);
+        }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $hotel->where(function ($query) use ($requestInfo) {
+                $query->where('cpf_cnpj', $requestInfo['cnpj'])
+                      ->orWhere('cnpj_extra', $requestInfo['cnpj']);
+            });
+        }
         return Utils::pagination($hotel->with($this->with), $requestInfo);
     }
 
@@ -54,6 +63,9 @@ class HotelService
     public function putHotel($id, $hotelInfo)
     {
         $hotel = $this->hotel->findOrFail($id);
+        if($hotelInfo['cnpj_hotel'] != $hotel['cnpj_hotel'] || $hotelInfo['cpf_cnpj'] != $hotel['cpf_cnpj'] || $hotelInfo['holder_full_name'] != $hotel['holder_full_name'] || ($hotelInfo['cnpj_extra'] && ($hotelInfo['cnpj_extra'] != $hotel['cnpj_extra']))){
+            $hotelInfo['is_valid'] = false;
+        }
         $hotel->fill($hotelInfo)->save();
         $this->putBankAccounts($id, $hotelInfo);
         return $this->hotel->with($this->with)->findOrFail($hotel->id);

@@ -7,6 +7,8 @@ use App\Services\PaidBillingInfoService as PaidBillingInfoService;
 //use App\Exports\PaidBillingInfoExport;
 use App\Imports\PaidBillingInfoImport;
 use App\Imports\DailyPaidBillingInfoImport;
+use App\Models\PaidBillingInfo;
+use Illuminate\Support\Facades\Artisan;
 
 class PaidBillingInfoController extends Controller
 {
@@ -39,11 +41,9 @@ class PaidBillingInfoController extends Controller
 
     public function import()
     {
+        ini_set('max_execution_time', 300);
         $this->paidBillingInfoImport->import(request()->file('import_file'));
-        return response([
-            'not_imported' => $this->paidBillingInfoImport->not_imported,
-            'imported' => $this->paidBillingInfoImport->imported,
-        ]);
+        return response('');
     }
 
     public function dailyImport()
@@ -53,6 +53,19 @@ class PaidBillingInfoController extends Controller
             'not_imported' => $this->dailyPaidBillingInfoImport->not_imported,
             'imported' => $this->dailyPaidBillingInfoImport->imported,
         ]);
+    }
+
+    public function work()
+    {
+        ini_set('max_execution_time', 6000);
+        Artisan::call('queue:work --stop-when-empty --timeout=6000', []);
+        return response('');
+    }
+
+    public function truncate()
+    {
+        PaidBillingInfo::truncate();
+        return response('');
     }
 
     // public function export(Request $request, $approvalStatus)

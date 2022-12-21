@@ -77,12 +77,14 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypes[$bankAccount->account_type] : '',
             !is_null($bankAccount) ? (!!($bankAccount->account_check_number) ? $bankAccount->account_number.'-'.$bankAccount->account_check_number : $bankAccount->account_number) : '',
             !is_null($hotel) ? $hotel->holder_full_name : '',
-            !is_null($hotel) ? $hotel->cpf_cnpj : '',
+            $billing->cnpj,
             !is_null($hotel) ? ($hotel->is_valid ? 'Sim' : 'Não') : '',
             !is_null($cangooroo) ? $cangooroo->selling_price : '',
             $billing->pax_in_house ? 'Sim' : 'Não',
             $billing->created_at,
             !is_null($reasonToReject) ? $reasonToReject->title : '',
+            $billing->suggestion,
+            $billing->suggestion_reason,
         ];
     }
 
@@ -116,12 +118,14 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             'Tipo de Conta',
             'Conta',
             'Nome Completo do Titular',
-            'CPF/CNPJ',
+            'CNPJ',
             'CNPJ Válido?',
             'Valor Cangooroo',
             'Pax In House',
             'Data de Criação',
             'Motivo de Rejeição',
+            'Sugestão',
+            'Motivo',
         ];
     }
 }
