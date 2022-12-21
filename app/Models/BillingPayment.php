@@ -35,6 +35,8 @@ class BillingPayment extends Model
         'cnpj',
         'form_of_payment',
         'hotel_id',
+        'status_cnab_code',
+        'text_cnab',
     ];
 
     protected $appends = ['ready_to_pay', 'invoiced_value'];
