@@ -410,7 +410,7 @@ class BillingService
             $suggestionReason = $suggestionReason.' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
         }
         if($cangooroo['provider_name'] != 'Omnibees' && $cangooroo['provider_name'] != 'HSystem' && $cangooroo['provider_name'] != 'Trend'){
-            $suggestionReason = $suggestionReason.' | Reserva não pertence a um dos seguintes fornecedores: Omnibees, Trend, HSystem';
+            $suggestionReason = $suggestionReason.' | Reserva referente a Broker';
         }
         if($cangooroo['is_vcn']){
             $suggestionReason = $suggestionReason.' | A forma de pagamento para essa reserva é VCN';

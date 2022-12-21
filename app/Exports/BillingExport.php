@@ -55,6 +55,7 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             $billing->payment_status,
             !is_null($cangooroo) ? $cangooroo->status : '',
             $billing->status_123,
+            $billing->billing_payment_id,
             $billing->supplier_value,
             $billing->boleto_value,
             $billing->pay_date,
@@ -85,6 +86,8 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             !is_null($reasonToReject) ? $reasonToReject->title : '',
             $billing->suggestion,
             $billing->suggestion_reason,
+            '',
+            '',
         ];
     }
 
@@ -96,6 +99,7 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             'Status do Pagamento',
             'Status do Cangooroo',
             'Status 123',
+            'Id do Pagamento',
             'Valor do Parceiro',
             'Valor do Boleto',
             'Data de pagamento',
@@ -126,6 +130,8 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             'Motivo de Rejeição',
             'Sugestão',
             'Motivo',
+            'Pago',
+            'Obs Pagamento'
         ];
     }
 }
