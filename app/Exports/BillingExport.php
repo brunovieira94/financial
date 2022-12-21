@@ -83,6 +83,8 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             $billing->pax_in_house ? 'Sim' : 'Não',
             $billing->created_at,
             !is_null($reasonToReject) ? $reasonToReject->title : '',
+            $billing->suggestion,
+            $billing->suggestion_reason,
         ];
     }
 
@@ -122,6 +124,8 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
             'Pax In House',
             'Data de Criação',
             'Motivo de Rejeição',
+            'Sugestão',
+            'Motivo',
         ];
     }
 }
