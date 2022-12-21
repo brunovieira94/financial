@@ -63,6 +63,7 @@ class PaymentRequestService
     public function getPaymentRequestByUser($requestInfo)
     {
         $paymentRequests = Utils::search($this->paymentRequestClean, $requestInfo);
+        auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
         $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency'])->where('user_id', auth()->user()->id), $requestInfo);
         /*foreach ($paymentRequests as $paymentRequest) {
 >>>>>>> main
@@ -200,6 +201,10 @@ class PaymentRequestService
             }
         }
 
+        if ($approval->status == 1) {
+            $approval->order = $maxOrder;
+        }
+
         if ($approval->status != 7) {
             $approval->status = Config::get('constants.status.open');
         }
@@ -331,7 +336,9 @@ class PaymentRequestService
         if (array_key_exists('installments', $paymentRequestInfo)) {
             $notDeleteInstallmentsID = [];
             foreach ($paymentRequestInfo['installments'] as $key => $installments) {
-
+                if (array_key_exists('status', $installments) && $installments['status'] != 4) {
+                    $installments['status'] = 0;
+                }
                 if (array_key_exists('billet_file', $installments)) {
                     $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0] ?? null;
                 }
@@ -605,6 +612,9 @@ class PaymentRequestService
         $installment = $this->installments->findOrFail($id);
         if (array_key_exists('billet_file', $requestInfo)) {
             $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
+        }
+        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] != 4) {
+            $requestInfo['status'] = 0;
         }
         $installment->fill($requestInfo)->save();
 

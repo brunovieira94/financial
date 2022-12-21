@@ -13,6 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        \App\Console\Commands\StatusUserUpdate::class,
         'App\Console\Commands\DailyApprovalsReport',
         'App\Console\Commands\DailyPurchaseOrderRenewal',
     ];
@@ -25,6 +26,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        //$schedule->command('php artisan alter:user-status')->dailyAt('03:00');
         //desativar mails agendados
         //$schedule->command('command:payment-request-approvals-email')
         //->dailyAt('06:00');
@@ -38,7 +40,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

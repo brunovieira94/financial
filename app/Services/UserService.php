@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\AdditionalUser;
 use App\Models\User;
 use App\Models\CostCenter;
 use App\Models\Business;
-use AWS\CRT\HTTP\Response;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
@@ -13,7 +13,7 @@ class UserService
     private $user;
     private $costCenter;
     private $business;
-    private $with = ['cost_center', 'business', 'role'];
+    private $with = ['cost_center', 'business', 'role', 'additional_users.role'];
 
     public function __construct(User $user, CostCenter $costCenter, Business $business)
     {
@@ -39,6 +39,10 @@ class UserService
                 }
             }
         }
+        if (array_key_exists('not_active', $requestInfo)) {
+            $user = $user->where('status', '!=', 0);
+        }
+
         return Utils::pagination($user->with($this->with), $requestInfo);
     }
 
@@ -53,8 +57,10 @@ class UserService
         $userInfo['password'] = Hash::make($userInfo['password']);
         $user = $user->create($userInfo);
 
+        self::syncAdditionalUsers($user, $userInfo);
         self::syncBusiness($user, $userInfo);
         self::syncCostCenter($user, $userInfo);
+
         return $this->user->with($this->with)->findOrFail($user->id);
     }
 
@@ -65,12 +71,21 @@ class UserService
         if (array_key_exists('password', $userInfo)) {
             $userInfo['password'] = Hash::make($userInfo['password']);
         }
+
         $user->fill($userInfo)->save();
 
+        self::syncAdditionalUsers($user, $userInfo);
         self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
 
-        return $this->user->with($this->with)->findOrFail($id);
+        $user = $this->user->with($this->with)->findOrFail($id);
+
+        if ($user->status == 0) {
+            AdditionalUser::where('user_additional_id', $user->id)->delete();
+            User::where('id', $user->id)
+                ->update(['return_date' => null]);
+        }
+        return $user;
     }
 
     public function deleteUser($id)
@@ -116,6 +131,13 @@ class UserService
     {
         if (array_key_exists('business', $userInfo)) {
             $user->business()->sync($userInfo['business']);
+        }
+    }
+
+    public function syncAdditionalUsers($user, $userInfo)
+    {
+        if (array_key_exists('additional_users', $userInfo)) {
+            $user->additional_users()->sync($userInfo['additional_users']);
         }
     }
 }
