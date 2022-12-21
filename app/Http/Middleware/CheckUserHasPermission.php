@@ -33,6 +33,7 @@ class CheckUserHasPermission
             'logs',
             'module',
             'cnab',
+            'hotel-cnab',
             'update-user',
             'update-date-installment',
             'delivery',

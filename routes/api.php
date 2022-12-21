@@ -26,6 +26,7 @@ use App\Http\Controllers\ApprovalFlowByUserController;
 use App\Http\Controllers\TypeOfTaxController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ItauCNABController;
+use App\Http\Controllers\HotelCNABController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MeasurementUnitController;
@@ -384,6 +385,13 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
             Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
             Route::post('/return', [ItauCNABController::class, 'return240']);
             Route::post('/cnab-parse', [ItauCNABController::class, 'cnabParse']);
+        });
+    });
+
+    Route::prefix('hotel-cnab')->group(function () {
+        Route::prefix('/240')->group(function () {
+            Route::post('/cnab-parse', [HotelCNABController::class, 'cnabParse']);
+            Route::post('/return', [HotelCNABController::class, 'return240']);
         });
     });
 
