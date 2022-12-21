@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\BillingService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -72,6 +73,19 @@ class BillingPayment extends Model
             $sum += $billing->supplier_value;
         }
         return $sum;
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+        self::deleting(function ($billingPayment) {
+            foreach ($billingPayment->billings as $billing) {
+                $billing = Billing::findOrFail($billing->id);
+                $billing->billing_payment_id = null;
+                $billing->approval_status =  Config::get('constants.billingStatus.canceled');
+                $billing->save();
+            }
+        });
     }
 
     public array $formsOfPayment = [

@@ -51,4 +51,9 @@ class BankAccount extends Model
         "Conta Corrente",
         "Conta Salário",
     ];
+
+    public array $accountTypesTransfeera = [
+        "POUPANÇA",
+        "CORRENTE",
+    ];
 }

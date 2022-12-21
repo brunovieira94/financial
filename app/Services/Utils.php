@@ -6,6 +6,7 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
+use App\Models\HotelApprovalFlow;
 use App\Models\ApprovalFlowSupply;
 use App\Models\PaidBillingInfo;
 use App\Models\PurchaseOrder;
@@ -14,6 +15,8 @@ use App\Models\SupplyApprovalFlow;
 use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Billing;
+use App\Models\BillingLog;
 use Carbon\Carbon;
 use Config;
 use DB;
@@ -535,6 +538,39 @@ class Utils
         }
     }
 
+    public static function createBillingLog($billingId, $type, $motive, $description, $stage, $userID, $createdAt = null)
+    {
+        $user = User::withTrashed()->with('role')->find($userID);
+        if ($createdAt == null) {
+            BillingLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'billing_id' => $billingId,
+                ]
+            );
+        } else {
+            BillingLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'billing_id' => $billingId,
+                    'created_at' => $createdAt
+                ]
+            );
+        }
+    }
+
     public static function baseFilterPurchaseOrder($purchaseOrder, $requestInfo)
     {
 
@@ -767,6 +803,21 @@ class Utils
         }
         if (array_key_exists('form_of_payment', $requestInfo)) {
             $billing->where('form_of_payment', $requestInfo['form_of_payment']);
+        }
+        if (array_key_exists('role', $requestInfo)) {
+            $approvalFlowOrders = HotelApprovalFlow::where('role_id', $requestInfo['role'])->get(['order']);
+            $billingIDs = [];
+            foreach ($approvalFlowOrders as $approvalFlowOrder) {
+                $billingApprovalFlow = Billing::where('order', $approvalFlowOrder['order']);
+                $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
+            }
+            $billing = $billing->whereIn('id', $billingIDs);
+        }
+        if (array_key_exists('order', $requestInfo)) {
+            $billing = Billing::where('order', $requestInfo['order']);
+        }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $billing->where('cnpj', $requestInfo['cnpj']);
         }
         return $billing;
     }

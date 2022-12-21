@@ -18,6 +18,23 @@ class HotelApprovalFlowService
         return $this->hotelApprovalFlow->with($this->with)->get();
     }
 
+    public function getHotelApprovalRoles()
+    {
+        $roles = [];
+        $hotelApprovalFlow = $this->hotelApprovalFlow->with($this->with)->get();
+        foreach ($hotelApprovalFlow as $hotelApproval) {
+            if(!array_key_exists($hotelApproval->order, $roles)){
+                $data = [
+                    'order' => $hotelApproval->order,
+                    'role_id' => $hotelApproval->role_id,
+                    'title' => $hotelApproval->role->title,
+                ];
+                array_push($roles, $data);
+            }
+        }
+        return $roles;
+    }
+
     public function postHotelApprovalFlow($hotelApprovalFlowInfo)
     {
         HotelApprovalFlow::truncate();
