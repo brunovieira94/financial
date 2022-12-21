@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Billing;
 use App\Models\BillingPayment;
+use App\Services\Utils;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -32,9 +33,10 @@ class SetPayBillingImport implements ToCollection, WithValidation, WithHeadingRo
                     $billingPayment->status = 3;
                     $billingPayment->save();
                     foreach ($billingPayment->billings as $key => $billing) {
-                        Billing::where('id',$billing->id)->update([
-                            'approval_status' => Config::get('constants.billingStatus.paid out')
-                        ]);
+                        $bil = Billing::where('id',$billing->id)->with(['cangooroo','user', 'bank_account'])->first();
+                        $bil->approval_status = Config::get('constants.billingStatus.paid out');
+                        $bil->save();
+                        Utils::createPaiBillingInfo([$bil]);
                     }
                     $this->imported++;
                 }
