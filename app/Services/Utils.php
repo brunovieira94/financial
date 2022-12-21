@@ -7,6 +7,7 @@ use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
 use App\Models\ApprovalFlowSupply;
+use App\Models\PaidBillingInfo;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDelivery;
 use App\Models\SupplyApprovalFlow;
@@ -770,6 +771,43 @@ class Utils
         return $billing;
     }
 
+    public static function groupBillings($billings, $bankCode)
+    {
+
+        $groupBilling = [];
+        foreach ($billings as $billing) {
+            if ($billing->form_of_payment == 1) //Default PIX group 2
+            {
+                if (array_key_exists('45', $groupBilling)) {
+                    array_push($groupBilling['45'], $billing);
+                    break;
+                } else {
+                    $groupBilling['45'] = [$billing];
+                    break;
+                }
+            } elseif ($billing->form_of_payment == 0) {
+                if (substr($billing->boleto_code, 0, 3) == $bankCode) {
+                    if (array_key_exists('30', $groupBilling)) {
+                        array_push($groupBilling['30'], $billing);
+                        break;
+                    } else {
+                        $groupBilling['30'] = [$billing];
+                        break;
+                    }
+                } else {
+                    if (array_key_exists('11', $groupBilling)) {
+                        array_push($groupBilling['11'], $billing);
+                        break;
+                    } else {
+                        $groupBilling['11'] = [$billing];
+                        break;
+                    }
+                }
+            }
+        }
+        return $groupBilling;
+    }
+
     public static function createManualLogPaymentRequest($old, $new, $causerID, $model)
     {
         activity()
@@ -788,5 +826,39 @@ class Utils
                 $activity->log_name = 'payment_request';
             })
             ->log('updated');
+    }
+
+    public static function createPaiBillingInfo($billings)
+    {
+        foreach ($billings as $key => $billing) {
+            $bankAccount = $billing->bank_account;
+            $cangooroo = $billing->cangooroo;
+            $data =
+            [
+                'reserve' => $billing['reserve'],
+                'operator' => !is_null($billing->user) ? $billing->user->name : '',
+                'supplier_value' => $billing['supplier_value'],
+                'pay_date' => $billing['pay_date'],
+                'boleto_value' => $billing['boleto_value'],
+                'boleto_code' => $billing['boleto_code'],
+                'remark' => $billing['remark'],
+                'oracle_protocol' => $billing['oracle_protocol'],
+                'user_id' => !is_null($billing->user) ? $billing->user->id : '',
+                'bank' => !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->title : '') : '',
+                'bank_code' => !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->bank_code : '') : '',
+                'agency' => !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) ? $bankAccount->agency_number.'-'.$bankAccount->agency_check_number : $bankAccount->agency_number) : '',
+                'account' => !is_null($bankAccount) ? (!!($bankAccount->account_check_number) ? $bankAccount->account_number.'-'.$bankAccount->account_check_number : $bankAccount->account_number) : '',
+                'form_of_payment' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
+                'hotel_name' => !is_null($cangooroo) ? $cangooroo->hotel_name : '',
+                'cnpj_hotel' => $billing['cnpj'],
+                'payment_voucher' => '',
+                'payment_method' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
+                'payment_bank' => '',
+                'payment_remark' => '',
+                'created_at' => $billing->created_at,
+            ];
+            $paidBillingInfo = new PaidBillingInfo();
+            $paidBillingInfo = $paidBillingInfo->create($data);
+        }
     }
 }
