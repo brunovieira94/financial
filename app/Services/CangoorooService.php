@@ -68,10 +68,10 @@ class CangoorooService
         $data =
             [
                 "booking_id" => $bookingId,
-                "guests" => join(", ", array_map(
+                "guests" => array_key_exists('Paxs', $room) ? join(", ", array_map(
                     fn ($e) => $e['Name'] . ' ' . $e['Surname'],
                     $room['Paxs']
-                )),
+                )) : '',
                 "service_id" => intval($room['ServiceId']),
                 "supplier_reservation_code" => $room['SupplierReservationCode'],
                 "status" => $room['Status'],
