@@ -52,6 +52,7 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
         return [
             !is_null($billing->user) ? $billing->user->name : '',
             $billing->reserve,
+            $billing->cangooroo_service_id,
             $billing->payment_status,
             !is_null($cangooroo) ? $cangooroo->status : '',
             $billing->status_123,
@@ -96,6 +97,7 @@ class BillingExport implements FromCollection, ShouldAutoSize, WithMapping, With
         return [
             'Operador',
             'Reserva',
+            'Id do Serviço',
             'Status do Pagamento',
             'Status do Cangooroo',
             'Status 123',

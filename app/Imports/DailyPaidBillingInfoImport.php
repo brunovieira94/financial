@@ -39,6 +39,7 @@ class DailyPaidBillingInfoImport implements ToCollection, WithValidation, WithHe
                     'payment_method' => 'VCN',
                     'payment_bank' => 'Cartão Utilizado',
                     'payment_remark' => 'Cartão Utilizado',
+                    'service_id' => $row['bookingid']
                     // 'service_id' => $row['id_servico_cangooroo']
                 ]);
                 $this->imported++;
@@ -56,6 +57,7 @@ class DailyPaidBillingInfoImport implements ToCollection, WithValidation, WithHe
             'codigo_tratado' => 'required|max:150',
             'amount' => 'required',
             'merchant_name' => 'max:150',
+            'bookingid' => 'required'
         ];
     }
 
