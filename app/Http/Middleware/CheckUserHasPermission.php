@@ -144,6 +144,7 @@ class CheckUserHasPermission
                 }
                 if ($request->isMethod('POST')) {
                     if (count($route) > 2) {
+                        if ($route[count($route) - 1] == '{approvalStatus}') $route[count($route) - 1] = $url[count($url) - 2];
                         if ($route[count($route) - 1] == 'import') {
                             if ($role->import == true) {
                                 return $next($request);

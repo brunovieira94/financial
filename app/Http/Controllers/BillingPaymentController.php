@@ -5,14 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\BillingPaymentService as BillingPaymentService;
 use App\Exports\BillingTransfeeraExport;
+use App\Imports\SetPayBillingImport;
 
 class BillingPaymentController extends Controller
 {
     private $billingPaymentService;
+    private $setPayBillingImport;
 
-    public function __construct(BillingPaymentService $billingPaymentService)
+    public function __construct(BillingPaymentService $billingPaymentService, SetPayBillingImport $setPayBillingImport)
     {
         $this->billingPaymentService = $billingPaymentService;
+        $this->setPayBillingImport = $setPayBillingImport;
     }
 
     public function index(Request $request)
@@ -36,5 +39,14 @@ class BillingPaymentController extends Controller
             return (new BillingTransfeeraExport($request->all()))->download('transfeera.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
         }
         return (new BillingTransfeeraExport($request->all()))->download('transfeera.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function import()
+    {
+        $this->setPayBillingImport->import(request()->file('import_file'));
+        return response([
+            'not_imported' => $this->setPayBillingImport->not_imported,
+            'imported' => $this->setPayBillingImport->imported,
+        ]);
     }
 }
