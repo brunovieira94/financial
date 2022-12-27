@@ -35,7 +35,35 @@ class Utils
         $orderBy = $requestInfo['orderBy'] ?? self::defaultOrderBy;
         $order = $requestInfo['order'] ?? self::defaultOrder;
         $perPage = $requestInfo['perPage'] ?? self::defaultPerPage;
-        return $model->orderBy($orderBy, $order)->paginate($perPage);
+        $columnRelationshipOrderBy = explode('.', $orderBy);
+        if (count($columnRelationshipOrderBy) == 1) {
+            $model = $model->orderBy($orderBy, $order);
+        } else {
+            $columnFilter = last($columnRelationshipOrderBy);
+            $table = '';
+            switch ($columnRelationshipOrderBy[0]) {
+                case 'provider':
+                    $table = 'providers';
+                    break;
+                case 'company':
+                    $table = 'companies';
+                    break;
+                case 'cost_center':
+                    $table = 'cost_center';
+                    break;
+                case 'chart_of_accounts':
+                    $table = 'chart_of_accounts';
+                    break;
+            }
+            $model
+                ->join('providers', 'providers.id', '=', 'payment_requests.provider_id')
+                ->join('companies', 'companies.id', '=', 'payment_requests.company_id')
+                ->join('cost_center', 'cost_center.id', '=', 'payment_requests.cost_center_id')
+                ->join('chart_of_accounts', 'chart_of_accounts.id', '=', 'payment_requests.chart_of_account_id')
+                ->orderBy($table . '.' . $columnFilter, $order);
+        }
+
+        return $model->paginate($perPage);
     }
 
     public static function getDeleteKeys($nestable)
