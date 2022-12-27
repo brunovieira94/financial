@@ -46,6 +46,7 @@ use App\Http\Controllers\InfoController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
 use App\Http\Controllers\NotificationCatalogController;
+use App\Http\Controllers\PlutoTableStateController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -470,6 +471,11 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     });
 
     Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
+
+    Route::prefix('pluto-table-state')->group(function () {
+        Route::put('/get', [PlutoTableStateController::class, 'getState']);
+        Route::put('/save', [PlutoTableStateController::class, 'saveState']);
+    });
 });
 
 

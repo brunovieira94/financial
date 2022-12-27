@@ -38,7 +38,8 @@ class CheckUserHasPermission
             'update-date-installment',
             'delivery',
             'purchase-order-export',
-            'change-logged-user'
+            'change-logged-user',
+            'pluto-table-state',
         ];
 
         $unverifiedSubRoutes = [
@@ -81,7 +82,7 @@ class CheckUserHasPermission
             return $next($request);
 
         if ($user->role_id == 1)
-             return $next($request);
+            return $next($request);
 
         //array de objetos com module id
         $roles = $this->role->where('role_id', $user->role_id);
