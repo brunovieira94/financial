@@ -2,9 +2,12 @@
 
 namespace App\Services;
 
+use AddedColumnPaymentRequestInstallments;
 use App\Models\ApprovalFlowSupply;
 use App\Models\Module;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestHasInstallments;
+use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Product;
 use App\Models\ProviderQuotation;
@@ -575,7 +578,8 @@ class PurchaseOrderService
             ->select('payment_request_has_purchase_orders.purchase_order_id', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.payment_type')
             ->where([
                 'payment_request_has_purchase_orders.purchase_order_id' => $id,
-                'payment_requests.payment_type' => 0
+                'payment_requests.payment_type' => 0,
+                'payment_requests.deleted_at' => null
             ])
             ->get(['payment_request_has_purchase_orders.payment_request_id']);
 
@@ -623,6 +627,7 @@ class PurchaseOrderService
         if (!$getPaymentRequests->isEmpty()) {
             $response = [];
             $products = [];
+            $services = [];
             $balance_quantity = 0;
             foreach ($getPaymentRequests as $getPaymentRequest) {
                 $pay_id = $getPaymentRequest->id;
@@ -661,6 +666,30 @@ class PurchaseOrderService
 
                             $balance_quantity = 0;
                         }
+
+                        foreach ($getPaymentRequestsPurchaseOrder->purchase_order->services as $getPaymentRequestsPurchaseOrderService) {
+                            $parcelNumber = [];
+                            $status = PurchaseOrderDelivery::where([
+                                'payment_request_id' =>  $pay_id,
+                                'purchase_order_id' =>  $pur_id,
+                                'service_id' => $getPaymentRequestsPurchaseOrderService->service->id
+                            ])->first(['status']);
+
+                            foreach (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $pay_id)->with('installment_purchase')->get() as $teste) {
+                                $parcelNumber[] = $teste->installment_purchase->parcel_number;
+                            }
+
+                            $services[] = [
+                                'service_id' => $getPaymentRequestsPurchaseOrderService->service->id,
+                                'product_name' => $getPaymentRequestsPurchaseOrderService->service->title,
+                                'quantity' => $getPaymentRequestsPurchaseOrderService->quantity,
+                                'unitary_value' => $getPaymentRequestsPurchaseOrderService->unitary_value,
+                                'percentage_discount' => $getPaymentRequestsPurchaseOrderService->percentage_discount,
+                                'money_discount' => $getPaymentRequestsPurchaseOrderService->money_discount,
+                                'status' => $status['status'] ?? 0,
+                                'count_installments' => $parcelNumber
+                            ];
+                        }
                     } else {
                         return response()->json([
                             'error' => 'Pedido de compra ' . $pur_id . ' não existe.',
@@ -671,7 +700,8 @@ class PurchaseOrderService
             $response[] = [
                 'payment_request_id' => $pay_id,
                 'purchase_order_id' => $pur_id,
-                'products' => $products
+                'products' => $products,
+                'services' => $services
             ];
             return $response;
         } else {
@@ -685,6 +715,7 @@ class PurchaseOrderService
         $totalDeliveryQuantity = 0;
         $totalQuantity = 0;
         $ids = [];
+        $serviceIds = [];
         try {
             if (array_key_exists('products', $purchaseOrderDeliveryInfo)) {
                 foreach ($purchaseOrderDeliveryInfo['products'] as $product) {
@@ -737,6 +768,37 @@ class PurchaseOrderService
                                 'status' => ($totalQuantity - $totalDeliveryQuantity) == 0 ? 2 : 1,
                             ]
                         );
+                }
+            }
+
+            if (array_key_exists('services', $purchaseOrderDeliveryInfo)) {
+                foreach ($purchaseOrderDeliveryInfo['services'] as $service) {
+                    $serviceIds[] = $service['service_id'];
+                    $purchaseOrderDeliveryService =  PurchaseOrderDelivery::where([
+                        'payment_request_id' => $purchaseOrderDeliveryInfo['payment_request_id'],
+                        'purchase_order_id' =>  $purchaseOrderDeliveryInfo['purchase_order_id'],
+                        'service_id' => $service['service_id']
+                    ])->first();
+
+                    if ($purchaseOrderDeliveryService != null) {
+                        $purchaseOrderDeliveryService->update([
+                            'status' => $service['status'],
+                            'quantity' => $service['quantity'],
+                            'delivery_quantity' => $service['quantity'],
+                        ]);
+
+                        $response[] = $purchaseOrderDeliveryService;
+                    } else {
+                        $purchaseOrderDelivery = PurchaseOrderDelivery::create([
+                            'payment_request_id' => $purchaseOrderDeliveryInfo['payment_request_id'],
+                            'purchase_order_id' =>  $purchaseOrderDeliveryInfo['purchase_order_id'],
+                            'service_id' => $service['service_id'],
+                            'delivery_quantity' => $service['quantity'],
+                            'quantity' => $service['quantity'],
+                            'status' => $service['status'],
+                        ]);
+                        $response[] = $purchaseOrderDelivery;
+                    }
                 }
             }
         } catch (\Exception $e) {

@@ -174,7 +174,7 @@ class PurchaseOrder extends Model
                 ->where([
                     'payment_request_has_purchase_orders.purchase_order_id' => $this->id,
                     'payment_requests.payment_type' => 0,
-                    'payment_requests.deleted_at' => null,
+                    'payment_requests.deleted_at' => null
                 ])
                 ->groupBy([
                     'payment_request_has_purchase_orders.payment_request_id',
@@ -184,23 +184,66 @@ class PurchaseOrder extends Model
                 ->get(['payment_request_has_purchase_orders.payment_request_id']);
 
             if (!$getAllPaymentRequests->isEmpty()) {
+                $countService = 0;
+                $countProduct = 0;
                 foreach ($getAllPaymentRequests as $getAllPaymentRequest) {
-
                     $getPurchaseOrderDeliverys = PurchaseOrderDelivery::where([
                         'payment_request_id' => $getAllPaymentRequest->payment_request_id,
-                        'purchase_order_id' => $this->id
+                        'purchase_order_id' => $this->id,
+                        'deleted_at' => null
                     ])->get();
                     if (!$getPurchaseOrderDeliverys->isEmpty()) {
                         foreach ($getPurchaseOrderDeliverys as $getPurchaseOrderDelivery) {
-                            if ($getPurchaseOrderDelivery->product_id != null) {
+                            if ($getPurchaseOrderDelivery->service_id != null) {
+                                $countService++;
+                            } else if ($getPurchaseOrderDelivery->product_id != null) {
+                                $countProduct++;
                                 $status = $getPurchaseOrderDelivery->status;
                             }
                         }
                     }
                 }
-                $approverStage[] = [
-                    'status' => $status
-                ];
+
+                if ($countService > 0 &&  $countProduct == 0) {
+
+                    $totalPurchaseOrderInstallment = PurchaseOrderHasInstallments::where('purchase_order_id', $this->id)->count();
+
+                    $getPaymentRequestPurchaseOrderIds = PaymentRequestHasPurchaseOrders::where('purchase_order_id', $this->id)->get(['id']);
+
+                    $totalPaymentRequestPurchaseOrder = PaymentRequestHasPurchaseOrderInstallments::whereIn('payment_request_has_purchase_order_id', $getPaymentRequestPurchaseOrderIds)->count();
+
+                    $minStatus = PurchaseOrderDelivery::where([
+                        'purchase_order_id' => $this->id,
+                        'deleted_at' => null
+                    ])->min('status');
+
+                    if ($totalPurchaseOrderInstallment == $totalPaymentRequestPurchaseOrder) {
+
+                        if ($minStatus == 0) {
+                            $approverStage[] = [
+                                'status' => 1
+                            ];
+                        } else {
+                            $approverStage[] = [
+                                'status' => 2
+                            ];
+                        }
+                    } else {
+                        if ($minStatus == 0) {
+                            $approverStage[] = [
+                                'status' => 0
+                            ];
+                        } else {
+                            $approverStage[] = [
+                                'status' => 1
+                            ];
+                        }
+                    }
+                } else {
+                    $approverStage[] = [
+                        'status' => $status
+                    ];
+                }
             }
             return $approverStage;
         } else {
