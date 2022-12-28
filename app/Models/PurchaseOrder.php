@@ -173,7 +173,8 @@ class PurchaseOrder extends Model
                 ->select('payment_request_has_purchase_orders.purchase_order_id', 'payment_request_has_purchase_orders.payment_request_id', 'payment_requests.payment_type')
                 ->where([
                     'payment_request_has_purchase_orders.purchase_order_id' => $this->id,
-                    'payment_requests.payment_type' => 0
+                    'payment_requests.payment_type' => 0,
+                    'payment_requests.deleted_at' => null,
                 ])
                 ->groupBy([
                     'payment_request_has_purchase_orders.payment_request_id',
