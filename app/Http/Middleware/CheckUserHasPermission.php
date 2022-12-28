@@ -38,6 +38,7 @@ class CheckUserHasPermission
             'update-date-installment',
             'delivery',
             'purchase-order-export',
+            'other-payments',
             'change-logged-user',
             'pluto-table-state',
         ];

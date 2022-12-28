@@ -45,6 +45,7 @@ use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
+use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\PlutoTableStateController;
 
@@ -462,6 +463,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::delete('/{id}', [HotelReasonToRejectController::class, 'destroy']);
     });
 
+    Route::prefix('other-payments')->group(function () {
+        Route::post('/', [OtherPaymentsController::class, 'storePayment']);
+    });
     Route::post('/change-logged-user/{id}', [AuthController::class, 'changeLogin']);
 
     Route::prefix('notifications')->group(function () {
@@ -501,3 +505,4 @@ Route::post('/work', [PaidBillingInfoController::class, 'work']);
 Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
+Route::put('/approved-payment-request-resolve-status', [OtherPaymentsController::class, 'approvedPaymentRequestsResolveStatus']);

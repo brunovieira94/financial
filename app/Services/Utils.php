@@ -850,6 +850,15 @@ class Utils
         return $billing;
     }
 
+    public static function baseFilterGroupFormPayment($groupFormPayment, $requestInfo)
+    {
+        if (array_key_exists('only_not_main_payments', $requestInfo) && ($requestInfo['only_not_main_payments'] == 1 || $requestInfo['only_not_main_payments'] == '1')) {
+            $groupFormPayment->where('main_payment', '=', '0');
+        }
+
+        return $groupFormPayment;
+    }
+
     public static function groupBillings($billings, $bankCode)
     {
 
