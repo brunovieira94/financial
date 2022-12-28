@@ -32,7 +32,7 @@ class Provider extends Model
 
     public function bank_account()
     {
-        return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with(['bank', 'bank_account_default'])->whereNull('pix_key_type')->where('hidden', false);
+        return $this->belongsToMany(BankAccount::class, 'provider_has_bank_accounts', 'provider_id', 'bank_account_id')->with(['bank', 'bank_account_default'])->where('hidden', false);
     }
 
     public function provider_category()
