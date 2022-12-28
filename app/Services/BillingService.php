@@ -259,9 +259,9 @@ class BillingService
             ];
         }
         $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
-        if(!$billingInfo['billing_payment_id']){
+        if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto',
+                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
             ], 422);
         }
         if(array_key_exists('bank_account', $billingInfo))
@@ -484,9 +484,9 @@ class BillingService
             if($findBillingPayment){
                 foreach ($fields as $field) {
                     if($field == 'pay_date'){
-                        if(strtotime($billingInfo[$field]) != strtotime($findBillingPayment[$field])) return false;
+                        if(strtotime($billingInfo[$field]) != strtotime($findBillingPayment[$field])) return ['error' => $field];
                     }
-                    else if($billingInfo[$field] != $findBillingPayment[$field]) return false;
+                    else if($billingInfo[$field] != $findBillingPayment[$field]) return ['error' => $field];
                 }
                 $findBillingPayment->status = Config::get('constants.billingStatus.open');
                 $findBillingPayment->save();
