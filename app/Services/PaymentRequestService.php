@@ -464,7 +464,9 @@ class PaymentRequestService
 
     public function getAllGroupFormPayment($requestInfo)
     {
-        $groupPaymentRequest = Utils::search($this->groupFormPayment, $requestInfo);
+        $groupFormPayment = $this->groupFormPayment;
+        $groupPaymentRequest = Utils::search($groupFormPayment, $requestInfo);
+        $groupPaymentRequest = Utils::baseFilterGroupFormPayment($groupPaymentRequest, $requestInfo);
         return Utils::pagination($groupPaymentRequest, $requestInfo);
     }
 

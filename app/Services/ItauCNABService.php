@@ -309,8 +309,9 @@ class ItauCNABService
             ->get() as $paymentRequest) {
             $billsPaid = true;
             foreach ($paymentRequest->installments as $installment) {
-                if ($installment->status != 6) {
+                if ($installment->status != Config::get('constants.status.cnab generated') && $installment->status != Config::get('constants.status.paid out')) {
                     $billsPaid = false;
+                    break;
                 }
             }
             if ($billsPaid) {

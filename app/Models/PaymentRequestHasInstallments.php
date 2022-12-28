@@ -46,6 +46,11 @@ class PaymentRequestHasInstallments extends Model
         return $this->hasOne(CnabPaymentRequestsHasInstallments::class, 'installment_id', 'id')->with('generated_cnab')->orderBy('id', 'asc');
     }
 
+    public function other_payments()
+    {
+        return $this->belongsToMany(OtherPayment::class, 'payment_request_installments_have_other_payments', 'other_payment_id', 'payment_request_installment_id');
+    }
+
     public function getBilletLinkAttribute()
     {
         if (!is_null($this->attributes['billet_file'])) {
