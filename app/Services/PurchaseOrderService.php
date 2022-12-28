@@ -596,7 +596,7 @@ class PurchaseOrderService
                 if ($getPurchaseOrderDeliverys != null) {
                     foreach ($getPurchaseOrderDeliverys as $getPurchaseOrderDelivery) {
                         if ($getPurchaseOrderDelivery->status == 0) {
-                            $status = " "; //new
+                            $status = "n"; //new
                         }
                         if ($getPurchaseOrderDelivery->status == 1) {
                             $status = "*"; //pendente
@@ -698,7 +698,8 @@ class PurchaseOrderService
                     if ($purchaseOrderDeliveryProduct != null) {
                         $purchaseOrderDeliveryProduct->update([
                             'delivery_quantity' => $product['delivery_quantity'],
-                            'quantity' => $product['quantity']
+                            'quantity' => $product['quantity'],
+                            'status' => $product['delivery_quantity'] == 0 ? 0 : $purchaseOrderDeliveryProduct->status,
                         ]);
                         $response[] = $purchaseOrderDeliveryProduct;
                     } else {

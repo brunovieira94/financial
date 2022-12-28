@@ -22,7 +22,10 @@ use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
 use App\Models\Provider;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderDelivery;
 use App\Models\PurchaseOrderHasInstallments;
+use App\Models\PurchaseOrderHasProducts;
+use App\Models\PurchaseOrderHasServices;
 use App\Models\TemporaryLogUploadPaymentRequest;
 use Config;
 use Exception;
@@ -175,6 +178,9 @@ class PaymentRequestService
         }
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
+        if ($paymentRequest->payment_type == 0) {
+            $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo);
+        }
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
         $this->syncProviderGeneric($paymentRequestInfo);
@@ -249,6 +255,9 @@ class PaymentRequestService
         $updateExtension = array_key_exists('extension_date', $paymentRequestInfo);
 
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo, $id);
+        if ($paymentRequest->payment_type == 0) {
+            $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo, $id);
+        }
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, $updateCompetence, $updateExtension, $request);
         $this->syncProviderGeneric($paymentRequestInfo, $id);
 
@@ -274,6 +283,18 @@ class PaymentRequestService
             $approval->save();
             activity()->enableLogging();
             Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'deleted', null, null, $approval->order, auth()->user()->id, null);
+
+            if ($paymentRequest->payment_type == 0) {
+                $purchaseOrdersDelveryDelete = [];
+
+                if (PurchaseOrderDelivery::where(['payment_request_id' => $paymentRequest->id])->exists()) {
+                    foreach (PurchaseOrderDelivery::where('payment_request_id', $paymentRequest->id)->get() as $purchaseOrderDelivery) {
+                        array_push($purchaseOrdersDelveryDelete, $purchaseOrderDelivery->id);
+                    }
+                }
+                PurchaseOrderDelivery::destroy($purchaseOrdersDelveryDelete);
+            }
+
             return true;
         } else {
             return response()->json([
@@ -649,5 +670,54 @@ class PaymentRequestService
     public function getInstallment($id)
     {
         return $this->installmentClean->with($this->installmentWith)->findOrFail($id);
+    }
+
+    public function syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo, $id = null)
+    {
+        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
+
+            $purchaseOrdersDelveryDelete = [];
+            if ($id != null) {
+                if (PurchaseOrderDelivery::where(['payment_request_id' => $id])->exists()) {
+                    foreach (PurchaseOrderDelivery::where('payment_request_id', $id)->get() as $purchaseOrderDelivery) {
+                        array_push($purchaseOrdersDelveryDelete, $purchaseOrderDelivery->id);
+                    }
+                }
+            }
+
+            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrders) {
+                foreach (PurchaseOrderHasProducts::where('purchase_order_id', $purchaseOrders['order'])->get() as $getProductsInfo) {
+                    PurchaseOrderDelivery::create([
+                        'payment_request_id' => $paymentRequest->id,
+                        'purchase_order_id' =>  $purchaseOrders['order'],
+                        'product_id' => $getProductsInfo->product_id,
+                        'delivery_quantity' => 0,
+                        'quantity' => $getProductsInfo->quantity,
+                        'status' => 0
+                    ]);
+                }
+
+                foreach (PurchaseOrderHasServices::where('purchase_order_id', $purchaseOrders['order'])->get() as $getServicesInfo) {
+                    PurchaseOrderDelivery::create([
+                        'payment_request_id' => $paymentRequest->id,
+                        'purchase_order_id' =>  $purchaseOrders['order'],
+                        'service_id' => $getServicesInfo->service_id,
+                        'delivery_quantity' => 0,
+                        'quantity' => $getServicesInfo->quantity,
+                        'status' => 0
+                    ]);
+                }
+            }
+            PurchaseOrderDelivery::destroy($purchaseOrdersDelveryDelete);
+        } else if ($id != null) {
+            $purchaseOrdersDelveryDelete = [];
+
+            if (PurchaseOrderDelivery::where(['payment_request_id' => $id])->exists()) {
+                foreach (PurchaseOrderDelivery::where('payment_request_id', $id)->get() as $purchaseOrderDelivery) {
+                    array_push($purchaseOrdersDelveryDelete, $purchaseOrderDelivery->id);
+                }
+            }
+            PurchaseOrderDelivery::destroy($purchaseOrdersDelveryDelete);
+        }
     }
 }

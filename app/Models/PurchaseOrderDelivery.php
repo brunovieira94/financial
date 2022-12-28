@@ -21,7 +21,7 @@ class PurchaseOrderDelivery extends Model
         $activity->causer_object = $user;
     }
 
-    //use SoftDeletes;
+    use SoftDeletes;
     protected $table = 'purchase_order_deliverys';
     protected $fillable = ['payment_request_id', 'purchase_order_id', 'product_id', 'service_id', 'delivery_quantity', 'status', 'quantity'];
     protected $hidden = ['payment_request_id', 'purchase_order_id', 'product_id', 'service_id', 'created_at', 'updated_at', 'deleted_at'];
