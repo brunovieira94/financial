@@ -53,12 +53,12 @@ class BillingPayment extends Model
 
     public function getReadyToPayAttribute()
     {
+        $sum = 0;
         if($this->form_of_payment == 0){
-            $sum = 0;
             foreach ($this->billings as $billing){
                 $sum += $billing->supplier_value;
             }
-            if($this->status == Config::get('constants.billingStatus.approved') && $sum == $this->boleto_value) return true;
+            if($this->status == Config::get('constants.billingStatus.approved') && floor($sum) == floor($this->boleto_value)) return true;
         }
         else{
             if($this->status == Config::get('constants.billingStatus.approved')) return true;
