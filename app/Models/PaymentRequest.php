@@ -27,7 +27,7 @@ class PaymentRequest extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $appends = ['stage_for_disapproval', 'first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
         'edit_counter',
@@ -262,4 +262,15 @@ class PaymentRequest extends Model
     {
         return $this->hasMany(AccountsPayableApprovalFlowLog::class, 'payment_request_id', 'id');
     }
+
+    public function getStageForDisapprovalAttribute()
+    {
+        return ApprovalFlow::with(['role'])
+        ->where('group_approval_flow_id', $this->group_approval_flow_id)
+        ->where('order', '<', $this->approval->order)
+        ->groupBy('order')
+        ->orderBy('id', 'ASC')
+        ->get();
+    }
+
 }

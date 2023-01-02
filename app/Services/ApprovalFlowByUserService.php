@@ -33,6 +33,8 @@ class ApprovalFlowByUserService
     private $accountsPayableApprovalFlowClean;
     private $paymentRequestClean;
     private $user;
+    private $alterOrder = false;
+    private $order = null;
 
     private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
 
@@ -86,9 +88,16 @@ class ApprovalFlowByUserService
         return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo)); //;
     }
 
-    public function approveAccount($id)
+    public function approveAccount($id, $requestInfo)
     {
-        $requestInfo['ids'] = [$id];
+        $order = null;
+        if(array_key_exists('order', $requestInfo)) {
+            $order = $requestInfo['order'];
+        }
+        $requestInfo['ids'][0] = [
+            'id' => $id,
+            'order' => $order
+        ];
         $requestInfo['reprove'] = false;
         return $this->approveManyAccounts($requestInfo);
     }
@@ -98,11 +107,12 @@ class ApprovalFlowByUserService
         if (array_key_exists('ids', $requestInfo)) {
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
+                    $value = self::updateOrder($value);
                     if (!Redis::exists('h', $value)) {
                         Redis::hSet('h', $value, 'payment-request');
                         $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
                             $query->withoutGlobalScopes();
-                        }]))->findOrFail($value);
+                        }]))->findOrFail((int)  $value);
                         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
                         $accountApproval->status = Config::get('constants.status.disapproved');
                         if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
@@ -129,6 +139,7 @@ class ApprovalFlowByUserService
                 ], 200);
             } else {
                 foreach ($requestInfo['ids'] as $value) {
+                    $value = self::updateOrder($value);
                     if (!Redis::exists('h', $value)) {
                         Redis::hSet('h', $value, 'payment-request');
                         $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
@@ -174,10 +185,16 @@ class ApprovalFlowByUserService
         }
     }
 
-    public function reproveAccount($id, Request $request)
+    public function reproveAccount($id, $requestInfo)
     {
-        $requestInfo = $request->all();
-        $requestInfo['ids'] = [$id];
+        $order = null;
+        if(array_key_exists('order', $requestInfo)) {
+            $order = $requestInfo['order'];
+        }
+        $requestInfo['ids'][0] = [
+            'id' => $id,
+            'order' => $order
+        ];
         $requestInfo['reprove'] = true;
         return $this->approveManyAccounts($requestInfo);
     }
@@ -325,13 +342,17 @@ class ApprovalFlowByUserService
     }
     public function approveOrDisapprove($accountApproval, $approve, $maxOrder, $requestInfo)
     {
+        if(array_key_exists('order', $requestInfo)){
+            unset($requestInfo['order']);
+        }
+
         if ($approve) {
             $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
             Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'approved', null, $description, $accountApproval->order, auth()->user()->id, null);
             if ($accountApproval->order >= $maxOrder) {
                 $accountApproval->status = Config::get('constants.status.approved');
             } else {
-                $accountApproval->order += 1;
+                $accountApproval->order = $accountApproval->order = $this->alterOrder == false ? ($accountApproval->order + 1) : $this->order;
                 $accountApproval->status = Config::get('constants.status.open');
             }
             $accountApproval->action = 1;
@@ -343,11 +364,13 @@ class ApprovalFlowByUserService
             if ($accountApproval->order > $maxOrder) {
                 $accountApproval->order = Config::get('constants.status.open');
             } else if ($accountApproval->order != 0) {
-                $accountApproval->order -= 1;
+                $accountApproval->order = $this->alterOrder == false ? ($accountApproval->order - 1) : $this->order;
             }
             $accountApproval->action = 2;
             $accountApproval->fill($requestInfo)->save();
         }
+
+        $this->alterOrder = false;
 
         Redis::del('h', $accountApproval->payment_request_id);
         $this->notifyUsers($accountApproval, $maxOrder);
@@ -379,6 +402,25 @@ class ApprovalFlowByUserService
             $usersMail = $usersNotify->pluck('email');
             $dataSendMail = NotificationService::generateDataSendRedisPaymentRequest($accountApproval->payment_request, $usersMail, 'Conta pendente de aprovação', 'payment-request-to-approve');
             NotificationService::sendEmail($dataSendMail);
+        }
+    }
+
+    public function updateOrder($objRequest)
+    {
+        if (is_array($objRequest)) {
+            if (array_key_exists('id', $objRequest)) {
+                if (array_key_exists('order', $objRequest)) {
+                    if ($objRequest['order'] != null) {
+                        $this->alterOrder = true;
+                        $this->order = $objRequest['order'];
+                    }
+                }
+                return $objRequest['id'];
+            } else {
+                return $objRequest;
+            }
+        } else {
+            return $objRequest;
         }
     }
 }

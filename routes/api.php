@@ -505,4 +505,5 @@ Route::post('/work', [PaidBillingInfoController::class, 'work']);
 Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
+Route::post('/redis-clean', [InfoController::class, 'redisClean']);
 Route::put('/approved-payment-request-resolve-status', [OtherPaymentsController::class, 'approvedPaymentRequestsResolveStatus']);

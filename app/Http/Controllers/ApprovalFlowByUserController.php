@@ -34,9 +34,9 @@ class ApprovalFlowByUserController extends Controller
         return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
-    public function approveAccount($id)
+    public function approveAccount($id, Request $request)
     {
-        return $this->accountsPayableApprovalFlowService->approveAccount($id);
+        return $this->accountsPayableApprovalFlowService->approveAccount($id, $request->all());
     }
 
     public function approveManyAccounts(Request $request)
@@ -46,7 +46,7 @@ class ApprovalFlowByUserController extends Controller
 
     public function reproveAccount($id, PutAccountsPayableApprovalFlowRequest $request)
     {
-        return $this->accountsPayableApprovalFlowService->reproveAccount($id, $request);
+        return $this->accountsPayableApprovalFlowService->reproveAccount($id, $request->all());
     }
 
     public function cancelAccount($id, PutAccountsPayableApprovalFlowRequest $request)
