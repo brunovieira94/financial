@@ -33,6 +33,7 @@ class RouteApprovalFlowByUserResource extends JsonResource
             'pay_date' => $this->pay_date,
             'currency' => new ReportsCurrencyResource($this->currency),
             'first_approval_financial_analyst' => new ReportsFirstApprovalPaymentRequestResource($this->first_approval_financial_analyst),
+            'stage_for_disapproval' => ReportsStageForDisapproval::collection($this->stage_for_disapproval),
         ];
     }
 }

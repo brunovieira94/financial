@@ -262,4 +262,11 @@ class InfoController extends Controller
         Redis::hSet($id, 'priority', 0);
         Redis::rpush('active', $id);
     }
+
+    public function redisClean(Request $request)
+    {
+        $requestInfo = $request->all();
+        Redis::del($requestInfo['key']);
+    }
+
 }
