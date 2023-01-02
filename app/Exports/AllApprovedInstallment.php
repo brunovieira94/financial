@@ -27,11 +27,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
     {
         $requestInfo = $this->requestInfo;
         $installment = PaymentRequestHasInstallments::with(['payment_request', 'group_payment', 'bank_account_provider']);
-        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
-            $installment = $installment->with(['payment_request' => function ($query) {
-                return $query->withTrashed();
-            },]);
-        }
+
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);

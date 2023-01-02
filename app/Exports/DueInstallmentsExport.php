@@ -29,11 +29,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
         $query = PaymentRequestHasInstallments::query();
         $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
         $requestInfo = $this->requestInfo;
-        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
-            $query = $query->with(['payment_request' => function ($query) {
-                return $query->withTrashed();
-            },]);
-        }
+
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             if (array_key_exists('from', $requestInfo)) {
                 $query = $query->where('extension_date', '>=', $requestInfo['from']);
