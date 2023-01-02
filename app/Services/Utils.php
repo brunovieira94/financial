@@ -418,16 +418,38 @@ class Utils
         }
 
         if (array_key_exists('status', $requestInfo)) {
-            if ($requestInfo['status'] == 3) {
-                $paymentRequest = $paymentRequest->withTrashed();
-            }
-            $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
-                if ($requestInfo['status'] == 0) {
-                    $query->whereIn('status', [0, 8, 9]);
-                } else {
-                    $query->where('status', $requestInfo['status']);
+            if (is_array($requestInfo['status'])) {
+                $arrayInt = [];
+                foreach ($requestInfo['status'] as $val) {
+                    array_push($arrayInt, (int) $val);
                 }
-            });
+                $requestInfo['status'] = $arrayInt;
+                if (in_array(3, $requestInfo['status'])) {
+                    $paymentRequest = $paymentRequest->withTrashed();
+                }
+                if (in_array(0, $requestInfo['status'])) {
+                    $requestInfo['status'] = array_merge($requestInfo['status'], [8, 9]);
+                    $requestInfo['status'] = array_unique($requestInfo['status']);
+                    $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+                        $query->whereIn('status', $requestInfo['status']);
+                    });
+                } else {
+                    $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+                        $query->whereIn('status', $requestInfo['status']);
+                    });
+                }
+            } else {
+                if ($requestInfo['status'] == 3) {
+                    $paymentRequest = $paymentRequest->withTrashed();
+                }
+                $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+                    if ($requestInfo['status'] == 0) {
+                        $query->whereIn('status', [0, 8, 9]);
+                    } else {
+                        $query->where('status', $requestInfo['status']);
+                    }
+                });
+            }
         }
 
         if (array_key_exists('role', $requestInfo)) {
@@ -922,31 +944,52 @@ class Utils
             $bankAccount = $billing->bank_account;
             $cangooroo = $billing->cangooroo;
             $data =
-            [
-                'reserve' => $billing['reserve'],
-                'operator' => !is_null($billing->user) ? $billing->user->name : '',
-                'supplier_value' => $billing['supplier_value'],
-                'pay_date' => $billing['pay_date'],
-                'boleto_value' => $billing['boleto_value'],
-                'boleto_code' => $billing['boleto_code'],
-                'remark' => $billing['remark'],
-                'oracle_protocol' => $billing['oracle_protocol'],
-                'user_id' => !is_null($billing->user) ? $billing->user->id : '',
-                'bank' => !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->title : '') : '',
-                'bank_code' => !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->bank_code : '') : '',
-                'agency' => !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) ? $bankAccount->agency_number.'-'.$bankAccount->agency_check_number : $bankAccount->agency_number) : '',
-                'account' => !is_null($bankAccount) ? (!!($bankAccount->account_check_number) ? $bankAccount->account_number.'-'.$bankAccount->account_check_number : $bankAccount->account_number) : '',
-                'form_of_payment' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
-                'hotel_name' => !is_null($cangooroo) ? $cangooroo->hotel_name : '',
-                'cnpj_hotel' => $billing['cnpj'],
-                'payment_voucher' => '',
-                'payment_method' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
-                'payment_bank' => '',
-                'payment_remark' => '',
-                'created_at' => $billing->created_at,
-            ];
+                [
+                    'reserve' => $billing['reserve'],
+                    'operator' => !is_null($billing->user) ? $billing->user->name : '',
+                    'supplier_value' => $billing['supplier_value'],
+                    'pay_date' => $billing['pay_date'],
+                    'boleto_value' => $billing['boleto_value'],
+                    'boleto_code' => $billing['boleto_code'],
+                    'remark' => $billing['remark'],
+                    'oracle_protocol' => $billing['oracle_protocol'],
+                    'user_id' => !is_null($billing->user) ? $billing->user->id : '',
+                    'bank' => !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->title : '') : '',
+                    'bank_code' => !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->bank_code : '') : '',
+                    'agency' => !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) ? $bankAccount->agency_number . '-' . $bankAccount->agency_check_number : $bankAccount->agency_number) : '',
+                    'account' => !is_null($bankAccount) ? (!!($bankAccount->account_check_number) ? $bankAccount->account_number . '-' . $bankAccount->account_check_number : $bankAccount->account_number) : '',
+                    'form_of_payment' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
+                    'hotel_name' => !is_null($cangooroo) ? $cangooroo->hotel_name : '',
+                    'cnpj_hotel' => $billing['cnpj'],
+                    'payment_voucher' => '',
+                    'payment_method' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
+                    'payment_bank' => '',
+                    'payment_remark' => '',
+                    'created_at' => $billing->created_at,
+                ];
             $paidBillingInfo = new PaidBillingInfo();
             $paidBillingInfo = $paidBillingInfo->create($data);
         }
+    }
+
+    public static function statusApprovalFlowRequest($requestInfo)
+    {
+        $arrayStatus = [];
+        if (array_key_exists('status', $requestInfo)) {
+            if (is_array($requestInfo['status'])) {
+                if (in_array(0, $requestInfo['status'])) {
+                    array_push($arrayStatus, 0);
+                }
+                if (in_array(2, $requestInfo['status'])) {
+                    array_push($arrayStatus, 2);
+                }
+            } else {
+                array_push($arrayStatus, 0, 2);
+            }
+        } else {
+            array_push($arrayStatus, 0, 2);
+        }
+
+        return $arrayStatus;
     }
 }

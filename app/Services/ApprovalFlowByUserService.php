@@ -56,9 +56,9 @@ class ApprovalFlowByUserService
         $paymentRequest = Utils::search($this->paymentRequestClean, $requestInfo, ['order']);
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
 
-        $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
-            //$query->whereIn('order', $approvalFlowUserOrder->pluck('order')->toArray())
-            $query->whereIn('status', [0, 2])
+        $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $arrayStatus = Utils::statusApprovalFlowRequest($requestInfo);
+            $query->whereIn('status', $arrayStatus)
                 ->where('deleted_at', '=', null);
         });
         $idsPaymentRequestOrder = [];

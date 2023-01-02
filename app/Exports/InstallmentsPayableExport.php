@@ -30,11 +30,7 @@ class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithM
         $requestInfo = $this->requestInfo;
         $query = PaymentRequestHasInstallments::query();
         $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
-        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
-            $query = $query->with(['payment_request' => function ($query) {
-                return $query->withTrashed();
-            },]);
-        }
+
         $query = $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });

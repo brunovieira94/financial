@@ -76,11 +76,7 @@ class ReportService
     {
         $result = Utils::search($this->installmentClean, $requestInfo);
         $result = $result->with($this->installmentCleanWith)->has('payment_request');
-        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
-            $result = $result->with(['payment_request' => function ($query) {
-                return $query->withTrashed();
-            },]);
-        }
+
         $result = $result->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });
@@ -124,11 +120,7 @@ class ReportService
     {
         $installment = Utils::search($this->installmentClean, $requestInfo);
         $installment = $installment->with($this->installmentCleanWith);
-        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
-            $installment = $installment->with(['payment_request' => function ($query) {
-                return $query->withTrashed();
-            },]);
-        }
+
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->where('status', 1);
@@ -208,24 +200,6 @@ class ReportService
         $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
 
-        if (array_key_exists('status', $requestInfo)) {
-            $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
-                if ($requestInfo['status'] == 3) {
-                    $this->filterCanceled = true;
-                }
-                if ($requestInfo['status'] == 0) {
-                    $query->whereIn('status', [0, 8, 9]);
-                } else {
-                    $query->where('status', $requestInfo['status']);
-                }
-            });
-        }
-
-        if ($this->filterCanceled) {
-            $paymentRequest->withTrashed();
-            $paymentRequest->where('deleted_at', '!=', NULL);
-        }
-
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return RouteBillToPayResource::collection(Utils::pagination($paymentRequest, $requestInfo));
     }
@@ -234,11 +208,6 @@ class ReportService
     {
         $query = $this->installmentClean->query();
         $query = $query->with($this->installmentCleanWith);
-        if (array_key_exists('status', $requestInfo) && $requestInfo['status'] == 3) {
-            $query = $query->with(['payment_request' => function ($query) {
-                return $query->withTrashed();
-            },]);
-        }
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
         });

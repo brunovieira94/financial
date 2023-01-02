@@ -44,9 +44,9 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         $paymentRequest = PaymentRequest::with(['provider', 'company']);
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
 
-        $paymentRequest->whereHas('approval', function ($query) use ($approvalFlowUserOrder) {
-            //$query->whereIn('order', $approvalFlowUserOrder->pluck('order')->toArray())
-            $query->whereIn('status', [0, 2])
+        $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $arrayStatus = Utils::statusApprovalFlowRequest($requestInfo);
+            $query->whereIn('status', $arrayStatus)
                 ->where('deleted_at', '=', null);
         });
         $idsPaymentRequestOrder = [];
@@ -116,7 +116,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
             ExportsUtils::frequencyOfInstallments($paymentRequest),
             ExportsUtils::numberOfInstallments($paymentRequest),
             $paymentRequest->user ? $paymentRequest->user->email : $paymentRequest->user,
-            Config::get('constants.statusPt.'.$paymentRequest->approval->status),
+            Config::get('constants.statusPt.' . $paymentRequest->approval->status),
             $paymentRequest->approval->approver_stage_first['title'],
             ExportsUtils::approver($paymentRequest),
             $paymentRequest->note,
