@@ -514,7 +514,9 @@ class PaymentRequestService
     public function updateDateInstallment($requestInfo)
     {
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($requestInfo['payment_request_id']);
+        $paymentRequestOld = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($requestInfo['payment_request_id']);
 
+        activity()->disableLogging();
         if (auth()->user()->role_id != 1) {
             if (ApprovalFlow::where('role_id', auth()->user()->role_id)
                 ->where('order', $paymentRequest->approval->order)
@@ -540,6 +542,10 @@ class PaymentRequestService
             $paymentRequestHasInstallments = PaymentRequestHasInstallments::findOrFail($installment['id']);
             $paymentRequestHasInstallments->fill($installment)->save();
         }
+        activity()->enableLogging();
+
+        $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($requestInfo['payment_request_id']);
+        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
