@@ -15,7 +15,7 @@ class StoreBankRequest extends FormRequest
     public function rules()
     {
         return [
-            'bank_code' => 'numeric',
+            'bank_code' => 'string',
             'title' => 'required|max:150|unique:banks,title,NULL,id,deleted_at,NULL',
             'cnab400' => 'required|boolean',
             'cnab240' => 'required|boolean',

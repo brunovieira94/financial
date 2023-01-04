@@ -24,6 +24,9 @@ class StoreBankAccountRequest extends FormRequest
             'pix_key' => 'string|required_without_all:agency_number,agency_check_number,account_number,account_check_number,account_type,bank_id',
             'pix_key_type' => 'integer|required_without_all:agency_number,agency_check_number,account_number,account_check_number,account_type,bank_id|min:0|max:4',
             'account_type' => 'integer|required_without_all:pix_key|min:0|max:2',
+            'iban_code' => 'string',
+            'address' => 'string',
+            'international' => 'boolean',
        ];
     }
 }

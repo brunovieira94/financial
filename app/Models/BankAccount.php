@@ -24,11 +24,11 @@ class BankAccount extends Model
     use SoftDeletes;
     protected $hidden = ['pivot', 'bank_id'];
     protected $table = 'bank_accounts';
-    protected $fillable = ['cpf_cnpj' ,'entity_name', 'entity_type', 'hidden', 'covenant', 'agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
+    protected $fillable = ['iban_code', 'address', 'international', 'cpf_cnpj' ,'entity_name', 'entity_type', 'hidden', 'covenant', 'agency_number', 'agency_check_number', 'account_number', 'account_check_number', 'bank_id', 'pix_key', 'account_type', 'pix_key_type'];
 
     public function bank()
     {
-        return $this->hasOne(Bank::class, 'id', 'bank_id')->with('form_payment')->withTrashed();
+        return $this->hasOne(Bank::class, 'id', 'bank_id')->with(['form_payment', 'country'])->withTrashed();
     }
 
     public function bank_account_default()
