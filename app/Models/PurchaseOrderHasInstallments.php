@@ -19,6 +19,11 @@ class PurchaseOrderHasInstallments extends Model
     //        return 0;
     //    }
     //}
+
+    public function purchase_order()
+    {
+        return $this->hasOne(PurchaseOrder::class, 'id', 'purchase_order_id');
+    }
 }
 
 
