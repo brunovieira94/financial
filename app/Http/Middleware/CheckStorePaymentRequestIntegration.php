@@ -25,15 +25,19 @@ class CheckStorePaymentRequestIntegration
             $amountReceived = 0;
             foreach ($paymentRequestInfo['installment_purchase_order'] as $instalmentPurchaseOrder) {
                 $amountReceived += $instalmentPurchaseOrder['amount_received'];
-                $installmentPurchase = PurchaseOrderHasInstallments::FindOrFail($instalmentPurchaseOrder['installment']);
+                $installmentPurchase = PurchaseOrderHasInstallments::with('purchase_order')->findOrFail($instalmentPurchaseOrder['installment']);
                 if ($request->route('id') != null) {
-                    if(PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $request->route('id'))->where('purchase_order_has_installments_id', $instalmentPurchaseOrder['installment'])->exists()){
+                    if (PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $request->route('id'))->where('purchase_order_has_installments_id', $instalmentPurchaseOrder['installment'])->exists()) {
                         $paymentRequestHasPurchaseOrderInstallments = PaymentRequestHasPurchaseOrderInstallments::where('payment_request_id', $request->route('id'))->where('purchase_order_has_installments_id', $instalmentPurchaseOrder['installment'])->first();
                         $installmentPurchase->amount_paid -= $paymentRequestHasPurchaseOrderInstallments->amount_received;
                     }
                 }
+
+                $valueFinal = $installmentPurchase->portion_amount - $installmentPurchase->money_discount;
+                $amount = ((($valueFinal * $installmentPurchase->purchase_order->increase_tolerance) / 100) + $valueFinal);
                 $installmentPurchase->amount_paid += $instalmentPurchaseOrder['amount_received'];
-                if ($installmentPurchase->amount_paid > ($installmentPurchase->portion_amount - $installmentPurchase->money_discount)) {
+
+                if ($installmentPurchase->amount_paid > $amount) {
                     return response()->json([
                         'error' => 'A soma do valor recebido para a parcela: ' . $installmentPurchase->id . ' é maior do que necessário para o pagamento completo da mesma, verifique o desconto aplicado e o valor informado.'
                     ], 422);
