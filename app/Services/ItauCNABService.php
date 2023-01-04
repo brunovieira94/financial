@@ -183,6 +183,7 @@ class ItauCNABService
         $arrayString = preg_split("/\r\n|\n|\r/", file_get_contents($requestInfo->file('return-file')));
         $arrayInstallments = [];
         $arrayPaymentRequest = [];
+        $codeBankReturn = substr($arrayString[0], 0, 3);
 
         foreach ($arrayString as $line) {
 
@@ -284,6 +285,11 @@ class ItauCNABService
                 $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/itau/cnab240/cobranca.yml');
                 $remessa = new Remessa($remessaLayout);
                 $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
+                break;
+            case '033':
+                $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/santander/cnab240/cobranca.yml');
+                $remessa = new Remessa($remessaLayout);
+                $remessa = GerarRemessa::gerarRemessaSantander($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
                 break;
             default:
                 return Response()->json([
