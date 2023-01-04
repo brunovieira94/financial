@@ -20,7 +20,10 @@ class PutBankRequest extends FormRequest
             'title' => 'unique:banks,title,' . $this->id . ',id,deleted_at,NULL',
             'cnab400' => 'boolean',
             'cnab240' => 'boolean',
-            'bank_code' => 'numeric',
+            'bank_code' => 'string',
+            'iban_code' => 'string',
+            'address' => 'string',
+            'international' => 'boolean',
         ];
     }
 

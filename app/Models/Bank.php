@@ -25,7 +25,7 @@ class Bank extends Model
 
     use SoftDeletes;
     protected $table='banks';
-    protected $fillable = ['title','cnab400','cnab240', 'bank_code'];
+    protected $fillable = ['title','cnab400','cnab240', 'bank_code', 'country_id'];
     protected $appends = ['linked_accounts'];
 
     public function getLinkedAccountsAttribute()
@@ -48,5 +48,10 @@ class Bank extends Model
     public function form_payment()
     {
         return $this->hasMany(FormPayment::class, 'bank_code', 'bank_code')->where('group_form_payment_id', '!=', null)->with('group_payment');
+    }
+
+    public function country()
+    {
+        return $this->hasOne(Country::class, 'id', 'country_id');
     }
 }

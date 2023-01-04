@@ -23,7 +23,7 @@ class Country extends Model
     // Model attributes
     use SoftDeletes;
     protected $table = 'countries';
-    protected $fillable = ['title'];
+    protected $fillable = ['title', 'country_bank_code'];
 
     public function state()
     {

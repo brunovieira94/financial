@@ -17,12 +17,12 @@ class BankService
     public function getAllBank($requestInfo)
     {
         $bank = Utils::search($this->bank,$requestInfo);
-        return Utils::pagination($bank,$requestInfo);
+        return Utils::pagination($bank->with('country'),$requestInfo);
     }
 
     public function getBank($id)
     {
-      return $this->bank->findOrFail($id);
+      return $this->bank->with('country')->findOrFail($id);
     }
 
     public function postBank($bankInfo)
