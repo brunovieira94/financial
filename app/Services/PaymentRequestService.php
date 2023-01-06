@@ -639,6 +639,7 @@ class PaymentRequestService
     {
         $requestInfo = $request->all();
         $installment = $this->installments->findOrFail($id);
+        $paymentRequestOld = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($installment->payment_request_id);
         if (array_key_exists('billet_file', $requestInfo)) {
             $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
@@ -649,7 +650,8 @@ class PaymentRequestService
 
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($installment->payment_request_id);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
-
+        $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($installment->payment_request_id);
+        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
 
