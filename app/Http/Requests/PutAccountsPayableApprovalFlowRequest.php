@@ -14,7 +14,7 @@ class PutAccountsPayableApprovalFlowRequest extends FormRequest
     public function rules()
     {
         return [
-            'reason' => 'max:255'
+            'reason' => 'max:16777215'
         ];
     }
 }
