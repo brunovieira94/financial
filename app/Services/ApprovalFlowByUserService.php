@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Config;
 use CreateUserHasPaymentRequest;
 use Exception;
+use Faker\Provider\ar_EG\Payment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Response;
@@ -345,12 +346,14 @@ class ApprovalFlowByUserService
         if(array_key_exists('order', $requestInfo)){
             unset($requestInfo['order']);
         }
+        $notify = true;
 
         if ($approve) {
             $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
             Utils::createLogApprovalFlowLogPaymentRequest($accountApproval->payment_request_id, 'approved', null, $description, $accountApproval->order, auth()->user()->id, null);
             if ($accountApproval->order >= $maxOrder) {
                 $accountApproval->status = Config::get('constants.status.approved');
+                $notify = false;
             } else {
                 $accountApproval->order = $accountApproval->order = $this->alterOrder == false ? ($accountApproval->order + 1) : $this->order;
                 $accountApproval->status = Config::get('constants.status.open');
@@ -373,12 +376,12 @@ class ApprovalFlowByUserService
         $this->alterOrder = false;
 
         Redis::del('h', $accountApproval->payment_request_id);
-        $this->notifyUsers($accountApproval, $maxOrder);
+        $this->notifyUsers($accountApproval, $notify, $maxOrder);
     }
 
-    public function notifyUsers($accountApproval, $maxOrder)
+    public function notifyUsers($accountApproval, $notify, $maxOrder)
     {
-        if ($accountApproval->order < $maxOrder) {
+        if ($notify) {
             $approvalFlowOrders = $this->approvalFlow
                 ->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)
                 ->where('order', $accountApproval->order)
@@ -387,7 +390,7 @@ class ApprovalFlowByUserService
             $usersNotify = $this->user->with((['cost_center' => function ($query) use ($accountApproval) {
                 $query->where('cost_center_id', $accountApproval->payment_request->cost_center_id);
             }]))
-                ->where('email_account_approval_notification', true)
+                //->where('email_account_approval_notification', true)
                 ->whereIn('role_id', $approvalFlowOrders)
                 ->orWhere(function ($query) use ($approvalFlowOrders) {
                     $query->where('email_account_approval_notification', true);
@@ -400,7 +403,8 @@ class ApprovalFlowByUserService
                 ->get(['id', 'email', 'phone']);
 
             $usersMail = $usersNotify->pluck('email');
-            $dataSendMail = NotificationService::generateDataSendRedisPaymentRequest($accountApproval->payment_request, $usersMail, 'Conta pendente de aprovação', 'payment-request-to-approve');
+            $paymentRequest = PaymentRequestClean::with(['provider', 'company', 'cost_center', 'chart_of_accounts', 'approval'])->withOutGlobalScopes()->where('id', $accountApproval->payment_request->id)->first();
+            $dataSendMail = NotificationService::generateDataSendRedisPaymentRequest($paymentRequest, $usersMail, 'Conta pendente de aprovação', 'payment-request-to-approve', $accountApproval->order, $maxOrder);
             NotificationService::sendEmail($dataSendMail);
         }
     }
