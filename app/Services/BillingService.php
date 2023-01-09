@@ -293,8 +293,11 @@ class BillingService
         $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
         if($billingPayment){
-            $billingPayment->status = Config::get('constants.billingStatus.open');
-            $billingPayment->save();
+            if(count($billingPayment->billings) <= 1) $billingPayment->delete();
+            else{
+                $billingPayment->status = Config::get('constants.billingStatus.open');
+                $billingPayment->save();
+            }
         }
         $billingInfo['reason'] = null;
         $billingInfo['reason_to_reject_id'] = null;
@@ -312,6 +315,13 @@ class BillingService
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
+        }
+        $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
+        if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
+            $this->billingPayment->where('id', $billing->billing_payment_id)->update(['deleted_at' => null]);
+            return response()->json([
+                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+            ], 422);
         }
         if(array_key_exists('bank_account', $billingInfo))
         {
@@ -477,7 +487,7 @@ class BillingService
 
     public function syncBillingPayment($billingInfo, $cangooroo)
     {
-        $fields = ['pay_date', 'recipient_name', 'oracle_protocol', 'cnpj', 'hotel_id'];
+        $fields = ['pay_date', 'recipient_name', 'oracle_protocol', 'cnpj'];
         $billingInfo['hotel_id'] = $cangooroo['hotel_id'];
         if(!is_null($billingInfo['boleto_code'])){
             $findBillingPayment = BillingPayment::where('boleto_code', $billingInfo['boleto_code'])->where('status', 0)->first();

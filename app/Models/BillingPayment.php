@@ -58,7 +58,7 @@ class BillingPayment extends Model
             foreach ($this->billings as $billing){
                 $sum += $billing->supplier_value;
             }
-            if($this->status == Config::get('constants.billingStatus.approved') && floor($sum) == floor($this->boleto_value)) return true;
+            if($this->status == Config::get('constants.billingStatus.approved') && round($sum) == round($this->boleto_value)) return true;
         }
         else{
             if($this->status == Config::get('constants.billingStatus.approved')) return true;
@@ -75,18 +75,18 @@ class BillingPayment extends Model
         return $sum;
     }
 
-    public static function boot()
-    {
-        parent::boot();
-        self::deleting(function ($billingPayment) {
-            foreach ($billingPayment->billings as $billing) {
-                $billing = Billing::findOrFail($billing->id);
-                $billing->billing_payment_id = null;
-                $billing->approval_status =  Config::get('constants.billingStatus.canceled');
-                $billing->save();
-            }
-        });
-    }
+    // public static function boot()
+    // {
+    //     parent::boot();
+    //     self::deleting(function ($billingPayment) {
+    //         foreach ($billingPayment->billings as $billing) {
+    //             $billing = Billing::findOrFail($billing->id);
+    //             $billing->billing_payment_id = null;
+    //             $billing->approval_status =  Config::get('constants.billingStatus.canceled');
+    //             $billing->save();
+    //         }
+    //     });
+    // }
 
     public array $formsOfPayment = [
         "Boleto",
