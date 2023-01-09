@@ -92,7 +92,7 @@ class ApprovalFlowByUserService
     public function approveAccount($id, $requestInfo)
     {
         $order = null;
-        if(array_key_exists('order', $requestInfo)) {
+        if (array_key_exists('order', $requestInfo)) {
             $order = $requestInfo['order'];
         }
         $requestInfo['ids'][0] = [
@@ -128,7 +128,7 @@ class ApprovalFlowByUserService
                             ) {
                                 Redis::del('h', $value);
                                 return response()->json([
-                                    'error' => 'Não é permitido a esse usuário reprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                                    'error' => 'Não é permitido a este usuário provar ID: ' . $accountApproval->payment_request_id . ', a conta já foi reprovada',
                                 ], 422);
                             }
                             $this->approveOrDisapprove($accountApproval, false, $maxOrder, $requestInfo);
@@ -168,7 +168,7 @@ class ApprovalFlowByUserService
                             ) {
                                 Redis::del('h', $value);
                                 return response()->json([
-                                    'error' => 'Não é permitido a esse usuário aprovar ' . $accountApproval->payment_request_id . ', modifique o fluxo de aprovação.',
+                                    'error' => 'Não é permitido a este usuário provar ID: ' . $accountApproval->payment_request_id . ', a conta já foi aprovada',
                                 ], 422);
                             }
                             $this->approveOrDisapprove($accountApproval, true, $maxOrder, $requestInfo);
@@ -189,7 +189,7 @@ class ApprovalFlowByUserService
     public function reproveAccount($id, $requestInfo)
     {
         $order = null;
-        if(array_key_exists('order', $requestInfo)) {
+        if (array_key_exists('order', $requestInfo)) {
             $order = $requestInfo['order'];
         }
         $requestInfo['ids'][0] = [
@@ -343,7 +343,7 @@ class ApprovalFlowByUserService
     }
     public function approveOrDisapprove($accountApproval, $approve, $maxOrder, $requestInfo)
     {
-        if(array_key_exists('order', $requestInfo)){
+        if (array_key_exists('order', $requestInfo)) {
             unset($requestInfo['order']);
         }
         $notify = true;
