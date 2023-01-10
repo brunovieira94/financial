@@ -60,6 +60,26 @@ class Remessa
 
                 $lotValue += $amount;
 
+                $nomeBeneficiario = '';
+                $type = '';
+                $inscricao = '';
+
+                if ($installment->bank_account_provider == null) {
+                    $type = $installment->payment_request->provider->provider_type;
+                    $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+                } else {
+                    if ($installment->bank_account_provider->entity_name == null) {
+                        $type = $installment->payment_request->provider->provider_type;
+                        $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                        $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+                    } else {
+                        $type = $installment->bank_account_provider->entity_type;
+                        $inscricao = Utils::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
+                        $nomeBeneficiario = $installment->bank_account_provider->entity_name;
+                    }
+                }
+
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {
                     $lotQuantityDetails++;
                     $detalhe->segmento_j->lote_servico = $lote->sequencial;
@@ -67,12 +87,12 @@ class Remessa
 
                     if (strlen(Utils::onlyNumbers($installment->bar_code) > 45)) {
                         $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
-                    }else {
+                    } else {
                         $detalhe->segmento_j->codigo_barras = Utils::onlyNumbers($installment->bar_code);
                     }
 
                     $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
                     $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
                     $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
@@ -86,8 +106,8 @@ class Remessa
                     $detalhe->segmento_j52->lote_servico = $lotQuantity;
                     $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
                     $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($installment->payment_request->provider->cnpj)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                    $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
                     unset($detalhe->segmento_a);
                     unset($detalhe->segmento_b);
 
@@ -106,7 +126,7 @@ class Remessa
                     $detalhe->segmento_a->verificador_agencia_favorecido = $installment->bank_account_provider->agency_check_number ?? '';
                     $detalhe->segmento_a->conta_favorecido = $installment->bank_account_provider->account_number;
                     $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number ?? '';
-                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $nomeBeneficiario, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
                     $dataPagamento = new Carbon($installment->extension_date);
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
@@ -116,8 +136,8 @@ class Remessa
                     $lotQuantityDetails++;
                     $detalhe->segmento_b->lote_servico = $lotQuantity;
                     $detalhe->segmento_b->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_b->tipo_inscricao_favorecido = $installment->payment_request->provider->provider_type == 'J' ? 2 : 1;
-                    $detalhe->segmento_b->inscricao_favorecido = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $detalhe->segmento_b->tipo_inscricao_favorecido = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                    $detalhe->segmento_b->inscricao_favorecido = Utils::onlyNumbers($inscricao);
                     $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_b->vencimento = $dataVencimento->format('dmY');
 
@@ -202,6 +222,26 @@ class Remessa
             foreach ($groupedInstallment as $installment) {
                 $amount = ($installment->initial_value + $installment->fees + $installment->fine) - $installment->discount;
 
+                $nomeBeneficiario = '';
+                $type = '';
+                $inscricao = '';
+
+                if ($installment->bank_account_provider == null) {
+                    $type = $installment->payment_request->provider->provider_type;
+                    $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+                } else {
+                    if ($installment->bank_account_provider->entity_name == null) {
+                        $type = $installment->payment_request->provider->provider_type;
+                        $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                        $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+                    } else {
+                        $type = $installment->bank_account_provider->entity_type;
+                        $inscricao = Utils::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
+                        $nomeBeneficiario = $installment->bank_account_provider->entity_name;
+                    }
+                }
+
                 $detalhe = $lote->novoDetalhe();
 
                 $lotValue += $amount;
@@ -210,7 +250,7 @@ class Remessa
                     $lotQuantityDetails++;
                     $detalhe->segmento_j->lote_servico = $lote->sequencial;
                     $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
                     $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
                     $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
@@ -231,8 +271,8 @@ class Remessa
                     $detalhe->segmento_j52->lote_servico = $lotQuantity;
                     $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
                     $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($installment->payment_request->provider->cnpj)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                    $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
                     unset($detalhe->segmento_a);
                     unset($detalhe->segmento_b);
 
@@ -252,13 +292,13 @@ class Remessa
                     $detalhe->segmento_a->verificador_agencia_favorecido = $installment->bank_account_provider->agency_check_number;
                     $detalhe->segmento_a->conta_favorecido = $installment->bank_account_provider->account_number;
                     $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number;
-                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $nomeBeneficiario, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
                     $dataPagamento = new Carbon($installment->extension_date); //validar
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_a->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
                     $detalhe->segmento_a->identificacao_transferencia = Utils::identificacaoTipoTransferencia($installment->bank_account_provider->account_type ?? 3);
-                    $detalhe->segmento_a->numero_inscricao_favorecido = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $detalhe->segmento_a->numero_inscricao_favorecido = Utils::onlyNumbers($inscricao);
 
                     unset($detalhe->segmento_j);
                     unset($detalhe->segmento_j52);
@@ -336,6 +376,27 @@ class Remessa
             $lote->header->versao_layout = $key == '11' ? '030' : '031';
 
             foreach ($groupedInstallment as $installment) {
+
+                $nomeBeneficiario = '';
+                $type = '';
+                $inscricao = '';
+
+                if ($installment->bank_account_provider == null) {
+                    $type = $installment->payment_request->provider->provider_type;
+                    $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+                } else {
+                    if ($installment->bank_account_provider->entity_name == null) {
+                        $type = $installment->payment_request->provider->provider_type;
+                        $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                        $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+                    } else {
+                        $type = $installment->bank_account_provider->entity_type;
+                        $inscricao = Utils::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
+                        $nomeBeneficiario = $installment->bank_account_provider->entity_name;
+                    }
+                }
+
                 $detalhe = $lote->novoDetalhe();
                 $amount = ($installment->initial_value + $installment->fees + $installment->fine) - $installment->discount;
 
@@ -348,12 +409,12 @@ class Remessa
 
                     if (strlen(Utils::onlyNumbers($installment->bar_code) > 45)) {
                         $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
-                    }else {
+                    } else {
                         $detalhe->segmento_j->codigo_barras = Utils::onlyNumbers($installment->bar_code);
                     }
 
                     $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
                     $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
                     $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
@@ -367,8 +428,8 @@ class Remessa
                     $detalhe->segmento_j52->lote_servico = $lotQuantity;
                     $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
                     $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($installment->payment_request->provider->cnpj)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                    $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
                     unset($detalhe->segmento_a);
                     unset($detalhe->segmento_b);
 
@@ -387,7 +448,7 @@ class Remessa
                     $detalhe->segmento_a->verificador_agencia_favorecido = $installment->bank_account_provider->agency_check_number ?? '';
                     $detalhe->segmento_a->conta_favorecido = $installment->bank_account_provider->account_number;
                     $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number ?? '';
-                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name, '30');
+                    $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $nomeBeneficiario, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
                     $dataPagamento = new Carbon($installment->extension_date);
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
@@ -397,8 +458,8 @@ class Remessa
                     $lotQuantityDetails++;
                     $detalhe->segmento_b->lote_servico = $lotQuantity;
                     $detalhe->segmento_b->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_b->tipo_inscricao_favorecido = $installment->payment_request->provider->provider_type == 'J' ? 2 : 1;
-                    $detalhe->segmento_b->inscricao_favorecido = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
+                    $detalhe->segmento_b->tipo_inscricao_favorecido = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                    $detalhe->segmento_b->inscricao_favorecido = Utils::onlyNumbers($inscricao);
                     $dataVencimento = new Carbon($installment->extension_date); // data vendimento
                     $detalhe->segmento_b->vencimento = $dataVencimento->format('dmY');
                     unset($detalhe->segmento_j);
@@ -427,5 +488,4 @@ class Remessa
 
         return $remessa;
     }
-
 }
