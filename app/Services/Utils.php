@@ -890,27 +890,21 @@ class Utils
             {
                 if (array_key_exists('45', $groupBilling)) {
                     array_push($groupBilling['45'], $billing);
-                    break;
                 } else {
                     $groupBilling['45'] = [$billing];
-                    break;
                 }
             } elseif ($billing->form_of_payment == 0) {
                 if (substr($billing->boleto_code, 0, 3) == $bankCode) {
                     if (array_key_exists('30', $groupBilling)) {
                         array_push($groupBilling['30'], $billing);
-                        break;
                     } else {
                         $groupBilling['30'] = [$billing];
-                        break;
                     }
                 } else {
                     if (array_key_exists('11', $groupBilling)) {
                         array_push($groupBilling['11'], $billing);
-                        break;
                     } else {
                         $groupBilling['11'] = [$billing];
-                        break;
                     }
                 }
             }
