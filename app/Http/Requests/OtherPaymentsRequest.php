@@ -30,7 +30,7 @@ class OtherPaymentsRequest extends FormRequest
             'payment_request_ids' => 'array|exists:payment_requests,id',
             'bank_account_company_id' => 'required|integer|exists:bank_accounts,id',
             'payment_date' => 'required|date',
-            'attachments' => 'required|array',
+            'attachments' => 'array',
             'exchange_rates' => 'array',
             'note' => 'string|nullable',
             'all' => 'boolean',
