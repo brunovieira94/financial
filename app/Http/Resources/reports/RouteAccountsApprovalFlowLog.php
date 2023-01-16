@@ -40,6 +40,7 @@ class RouteAccountsApprovalFlowLog extends JsonResource
             'stage' => $this->stage,
             'totalStages' => $this->totalStages,
             'temporary' => $this->temporary,
+            'current_stage' => $this->current_stage,
         ];
     }
 }

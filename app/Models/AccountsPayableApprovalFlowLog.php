@@ -11,7 +11,7 @@ use Spatie\Activitylog\Models\Activity;
 class AccountsPayableApprovalFlowLog extends Model
 {
     protected $table = 'accounts_payable_approval_flows_log';
-    protected $fillable = ['temporary', 'recipient', 'type', 'motive', 'description', 'stage', 'user_id', 'user_name', 'user_role', 'payment_request_id', 'created_at'];
+    protected $fillable = ['current_stage', 'temporary', 'recipient', 'type', 'motive', 'description', 'stage', 'user_id', 'user_name', 'user_role', 'payment_request_id', 'created_at'];
     protected $hidden = ['payment_request_id'];
 
     public function payment_request()

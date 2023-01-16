@@ -279,7 +279,7 @@ class LogsService
         $dataLogs = RouteBillingLog::collection($billingLogs);
         return $dataLogs->collection->toArray();
     }
-    
+
     public function getLogPaymentRequestUpdate($id, $requestInfo)
     {
         $dataLog = LogActivity::where([
