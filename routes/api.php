@@ -195,6 +195,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
         Route::put('/approve-many', [BillingController::class, 'approveMany']);
         Route::get('/get-billing-for-approve', [BillingController::class, 'getBillingsForApproval']);
+        Route::post('/get-billing-for-approve/export', [BillingController::class, 'exportBillingForApproval']);
         Route::get('/show/{id}', [BillingController::class, 'show']);
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
         Route::get('/{approvalStatus}', [BillingController::class, 'index']);
@@ -502,7 +503,7 @@ Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentR
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
 Route::post('/work', [PaidBillingInfoController::class, 'work']);
-Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
+// Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
 Route::post('/redis-clean', [InfoController::class, 'redisClean']);
