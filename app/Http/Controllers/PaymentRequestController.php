@@ -293,7 +293,4 @@ class PaymentRequestController extends Controller
     {
         return PaymentRequest::withOutGlobalScopes()->withTrashed()->where('group_approval_flow_id', null)->get();
     }
-
-
-
 }

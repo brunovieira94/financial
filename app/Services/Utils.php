@@ -549,7 +549,7 @@ class Utils
         return $paymentRequest;
     }
 
-    public static function createLogApprovalFlowLogPaymentRequest($paymentRequestID, $type, $motive, $description, $stage, $userID, $recipient, $createdAt = null)
+    public static function createLogApprovalFlowLogPaymentRequest($paymentRequestID, $type, $motive, $description, $stage, $userID, $recipient, $createdAt = null, $currentOrder = null)
     {
         $user = User::withTrashed()->with('role')->find($userID);
         $temporary = $user->logged_user_id == null ? false : true;
@@ -566,7 +566,8 @@ class Utils
                     'user_role' => $role != null ? $role->title : null,
                     'payment_request_id' => $paymentRequestID,
                     'recipient' => $recipient,
-                    'temporary' => $temporary
+                    'temporary' => $temporary,
+                    'current_stage' => $currentOrder,
                 ]
             );
         } else {
@@ -582,7 +583,8 @@ class Utils
                     'payment_request_id' => $paymentRequestID,
                     'recipient' => $recipient,
                     'created_at' => $createdAt,
-                    'temporary' => $temporary
+                    'temporary' => $temporary,
+                    'current_stage' => $currentOrder,
                 ]
             );
         }

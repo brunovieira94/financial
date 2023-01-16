@@ -267,7 +267,7 @@ class PaymentRequestService
 
         $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
-        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null, null, $approval->order);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
@@ -282,7 +282,7 @@ class PaymentRequestService
             $approval->status = 3;
             $approval->save();
             activity()->enableLogging();
-            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'deleted', null, null, $approval->order, auth()->user()->id, null);
+            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'deleted', null, null, $approval->order, auth()->user()->id, null, null, $approval->order);
 
             if ($paymentRequest->payment_type == 0) {
                 $purchaseOrdersDelveryDelete = [];
@@ -546,7 +546,7 @@ class PaymentRequestService
 
         $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($requestInfo['payment_request_id']);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
-        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
         ], 200);
@@ -649,7 +649,7 @@ class PaymentRequestService
         $installment->fill($requestInfo)->save();
 
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($installment->payment_request_id);
-        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($installment->payment_request_id);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
