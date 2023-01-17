@@ -33,4 +33,12 @@ return [
         'paid out' => '4',
         'finished' => '5',
     ],
+    'billingStatusPt' => [
+        'Em Processo',
+        'Aprovada',
+        'Reprovada',
+        'Cancelada',
+        'Paga',
+        'Finalizada',
+    ],
 ];

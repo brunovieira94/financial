@@ -8,6 +8,7 @@ use App\Services\CangoorooService as CangoorooService;
 use App\Http\Requests\StoreBillingRequest;
 use App\Http\Requests\PutBillingRequest;
 use App\Exports\BillingExport;
+use App\Exports\BillingForApprovalExport;
 
 class BillingController extends Controller
 {
@@ -87,6 +88,14 @@ class BillingController extends Controller
             return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
         }
         return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function exportBillingForApproval(Request $request, $approvalStatus)
+    {
+        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
+            return (new BillingForApprovalExport($request->all(), $approvalStatus))->download('faturamentoAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        }
+        return (new BillingForApprovalExport($request->all(), $approvalStatus))->download('faturamentoAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function refreshStatuses($id)

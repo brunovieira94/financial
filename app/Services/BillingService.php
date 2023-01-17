@@ -40,6 +40,7 @@ class BillingService
             $billing = $billing->where('approval_status', array_search($approvalStatus, Utils::$approvalStatus));
         }
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
+        $requestInfo['perPage'] = $requestInfo['perPage'] ?? 200;
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
@@ -61,6 +62,7 @@ class BillingService
             $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
         }
         $billing = $billing->whereIn('id', $billingIDs);
+        $requestInfo['perPage'] = $requestInfo['perPage'] ?? 200;
         return Utils::pagination($billing->with($this->with), $requestInfo);
     }
 
@@ -382,7 +384,8 @@ class BillingService
         if($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido'){
             $suggestionReason = $suggestionReason.' | Reserva não emitida no Admin';
         }
-        if($this->billing->where('id', '!=' , $billingId)->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
+        //if($this->billing->where('id', '!=' , $billingId)->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
+        if($this->billing->where('id', '!=' , $billingId)->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
             $suggestionReason = $suggestionReason.' | Reserva cadastrada em duplicidade';
         }
         if($cangooroo['status'] == 'Cancelled'){
