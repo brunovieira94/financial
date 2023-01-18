@@ -29,10 +29,10 @@ class SetPayBillingImport implements ToCollection, WithValidation, WithHeadingRo
             if($row['pago'] == true || $row['pago'] == 'sim' || $row['pago'] == 'SIM' || $row['pago'] == 'Sim')
             {
                 $billingPayment = BillingPayment::where('id', $row['id_do_pagamento'])->with(['billings'])->first();
-                if($billingPayment && $billingPayment->ready_to_pay){
+                if($billingPayment && ($billingPayment->ready_to_pay || $billingPayment->status == 2)){
                     $billingPayment->status = 3;
                     $billingPayment->save();
-                    foreach ($billingPayment->billings as $key => $billing) {
+                    foreach ($billingPayment->billings as $billing) {
                         $bil = Billing::where('id',$billing->id)->with(['cangooroo','user', 'bank_account'])->first();
                         $bil->approval_status = Config::get('constants.billingStatus.paid out');
                         $bil->save();
