@@ -33,7 +33,9 @@ class ApprovalFlowService
     public function postApprovalFlow($approvalFlowInfo)
     {
         if (array_key_exists('default', $approvalFlowInfo)) {
-            if ($approvalFlowInfo['default']) {
+            if (is_array($approvalFlowInfo['default'])) {
+                unset($approvalFlowInfo['default']);
+            } else if ($approvalFlowInfo['default'] == true) {
                 DB::table('group_approval_flow')->update(['default' => 0]);
             }
         }
@@ -58,7 +60,9 @@ class ApprovalFlowService
     {
         $groupApprovalFlow = $this->groupApprovalFlow->findOrFail($id);
         if (array_key_exists('default', $approvalFlowInfo)) {
-            if ($approvalFlowInfo['default']) {
+            if (is_array($approvalFlowInfo['default'])) {
+                unset($approvalFlowInfo['default']);
+            } else if ($approvalFlowInfo['default'] == true) {
                 DB::table('group_approval_flow')->update(['default' => 0]);
             }
         }
