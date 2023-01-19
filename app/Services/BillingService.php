@@ -308,6 +308,11 @@ class BillingService
     public function putBilling($id, $billingInfo)
     {
         $billing = $this->billing->findOrFail($id);
+        if ($billing->approval_status == Config::get('constants.billingStatus.approved')) {
+            return response()->json([
+                'error' => 'Pedido previamente aprovado, não é possível editar',
+            ], 422);
+        }
         if ($billing->approval_status == Config::get('constants.billingStatus.canceled')) {
             return response()->json([
                 'error' => 'Pedido previamente cancelado',
@@ -319,6 +324,7 @@ class BillingService
                 'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
             ], 422);
         }
+        $billingInfo['order'] = 1;
         $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
         if($billingPayment){
