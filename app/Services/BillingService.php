@@ -14,6 +14,7 @@ use App\Models\HotelReasonToReject;
 use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class BillingService
 {
@@ -104,6 +105,7 @@ class BillingService
 
     public function approveMany($requestInfo)
     {
+        DB::beginTransaction();
         if (array_key_exists('ids', $requestInfo)) {
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
@@ -116,6 +118,7 @@ class BillingService
                         ->where('role_id', auth()->user()->role_id)
                         ->doesntExist()
                     ) {
+                        DB::rollback();
                         return response()->json([
                             'error' => 'Não é permitido a esse usuário reprovar o faturamento ' . $billing->id . ', modifique o fluxo de aprovação.',
                         ], 422);
@@ -135,30 +138,37 @@ class BillingService
                     $billing->save();
                     Utils::createBillingLog($billing->id, 'rejected', null, null, $stage, auth()->user()->id);
                 }
+                DB::commit();
                 return response()->json([
                     'Sucesso' => 'Faturamentos reprovados',
                 ], 200);
             } else {
-                foreach ($requestInfo['ids'] as $value) {
-                    $billing = $this->billing->findOrFail($value);
+                $billingPayments = [];
+                $maxOrder = $this->approvalFlow->max('order');
+                $arrayOrder = $this->approvalFlow
+                ->where('role_id', auth()->user()->role_id)
+                ->pluck('order')->toArray();
+                $billings = $this->billing->whereIn('id', $requestInfo['ids'])->get();
+                foreach ($billings as $billing) {
                     $stage = 0;
-                    if ($this->approvalFlow
-                        ->where('order', $billing->order)
-                        ->where('role_id', auth()->user()->role_id)
-                        ->doesntExist()
+                    if (!in_array($billing->order, $arrayOrder)
                     ) {
+                        DB::rollback();
                         return response()->json([
                             'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
                         ], 422);
                     }
 
-                    $maxOrder = $this->approvalFlow->max('order');
                     if ($billing->order >= $maxOrder) {
                         $billing->approval_status = Config::get('constants.billingStatus.approved');
-                        $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-                        if($billingPayment){
-                            $this->openOrApprovePaymentBilling($billingPayment, $billing);
+                        if($billing->billing_payment_id && !in_array($billing->billing_payment_id,$billingPayments)) {
+                            $billingPayments[] = $billing->billing_payment_id;
                         }
+                        // $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
+                        // // push $billing->billing_payment_id if !array_key_exists
+                        // if($billingPayment){
+                        //     $this->openOrApprovePaymentBilling($billingPayment, $billing);
+                        // }
                         $stage = $billing->order;
                     } else {
                         $billing->order += 1;
@@ -170,11 +180,28 @@ class BillingService
                     $billing->save();
                     Utils::createBillingLog($billing->id, 'approved', null, null, $stage, auth()->user()->id);
                 }
+
+                foreach ($billingPayments as $billingPaymentId) {
+                    $billingPayment = $this->billingPayment->with(['billings'])->find($billingPaymentId);
+                    if($billingPayment){
+                        $billingPayment->status = Config::get('constants.billingStatus.approved');
+                        foreach($billingPayment->billings as $value){
+                            if($value->approval_status != Config::get('constants.billingStatus.approved')){
+                                $billingPayment->status = Config::get('constants.billingStatus.open');
+                                break;
+                            }
+                        }
+                        $billingPayment->save();
+                    }
+                }
+
+                DB::commit();
                 return response()->json([
                     'Sucesso' => 'Faturamentos aprovados',
                 ], 200);
             }
         } else {
+            DB::rollback();
             return response()->json([
                 'error' => 'Nenhum faturamento selecionado',
             ], 422);
@@ -524,6 +551,7 @@ class BillingService
         foreach($billingPayment->billings as $value){
             if($value->approval_status != Config::get('constants.billingStatus.approved') && $value->id != $billing->id){
                 $billingPayment->status = Config::get('constants.billingStatus.open');
+                break;
             }
         }
         $billingPayment->save();
