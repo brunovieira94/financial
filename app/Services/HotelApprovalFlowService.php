@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Billing;
 use App\Models\HotelApprovalFlow;
 
 class HotelApprovalFlowService
@@ -37,6 +38,10 @@ class HotelApprovalFlowService
 
     public function postHotelApprovalFlow($hotelApprovalFlowInfo)
     {
+        if((count($hotelApprovalFlowInfo['order']) - 1) < $this->hotelApprovalFlow->max('order'))
+        {
+            Billing::whereIn('approval_status', [0,2])->where('order', '>', (count($hotelApprovalFlowInfo['order']) - 1))->update(['order' => 1]);
+        }
         HotelApprovalFlow::truncate();
         $hotelApprovalFlow = new HotelApprovalFlow;
         $info = [];
