@@ -51,6 +51,7 @@ class CheckUserHasPermission
             'all',
             'filter-user',
             'approve-many',
+            'approve-all',
             'update-installment',
             'multiple-approval',
             'transfer-approval',
