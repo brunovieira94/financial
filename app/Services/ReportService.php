@@ -34,7 +34,7 @@ class ReportService
     private $accountsPayableApprovalFlowLog;
 
     private $paymentRequestCleanWith = ['provider', 'cost_center', 'approval.approval_flow', 'installments', 'currency', 'cnab_payment_request.cnab_generated'];
-    private $installmentCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'cnab_generated_installment.generated_cnab', 'bank_account_provider', 'group_payment.form_payment'];
+    private $installmentCleanWith = ['payment_request.provider.provider_category', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'cnab_generated_installment.generated_cnab', 'bank_account_provider', 'group_payment.form_payment'];
     private $accountsPayableApprovalFlowCleanWith = ['payment_request.provider', 'payment_request.cost_center', 'payment_request.approval.approval_flow', 'payment_request.currency', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.installments.bank_account_provider'];
     private $logPaymentRequestWith = ['user', 'payment_request.provider'];
 
