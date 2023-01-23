@@ -30,6 +30,9 @@ class PaymentRequest extends Model
     protected $appends = ['stage_for_disapproval', 'first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'amount_old',
+        'currency_old_id',
+        'net_value_old',
         'edit_counter',
         'group_approval_flow_id',
         'company_id',
@@ -271,6 +274,11 @@ class PaymentRequest extends Model
         ->groupBy('order')
         ->orderBy('id', 'ASC')
         ->get();
+    }
+
+    public function currency_old()
+    {
+        return $this->hasOne(Currency::class, 'id', 'currency_old_id');
     }
 
 }

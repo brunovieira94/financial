@@ -25,7 +25,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
 
     public function collection()
     {
-        $result = PaymentRequest::with(['tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = PaymentRequest::with(['currency_old', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
         $requestInfo = $this->requestInfo;
         $result = Utils::baseFilterReportsPaymentRequest($result, $requestInfo);
         $result = $result->whereHas('installments', function ($query) use ($requestInfo) {

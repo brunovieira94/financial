@@ -81,6 +81,9 @@ class StorePaymentRequestRequest extends FormRequest
             'installments.*.billet_file' => 'file',
             'purchase_orders.*.order' => 'required_with:installment_purchase_order.*.installment',
             'installment_purchase_order.*.installment' => 'required_with:purchase_orders.*.order',
+            'currency_old_id' => 'integer|exists:currency,id',
+            'amount_old' => 'numeric',
+            'net_value_old' => 'numeric',
         ];
     }
 }

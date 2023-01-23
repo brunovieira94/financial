@@ -28,7 +28,7 @@ class PaymentRequestHasInstallments extends Model
 
     public function payment_request()
     {
-        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['provider', 'company', 'purchase_order', 'group_payment', 'attachments', 'approval', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax']);
+        return $this->hasOne(PaymentRequest::class, 'id', 'payment_request_id')->with(['currency_old', 'provider', 'company', 'purchase_order', 'group_payment', 'attachments', 'approval', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'tax']);
     }
 
     public function group_payment()

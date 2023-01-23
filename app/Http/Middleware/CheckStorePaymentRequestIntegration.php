@@ -47,6 +47,9 @@ class CheckStorePaymentRequestIntegration
 
             //solve error float value PHP
             $value1 = floatval($amountReceived);
+            if(array_key_exists('exchange_rate', $paymentRequestInfo) && $paymentRequestInfo['exchange_rate'] != 0) {
+                $paymentRequestInfo['amount'] = $paymentRequestInfo['amount'] / $paymentRequestInfo['exchange_rate'];
+            }
             $value2 = floatval($paymentRequestInfo['amount']);
 
             if (strval($value1) != strval($value2)) {
