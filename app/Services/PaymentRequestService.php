@@ -48,7 +48,8 @@ class PaymentRequestService
     private $installmentClean;
     private $approval;
 
-    private $with = ['group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['currency_old', 'group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $withLog = ['currency_old', 'cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
     private $installmentWith = ['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'];
 
     public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
@@ -192,8 +193,8 @@ class PaymentRequestService
     public function putPaymentRequest($id, Request $request)
     {
         $paymentRequestInfo = $request->all();
-        $paymentRequest = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
-        $paymentRequestOld = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
+        $paymentRequest = $this->paymentRequest->with(['currency_old', 'cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
+        $paymentRequestOld = $this->paymentRequest->with($this->withLog)->findOrFail($id);
         $paymentRequest->edit_counter += 1;
         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $paymentRequest->group_approval_flow_id)->max('order');
         $approval = $this->approval->where('payment_request_id', $paymentRequest->id)->first();
@@ -266,7 +267,7 @@ class PaymentRequestService
         $paymentRequest->fill($paymentRequestInfo)->save();
         activity()->enableLogging();
 
-        $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($id);
+        $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($id);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null, null, $approval->order);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
@@ -515,7 +516,7 @@ class PaymentRequestService
     public function updateDateInstallment($requestInfo)
     {
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($requestInfo['payment_request_id']);
-        $paymentRequestOld = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($requestInfo['payment_request_id']);
+        $paymentRequestOld = $this->paymentRequest->with($this->withLog)->findOrFail($requestInfo['payment_request_id']);
 
         activity()->disableLogging();
         if (auth()->user()->role_id != 1) {
@@ -545,7 +546,7 @@ class PaymentRequestService
         }
         activity()->enableLogging();
 
-        $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($requestInfo['payment_request_id']);
+        $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($requestInfo['payment_request_id']);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         return response()->json([
@@ -640,7 +641,7 @@ class PaymentRequestService
     {
         $requestInfo = $request->all();
         $installment = $this->installments->findOrFail($id);
-        $paymentRequestOld = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($installment->payment_request_id);
+        $paymentRequestOld = $this->paymentRequest->with($this->withLog)->findOrFail($installment->payment_request_id);
         if (array_key_exists('billet_file', $requestInfo)) {
             $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
         }
@@ -651,7 +652,7 @@ class PaymentRequestService
 
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($installment->payment_request_id);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
-        $paymentRequestNew = $this->paymentRequest->with(['cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'])->findOrFail($installment->payment_request_id);
+        $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($installment->payment_request_id);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
