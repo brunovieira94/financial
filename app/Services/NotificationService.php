@@ -171,4 +171,24 @@ class NotificationService
 
         self::sendEmail($data);
     }
+
+    public static function generateDataSendRedisResetPassword($mail = [], $titleMail, $typeMail, $name, $code)
+    {
+        $data = [
+            'to' => $mail,
+            'subject' => $titleMail,
+            'type' => $typeMail,
+            'args' => [
+                [
+                    'name' =>  'name',
+                    'value' =>  $name ?? '',
+                ],
+                [
+                    'name' =>  'code',
+                    'value' =>  $code ?? '',
+                ]
+            ]
+        ];
+        self::sendEmail($data);
+    }
 }

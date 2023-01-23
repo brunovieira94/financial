@@ -48,6 +48,7 @@ use App\Http\Controllers\BillingPaymentController;
 use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\PlutoTableStateController;
+use App\Http\Controllers\ResetPasswordController;
 
 Route::middleware(['auth:api', 'check.permission'])->group(function () {
 
@@ -508,3 +509,6 @@ Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
 Route::post('/redis-clean', [InfoController::class, 'redisClean']);
 Route::put('/approved-payment-request-resolve-status', [OtherPaymentsController::class, 'approvedPaymentRequestsResolveStatus']);
+Route::post('/forgot-password', [ResetPasswordController::class, 'forgotPassword']);
+Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
+Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
