@@ -102,4 +102,9 @@ class BillingController extends Controller
     {
         return $this->billingService->refreshStatuses($id);
     }
+
+    public function getBillingUsers()
+    {
+        return $this->billingService->getBillingUsers();
+    }
 }
