@@ -61,7 +61,7 @@ class AccountsPayableApprovalFlow extends Model
         $costCenterId = PaymentRequest::where('id', $this->payment_request_id)->withTrashed()->withoutGlobalScopes()->first()->cost_center_id;
         foreach ($roles as $role) {
             if ($role->role->id != 1) {
-                $checkUser = User::where('role_id', $role->role->id)->with('cost_center')->get();
+                $checkUser = User::where('role_id', $role->role->id)->where('status', 0)->with('cost_center')->get();
                 $names = [];
                 foreach ($checkUser as $user) {
                     foreach ($user->cost_center as $userCostCenter) {
