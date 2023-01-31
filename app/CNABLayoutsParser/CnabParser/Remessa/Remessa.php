@@ -335,7 +335,7 @@ class Remessa
         $remessa->header->inscricao_numero = Utils::formatCnab('9', Utils::onlyNumbers($company->cnpj), 14);
         $remessa->header->numero_convenio = Utils::formatCnab('9', $bankAccount->covenant, 9);
         $remessa->header->agencia = Utils::formatCnab('9', $bankAccount->agency_number, 5);
-        $remessa->header->convenio = Utils::formatCnab('9', $bankAccount->covenant, 20);
+        $remessa->header->convenio = Utils::formatCnab('X', $bankAccount->covenant, 20);
         $remessa->header->digito_verificador_agencia = Utils::formatCnab('X', $bankAccount->agency_check_number, 1);
         $remessa->header->conta = Utils::formatCnab('9', $bankAccount->account_number, 12);
         $remessa->header->digito_verificador_conta = Utils::formatCnab('X', $bankAccount->account_check_number, 1);
@@ -360,7 +360,7 @@ class Remessa
             $lote->header->digito_verificador_agencia = $bankAccount->agency_check_number ?? '';
             $lote->header->conta = $bankAccount->account_number;
             $lote->header->digito_verificador_conta = $bankAccount->account_check_number ?? '';
-            $lote->header->numero_convenio = Utils::formatCnab('9', $bankAccount->covenant, 9);
+            $lote->header->numero_convenio = Utils::formatCnab('X', $bankAccount->covenant, 20);
             $lote->header->codigo_banco = $bankAccount->bank->bank_code;
             $lote->header->lote_servico = $lote->sequencial;
             $lote->header->tipo_registro = 1;
