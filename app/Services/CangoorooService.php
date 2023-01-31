@@ -65,6 +65,9 @@ class CangoorooService
 
         $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
 
+        $isInvalidContract = $this->invalidateCangoorooContract($response, $room);
+        if($isInvalidContract) return ['error' => 'Contrato inválido. Campo ausente na API Cangooroo: ' . $isInvalidContract];
+
         $data =
             [
                 "booking_id" => $bookingId,
@@ -138,5 +141,27 @@ class CangoorooService
             ];
         }
         return $apiCall->json()['Reservations'][0]['BookingId'];
+    }
+
+    public function invalidateCangoorooContract($response, $room)
+    {
+        if(!array_key_exists('ServiceId', $room)) return 'ServiceId';
+        if(!array_key_exists('SupplierReservationCode', $room)) return 'SupplierReservationCode';
+        if(!array_key_exists('Status', $room)) return 'Status';
+        if(!array_key_exists('ReservationDate', $room)) return 'ReservationDate';
+        if(!array_key_exists('CheckIn', $room)) return 'CheckIn';
+        if(!array_key_exists('CheckOut', $room)) return 'CheckOut';
+        if(!array_key_exists('CancellationDate', $room)) return 'CancellationDate';
+        if(!array_key_exists('ProviderName', $room)) return 'ProviderName';
+        if(!array_key_exists('NumberOfNights', $room)) return 'NumberOfNights';
+        if(!array_key_exists('SupplierHotelId', $room)) return 'SupplierHotelId';
+        if(!array_key_exists('HotelId', $room)) return 'HotelId';
+        if(!array_key_exists('HotelName', $room)) return 'HotelName';
+        if(!array_key_exists('CityName', $room)) return 'CityName';
+        if(!array_key_exists('ControlNumber', $response)) return 'ControlNumber';
+        if(!array_key_exists('CancellationPolicies', $room) || !array_key_exists(0, $room['CancellationPolicies']) || !array_key_exists('StartDate', $room['CancellationPolicies'][0])) return 'CancellationPoliciesStartDate';
+        if(!array_key_exists('CancellationPolicies', $room) || !array_key_exists(0, $room['CancellationPolicies']) || !array_key_exists('Value', $room['CancellationPolicies'][0])) return 'CancellationPoliciesValue';
+        if(!array_key_exists('CreationUserDetail', $room) || !array_key_exists('Name', $room['CreationUserDetail'])) return 'CreationUserDetailName';
+        return false;
     }
 }
