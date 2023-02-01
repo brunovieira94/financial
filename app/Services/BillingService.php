@@ -291,6 +291,8 @@ class BillingService
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             return response()->json([
                 'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'code' => 'INCONSISTENT_VALUES',
+                'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
         }
         if(array_key_exists('bank_account', $billingInfo))
@@ -356,6 +358,8 @@ class BillingService
             $this->billingPayment->where('id', $billing->billing_payment_id)->update(['deleted_at' => null]);
             return response()->json([
                 'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'code' => 'INCONSISTENT_VALUES',
+                'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
         }
         if(array_key_exists('bank_account', $billingInfo))
@@ -544,13 +548,18 @@ class BillingService
 
     public function syncBillingPayment($billingInfo, $cangooroo)
     {
+        $changeAllPayment = isset($billingInfo['change_all_payment']) && $billingInfo['change_all_payment'] == true;
         $fields = ['pay_date', 'recipient_name', 'oracle_protocol', 'cnpj'];
         $billingInfo['hotel_id'] = $cangooroo['hotel_id'];
         if(!is_null($billingInfo['boleto_code'])){
             $findBillingPayment = BillingPayment::where('boleto_code', $billingInfo['boleto_code'])->where('status', 0)->first();
             if($findBillingPayment){
                 foreach ($fields as $field) {
-                    if($field == 'pay_date'){
+                    if($changeAllPayment){
+                        $findBillingPayment[$field] = $billingInfo[$field];
+                        $this->billing->where('billing_payment_id', $findBillingPayment->id)->update([$field => $billingInfo[$field]]);
+                    }
+                    else if($field == 'pay_date'){
                         if(strtotime($billingInfo[$field]) != strtotime($findBillingPayment[$field])) return ['error' => $field];
                     }
                     else if($billingInfo[$field] != $findBillingPayment[$field]) return ['error' => $field];
