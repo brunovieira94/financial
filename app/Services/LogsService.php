@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Http\Resources\reports\RouteAccountsApprovalFlowLog;
 use App\Http\Resources\reports\RouteBillingLog;
+use App\Http\Resources\reports\RouteHotelLog;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\BillingLog;
+use App\Models\HotelLog;
 use App\Models\ApprovalFlow;
 use App\Models\HotelApprovalFlow;
 use App\Models\LogActivity;
@@ -277,6 +279,14 @@ class LogsService
         });
 
         $dataLogs = RouteBillingLog::collection($billingLogs);
+        return $dataLogs->collection->toArray();
+    }
+
+    public function getHotelLogs($id, $requestInfo)
+    {
+        $hotelLogs = HotelLog::where('hotel_id', $id)->orderBy('created_at', 'asc')->get();
+
+        $dataLogs = RouteHotelLog::collection($hotelLogs);
         return $dataLogs->collection->toArray();
     }
 
