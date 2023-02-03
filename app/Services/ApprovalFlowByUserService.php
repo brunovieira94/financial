@@ -109,8 +109,8 @@ class ApprovalFlowByUserService
             if (array_key_exists('reprove', $requestInfo) && $requestInfo['reprove'] == true) {
                 foreach ($requestInfo['ids'] as $value) {
                     $value = self::updateOrder($value);
-                    if (!Redis::exists('h', $value)) {
-                        Redis::hSet('h', $value, 'payment-request');
+                    if (!Redis::exists($value)) {
+                        Redis::set($value, 'payment-request', 'EX', '10');
                         $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
                             $query->withoutGlobalScopes();
                         }]))->findOrFail((int)  $value);
@@ -141,8 +141,8 @@ class ApprovalFlowByUserService
             } else {
                 foreach ($requestInfo['ids'] as $value) {
                     $value = self::updateOrder($value);
-                    if (!Redis::exists('h', $value)) {
-                        Redis::hSet('h', $value, 'payment-request');
+                    if (!Redis::exists($value)) {
+                        Redis::set($value, 'payment-request', 'EX', '10');
                         $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
                             $query->withoutGlobalScopes();
                         }]))->findOrFail($value);
