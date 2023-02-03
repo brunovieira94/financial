@@ -836,6 +836,17 @@ class Utils
                 $billing->whereBetween('created_at', [now()->addMonths(-1), now()]);
             }
         }
+        if (array_key_exists('updated_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['updated_at'])) {
+                $billing->where('updated_at', '>=', $requestInfo['updated_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['updated_at'])) {
+                $billing->where('updated_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['updated_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['updated_at']) && !array_key_exists('from', $requestInfo['updated_at'])) {
+                $billing->whereBetween('updated_at', [now()->addMonths(-1), now()]);
+            }
+        }
         if (array_key_exists('pay_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['pay_date'])) {
                 $billing->where('pay_date', '>=', $requestInfo['pay_date']['from']);
