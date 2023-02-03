@@ -905,6 +905,9 @@ class Utils
         if (array_key_exists('cnpj', $requestInfo)) {
             $billing->where('cnpj', $requestInfo['cnpj']);
         }
+        if (array_key_exists('user_id', $requestInfo)) {
+            $billing->where('user_id', $requestInfo['user_id']);
+        }
         return $billing;
     }
 

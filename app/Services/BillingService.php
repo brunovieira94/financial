@@ -11,6 +11,7 @@ use App\Models\BankAccount;
 use App\Models\Hotel;
 use App\Models\HotelApprovalFlow;
 use App\Models\HotelReasonToReject;
+use App\Models\User;
 use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -591,5 +592,21 @@ class BillingService
             }
         }
         $billingPayment->save();
+    }
+
+    public function getBillingUsers()
+    {
+        $usersArray = [];
+        $userIds = $this->billing->where('approval_status', '!=', Config::get('constants.billingStatus.canceled'))->distinct()->pluck('user_id');
+        $users = User::whereIn('id', $userIds)->get();
+        foreach ($users as $user) {
+            $data = [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ];
+            array_push($usersArray, $data);
+        }
+        return $usersArray;
     }
 }
