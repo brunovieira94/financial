@@ -17,6 +17,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\Billing;
 use App\Models\BillingLog;
+use App\Models\HotelLog;
 use Carbon\Carbon;
 use Config;
 use DB;
@@ -617,6 +618,39 @@ class Utils
                     'user_name' => $user != null ? $user->name : null,
                     'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
                     'billing_id' => $billingId,
+                    'created_at' => $createdAt
+                ]
+            );
+        }
+    }
+
+    public static function createHotelLog($hotelId, $type, $motive, $description, $stage, $userID, $createdAt = null)
+    {
+        $user = User::withTrashed()->with('role')->find($userID);
+        if ($createdAt == null) {
+            HotelLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'hotel_id' => $hotelId,
+                ]
+            );
+        } else {
+            HotelLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'hotel_id' => $hotelId,
                     'created_at' => $createdAt
                 ]
             );
