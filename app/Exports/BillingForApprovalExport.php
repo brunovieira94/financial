@@ -92,7 +92,7 @@ class BillingForApprovalExport implements FromCollection, ShouldAutoSize, WithMa
             !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) ? $bankAccount->agency_number.'-'.$bankAccount->agency_check_number : $bankAccount->agency_number) : '',
             !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypes[$bankAccount->account_type] : '',
             !is_null($bankAccount) ? (!!($bankAccount->account_check_number) ? $bankAccount->account_number.'-'.$bankAccount->account_check_number : $bankAccount->account_number) : '',
-            !is_null($hotel) ? $hotel->holder_full_name : '',
+            $billing->recipient_name,
             $billing->cnpj,
             !is_null($hotel) ? ($hotel->is_valid ? 'Sim' : 'Não') : '',
             !is_null($cangooroo) ? $cangooroo->selling_price : '',
