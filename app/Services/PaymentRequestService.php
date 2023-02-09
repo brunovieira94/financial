@@ -182,6 +182,7 @@ class PaymentRequestService
         $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
         if ($paymentRequest->payment_type == 0) {
             $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo);
+            $this->notifyUsers($paymentRequest, $paymentRequestInfo, auth()->user());
         }
         $this->syncTax($paymentRequest, $paymentRequestInfo);
         $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
@@ -730,6 +731,17 @@ class PaymentRequestService
                 }
             }
             PurchaseOrderDelivery::destroy($purchaseOrdersDelveryDelete);
+        }
+    }
+
+    public function notifyUsers($paymentRequest, $paymentRequestInfo, $approverUser)
+    {
+        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
+            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrder) {
+                $usersMail = [];
+                $purchaseOrderInfo = PurchaseOrder::where('id', $purchaseOrder['order'])->firstOrFail();
+                NotificationService::generateDataSendRedisPurchaseOrderPaymentRequest($paymentRequest, $purchaseOrderInfo, $usersMail, 'Nota fiscal vinculada ao pedido de compra', 'purchase-order-vinculated', $approverUser);
+            }
         }
     }
 }
