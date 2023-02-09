@@ -47,7 +47,6 @@ use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
 use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
-use App\Http\Controllers\TransferOrderController;
 use App\Http\Controllers\PlutoTableStateController;
 use App\Http\Controllers\ResetPasswordController;
 
@@ -481,13 +480,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::put('status', [NotificationCatalogController::class, 'status']);
     });
 
-    //Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
-
-    Route::prefix('transfer-order')->group(function () {
-        Route::get('/{id}', [TransferOrderController::class, 'getUserApprover']);
-        Route::post('/cancel/{id}', [TransferOrderController::class, 'cancelTransferOrder']);
-        Route::post('/', [TransferOrderController::class, 'store']);
-    });
+    Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
 
     Route::prefix('pluto-table-state')->group(function () {
         Route::put('/get', [PlutoTableStateController::class, 'getState']);

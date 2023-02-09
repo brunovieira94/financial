@@ -6,7 +6,6 @@ use App\Models\SupplyApprovalFlow;
 use App\Models\ApprovalFlowSupply;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasCostCenters;
-use App\Models\TransferOrder;
 use App\Models\User;
 use App\Models\UserHasCostCenter;
 use Illuminate\Http\Request;
@@ -16,8 +15,6 @@ class ApprovalFlowSupplyByUserService
 {
     private $supplyApprovalFlow;
     private $approvalFlow;
-    private $purchaseOrder;
-    private $user;
 
     public function __construct(SupplyApprovalFlow $supplyApprovalFlow, ApprovalFlowSupply $approvalFlow, PurchaseOrder $purchaseOrder, User $user)
     {
@@ -34,7 +31,69 @@ class ApprovalFlowSupplyByUserService
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
+        $supplyApprovalFlow = $this->supplyApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->whereIn('status', [0, 2])
+            ->whereRelation('purchase_order', 'deleted_at', '=', null)
+            ->with(['purchase_order', 'purchase_order.installments', 'approval_flow'])->get();
+
+
+        $idUserApproval = [];
+
+        if (auth()->user()->role->filter_cost_center_supply) {
+            foreach ($supplyApprovalFlow as $purchaseOrderApproval) {
+                $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $purchaseOrderApproval->id_purchase_order)->get();
+                $costCenterId = [];
+                $maxPercentage = 0;
+                $constCenterEqual = false;
+                foreach ($costCenters as $costCenter) {
+                    if ($costCenter->percentage > $maxPercentage) {
+                        $constCenterEqual = false;
+                        unset($costCenterId);
+                        $costCenterId = [$costCenter->cost_center_id];
+                        $maxPercentage = $costCenter->percentage;
+                    } else if ($costCenter->percentage == $maxPercentage) {
+                        $constCenterEqual = true;
+                        $maxPercentage = $costCenter->percentage;
+                    }
+                    if ($costCenter->percentage == $maxPercentage) {
+                        if (!in_array($costCenter->cost_center_id, $costCenterId)) {
+                            array_push($costCenterId, $costCenter->cost_center_id);
+                        }
+                    }
+                }
+
+                if ($constCenterEqual) {
+                    $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
+                        $query->whereIn('cost_center_id', $costCenterId);
+                    });
+                    if ($userApprovalByName->exists()) {
+                        $userApprovalByName = $userApprovalByName->orderBy('name', 'asc')->first();
+                        if ($userApprovalByName->id == auth()->user()->id) {
+                            $idUserApproval[] = $purchaseOrderApproval->id;
+                        }
+                    }
+                } else {
+                    $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
+                        $query->whereIn('cost_center_id', $costCenterId);
+                    });
+                    if ($userApprovalByName->where('id', auth()->user()->id)->exists()) {
+                        $idUserApproval[] = $purchaseOrderApproval->id;
+                    }
+                }
+            }
+        }
+
         $supplyApprovalFlow = Utils::search($this->supplyApprovalFlow, $requestInfo, ['order']);
+
+        $supplyApprovalFlow->whereIn('order', $approvalFlowUserOrder->toArray())
+            ->whereIn('status', [0, 2])
+            ->whereRelation('purchase_order', 'deleted_at', '=', null)
+            ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']);
+
+        //filter cost center
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $supplyApprovalFlow->whereIn('id', $idUserApproval);
+        }
 
         $supplyApprovalFlow->whereHas('purchase_order', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
@@ -66,98 +125,6 @@ class ApprovalFlowSupplyByUserService
             }
         });
 
-        $idsPurchaseOrderByOrder = [];
-        foreach ($approvalFlowUserOrder as $approvalOrder) {
-            $accountApprovalFlow = SupplyApprovalFlow::where('order', $approvalOrder['order'])
-                ->whereIn('status', [0, 2])
-                ->whereRelation('purchase_order', 'deleted_at', '=', null)
-                ->get('id_purchase_order');
-            $idsPurchaseOrderByOrder = array_merge($idsPurchaseOrderByOrder, $accountApprovalFlow->pluck('id_purchase_order')->toArray());
-        }
-
-        $idUserApproval = [];
-
-        if (auth()->user()->role->filter_cost_center_supply) {
-            foreach ($idsPurchaseOrderByOrder as $purchaseOrderApproval) {
-                $costCenters = PurchaseOrderHasCostCenters::where('purchase_order_id', $purchaseOrderApproval)->get();
-                $costCenterId = [];
-                $maxPercentage = 0;
-                $constCenterEqual = false;
-                foreach ($costCenters as $costCenter) {
-                    if ($costCenter->percentage > $maxPercentage) {
-                        $constCenterEqual = false;
-                        unset($costCenterId);
-                        $costCenterId = [$costCenter->cost_center_id];
-                        $maxPercentage = $costCenter->percentage;
-                    } else if ($costCenter->percentage == $maxPercentage) {
-                        $constCenterEqual = true;
-                        $maxPercentage = $costCenter->percentage;
-                    }
-                    if ($costCenter->percentage == $maxPercentage) {
-                        if (!in_array($costCenter->cost_center_id, $costCenterId)) {
-                            array_push($costCenterId, $costCenter->cost_center_id);
-                        }
-                    }
-                }
-
-                if ($constCenterEqual) {
-                    $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
-                        $query->whereIn('cost_center_id', $costCenterId);
-                    });
-                    if ($userApprovalByName->exists()) {
-                        $userApprovalByName = $userApprovalByName->orderBy('name', 'asc')->first();
-                        if ($userApprovalByName->id == auth()->user()->id) {
-                            $idUserApproval[] = $purchaseOrderApproval;
-                        }
-                    }
-                } else {
-                    $userApprovalByName = User::whereHas('cost_center', function ($query) use ($costCenterId) {
-                        $query->whereIn('cost_center_id', $costCenterId);
-                    });
-                    if ($userApprovalByName->where('id', auth()->user()->id)->exists()) {
-                        $idUserApproval[] = $purchaseOrderApproval;
-                    }
-                }
-            }
-        }
-
-        $ids = array_unique(array_merge($idsPurchaseOrderByOrder, $idUserApproval));
-
-        $add = [];
-        $remove = [];
-        if (TransferOrder::whereJsonContains('users_ids', auth()->user()->id)
-            ->whereIn('flag', [1, 2])->exists()
-        ) {
-            //check in transfer order tabel
-            $transfers = TransferOrder::whereJsonContains('users_ids', auth()->user()->id)
-                ->whereIn('flag', [1, 2])->get();
-
-            foreach ($transfers as $trans) {
-                $userIndex = array_search(auth()->user()->id, $trans->users_ids);
-                $count = $trans->approve_count;
-                if ($userIndex == $count) {
-                    $add[] = $trans->purchase_order_id;
-                } else {
-                    $remove[] = $trans->purchase_order_id;
-                }
-            }
-
-            //if (auth()->user()->role->filter_cost_center_supply) {
-            foreach ($remove as $rem) {
-                foreach (array_keys($ids, $rem) as $key) {
-                    unset($ids[$key]);
-                }
-            }
-            //}
-        }
-
-        $ids = array_merge($add, $ids);
-        $supplyApprovalFlow->withoutGlobalScopes()->whereIn('id_purchase_order', $ids);
-        $supplyApprovalFlow
-            ->whereIn('status', [0, 2])
-            ->whereRelation('purchase_order', 'deleted_at', '=', null)
-            ->with(['purchase_order', 'purchase_order.installments', 'approval_flow']);
-
         return Utils::pagination($supplyApprovalFlow, $requestInfo);
     }
 
@@ -166,52 +133,22 @@ class ApprovalFlowSupplyByUserService
         $accountApproval = $this->supplyApprovalFlow->with('purchase_order')->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = 0;
-        $approveCount = 0;
-        $initOrder = $accountApproval->order;
 
-        if (TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id/*, 'order' => $accountApproval->order , 'flag' => 1 */])->exists()) {
-            if ($accountApproval->order == 0) {
-                $accountApproval->order += 1;
-                $approveCount =  0;
-            } else {
-                $transfer = TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id, 'order' => $accountApproval->order])->firstOrFail();
-                if (($transfer->approve_count + 1) >= count($transfer->users_ids)) {
-                    $approveCount = $transfer->approve_count + 1;
-                    $this->updateTransferOrder($accountApproval->purchase_order->id, $accountApproval->order, $approveCount);
-                    if ($accountApproval->order >= $maxOrder) {
-                        $accountApproval->status = Config::get('constants.status.approved');
-                        $accountApproval->order += 1;
-                        $approveCount =  0;
-                    } else {
-                        $accountApproval->order += 1;
-                        $approveCount =  0;
-                    }
-                } else {
-                    $approveCount = $transfer->approve_count + 1;
-                }
-            }
-            $this->updateTransferOrder($accountApproval->purchase_order->id, $accountApproval->order, $approveCount);
+        if ($accountApproval->order >= $maxOrder) {
+            $accountApproval->status = Config::get('constants.status.approved');
+            $accountApproval->order += 1;
         } else {
-            if ($accountApproval->order >= $maxOrder) {
-                $accountApproval->status = Config::get('constants.status.approved');
-                $accountApproval->order += 1;
-            } else {
-                $accountApproval->order += 1;
-            }
+            $accountApproval->order += 1;
         }
-
         $accountApproval->purchase_order->update([
             'approved_total_value' => $accountApproval->purchase_order->negotiated_total_value,
             'approved_installment_value' => $accountApproval->purchase_order->installments_total_value
         ]);
-
         $accountApproval->reason = null;
         $accountApproval->updated_at = now();
         $accountApproval->save();
 
-        //if ($initOrder > $accountApproval->order) {
         $this->notifyUsers($accountApproval, $maxOrder, auth()->user());
-        //}
 
         return response()->json([
             'Sucesso' => 'Pedido aprovado',
@@ -226,7 +163,6 @@ class ApprovalFlowSupplyByUserService
                     $accountApproval = $this->supplyApprovalFlow->findOrFail($value);
                     $maxOrder = $this->approvalFlow->max('order');
                     $accountApproval->status = Config::get('constants.status.disapproved');
-                    $approveCount = 0;
 
                     if ($this->approvalFlow
                         ->where('order', $accountApproval->order)
@@ -238,34 +174,15 @@ class ApprovalFlowSupplyByUserService
                         ], 422);
                     }
 
-                    if (TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id, 'order' => $accountApproval->order/* , 'flag' => 1 */])->exists()) {
-
-                        if ($accountApproval->order > $maxOrder) {
-                            $accountApproval->order = Config::get('constants.status.open');
-                            $approveCount = 0;
-                        } else if ($accountApproval->order != 0) {
-                            $accountApproval->order -= 1;
-                            $approveCount = 0;
-                        }
-
-                        //if ($accountApproval->order == 0) {
-                        //    TransferOrder::where('purchase_order_id', $accountApproval->purchase_order->id)->delete();
-                        //} else {
-                        $this->updateTransferOrder($accountApproval->purchase_order->id, $accountApproval->order, $approveCount);
-                        //}
-                    } else {
-                        if ($accountApproval->order > $maxOrder) {
-                            $accountApproval->order = Config::get('constants.status.open');
-                        } else if ($accountApproval->order != 0) {
-                            $accountApproval->order -= 1;
-                        }
+                    if ($accountApproval->order > $maxOrder) {
+                        $accountApproval->order = Config::get('constants.status.open');
+                    } else if ($accountApproval->order != 0) {
+                        $accountApproval->order -= 1;
                     }
 
                     $accountApproval->reason = null;
                     //$accountApproval->reason_to_reject_id = null;
                     $accountApproval->fill($requestInfo)->save();
-
-                    $this->notifyUsers($accountApproval, $maxOrder, auth()->user());
                 }
                 return response()->json([
                     'Sucesso' => 'Contas reprovadas',
@@ -275,8 +192,6 @@ class ApprovalFlowSupplyByUserService
                     $accountApproval = $this->supplyApprovalFlow->with('purchase_order')->findOrFail($value);
                     $maxOrder = $this->approvalFlow->max('order');
                     $accountApproval->status = 0;
-                    $approveCount = 0;
-                    $initOrder = $accountApproval->order;
 
                     if ($this->approvalFlow
                         ->where('order', $accountApproval->order)
@@ -288,34 +203,10 @@ class ApprovalFlowSupplyByUserService
                         ], 422);
                     }
 
-                    if (TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id/*, 'order' => $accountApproval->order , 'flag' => 1 */])->exists()) {
-                        if ($accountApproval->order == 0) {
-                            $accountApproval->order += 1;
-                            $approveCount =  0;
-                        } else {
-                            $transfer = TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id, 'order' => $accountApproval->order/* , 'flag' => 1 */])->firstOrFail();
-                            if (($transfer->approve_count + 1) >= count($transfer->users_ids)) {
-                                $approveCount = $transfer->approve_count + 1;
-                                $this->updateTransferOrder($accountApproval->purchase_order->id, $accountApproval->order, $approveCount);
-                                if ($accountApproval->order >= $maxOrder) {
-                                    $accountApproval->status = Config::get('constants.status.approved');
-                                    $accountApproval->order += 1;
-                                    $approveCount =  0;
-                                } else {
-                                    $accountApproval->order += 1;
-                                    $approveCount =  0;
-                                }
-                            } else {
-                                $approveCount = $transfer->approve_count + 1;
-                            }
-                        }
-                        $this->updateTransferOrder($accountApproval->purchase_order->id, $accountApproval->order, $approveCount);
+                    if ($accountApproval->order >= $maxOrder) {
+                        $accountApproval->status = Config::get('constants.status.approved');
                     } else {
-                        if ($accountApproval->order >= $maxOrder) {
-                            $accountApproval->status = Config::get('constants.status.approved');
-                        } else {
-                            $accountApproval->order += 1;
-                        }
+                        $accountApproval->order += 1;
                     }
 
                     $accountApproval->purchase_order->update([
@@ -328,9 +219,7 @@ class ApprovalFlowSupplyByUserService
                     $accountApproval->updated_at = now();
                     $accountApproval->save();
 
-                    //if ($initOrder > $accountApproval->order) {
                     $this->notifyUsers($accountApproval, $maxOrder, auth()->user());
-                    //}
                 }
                 return response()->json([
                     'Sucesso' => 'Pedido aprovado',
@@ -348,44 +237,16 @@ class ApprovalFlowSupplyByUserService
         $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
         $maxOrder = $this->approvalFlow->max('order');
         $accountApproval->status = Config::get('constants.status.disapproved');
-        $approveCount = 0;
 
-        if (TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id, 'order' => $accountApproval->order])->exists()) {
-
-            if ($accountApproval->order > $maxOrder) {
-                $accountApproval->order = 0;
-                $approveCount =  0;
-            } else if ($accountApproval->order == 0) {
-                $accountApproval->reason = $request->reason;
-                $approveCount =  0;
-            } else {
-                $accountApproval->order -= 1;
-                $approveCount =  0;
-            }
-
-            //if ($accountApproval->order == 0) {
-            //    TransferOrder::where('purchase_order_id', $accountApproval->purchase_order->id)->delete();
-            //} else {
-            $this->updateTransferOrder($accountApproval->purchase_order->id, $accountApproval->order, $approveCount);
-            //}
+        if ($accountApproval->order > $maxOrder) {
+            $accountApproval->order = 0;
+        } else if ($accountApproval->order == 0) {
+            $accountApproval->reason = $request->reason;
         } else {
-            if ($accountApproval->order > $maxOrder) {
-                $accountApproval->order = 0;
-            } else if ($accountApproval->order == 0) {
-                $accountApproval->reason = $request->reason;
-            } else {
-                $accountApproval->order -= 1;
-            }
+            $accountApproval->order -= 1;
         }
-
         $accountApproval->reason = $request->reason;
-        $accountApproval->save();
-
-        $this->notifyUsers($accountApproval, $maxOrder, auth()->user());
-
-        return response()->json([
-            'Sucesso' => 'Conta reprovada',
-        ], 200);
+        return $accountApproval->save();
     }
 
     public function cancelAccount($id, Request $request)
@@ -393,10 +254,6 @@ class ApprovalFlowSupplyByUserService
         $accountApproval = $this->supplyApprovalFlow->findOrFail($id);
         $accountApproval->status = Config::get('constants.status.canceled');
         $accountApproval->reason = $request->reason;
-
-        if (TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id])->exists()) {
-            TransferOrder::where('purchase_order_id', $accountApproval->purchase_order->id)->delete();
-        }
         return $accountApproval->save();
     }
 
@@ -405,89 +262,28 @@ class ApprovalFlowSupplyByUserService
         if (($accountApproval->order - 1) >= $maxOrder) {
             //Gestor da Área, Gestor de Suprimentos e Equipe de Suprimentos
             $usersMail = [];
-            NotificationService::generateDataSendRedisPurchaseOrder($accountApproval->purchase_order, $usersMail, 'Pedido de Compra totalmente aprovada', 'purchase-order-fully-approved', $approveUser, '', '');
+            NotificationService::generateDataSendRedisPurchaseOrder($accountApproval->purchase_order, $usersMail, 'Pedido de Compra totalmente aprovada', 'purchase-order-fully-approved', $approveUser, '');
         } else {
-            if (TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id])->exists()) {
-                //check transfer table
-                $transfer = TransferOrder::where(['purchase_order_id' => $accountApproval->purchase_order->id, 'order' => $accountApproval->order, 'flag' => 1])->firstOrFail(['users_ids', 'approve_count']);
+            //responsável pela aprovação
+            $approvalFlowOrders = $this->approvalFlow
+                ->where('order', $accountApproval->order)
+                ->get('role_id')->pluck('role_id');
 
-                $usersNotify = $this->user->where('id', $transfer->users_ids[$transfer->approve_count])
-                    ->where('deleted_at', null)
-                    ->where('status', 0)
-                    ->get(['id', 'email', 'phone']);
+            $usersNotify = $this->user->whereIn('role_id', $approvalFlowOrders)
+                ->where('email_account_approval_notification', true)
+                ->where('deleted_at', null)
+                ->orWhere(function ($query) use ($approvalFlowOrders) {
+                    $query->where('email_account_approval_notification', true);
+                    $query->whereIn('role_id', $approvalFlowOrders);
+                    $query->with((['role' => function ($query) {
+                        $query->where('filter_cost_center', false);
+                    }]));
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
 
-                $usersMail = $usersNotify->pluck('email');
-            } else {
-                //responsável pela aprovação
-                $approvalFlowOrders = $this->approvalFlow
-                    ->where('order', $accountApproval->order)
-                    ->get('role_id')->pluck('role_id');
-
-                //filtrar por centro de custo e com maior peso
-                $costCenterId = [];
-                $maxPercentage = 0;
-                $constCenterEqual = false;
-
-                foreach ($accountApproval->purchase_order->cost_centers as $costCenter) {
-                    if ($costCenter->percentage > $maxPercentage) {
-                        $constCenterEqual = false;
-                        unset($costCenterId);
-                        $costCenterId = [$costCenter->cost_center_id];
-                        $maxPercentage = $costCenter->percentage;
-                    } else if ($costCenter->percentage == $maxPercentage) {
-                        $constCenterEqual = true;
-                        $maxPercentage = $costCenter->percentage;
-                    }
-                    if ($costCenter->percentage == $maxPercentage) {
-                        if (!in_array($costCenter->cost_center_id, $costCenterId)) {
-                            array_push($costCenterId, $costCenter->cost_center_id);
-                        }
-                    }
-                }
-
-                if ($constCenterEqual) {
-                    $usersNotify = $this->user->whereIn('role_id', $approvalFlowOrders)
-                        ->where('deleted_at', null)
-                        ->where('role_id', '!=', 1)
-                        ->whereHas('cost_center', function ($query) use ($costCenterId) {
-                            $query->where('cost_center_id', $costCenterId[0]);
-                        })
-                        ->where('status', 0)
-                        ->get(['id', 'email', 'phone']);
-                } else {
-                    $usersNotify = $this->user->whereIn('role_id', $approvalFlowOrders)
-                        ->where('deleted_at', null)
-                        ->where('role_id', '!=', 1)
-                        ->whereHas('cost_center', function ($query) use ($costCenterId) {
-                            $query->whereIn('cost_center_id', $costCenterId);
-                        })
-                        ->where('status', 0)
-                        ->get(['id', 'email', 'phone']);
-                }
-
-                $usersMail = $usersNotify->pluck('email');
-            }
-
-            NotificationService::generateDataSendRedisPurchaseOrder($accountApproval->purchase_order, $usersMail->toArray(), 'Pedido de Compra pendente de aprovação', 'purchase-order-to-approve', $approveUser, '', 'aprovado');
+            $usersMail = $usersNotify->pluck('email');
+            NotificationService::generateDataSendRedisPurchaseOrder($accountApproval->purchase_order, $usersMail->toArray(), 'Pedido de Compra pendente de aprovação', 'purchase-order-to-approve', $approveUser, '');
         }
-    }
-
-    public function updateTransferOrder($purchaseOrderId, $order, $count)
-    {
-        TransferOrder::where([
-            'purchase_order_id' => $purchaseOrderId
-        ])
-            ->update([
-                'flag' => 0
-            ]);
-
-        TransferOrder::where([
-            'purchase_order_id' => $purchaseOrderId,
-            'order' => $order
-        ])
-            ->update([
-                'flag' => 1,
-                'approve_count' => $count
-            ]);
     }
 }
