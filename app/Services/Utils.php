@@ -419,7 +419,7 @@ class Utils
         }
 
         if (array_key_exists('status', $requestInfo)) {
-            if (is_array($requestInfo['status'])) {
+            if (is_array($requestInfo['status']) && !empty($requestInfo['status'])) {
                 $arrayInt = [];
                 foreach ($requestInfo['status'] as $val) {
                     array_push($arrayInt, (int) $val);
@@ -439,7 +439,7 @@ class Utils
                         $query->whereIn('status', $requestInfo['status']);
                     });
                 }
-            } else {
+            } else if (!is_array($requestInfo['status'])) {
                 if ($requestInfo['status'] == 3) {
                     $paymentRequest = $paymentRequest->withTrashed();
                 }
