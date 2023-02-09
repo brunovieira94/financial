@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\ApprovalFlowSupply;
 use App\Models\NotificationCatalog;
 use App\Models\NotificationCatalogHasRoles;
 use App\Models\NotificationCatalogHasUsers;
@@ -86,10 +85,28 @@ class NotificationService
         self::sendEmail($data);
     }
 
-    public static function generateDataSendRedisPurchaseOrder($purchaseOrder, $mails = [], $titleMail, $typeMail, $approveUser, $paymentRequestId, $customText)
+    public static function generateDataSendRedisPurchaseOrder($purchaseOrder, $mails = [], $titleMail, $typeMail, $approveUser, $paymentRequestId)
     {
         if (NotificationCatalog::where(['type' => $typeMail, 'active' => true, 'schedule' => 0])->exists()) {
-            $mails = self::getMails($typeMail, $mails, $purchaseOrder);
+            $notificationCatalog = NotificationCatalog::where(['type' => $typeMail, 'active' => true, 'schedule' => 0])->firstOrFail();
+
+            $users = NotificationCatalogHasUsers::where('notification_catalog_id', $notificationCatalog->id)->with('user')->get();
+
+            foreach ($users as $user) {
+                if (!in_array($user->user->email, $mails, true)) {
+                    array_push($mails, $user->user->email);
+                }
+            }
+
+            $roles = NotificationCatalogHasRoles::where('notification_catalog_id', $notificationCatalog->id)->with('user')->get();
+
+            foreach ($roles as $role) {
+                foreach ($role->user as $roleUser) {
+                    if (!in_array($roleUser->email, $mails, true)) {
+                        array_push($mails, $roleUser->email);
+                    }
+                }
+            }
             // Na hora
             $purchaseOrderID = [
                 'name' =>  'id',
@@ -113,10 +130,6 @@ class NotificationService
                 'name' =>  'paymentRequestId',
                 'value' =>  $paymentRequestId ?? '',
             ];
-            $customText = [
-                'name' =>  'customText',
-                'value' =>  $customText ?? '',
-            ];
 
             $data = [
                 'to' => $mails,
@@ -127,53 +140,13 @@ class NotificationService
                     $provider,
                     $costCenter,
                     $causeUser,
-                    $paymentRequestId,
-                    $customText
+                    $paymentRequestId
                 ]
             ];
 
             self::sendEmail($data);
         } else {
             return false;
-        }
-    }
-
-    public static function generateDataSendRedisPurchaseOrderPaymentRequest($paymentRequest, $purchaseOrderInfo, $mails = [], $titleMail, $typeMail, $approveUser)
-    {
-        if (NotificationCatalog::where(['type' => $typeMail, 'active' => true, 'schedule' => 0])->exists()) {
-            $mails = self::getMails($typeMail, $mails, $purchaseOrderInfo);
-
-            $purchaseOrderID = [
-                'name' =>  'id',
-                'value' =>  strval($purchaseOrderInfo->id) ?? '',
-            ];
-
-            $provider = [
-                'name' =>  'fornecedor',
-                'value' =>  $purchaseOrderInfo->provider->trade_name ?? '',
-            ];
-
-            $causeUser = [
-                'name' =>  'causerUser',
-                'value' =>  $approveUser->name ?? '',
-            ];
-            $paymentRequestId = [
-                'name' =>  'idSoliciatacaoPagamento',
-                'value' =>  $paymentRequest->id ?? '',
-            ];
-            $data = [
-                'to' => $mails,
-                'subject' => $titleMail,
-                'type' => $typeMail,
-                "args" => [
-                    $purchaseOrderID,
-                    $provider,
-                    $causeUser,
-                    $paymentRequestId,
-                ]
-            ];
-
-            self::sendEmail($data);
         }
     }
 
@@ -197,82 +170,6 @@ class NotificationService
         }
 
         self::sendEmail($data);
-    }
-
-    public static function getMails($typeMail, $mails, $purchaseOrder)
-    {
-        $notificationCatalog = NotificationCatalog::where(['type' => $typeMail, 'active' => true, 'schedule' => 0])->firstOrFail();
-
-        $users = NotificationCatalogHasUsers::where('notification_catalog_id', $notificationCatalog->id)->with('user')->get();
-
-        foreach ($users as $user) {
-            if (!in_array($user->user->email, $mails, true)) {
-                array_push($mails, $user->user->email);
-            }
-        }
-
-        $costCenterId = [];
-        $maxPercentage = 0;
-        $constCenterEqual = false;
-
-        foreach ($purchaseOrder->cost_centers as $costCenter) {
-            if ($costCenter->percentage > $maxPercentage) {
-                $constCenterEqual = false;
-                unset($costCenterId);
-                $costCenterId = [$costCenter->cost_center_id];
-                $maxPercentage = $costCenter->percentage;
-            } else if ($costCenter->percentage == $maxPercentage) {
-                $constCenterEqual = true;
-                $maxPercentage = $costCenter->percentage;
-            }
-            if ($costCenter->percentage == $maxPercentage) {
-                if (!in_array($costCenter->cost_center_id, $costCenterId)) {
-                    array_push($costCenterId, $costCenter->cost_center_id);
-                }
-            }
-        }
-        if ($typeMail == 'purchase-order-to-approve') {
-            $order = SupplyApprovalFlow::where('id_purchase_order', $purchaseOrder->id)->get('order')->pluck('order');
-            $approvalFlowOrders = ApprovalFlowSupply::where('order', $order)
-                ->get('role_id')->pluck('role_id');
-
-            $roles = NotificationCatalogHasRoles::where('notification_catalog_id', $notificationCatalog->id)
-                ->whereIn('role_id', $approvalFlowOrders)
-                ->with('user', 'role')->get();
-        } else {
-            $roles = NotificationCatalogHasRoles::where('notification_catalog_id', $notificationCatalog->id)
-                ->with('user', 'role')->get();
-        }
-
-        foreach ($roles as $role) {
-            if ($role->role->filter_cost_center_supply) {
-                foreach ($role->user as $roleUser) {
-                    foreach ($roleUser->cost_center as $roleUserCostCenter) {
-                        if ($constCenterEqual) {
-                            if ($roleUserCostCenter->id == $costCenterId[0]) {
-                                if (!in_array($roleUser->email, $mails, true)) {
-                                    array_push($mails, $roleUser->email);
-                                }
-                            }
-                        } else {
-                            if (in_array($roleUserCostCenter->id, $costCenterId, true)) {
-                                if (!in_array($roleUser->email, $mails, true)) {
-                                    array_push($mails, $roleUser->email);
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                foreach ($role->user as $roleUser) {
-                    if (!in_array($roleUser->email, $mails, true)) {
-                        array_push($mails, $roleUser->email);
-                    }
-                }
-            }
-        }
-
-        return $mails;
     }
 
     public static function generateDataSendRedisResetPassword($mail = [], $titleMail, $typeMail, $name, $code)
