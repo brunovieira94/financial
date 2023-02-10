@@ -26,12 +26,12 @@ class Bank extends Model
     use SoftDeletes;
     protected $table='banks';
     protected $fillable = ['title','cnab400','cnab240', 'bank_code', 'country_id'];
-    protected $appends = ['linked_accounts'];
+    //protected $appends = ['linked_accounts'];
 
-    public function getLinkedAccountsAttribute()
-    {
-        return $this->hasMany(BankAccount::class, 'bank_id', 'id')->count();
-    }
+    //public function getLinkedAccountsAttribute()
+    //{
+    //    return $this->hasMany(BankAccount::class, 'bank_id', 'id')->count();
+    //}
 
     public function bankAccount(){
         return $this->hasMany(BankAccount::class, 'bank_id', 'id');
