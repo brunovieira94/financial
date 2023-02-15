@@ -17,6 +17,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Models\Billing;
 use App\Models\BillingLog;
+use App\Models\HotelLog;
 use Carbon\Carbon;
 use Config;
 use DB;
@@ -418,7 +419,7 @@ class Utils
         }
 
         if (array_key_exists('status', $requestInfo)) {
-            if (is_array($requestInfo['status'])) {
+            if (is_array($requestInfo['status']) && !empty($requestInfo['status'])) {
                 $arrayInt = [];
                 foreach ($requestInfo['status'] as $val) {
                     array_push($arrayInt, (int) $val);
@@ -438,7 +439,7 @@ class Utils
                         $query->whereIn('status', $requestInfo['status']);
                     });
                 }
-            } else {
+            } else if (!is_array($requestInfo['status'])) {
                 if ($requestInfo['status'] == 3) {
                     $paymentRequest = $paymentRequest->withTrashed();
                 }
@@ -546,6 +547,12 @@ class Utils
                 });
             });
         }
+
+        if (array_key_exists('card_identifier', $requestInfo)) {
+            $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+                $query->whereLike('card_identifier', "%{$requestInfo['card_identifier']}%");
+            });
+        }
         return $paymentRequest;
     }
 
@@ -617,6 +624,39 @@ class Utils
                     'user_name' => $user != null ? $user->name : null,
                     'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
                     'billing_id' => $billingId,
+                    'created_at' => $createdAt
+                ]
+            );
+        }
+    }
+
+    public static function createHotelLog($hotelId, $type, $motive, $description, $stage, $userID, $createdAt = null)
+    {
+        $user = User::withTrashed()->with('role')->find($userID);
+        if ($createdAt == null) {
+            HotelLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'hotel_id' => $hotelId,
+                ]
+            );
+        } else {
+            HotelLog::create(
+                [
+                    'type' => $type,
+                    'motive' => $motive,
+                    'description' => $description,
+                    'stage' => $stage,
+                    'user_id' => $user != null ?  $user->id : null,
+                    'user_name' => $user != null ? $user->name : null,
+                    'user_role' => $user != null ? ($user->role != null ? $user->role->title : null) : null,
+                    'hotel_id' => $hotelId,
                     'created_at' => $createdAt
                 ]
             );
@@ -836,6 +876,17 @@ class Utils
                 $billing->whereBetween('created_at', [now()->addMonths(-1), now()]);
             }
         }
+        if (array_key_exists('updated_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['updated_at'])) {
+                $billing->where('updated_at', '>=', $requestInfo['updated_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['updated_at'])) {
+                $billing->where('updated_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['updated_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['updated_at']) && !array_key_exists('from', $requestInfo['updated_at'])) {
+                $billing->whereBetween('updated_at', [now()->addMonths(-1), now()]);
+            }
+        }
         if (array_key_exists('pay_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['pay_date'])) {
                 $billing->where('pay_date', '>=', $requestInfo['pay_date']['from']);
@@ -871,13 +922,16 @@ class Utils
         if (array_key_exists('cnpj', $requestInfo)) {
             $billing->where('cnpj', $requestInfo['cnpj']);
         }
+        if (array_key_exists('user_id', $requestInfo)) {
+            $billing->where('user_id', $requestInfo['user_id']);
+        }
         return $billing;
     }
 
     public static function baseFilterGroupFormPayment($groupFormPayment, $requestInfo)
     {
         if (array_key_exists('only_not_main_payments', $requestInfo) && ($requestInfo['only_not_main_payments'] == 1 || $requestInfo['only_not_main_payments'] == '1')) {
-            $groupFormPayment->where('main_payment', '=', '0');
+            //$groupFormPayment->where('main_payment', '=', '0');
         }
 
         return $groupFormPayment;

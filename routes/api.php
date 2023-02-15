@@ -195,7 +195,9 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
     Route::prefix('billing')->group(function () {
         Route::post('/cangooroo', [BillingController::class, 'getCangoorooData']);
         Route::put('/approve-many', [BillingController::class, 'approveMany']);
+        Route::put('/approve-all', [BillingController::class, 'approveAll']);
         Route::get('/get-billing-for-approve', [BillingController::class, 'getBillingsForApproval']);
+        Route::get('/get-users', [BillingController::class, 'getBillingUsers']);
         Route::post('/get-billing-for-approve/export', [BillingController::class, 'exportBillingForApproval']);
         Route::get('/show/{id}', [BillingController::class, 'show']);
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
@@ -272,6 +274,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/log-payment-request-update/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
+        Route::get('/log-hotel/{id}', [LogsController::class, 'getHotelLogs']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
@@ -393,7 +396,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::prefix('/240')->group(function () {
             Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
             Route::post('/return', [ItauCNABController::class, 'return240']);
-            Route::post('/cnab-parse', [ItauCNABController::class, 'cnabParse']);
+            Route::post('/cnab-parse', [ItauCNABController::class, 'cnabParse'])->middleware(['check.data.generate.cnab']);
         });
     });
 

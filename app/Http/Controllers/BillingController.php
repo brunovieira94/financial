@@ -56,6 +56,11 @@ class BillingController extends Controller
         return $this->billingService->approveMany($request->all());
     }
 
+    public function approveAll(Request $request)
+    {
+        return $this->billingService->approveAll($request->all());
+    }
+
     public function reprove($id, Request $request)
     {
         return $this->billingService->reprove($id, $request);
@@ -101,5 +106,10 @@ class BillingController extends Controller
     public function refreshStatuses($id)
     {
         return $this->billingService->refreshStatuses($id);
+    }
+
+    public function getBillingUsers()
+    {
+        return $this->billingService->getBillingUsers();
     }
 }

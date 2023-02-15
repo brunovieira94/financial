@@ -56,7 +56,10 @@ class HotelService
             $hotel = $hotel->create($hotelInfo);
         }
 
+        $stage = $hotelInfo['is_valid'] ? 1 : 0;
+
         $this->syncBankAccounts($hotel, $hotelInfo);
+        Utils::createHotelLog($hotel->id, 'created', null, null, $stage, auth()->user()->id);
         return $this->hotel->with($this->with)->findOrFail($hotel->id);
     }
 
@@ -68,6 +71,8 @@ class HotelService
         }
         $hotel->fill($hotelInfo)->save();
         $this->putBankAccounts($id, $hotelInfo);
+        $stage = $hotelInfo['is_valid'] ? 1 : 0;
+        Utils::createHotelLog($hotel->id, 'updated', null, null, $stage, auth()->user()->id);
         return $this->hotel->with($this->with)->findOrFail($hotel->id);
     }
 
@@ -78,6 +83,7 @@ class HotelService
             $query->where('hotel_id', $hotel->id_hotel_cangooroo);
         })->first();
         if(!$billing){
+            Utils::createHotelLog($hotel->id, 'deleted', null, null, 0, auth()->user()->id);
             $hotel->delete();
             $collection = $this->hotelHasBankAccounts->where('hotel_id', $id)->get(['bank_account_id']);
             $this->bankAccount->destroy($collection->toArray());

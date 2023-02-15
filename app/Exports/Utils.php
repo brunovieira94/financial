@@ -369,6 +369,7 @@ class Utils
             self::translatedInstallmentBankAccountType(($bankAccountCompany->account_type ?? null)),
             $bankAccountCompany == null ? '' : $bankAccountCompany->account_number ?? '',
             $bankAccountCompany == null ? '' : $bankAccountCompany->account_check_number ?? '',
+            $installment->card_identifier,
         ];
     }
 
@@ -424,6 +425,7 @@ class Utils
             'Tipo de Conta Bancária - Empresa',
             'Conta Bancária - Empresa',
             'Dígito da Conta Bancária - Empresa',
+            'Identificador do Cartão'
         ];
     }
 
