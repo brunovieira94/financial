@@ -546,6 +546,12 @@ class Utils
                 });
             });
         }
+
+        if (array_key_exists('card_identifier', $requestInfo)) {
+            $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+                $query->whereLike('card_identifier', "%{$requestInfo['card_identifier']}%");
+            });
+        }
         return $paymentRequest;
     }
 
@@ -877,7 +883,7 @@ class Utils
     public static function baseFilterGroupFormPayment($groupFormPayment, $requestInfo)
     {
         if (array_key_exists('only_not_main_payments', $requestInfo) && ($requestInfo['only_not_main_payments'] == 1 || $requestInfo['only_not_main_payments'] == '1')) {
-            $groupFormPayment->where('main_payment', '=', '0');
+            //$groupFormPayment->where('main_payment', '=', '0');
         }
 
         return $groupFormPayment;
