@@ -396,7 +396,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::prefix('/240')->group(function () {
             Route::post('/shipping', [ItauCNABController::class, 'shipping240']);
             Route::post('/return', [ItauCNABController::class, 'return240']);
-            Route::post('/cnab-parse', [ItauCNABController::class, 'cnabParse']);
+            Route::post('/cnab-parse', [ItauCNABController::class, 'cnabParse'])->middleware(['check.data.generate.cnab']);
         });
     });
 
