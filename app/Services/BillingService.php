@@ -368,7 +368,7 @@ class BillingService
         $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'error' => 'Existem divergências para esse Código de Boleto: '. self::translatedField[$billingInfo['billing_payment_id']['error']],
                 'code' => 'INCONSISTENT_VALUES',
                 'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
@@ -435,7 +435,7 @@ class BillingService
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             $this->billingPayment->where('id', $billing->billing_payment_id)->update(['deleted_at' => null]);
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'error' => 'Existem divergências para esse Código de Boleto: '. self::translatedField[$billingInfo['billing_payment_id']['error']],
                 'code' => 'INCONSISTENT_VALUES',
                 'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
@@ -686,4 +686,12 @@ class BillingService
         }
         return $usersArray;
     }
+
+    const translatedField = [
+        'pay_date' => 'Data de Pagamento',
+        'recipient_name' => 'Nome do titular',
+        'oracle_protocol' => 'Protocolo Oracle',
+        'cnpj' => 'CNPJ',
+        'hotel_id' => 'Id do Hotel'
+    ];
 }
