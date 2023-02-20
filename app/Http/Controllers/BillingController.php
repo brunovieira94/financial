@@ -95,12 +95,12 @@ class BillingController extends Controller
         return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
-    public function exportBillingForApproval(Request $request, $approvalStatus)
+    public function exportBillingForApproval(Request $request)
     {
         if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-            return (new BillingForApprovalExport($request->all(), $approvalStatus))->download('faturamentoAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+            return (new BillingForApprovalExport($request->all()))->download('faturamentoAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
         }
-        return (new BillingForApprovalExport($request->all(), $approvalStatus))->download('faturamentoAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        return (new BillingForApprovalExport($request->all()))->download('faturamentoAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
     }
 
     public function refreshStatuses($id)

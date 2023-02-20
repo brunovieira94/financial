@@ -22,12 +22,10 @@ class BillingForApprovalExport implements FromCollection, ShouldAutoSize, WithMa
     use Exportable;
 
     private $requestInfo;
-    private $approvalStatus;
 
-    public function __construct($requestInfo, $approvalStatus)
+    public function __construct($requestInfo)
     {
         $this->requestInfo = $requestInfo;
-        $this->approvalStatus = $approvalStatus;
     }
 
     public function collection()
