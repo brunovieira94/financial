@@ -58,7 +58,15 @@ class CangoorooService
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
             if ($customField['Name'] == 'SupplierPrice.Price')
-                $sellingPrice = $customField['Value'];
+            {
+                if (mb_strpos($customField['Value'], ',') !== false)
+                {
+                    $sellingPrice = floatval(str_replace(",", ".",$customField['Value']));
+                }
+                else{
+                    $sellingPrice = floatval($customField['Value']);
+                }
+            }
             if ($customField['Name'] == 'SupplierVCNpayment')
                 $isVcn = $customField['Value'] == 'true' ? 1 : 0;
         }
