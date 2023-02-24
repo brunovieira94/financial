@@ -664,16 +664,18 @@ class PaymentRequestService
             if ($provider->generic_provider) {
                 foreach ($requestInfo['installments'] as $installment) {
                     if ($installment['group_form_payment_id'] != 1) {
-                        $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
-                        $bankAccount->hidden = true;
-                        $bankAccount->save();
-                        $providerHasBankAccount = ProviderHasBankAccounts::create(
-                            [
-                                'provider_id' => $provider->id,
-                                'bank_account_id' => $installment['bank_account_provider_id'],
-                                'default_bank' => false
-                            ]
-                        );
+                        if (array_key_exists('bank_account_provider_id', $installment) && $installment['bank_account_provider_id'] != null) {
+                            $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
+                            $bankAccount->hidden = true;
+                            $bankAccount->save();
+                            $providerHasBankAccount = ProviderHasBankAccounts::create(
+                                [
+                                    'provider_id' => $provider->id,
+                                    'bank_account_id' => $installment['bank_account_provider_id'],
+                                    'default_bank' => false
+                                ]
+                            );
+                        }
                     }
                 }
             }
