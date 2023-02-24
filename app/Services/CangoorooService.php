@@ -54,6 +54,8 @@ class CangoorooService
         $supplierName = null;
         $sellingPrice = null;
         $isVcn = 0;
+        $hasUsdConvertion = false;
+        $convertion = 1;
         foreach ($room['CustomFields'] as $customField) {
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
@@ -69,6 +71,16 @@ class CangoorooService
             }
             if ($customField['Name'] == 'SupplierVCNpayment')
                 $isVcn = $customField['Value'] == 'true' ? 1 : 0;
+            if ($customField['Name'] == 'SupplierTax.Currency' && $customField['Value'] == "USD")
+                $hasUsdConvertion = true;
+        }
+
+        if($hasUsdConvertion){
+            foreach ($room['CustomFields'] as $customField) {
+                if ($customField['Name'] == 'Currency')
+                    $convertion = floatval(explode("}",explode('ConvertionValue":',$customField['Value'])[1])[0]);
+            }
+            $sellingPrice = $sellingPrice * $convertion;
         }
 
         $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
