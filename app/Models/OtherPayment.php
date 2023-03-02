@@ -36,6 +36,6 @@ class OtherPayment extends Model
 
     public function installments()
     {
-        return $this->belongsToMany(PaymentRequestHasInstallments::class, 'payment_request_installments_have_other_payments', 'payment_request_installment_id', 'other_payment_id');
+        return $this->belongsToMany(PaymentRequestHasInstallments::class, 'payment_request_installments_have_other_payments', 'other_payment_id', 'payment_request_installment_id');
     }
 }

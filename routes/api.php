@@ -45,6 +45,7 @@ use App\Http\Controllers\HotelApprovalFlowController;
 use App\Http\Controllers\InfoController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\BillingPaymentController;
+use App\Http\Controllers\IntegrationController;
 use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\PlutoTableStateController;
@@ -489,12 +490,20 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
 });
 
 
+Route::middleware(['integrations'])->group(function () {
+    Route::prefix('integration')->group(function () {
+        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills']);
+        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments']);
+    });
+});
+
 
 //Restful route -> Login
 Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
+Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
 Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
 Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
