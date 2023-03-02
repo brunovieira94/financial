@@ -48,7 +48,14 @@ class PaymentRequestHasInstallments extends Model
 
     public function other_payments()
     {
-        return $this->belongsToMany(OtherPayment::class, 'payment_request_installments_have_other_payments', 'other_payment_id', 'payment_request_installment_id');
+        return $this->belongsToMany(OtherPayment::class, 'payment_request_installments_have_other_payments', 'payment_request_installment_id', 'other_payment_id');
+    }
+
+    public function getLatestOtherPaymentAttribute()
+    {
+        $latestCreationDate = $this->other_payments()->get()->max('created_at');
+        $arr = $this->other_payments()->where('created_at', $latestCreationDate)->get();
+        return empty($arr) ? null : $arr->first();
     }
 
     public function getBilletLinkAttribute()
