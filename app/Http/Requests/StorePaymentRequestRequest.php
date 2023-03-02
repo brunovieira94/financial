@@ -42,7 +42,7 @@ class StorePaymentRequestRequest extends FormRequest
             'cost_center_id' => 'required|integer|exists:cost_center,id',
             'chart_of_account_id' => 'required|integer|exists:chart_of_accounts,id',
             'currency_id' => 'required|integer|exists:currency,id',
-            'exchange_rate' => 'numeric',
+            //'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
             'net_value' => 'numeric',
             'xml_file' => [

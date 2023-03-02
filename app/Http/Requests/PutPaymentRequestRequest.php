@@ -43,7 +43,7 @@ class PutPaymentRequestRequest extends FormRequest
             'cost_center_id' => 'integer',
             'chart_of_account_id' => 'integer|exists:chart_of_accounts,id',
             'currency_id' => 'integer|exists:currency,id',
-            'exchange_rate' => 'numeric',
+            //'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
             'invoice_number' => ['max:150'],
             'type_of_tax' => 'max:150',
