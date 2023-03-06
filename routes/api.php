@@ -516,7 +516,7 @@ Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentR
 Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
 Route::post('/work', [PaidBillingInfoController::class, 'work']);
-// Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
+Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
 Route::post('/redis-clean', [InfoController::class, 'redisClean']);
