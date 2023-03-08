@@ -16,6 +16,7 @@ use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\reports\RouteBillingResource;
 
 class BillingService
 {
@@ -43,29 +44,27 @@ class BillingService
         }
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
         $requestInfo['perPage'] = $requestInfo['perPage'] ?? 200;
-        return Utils::pagination($billing->with($this->with), $requestInfo);
+        return RouteBillingResource::collection(Utils::pagination($billing->with(['approval_flow', 'cangooroo', 'billing_payment']), $requestInfo));
     }
 
     public function getAllBillingsForApproval($requestInfo)
     {
-        $approvalFlowUserOrders = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
-
-        if (!$approvalFlowUserOrders)
-            return response([], 404);
+        $approvalFlowUserOrders = $this->approvalFlow->where('role_id', auth()->user()->role_id)->pluck('order')->toArray();
 
         $billing = Utils::search($this->billing, $requestInfo);
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
 
-        $billing = $billing->whereIn('approval_status', [0, 2])->where('deleted_at', '=', null);
+        $billing = $billing->whereIn('order', $approvalFlowUserOrders)->whereIn('approval_status', [0, 2])->where('deleted_at', '=', null);
 
-        $billingIDs = [];
-        foreach ($approvalFlowUserOrders as $approvalFlowOrder) {
-            $billingApprovalFlow = $this->billing->where('order', $approvalFlowOrder['order']);
-            $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
-        }
-        $billing = $billing->whereIn('id', $billingIDs);
+        // $billingIDs = [];
+        // foreach ($approvalFlowUserOrders as $approvalFlowOrder) {
+        //     $billingApprovalFlow = $this->billing->where('order', $approvalFlowOrder['order']);
+        //     $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
+        // }
+        // $billing = $billing->whereIn('id', $billingIDs);
+
         $requestInfo['perPage'] = $requestInfo['perPage'] ?? 200;
-        return Utils::pagination($billing->with($this->with), $requestInfo);
+        return RouteBillingResource::collection(Utils::pagination($billing->with(['approval_flow', 'cangooroo', 'billing_payment']), $requestInfo));
     }
 
     public function approveAll($requestInfo)
@@ -329,13 +328,14 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
-        $billingInfo['status_123'] = $this->get123Status($cangooroo);
-        $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
-        $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
-        $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
-        $billing->fill($billingInfo)->save();
+        // $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
+        // $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        // $billingInfo['status_123'] = $this->get123Status($cangooroo);
+        // $billing->fill($billingInfo);
+        // $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
+        // $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
+        // $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
+        // $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($id);
     }
 
@@ -616,12 +616,13 @@ class BillingService
         $status['cangooroo'] = $cangooroo['status'];
         $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
         $billingInfo['status_123'] = $this->get123Status($cangooroo);
+        $billing->fill($billingInfo);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
         $billing->fill($billingInfo)->save();
-        $billingInfo['cangooroo'] = $cangooroo['status'];
-        return $billingInfo;
+        $billing['cangooroo'] = $cangooroo['status'];
+        return $billing;
     }
 
     public function syncBillingPayment($billingInfo, $cangooroo)
