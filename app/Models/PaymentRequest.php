@@ -197,6 +197,9 @@ class PaymentRequest extends Model
     public function getApplicantCanEditAttribute()
     {
         if (isset($this->approval)) {
+            if (auth()->user() == null) {
+                return false;
+            }
             // Super Admin pode (em processamento ou rejeitada)
             if (auth()->user()->role->id == 1 && ($this->approval->status == 2 || $this->approval->status == 0)) {
                 return true;

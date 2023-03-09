@@ -196,6 +196,9 @@ class PaymentRequestClean extends Model
     public function getApplicantCanEditAttribute()
     {
         if (isset($this->approval)) {
+            if (auth()->user() == null) {
+                return false;
+            }
             // Super Admin pode (em processamento ou rejeitada)
             if (auth()->user()->role->id == 1 && ($this->approval->status == 2 || $this->approval->status == 0)) {
                 return true;
@@ -251,11 +254,11 @@ class PaymentRequestClean extends Model
     public function getStageForDisapprovalAttribute()
     {
         return ApprovalFlow::with(['role'])
-        ->where('group_approval_flow_id', $this->group_approval_flow_id)
-        ->where('order', '<', $this->approval->order)
-        ->groupBy('order')
-        ->orderBy('id', 'ASC')
-        ->get();
+            ->where('group_approval_flow_id', $this->group_approval_flow_id)
+            ->where('order', '<', $this->approval->order)
+            ->groupBy('order')
+            ->orderBy('id', 'ASC')
+            ->get();
     }
 
     public function currency_old()
