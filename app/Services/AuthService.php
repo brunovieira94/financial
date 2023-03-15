@@ -46,7 +46,7 @@ class AuthService
             activity()->enableLogging();
         }
 
-        $user = $this->user->with(['role', 'additional_users.role', 'cost_center', 'business'])->findOrFail($id);
+        $user = $this->user->with(['role', 'additional_users.role', 'cost_center', 'business', 'filters'])->findOrFail($id);
 
         if ($user->status != 0) {
             return response()->json([
