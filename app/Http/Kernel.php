@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'check.values.invoice' => \App\Http\Middleware\CheckValuesWhenSendingInvoice::class,
         'check.values.payment.request.integration' => \App\Http\Middleware\CheckStorePaymentRequestIntegration::class,
         'check.data.generate.cnab' => \App\Http\Middleware\CheckDataRequestGenerateCNAB::class,
+        'downtime.user' => \App\Http\Middleware\DownTimeUser::class,
     ];
 }
