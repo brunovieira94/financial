@@ -51,7 +51,7 @@ use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\PlutoTableStateController;
 use App\Http\Controllers\ResetPasswordController;
 
-Route::middleware(['auth:api', 'check.permission'])->group(function () {
+Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(function () {
 
     Route::prefix('cost-center')->group(function () {
         Route::get('/', [CostCenterController::class, 'index']);
