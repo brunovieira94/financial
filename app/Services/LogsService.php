@@ -160,6 +160,7 @@ class LogsService
 
                 $retorno[] = [
                     'type' => $status,
+                    //'order' => $log['properties']['attributes']['order'],
                     'createdAt' => $log['created_at'],
                     'description' => $log['description'],
                     'causerUser' => $log['causer_object']['name'],

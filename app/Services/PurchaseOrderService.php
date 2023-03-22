@@ -29,6 +29,7 @@ use App\Models\SupplyApprovalFlow;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestHasProducts;
 use App\Models\RoleHasModule;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PurchaseOrderService
@@ -151,6 +152,8 @@ class PurchaseOrderService
         if (array_key_exists('quotation_item_id', $purchaseOrderInfo)) {
             ProviderQuotationItems::where('id', $purchaseOrderInfo['quotation_item_id'])->update(['block_purchase_order' => true]);
         }
+
+        $this->notifyUsers($purchaseOrder, auth()->user());
 
         return $this->purchaseOrder->with($this->with)->findOrFail($purchaseOrder->id);
     }
@@ -845,5 +848,56 @@ class PurchaseOrderService
         }
 
         return $response;
+    }
+
+    public function notifyUsers($purchaseOrder, $approveUser)
+    {
+        //filtrar por centro de custo com maior peso
+        $costCenterId = [];
+        $maxPercentage = 0;
+        $constCenterEqual = false;
+
+        foreach ($purchaseOrder->cost_centers as $costCenter) {
+            if ($costCenter->percentage > $maxPercentage) {
+                $constCenterEqual = false;
+                unset($costCenterId);
+                $costCenterId = [$costCenter->cost_center_id];
+                $maxPercentage = $costCenter->percentage;
+            } else if ($costCenter->percentage == $maxPercentage) {
+                $constCenterEqual = true;
+                $maxPercentage = $costCenter->percentage;
+            }
+            if ($costCenter->percentage == $maxPercentage) {
+                if (!in_array($costCenter->cost_center_id, $costCenterId)) {
+                    array_push($costCenterId, $costCenter->cost_center_id);
+                }
+            }
+        }
+
+        $approvalFlowOrders = ApprovalFlowSupply::where('order', 1)
+            ->get('role_id')->pluck('role_id');
+
+        if ($constCenterEqual) {
+            $usersNotify = User::whereIn('role_id', $approvalFlowOrders)
+                ->where('deleted_at', null)
+                ->where('role_id', '!=', 1)
+                ->whereHas('cost_center', function ($query) use ($costCenterId) {
+                    $query->where('cost_center_id', $costCenterId[0]);
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
+        } else {
+            $usersNotify = User::whereIn('role_id', $approvalFlowOrders)
+                ->where('deleted_at', null)
+                ->where('role_id', '!=', 1)
+                ->whereHas('cost_center', function ($query) use ($costCenterId) {
+                    $query->whereIn('cost_center_id', $costCenterId);
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
+        }
+
+        $usersMail = $usersNotify->pluck('email');
+        NotificationService::generateDataSendRedisPurchaseOrder($purchaseOrder, $usersMail->toArray(), 'Pedido de Compra pendente de aprovação', 'purchase-order-to-approve', $approveUser, '', 'inserido');
     }
 }
