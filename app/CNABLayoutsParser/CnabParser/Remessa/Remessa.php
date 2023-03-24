@@ -81,37 +81,52 @@ class Remessa
                 }
 
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {
-                    $lotQuantityDetails++;
-                    $detalhe->segmento_j->lote_servico = $lote->sequencial;
-                    $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
+                    if ($installment->type_billet == 4) {
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_o->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_o->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_o->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_o->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
+                        $dataVencimento = new Carbon($installment->extension_date); // data vendimento
+                        $detalhe->segmento_o->vencimento = $dataVencimento->format('dmY');
+                        $detalhe->segmento_o->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $dataPagamento = new Carbon($installment->extension_date); // validar
+                        $detalhe->segmento_o->data_pagamento = $dataPagamento->format('dmY');
+                        $detalhe->segmento_o->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $detalhe->segmento_o->identificacao_titulo_empresa = $installment->id; //id parcela;
 
-                    if (strlen(Utils::onlyNumbers($installment->bar_code) > 45)) {
-                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        unset($detalhe->segmento_a);
+                        unset($detalhe->segmento_b);
+                        unset($detalhe->segmento_j);
+                        unset($detalhe->segmento_j52);
+
+                        $lote->inserirDetalhe($detalhe);
                     } else {
-                        $detalhe->segmento_j->codigo_barras = Utils::onlyNumbers($installment->bar_code);
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_j->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
+                        $dataVencimento = new Carbon($installment->extension_date); // data vendimento
+                        $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
+                        $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $dataPagamento = new Carbon($installment->extension_date); // validar
+                        $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
+                        $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
+
+                        //segmento j52 detalhe
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_j52->lote_servico = $lotQuantity;
+                        $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
+                        $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                        $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
+                        unset($detalhe->segmento_a);
+                        unset($detalhe->segmento_b);
+                        $lote->inserirDetalhe($detalhe);
                     }
-
-                    $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
-                    $dataVencimento = new Carbon($installment->extension_date); // data vendimento
-                    $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
-                    $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $dataPagamento = new Carbon($installment->extension_date); // validar
-                    $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
-                    $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
-
-                    //segmento j52 detalhe
-                    $lotQuantityDetails++;
-                    $detalhe->segmento_j52->lote_servico = $lotQuantity;
-                    $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
-                    unset($detalhe->segmento_a);
-                    unset($detalhe->segmento_b);
-
-                    $lote->inserirDetalhe($detalhe);
                 } else {
 
                     $lotQuantityDetails++;
@@ -247,36 +262,57 @@ class Remessa
                 $lotValue += $amount;
 
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {
-                    $lotQuantityDetails++;
-                    $detalhe->segmento_j->lote_servico = $lote->sequencial;
-                    $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
-                    $dataVencimento = new Carbon($installment->extension_date); // data vendimento
-                    $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
-                    $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $dataPagamento = new Carbon($installment->extension_date); //VALIDAR
-                    $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
-                    $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
-                    $detalhe->segmento_j->boleto_banco_favorecido = Utils::codigoBancoFavorecidoBoleto(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->boleto_dv_favorecido = Utils::dvBoleto(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->boleto_vencimento_favorecido = Utils::fatorVencimentoBoleto(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->boleto_moeda_favorecido = Utils::codigoMoedaBoleto(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->boleto_valor_favorecido = Utils::valorBoleto(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->boleto_campo_livre_favorecido = Utils::campoLivreBoleto(Utils::onlyNumbers($installment->bar_code));
+                    if ($installment->type_billet == 4) {
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_o->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_o->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_o->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_o->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
+                        $dataVencimento = new Carbon($installment->extension_date); // data vendimento
+                        $detalhe->segmento_o->vencimento = $dataVencimento->format('dmY');
+                        $detalhe->segmento_o->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $dataPagamento = new Carbon($installment->extension_date); // validar
+                        $detalhe->segmento_o->data_pagamento = $dataPagamento->format('dmY');
+                        $detalhe->segmento_o->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $detalhe->segmento_o->identificacao_titulo_empresa = $installment->id; //id parcela;
+                        unset($detalhe->segmento_a);
+                        unset($detalhe->segmento_b);
+                        unset($detalhe->segmento_j);
+                        unset($detalhe->segmento_j52);
+
+                        $lote->inserirDetalhe($detalhe);
+                    } else {
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_j->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
+                        $dataVencimento = new Carbon($installment->extension_date); // data vendimento
+                        $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
+                        $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $dataPagamento = new Carbon($installment->extension_date); //VALIDAR
+                        $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
+                        $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
+                        $detalhe->segmento_j->boleto_banco_favorecido = Utils::codigoBancoFavorecidoBoleto(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->boleto_dv_favorecido = Utils::dvBoleto(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->boleto_vencimento_favorecido = Utils::fatorVencimentoBoleto(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->boleto_moeda_favorecido = Utils::codigoMoedaBoleto(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->boleto_valor_favorecido = Utils::valorBoleto(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->boleto_campo_livre_favorecido = Utils::campoLivreBoleto(Utils::onlyNumbers($installment->bar_code));
 
 
-                    //segmento j52 detalhe
-                    $lotQuantityDetails++;
-                    $detalhe->segmento_j52->lote_servico = $lotQuantity;
-                    $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
-                    unset($detalhe->segmento_a);
-                    unset($detalhe->segmento_b);
+                        //segmento j52 detalhe
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_j52->lote_servico = $lotQuantity;
+                        $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
+                        $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                        $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
+                        unset($detalhe->segmento_a);
+                        unset($detalhe->segmento_b);
 
-                    $lote->inserirDetalhe($detalhe);
+                        $lote->inserirDetalhe($detalhe);
+                    }
                 } else {
 
                     $lotQuantityDetails++;
@@ -403,37 +439,51 @@ class Remessa
                 $lotValue += $amount;
 
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {
-                    $lotQuantityDetails++;
-                    $detalhe->segmento_j->lote_servico = $lote->sequencial;
-                    $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-
-                    if (strlen(Utils::onlyNumbers($installment->bar_code) > 45)) {
-                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                    if ($installment->type_billet == 4) {
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_o->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_o->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_o->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_o->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
+                        $dataVencimento = new Carbon($installment->extension_date); // data vendimento
+                        $detalhe->segmento_o->vencimento = $dataVencimento->format('dmY');
+                        $detalhe->segmento_o->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $dataPagamento = new Carbon($installment->extension_date); // validar
+                        $detalhe->segmento_o->data_pagamento = $dataPagamento->format('dmY');
+                        $detalhe->segmento_o->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $detalhe->segmento_o->identificacao_titulo_empresa = $installment->id; //id parcela;
+                        unset($detalhe->segmento_a);
+                        unset($detalhe->segmento_b);
+                        unset($detalhe->segmento_j);
+                        unset($detalhe->segmento_j52);
+                        $lote->inserirDetalhe($detalhe);
                     } else {
-                        $detalhe->segmento_j->codigo_barras = Utils::onlyNumbers($installment->bar_code);
+
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_j->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
+                        $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
+                        $dataVencimento = new Carbon($installment->extension_date); // data vendimento
+                        $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
+                        $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $dataPagamento = new Carbon($installment->extension_date); // validar
+                        $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
+                        $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
+                        $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
+
+                        //segmento j52 detalhe
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_j52->lote_servico = $lotQuantity;
+                        $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
+                        $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
+                        $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
+                        unset($detalhe->segmento_a);
+                        unset($detalhe->segmento_b);
+                        $lote->inserirDetalhe($detalhe);
                     }
-
-                    $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
-                    $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
-                    $dataVencimento = new Carbon($installment->extension_date); // data vendimento
-                    $detalhe->segmento_j->vencimento = $dataVencimento->format('dmY');
-                    $detalhe->segmento_j->valor = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $dataPagamento = new Carbon($installment->extension_date); // validar
-                    $detalhe->segmento_j->data_pagamento = $dataPagamento->format('dmY');
-                    $detalhe->segmento_j->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $detalhe->segmento_j->identificacao_titulo_empresa = $installment->id; //id parcela;
-
-                    //segmento j52 detalhe
-                    $lotQuantityDetails++;
-                    $detalhe->segmento_j52->lote_servico = $lotQuantity;
-                    $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
-                    $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
-                    $detalhe->segmento_j52->tipo_inscricao_beneficiario = strlen(Utils::onlyNumbers($inscricao)) == 14 ? 2 : 1;
-                    $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
-                    unset($detalhe->segmento_a);
-                    unset($detalhe->segmento_b);
-
-                    $lote->inserirDetalhe($detalhe);
                 } else {
 
                     $lotQuantityDetails++;

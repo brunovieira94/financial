@@ -3,12 +3,11 @@
 namespace App\Exports;
 
 use App\Models\CnabPaymentRequestsHasInstallments;
-use App\Models\OtherPayment;
 use App\Models\PaymentRequestHasInstallmentsThatHaveOtherPayments;
+
 use Carbon\Carbon;
 
 use Config;
-use CreatePaymentRequestInstallmentsHaveOtherPayments;
 
 class Utils
 {
@@ -62,7 +61,7 @@ class Utils
 
         if (isset($paymentRequest->installments)) {
             $amountToPay = $paymentRequest->installments->reduce(function ($carry, $item) {
-                return $carry + Utils::installmentTotalFinalValue($item);
+                return $carry + self::installmentTotalFinalValue($item);
             }, 0);
         }
 
@@ -110,11 +109,13 @@ class Utils
             case 0:
                 return 'Nota Fiscal';
             case 1:
-                return 'Boleto';
+                return 'Adiantamento';
             case 2:
-                return 'Avulso';
+                return 'Avulso/Reembolsos';
             case 3:
                 return 'Invoice';
+            case 4:
+                return 'Imposto';
             default:
                 return 'Outro';
         }
@@ -176,6 +177,10 @@ class Utils
                 return 'Boleto Bancário';
             case 1:
                 return 'Boleto de Arrecadação';
+            case 2:
+                return 'Guia de Impostos';
+            case 4:
+                return 'Boleto de Concessionária';
             default:
                 return 'Outro';
         }
@@ -270,6 +275,8 @@ class Utils
             $paymentRequest->approval->approver_stage_first['title'],
             self::approver($paymentRequest),
             $paymentRequest->note,
+            $paymentRequest->allow_binding == true ? 'Sim' : 'Não',
+            $paymentRequest['installment_link'],
         ];
     }
 
@@ -312,12 +319,19 @@ class Utils
             'Etapa Atual',
             'Aprovador',
             'Observações',
+            'Agrupar Parcela',
+            'Parcelas Agrupadas'
         ];
     }
 
     public static function exportInstallmentData($installment)
     {
-        $bankAccountCompany = self::bankAccountCompanyInstallment($installment);
+        $bankAccountCompany = $installment->bank_account_company == null ? self::bankAccountCompanyInstallment($installment) : $installment->bank_account_company;
+
+        $verification_period = null;
+        if (isset($installment->verification_period)) {
+            $verification_period = implode(', ', $installment->verification_period->toArray());
+        }
 
         return [
             $installment->payment_request->id,
@@ -369,7 +383,14 @@ class Utils
             self::translatedInstallmentBankAccountType(($bankAccountCompany->account_type ?? null)),
             $bankAccountCompany == null ? '' : $bankAccountCompany->account_number ?? '',
             $bankAccountCompany == null ? '' : $bankAccountCompany->account_check_number ?? '',
+            $installment->reference_number ?? '',
+            $installment->revenue_code ?? '',
+            $installment->tax_file_phone_number ?? '',
+            $verification_period ?? '',
             $installment->card_identifier,
+            $installment->group_payment_received->title ?? '',
+            $installment->paid_value ?? '',
+            self::formatDate($installment->payment_made_date) ?? '',
         ];
     }
 
@@ -425,7 +446,14 @@ class Utils
             'Tipo de Conta Bancária - Empresa',
             'Conta Bancária - Empresa',
             'Dígito da Conta Bancária - Empresa',
-            'Identificador do Cartão'
+            'Número de Referência',
+            'Código de Receita',
+            'Número de telefone do arquivo fiscal',
+            'Período de verificação',
+            'Identificador do Cartão',
+            'Forma de pagamento - Pago',
+            'Valor - Pago',
+            'Data do pagamento - Pago'
         ];
     }
 
