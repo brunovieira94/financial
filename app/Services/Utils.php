@@ -144,6 +144,17 @@ class Utils
                                 PaymentRequestHasInstallmentsClean::where('id', $installment['id'])->update(['status' => Config::get('constants.status.error')]);
                             }
                         } elseif ($payment_form->group_form_payment_id == 1) {
+                            if ($installment->type_billet == 4) {
+                                if ($payment_form->concessionaire_billet) {
+                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                        break;
+                                    } else {
+                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                        break;
+                                    }
+                                }
+                            } else
                             if (substr($installment->bar_code, 0, 3) == $bankCode) {
                                 if ($payment_form->same_ownership) {
                                     if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
@@ -274,8 +285,22 @@ class Utils
 
     public static function codigoBarrasBB($linhaDigitavel)
     {
-        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 10, 10) . substr($linhaDigitavel, 21, 10);
+        $linhaDigitavel = self::onlyNumbers($linhaDigitavel);
+        switch (strlen($linhaDigitavel)) {
+            case 47:
+                return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 10, 10) . substr($linhaDigitavel, 21, 10);
+                break;
+            case 44:
+                return $linhaDigitavel;
+                break;
+            case 48:
+                return substr($linhaDigitavel, 0, 11) . substr($linhaDigitavel, 12, 11) . substr($linhaDigitavel, 24, 11) . substr($linhaDigitavel, 36, 11);
+                break;
+            default:
+                return $linhaDigitavel;
+        }
     }
+
 
     public static function identificacaoTipoTransferencia($tipoConta)
     {

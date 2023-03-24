@@ -544,6 +544,65 @@ remessa:
         picture: 'X(53)'
         default: ''
 
+  segmento_o:
+      codigo_banco:
+        pos: [1,3]
+        picture: '9(3)'
+        default: 341
+      lote_servico:
+        pos: [4,7]
+        picture: '9(4)'
+      tipo_registro:
+        pos: [8,8]
+        picture: '9(1)'
+        default: 3
+      numero_registro:
+        pos: [9,13]
+        picture: '9(5)'
+      codigo_segmento:
+        pos: [14,14]
+        picture: 'X(1)'
+        default: 'O'
+      tipo_movimento:
+        pos: [15,15]
+        picture: 'X(1)'
+        default: '0'
+      codigo_movimento_remessa:
+        pos: [16,17]
+        picture: '9(2)'
+        default: '00'
+      codigo_barras:
+        pos: [18,61]
+        picture: '9(44)'
+      nome_beneficiario:
+        pos: [62,91]
+        picture: 'X(30)'
+        default: ''
+      vencimento:
+        pos: [92,99]
+        picture: '9(8)'
+      data_pagamento:
+        pos: [100,107]
+        picture: '9(8)'
+      valor_pagamento:
+        pos: [108,122]
+        picture: '9(15)'
+      identificacao_titulo_empresa:
+        pos: [123,142]
+        picture: 'X(20)'
+      identificacao_titulo_banco:
+        pos: [143,162]
+        picture: 'X(20)'
+        default: ''
+      uso_febraban_01:
+        pos: [163,230]
+        picture: 'X(68)'
+        default: ''
+      codigo_ocorrencia:
+        pos: [231,240]
+        picture: 'X(10)'
+        default: '0000000000'
+
 retorno:
   header_arquivo:
     codigo_banco:
