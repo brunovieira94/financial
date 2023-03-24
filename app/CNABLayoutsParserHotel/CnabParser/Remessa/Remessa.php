@@ -200,7 +200,7 @@ class Remessa
 
                 $detalhe = $lote->novoDetalhe();
 
-                $lotValue += $billing->supplier_value;
+                $lotValue += $billing->boleto_value;
 
                 if ($billing->form_of_payment == 0 && $billing->boleto_code != null) {
                     $lotQuantityDetails++;

@@ -198,7 +198,7 @@ remessa:
     codigo_banco:
       pos: [1,3]
       picture: '9(3)'
-      default: 001
+      default: 341
     lote_servico:
       pos: [4,7]
       picture: '9(4)'
@@ -223,8 +223,8 @@ remessa:
       default: '000000000000000000'
     aviso_debito:
       pos: [60,65]
-      picture: '9(6)'
-      default: '000000'
+      picture: 'X(6)'
+      default: ''
     uso_excluisivo_febraban:
       pos: [66,230]
       picture: 'X(165)'
@@ -260,8 +260,8 @@ remessa:
       picture: '9(6)'
     zeros_01:
       pos: [30,35]
-      picture: '9(6)'
-      default: '000000'
+      picture: 'X(6)'
+      default: ''
     brancos_02:
       pos: [36,240]
       picture: 'X(205)'
@@ -397,7 +397,7 @@ remessa:
       codigo_banco:
         pos: [1,3]
         picture: '9(3)'
-        default: 001
+        default: 341
       lote_servico:
         pos: [4,7]
         picture: '9(4)'
@@ -451,7 +451,7 @@ remessa:
       valor_multa:
         pos: [130,144]
         picture: '9(15)'
-        default: 0
+        default: '000000000000000'
       data_pagamento:
         pos: [145,152]
         picture: '9(8)'
@@ -476,14 +476,14 @@ remessa:
       codigo_ocorrencia:
         pos: [231,240]
         picture: 'X(10)'
-        default: '0000000000'
+        default: ''
 
     #segmento_j52 obrigatório
     segmento_j52:
       codigo_banco:
         pos: [1,3]
         picture: '9(3)'
-        default: 001
+        default: 341
       lote_servico:
         pos: [4,7]
         picture: '9(4)'
