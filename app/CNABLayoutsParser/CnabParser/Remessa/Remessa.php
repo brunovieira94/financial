@@ -125,6 +125,7 @@ class Remessa
                         $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
                         unset($detalhe->segmento_a);
                         unset($detalhe->segmento_b);
+                        unset($detalhe->segmento_o);
                         $lote->inserirDetalhe($detalhe);
                     }
                 } else {
@@ -264,7 +265,7 @@ class Remessa
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {
                     if ($installment->type_billet == 4) {
                         $lotQuantityDetails++;
-                        $detalhe->segmento_o->lote_servico = $lote->sequencial;
+                        $detalhe->segmento_o->lote_servico = 1;
                         $detalhe->segmento_o->numero_registro = $lotQuantityDetails;
                         $detalhe->segmento_o->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                         $detalhe->segmento_o->nome_beneficiario = Utils::formatCnab('X',  $nomeBeneficiario, '30');
@@ -310,6 +311,7 @@ class Remessa
                         $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
                         unset($detalhe->segmento_a);
                         unset($detalhe->segmento_b);
+                        unset($detalhe->segmento_o);
 
                         $lote->inserirDetalhe($detalhe);
                     }
@@ -338,6 +340,7 @@ class Remessa
 
                     unset($detalhe->segmento_j);
                     unset($detalhe->segmento_j52);
+                    unset($detalhe->segmento_o);
                     $lote->inserirDetalhe($detalhe);
                 }
             }
@@ -354,6 +357,7 @@ class Remessa
             $sumDetails +=  $lotQuantityDetails; //somar todos registros
 
             $remessa->inserirLote($lote);
+
         }
 
 
@@ -482,6 +486,7 @@ class Remessa
                         $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($inscricao);
                         unset($detalhe->segmento_a);
                         unset($detalhe->segmento_b);
+                        unset($detalhe->segmento_o);
                         $lote->inserirDetalhe($detalhe);
                     }
                 } else {
@@ -514,6 +519,7 @@ class Remessa
                     $detalhe->segmento_b->vencimento = $dataVencimento->format('dmY');
                     unset($detalhe->segmento_j);
                     unset($detalhe->segmento_j52);
+                    unset($detalhe->segmento_o);
                     $lote->inserirDetalhe($detalhe);
                 }
             }
