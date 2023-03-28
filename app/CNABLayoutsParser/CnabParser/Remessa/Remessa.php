@@ -159,6 +159,7 @@ class Remessa
 
                     unset($detalhe->segmento_j);
                     unset($detalhe->segmento_j52);
+                    unset($detalhe->segmento_o);
                     $lote->inserirDetalhe($detalhe);
                 }
             }
