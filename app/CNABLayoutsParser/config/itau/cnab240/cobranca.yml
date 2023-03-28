@@ -8,1073 +8,1071 @@
 # - Campos Numéricos (9) = Sempre à direita e preenchidos com zeros à esquerda.
 # - Campos Alfanuméricos (X) = Sempre à esquerda e preenchidos com brancos à direita.
 #
-servico: 'cobranca'
+servico: "cobranca"
 
-versao: 'out2020'
+versao: "out2020"
 
-layout: 'cnab240'
+layout: "cnab240"
 
 remessa:
   header_arquivo:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
-      default: '0000'
+      pos: [4, 7]
+      picture: "9(4)"
+      default: "0000"
     tipo_registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 0
     brancos_01:
-      pos: [9,14]
-      picture: 'X(6)'
-      default: ''
+      pos: [9, 14]
+      picture: "X(6)"
+      default: ""
     versao_layout_arquivo:
-      pos: [15,17]
-      picture: '9(3)'
-      default: '080'
+      pos: [15, 17]
+      picture: "9(3)"
+      default: "080"
     tipo_inscricao:
-      pos: [18,18]
-      picture: '9(1)'
+      pos: [18, 18]
+      picture: "9(1)"
       default: 2
     inscricao_numero:
-      pos: [19,32]
-      picture: '9(14)'
+      pos: [19, 32]
+      picture: "9(14)"
     brancos_02:
-      pos: [33,52]
-      picture: 'X(20)'
-      default: ''
+      pos: [33, 52]
+      picture: "X(20)"
+      default: ""
     agencia:
-      pos: [53,57]
-      picture: '9(5)'
+      pos: [53, 57]
+      picture: "9(5)"
     brancos_03:
-      pos: [58,58]
-      picture: 'X(1)'
-      default: ''
+      pos: [58, 58]
+      picture: "X(1)"
+      default: ""
     conta:
-      pos: [59,70]
-      picture: '9(12)'
+      pos: [59, 70]
+      picture: "9(12)"
     brancos_04:
-      pos: [71,71]
-      picture: 'X(1)'
-      default: ''
+      pos: [71, 71]
+      picture: "X(1)"
+      default: ""
     digito_verificador_conta:
-      pos: [72,72]
-      picture: '9(1)'
-      default: '0'
+      pos: [72, 72]
+      picture: "9(1)"
+      default: "0"
     nome_empresa:
-      pos: [73,102]
-      picture: 'X(30)'
+      pos: [73, 102]
+      picture: "X(30)"
     nome_banco:
-      pos: [103,132]
-      picture: 'X(30)'
-      default: 'BANCO ITAU S.A'
+      pos: [103, 132]
+      picture: "X(30)"
+      default: "BANCO ITAU S.A"
     brancos_05:
-      pos: [133,142]
-      picture: 'X(10)'
-      default: ''
+      pos: [133, 142]
+      picture: "X(10)"
+      default: ""
     codigo_arquivo:
-      pos: [143,143]
-      picture: '9(1)'
+      pos: [143, 143]
+      picture: "9(1)"
       default: 1
     data_geracao:
-      pos: [144,151]
-      picture: '9(8)'
+      pos: [144, 151]
+      picture: "9(8)"
     hora_geracao:
-      pos: [152,157]
-      picture: '9(6)'
+      pos: [152, 157]
+      picture: "9(6)"
     zeros:
-      pos: [158,166]
-      picture: '9(9)'
-      default: '000000000'
+      pos: [158, 166]
+      picture: "9(9)"
+      default: "000000000"
     unidade_densidade:
-      pos: [167,171]
-      picture: '9(5)'
-      default: '00000'
+      pos: [167, 171]
+      picture: "9(5)"
+      default: "00000"
     brancos_06:
-      pos: [172,240]
-      picture: 'X(69)'
-      default: ''
+      pos: [172, 240]
+      picture: "X(69)"
+      default: ""
   header_lote:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
+      pos: [4, 7]
+      picture: "9(4)"
     tipo_registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 1
     tipo_operacao:
-      pos: [9,9]
-      picture: 'X(1)'
-      default: 'R'
+      pos: [9, 9]
+      picture: "X(1)"
+      default: "R"
     tipo_pagamento:
-      pos: [10,11]
-      picture: '9(2)'
-      default: '20'
+      pos: [10, 11]
+      picture: "9(2)"
+      default: "20"
     forma_pagamento:
-      pos: [12,13]
-      picture: '9(2)'
+      pos: [12, 13]
+      picture: "9(2)"
     versao_layout_lote:
-      pos: [14,16]
-      picture: '9(3)'
-      default: '040'
+      pos: [14, 16]
+      picture: "9(3)"
+      default: "040"
     brancos_01:
-      pos: [17,17]
-      picture: 'X(1)'
-      default: ''
+      pos: [17, 17]
+      picture: "X(1)"
+      default: ""
     tipo_inscricao:
-      pos: [18,18]
-      picture: '9(1)'
+      pos: [18, 18]
+      picture: "9(1)"
       default: 2
     inscricao_numero:
-      pos: [19,32]
-      picture: '9(14)'
+      pos: [19, 32]
+      picture: "9(14)"
     identificacao_lancamento:
-      pos: [33,36]
-      picture: 'X(4)'
-      default: ''
+      pos: [33, 36]
+      picture: "X(4)"
+      default: ""
     brancos_02:
-      pos: [37,52]
-      picture: 'X(16)'
-      default: ''
+      pos: [37, 52]
+      picture: "X(16)"
+      default: ""
     agencia:
-      pos: [53,57]
-      picture: '9(5)'
+      pos: [53, 57]
+      picture: "9(5)"
     brancos_03:
-      pos: [58,58]
-      picture: 'X(1)'
-      default: ''
+      pos: [58, 58]
+      picture: "X(1)"
+      default: ""
     conta:
-      pos: [59,70]
-      picture: '9(12)'
+      pos: [59, 70]
+      picture: "9(12)"
     brancos_04:
-      pos: [71,71]
-      picture: 'X(1)'
-      default: ''
+      pos: [71, 71]
+      picture: "X(1)"
+      default: ""
     digito_verificador_conta:
-      pos: [72,72]
-      picture: '9(1)'
+      pos: [72, 72]
+      picture: "9(1)"
     nome_empresa:
-      pos: [73,102]
-      picture: 'X(30)'
+      pos: [73, 102]
+      picture: "X(30)"
     brancos_05:
-      pos: [103,142]
-      picture: 'X(40)'
-      default: ''
+      pos: [103, 142]
+      picture: "X(40)"
+      default: ""
     endereco:
-      pos: [143,172]
-      picture: 'X(30)'
+      pos: [143, 172]
+      picture: "X(30)"
     numero:
-      pos: [173,177]
-      picture: '9(5)'
+      pos: [173, 177]
+      picture: "9(5)"
     complemento:
-      pos: [178,192]
-      picture: 'X(15)'
+      pos: [178, 192]
+      picture: "X(15)"
     cidade:
-      pos: [193,212]
-      picture: 'X(20)'
+      pos: [193, 212]
+      picture: "X(20)"
     cep:
-      pos: [213,220]
-      picture: '9(8)'
+      pos: [213, 220]
+      picture: "9(8)"
     uf:
-      pos: [221,222]
-      picture: 'X(2)'
+      pos: [221, 222]
+      picture: "X(2)"
     complemento_registro:
-      pos: [223,230]
-      picture: 'X(8)'
+      pos: [223, 230]
+      picture: "X(8)"
     ocorrencia:
-      pos: [231,240]
-      picture: 'X(10)'
-      default: ''
+      pos: [231, 240]
+      picture: "X(10)"
+      default: ""
 
   trailer_lote:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 001
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
+      pos: [4, 7]
+      picture: "9(4)"
     tipo_registro:
-      pos: [8,8]
-      picture: '9(1)'
-      default: '5'
+      pos: [8, 8]
+      picture: "9(1)"
+      default: "5"
     exclusivo_febraban_01:
-      pos: [9,17]
-      picture: 'X(9)'
-      default: ''
+      pos: [9, 17]
+      picture: "X(9)"
+      default: ""
     # Total de linhas do lote (inclui Header de lote, Registros e Trailer de lote).
     quantidade_registros_lote:
-      pos: [18,23]
-      picture: '9(6)'
+      pos: [18, 23]
+      picture: "9(6)"
     somatoria_lote:
-      pos: [24,41]
-      picture: '9(18)'
+      pos: [24, 41]
+      picture: "9(18)"
     somatoria_qtde_moeda:
-      pos: [42,59]
-      picture: '9(18)'
-      default: '000000000000000000'
+      pos: [42, 59]
+      picture: "9(18)"
+      default: "000000000000000000"
     aviso_debito:
-      pos: [60,65]
-      picture: '9(6)'
-      default: '000000'
+      pos: [60, 65]
+      picture: "9(6)"
+      default: "000000"
     uso_excluisivo_febraban:
-      pos: [66,230]
-      picture: 'X(165)'
-      default: ''
+      pos: [66, 230]
+      picture: "X(165)"
+      default: ""
     ocorrencia_retorno:
-      pos: [231,240]
-      picture: 'X(10)'
-      default: ''
-
+      pos: [231, 240]
+      picture: "X(10)"
+      default: ""
 
   trailer_arquivo:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
+      pos: [4, 7]
+      picture: "9(4)"
       default: 9999
     registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 9
     brancos_01:
-      pos: [9,17]
-      picture: 'X(9)'
-      default: ''
+      pos: [9, 17]
+      picture: "X(9)"
+      default: ""
     total_lotes:
-      pos: [18,23]
-      picture: '9(6)'
+      pos: [18, 23]
+      picture: "9(6)"
     total_registros:
-      pos: [24,29]
-      picture: '9(6)'
+      pos: [24, 29]
+      picture: "9(6)"
     zeros_01:
-      pos: [30,35]
-      picture: '9(6)'
-      default: '000000'
+      pos: [30, 35]
+      picture: "9(6)"
+      default: "000000"
     brancos_02:
-      pos: [36,240]
-      picture: 'X(205)'
-      default: ''
+      pos: [36, 240]
+      picture: "X(205)"
+      default: ""
 
   detalhes:
     # obrigatorio
     segmento_a:
       codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
+        pos: [1, 3]
+        picture: "9(3)"
         default: 341
       lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
+        pos: [4, 7]
+        picture: "9(4)"
       tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
+        pos: [8, 8]
+        picture: "9(1)"
         default: 3
       numero_sequencial_registro_lote:
-        pos: [9,13]
-        picture: '9(5)'
+        pos: [9, 13]
+        picture: "9(5)"
         default: 1
       segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'A'
+        pos: [14, 14]
+        picture: "X(1)"
+        default: "A"
       tipo_movimento:
-        pos: [15,17]
-        picture: '9(3)'
-        default: '001'
+        pos: [15, 17]
+        picture: "9(3)"
+        default: "001"
       camara_centralizadora:
-        pos: [18,20]
-        picture: '9(3)'
-        default: '009' #validar
+        pos: [18, 20]
+        picture: "9(3)"
+        default: "009" #validar
       codigo_banco_favorecido:
-        pos: [21,23]
-        picture: '9(3)'
+        pos: [21, 23]
+        picture: "9(3)"
       agencia_favorecido:
-        pos: [24,28]
-        picture: '9(5)'
+        pos: [24, 28]
+        picture: "9(5)"
       zero05:
-        pos: [29,29]
-        picture: 'X(1)'
-        default: ''
+        pos: [29, 29]
+        picture: "X(1)"
+        default: ""
       conta_favorecido:
-        pos: [30,41]
-        picture: '9(12)'
+        pos: [30, 41]
+        picture: "9(12)"
       zero06:
-        pos: [42,42]
-        picture: 'X(1)'
-        default: ''
+        pos: [42, 42]
+        picture: "X(1)"
+        default: ""
       verificador_conta_favorecido:
-        pos: [43,43]
-        picture: 'X(1)'
+        pos: [43, 43]
+        picture: "X(1)"
       nome_favorecido:
-        pos: [44,73]
-        picture: 'X(30)'
+        pos: [44, 73]
+        picture: "X(30)"
       n_docto_atribuido_empresa:
-        pos: [74,93]
-        picture: 'X(20)'
+        pos: [74, 93]
+        picture: "X(20)"
       data_pagamento:
-        pos: [94,101]
-        picture: '9(8)'
+        pos: [94, 101]
+        picture: "9(8)"
       tipo_moeda:
-        pos: [102,104]
-        picture: 'X(3)'
-        default: 'REA'
+        pos: [102, 104]
+        picture: "X(3)"
+        default: "REA"
       identificacao_istituicao_spb:
-        pos: [105,112]
-        picture: 'X(8)'
-        default: '00000000'
+        pos: [105, 112]
+        picture: "X(8)"
+        default: "00000000"
       identificacao_transferencia:
-        pos: [112,113]
-        picture: 'X(2)'
+        pos: [112, 113]
+        picture: "X(2)"
       zero01:
-        pos: [115,119]
-        picture: '9(5)'
-        default: '00000'
+        pos: [115, 119]
+        picture: "9(5)"
+        default: "00000"
       valor_pagamento:
-        pos: [120,134]
-        picture: '9(15)'
+        pos: [120, 134]
+        picture: "9(15)"
       n_docto_atribuido_banco:
-        pos: [135,149]
-        picture: 'X(15)'
-        default: ''
+        pos: [135, 149]
+        picture: "X(15)"
+        default: ""
       zero02:
-        pos: [150,154]
-        picture: 'X(5)'
-        default: ''
+        pos: [150, 154]
+        picture: "X(5)"
+        default: ""
       data_efetiva_pagamento:
-        pos: [155,162]
-        picture: '9(8)'
-        default: '00000000'
+        pos: [155, 162]
+        picture: "9(8)"
+        default: "00000000"
       valor_efetivo_pagamento:
-        pos: [163,177]
-        picture: '9(15)'
-        default: '000000000000000'
+        pos: [163, 177]
+        picture: "9(15)"
+        default: "000000000000000"
       informacao_complementar:
-        pos: [178,197]
-        picture: 'X(20)'
-        default: ''
+        pos: [178, 197]
+        picture: "X(20)"
+        default: ""
       numero_dococumento_retorno:
-        pos: [198,203]
-        picture: '9(6)'
-        default: '000000'
+        pos: [198, 203]
+        picture: "9(6)"
+        default: "000000"
       numero_inscricao_favorecido:
-        pos: [204,217]
-        picture: '9(14)'
+        pos: [204, 217]
+        picture: "9(14)"
       finalidade_doc_status:
-        pos: [218,219]
-        picture: 'X(2)'
-        default: ''
+        pos: [218, 219]
+        picture: "X(2)"
+        default: ""
       finalidade_ted:
-        pos: [220,224]
-        picture: 'X(5)'
-        default: ''
+        pos: [220, 224]
+        picture: "X(5)"
+        default: ""
       zeros03:
-        pos: [225,229]
-        picture: 'X(5)'
-        default: ''
+        pos: [225, 229]
+        picture: "X(5)"
+        default: ""
       zeros04:
-        pos: [230,230]
-        picture: 'X(1)'
-        default: '0'
+        pos: [230, 230]
+        picture: "X(1)"
+        default: "0"
       ocorrencia:
-        pos: [231,240]
-        picture: 'X(10)'
-        default: ''
+        pos: [231, 240]
+        picture: "X(10)"
+        default: ""
 
     #segmento J
     segmento_j:
       codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
+        pos: [1, 3]
+        picture: "9(3)"
         default: 001
       lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
+        pos: [4, 7]
+        picture: "9(4)"
       tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
+        pos: [8, 8]
+        picture: "9(1)"
         default: 3
       numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
+        pos: [9, 13]
+        picture: "9(5)"
       codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'J'
+        pos: [14, 14]
+        picture: "X(1)"
+        default: "J"
       tipo_movimento:
-        pos: [15,17]
-        picture: 'X(3)'
-        default: '001'
+        pos: [15, 17]
+        picture: "X(3)"
+        default: "001"
       boleto_banco_favorecido:
-        pos: [18,20]
-        picture: '9(3)'
+        pos: [18, 20]
+        picture: "9(3)"
       boleto_dv_favorecido:
-        pos: [22,22]
-        picture: '9(1)'
+        pos: [22, 22]
+        picture: "9(1)"
       boleto_vencimento_favorecido:
-        pos: [23,26]
-        picture: '9(4)'
+        pos: [23, 26]
+        picture: "9(4)"
       boleto_moeda_favorecido:
-        pos: [21,21]
-        picture: '9(1)'
+        pos: [21, 21]
+        picture: "9(1)"
       boleto_valor_favorecido:
-        pos: [27,36]
-        picture: '9(10)'
+        pos: [27, 36]
+        picture: "9(10)"
       boleto_campo_livre_favorecido:
-        pos: [37,61]
-        picture: '9(25)'
+        pos: [37, 61]
+        picture: "9(25)"
       nome_beneficiario:
-        pos: [62,91]
-        picture: 'X(30)'
-        default: ''
+        pos: [62, 91]
+        picture: "X(30)"
+        default: ""
       vencimento:
-        pos: [92,99]
-        picture: '9(8)'
+        pos: [92, 99]
+        picture: "9(8)"
       valor:
-        pos: [100,114]
-        picture: '9(15)'
+        pos: [100, 114]
+        picture: "9(15)"
       valor_desconto:
-        pos: [63,77]
-        picture: '9(15)'
+        pos: [63, 77]
+        picture: "9(15)"
         default: 0
       valor_multa:
-        pos: [130,144]
-        picture: '9(15)'
+        pos: [130, 144]
+        picture: "9(15)"
         default: 0
       data_pagamento:
-        pos: [145,152]
-        picture: '9(8)'
+        pos: [145, 152]
+        picture: "9(8)"
       valor_pagamento:
-        pos: [153,167]
-        picture: '9(15)'
+        pos: [153, 167]
+        picture: "9(15)"
       quantidade_moeda:
-        pos: [168,182]
-        picture: '9(15)'
-        default: '000000000000000'
+        pos: [168, 182]
+        picture: "9(15)"
+        default: "000000000000000"
       identificacao_titulo_empresa:
-        pos: [183,202]
-        picture: 'X(20)'
+        pos: [183, 202]
+        picture: "X(20)"
       branco01:
-        pos: [203,215]
-        picture: 'X(13)'
-        default: ''
+        pos: [203, 215]
+        picture: "X(13)"
+        default: ""
       identificacao_titulo_banco:
-        pos: [216,230]
-        picture: 'X(15)'
-        default: ''
+        pos: [216, 230]
+        picture: "X(15)"
+        default: ""
       codigo_ocorrencia:
-        pos: [231,240]
-        picture: 'X(10)'
-        default: '0000000000'
+        pos: [231, 240]
+        picture: "X(10)"
+        default: "0000000000"
 
     #segmento_j52 obrigatório
     segmento_j52:
       codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
+        pos: [1, 3]
+        picture: "9(3)"
         default: 001
       lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
+        pos: [4, 7]
+        picture: "9(4)"
       tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
+        pos: [8, 8]
+        picture: "9(1)"
         default: 3
       numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
+        pos: [9, 13]
+        picture: "9(5)"
       codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'J'
+        pos: [14, 14]
+        picture: "X(1)"
+        default: "J"
       tipo_movimento:
-        pos: [15,17]
-        picture: 'X(3)'
-        default: '001'
+        pos: [15, 17]
+        picture: "X(3)"
+        default: "001"
       identificacao_registro_pcional:
-        pos: [18,19]
-        picture: '9(2)'
-        default: '52'
+        pos: [18, 19]
+        picture: "9(2)"
+        default: "52"
       tipo_inscricao_pagador:
-        pos: [20,20]
-        picture: '9(1)'
-        default: '2'
+        pos: [20, 20]
+        picture: "9(1)"
+        default: "2"
       numero_inscricao_pagador:
-        pos: [21,35]
-        picture: '9(15)'
+        pos: [21, 35]
+        picture: "9(15)"
       nome_inscricao_pagador:
-        pos: [36,76]
-        picture: 'X(40)'
-        default: ''
+        pos: [36, 76]
+        picture: "X(40)"
+        default: ""
       tipo_inscricao_beneficiario:
-        pos: [76,76]
-        picture: '9(1)'
+        pos: [76, 76]
+        picture: "9(1)"
       numero_inscricao_beneficiario:
-        pos: [77,91]
-        picture: '9(15)'
+        pos: [77, 91]
+        picture: "9(15)"
       nome_inscricao_beneficiario:
-        pos: [92,131]
-        picture: 'X(40)'
-        default: ''
+        pos: [92, 131]
+        picture: "X(40)"
+        default: ""
       sacador_avalista:
-        pos: [132,132]
-        picture: '9(1)'
-        default: '0'
+        pos: [132, 132]
+        picture: "9(1)"
+        default: "0"
       numero_inscricao_avalista:
-        pos: [133,147]
-        picture: '9(15)'
-        default: '000000000000000'
+        pos: [133, 147]
+        picture: "9(15)"
+        default: "000000000000000"
       nome_inscricao_avalista:
-        pos: [148,187]
-        picture: 'X(40)'
-        default: ''
+        pos: [148, 187]
+        picture: "X(40)"
+        default: ""
       uso_exclusivo_FEBRABAN:
-        pos: [188,240]
-        picture: 'X(53)'
-        default: ''
+        pos: [188, 240]
+        picture: "X(53)"
+        default: ""
 
-  segmento_o:
+    segmento_o:
       codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
+        pos: [1, 3]
+        picture: "9(3)"
         default: 341
       lote_servico:
-        pos: [4,7]
-        picture: '9(4)'
+        pos: [4, 7]
+        picture: "9(4)"
       tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
+        pos: [8, 8]
+        picture: "9(1)"
         default: 3
       numero_registro:
-        pos: [9,13]
-        picture: '9(5)'
+        pos: [9, 13]
+        picture: "9(5)"
       codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'O'
+        pos: [14, 14]
+        picture: "X(1)"
+        default: "O"
       tipo_movimento:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: '0'
+        pos: [15, 15]
+        picture: "X(1)"
+        default: "0"
       codigo_movimento_remessa:
-        pos: [16,17]
-        picture: '9(2)'
-        default: '00'
+        pos: [16, 17]
+        picture: "9(2)"
+        default: "00"
       codigo_barras:
-        pos: [18,61]
-        picture: '9(44)'
+        pos: [18, 61]
+        picture: "9(44)"
       nome_beneficiario:
-        pos: [62,91]
-        picture: 'X(30)'
-        default: ''
+        pos: [62, 91]
+        picture: "X(30)"
+        default: ""
       vencimento:
-        pos: [92,99]
-        picture: '9(8)'
+        pos: [92, 99]
+        picture: "9(8)"
       data_pagamento:
-        pos: [100,107]
-        picture: '9(8)'
+        pos: [100, 107]
+        picture: "9(8)"
       valor_pagamento:
-        pos: [108,122]
-        picture: '9(15)'
+        pos: [108, 122]
+        picture: "9(15)"
       identificacao_titulo_empresa:
-        pos: [123,142]
-        picture: 'X(20)'
+        pos: [123, 142]
+        picture: "X(20)"
       identificacao_titulo_banco:
-        pos: [143,162]
-        picture: 'X(20)'
-        default: ''
+        pos: [143, 162]
+        picture: "X(20)"
+        default: ""
       uso_febraban_01:
-        pos: [163,230]
-        picture: 'X(68)'
-        default: ''
+        pos: [163, 230]
+        picture: "X(68)"
+        default: ""
       codigo_ocorrencia:
-        pos: [231,240]
-        picture: 'X(10)'
-        default: '0000000000'
-
+        pos: [231, 240]
+        picture: "X(10)"
+        default: "0000000000"
 retorno:
   header_arquivo:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
-      default: '0000'
+      pos: [4, 7]
+      picture: "9(4)"
+      default: "0000"
     tipo_registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 0
     brancos_01:
-      pos: [9,17]
-      picture: 'X(9)'
-      default: ''
+      pos: [9, 17]
+      picture: "X(9)"
+      default: ""
     tipo_inscricao:
-      pos: [18,18]
-      picture: '9(1)'
+      pos: [18, 18]
+      picture: "9(1)"
     inscricao_numero:
-      pos: [19,32]
-      picture: '9(14)'
+      pos: [19, 32]
+      picture: "9(14)"
     brancos_02:
-      pos: [33,52]
-      picture: 'X(20)'
-      default: ''
+      pos: [33, 52]
+      picture: "X(20)"
+      default: ""
     zeros_01:
-      pos: [53,53]
-      picture: '9(1)'
+      pos: [53, 53]
+      picture: "9(1)"
       default: 0
     agencia:
-      pos: [54,57]
-      picture: '9(4)'
+      pos: [54, 57]
+      picture: "9(4)"
     brancos_03:
-      pos: [58,58]
-      picture: 'X(1)'
-      default: ''
+      pos: [58, 58]
+      picture: "X(1)"
+      default: ""
     zeros_02:
-      pos: [59,65]
-      picture: '9(7)'
-      default: '0000000'
+      pos: [59, 65]
+      picture: "9(7)"
+      default: "0000000"
     conta:
-      pos: [66,70]
-      picture: '9(5)'
+      pos: [66, 70]
+      picture: "9(5)"
     brancos_04:
-      pos: [71,71]
-      picture: 'X(1)'
-      default: ''
+      pos: [71, 71]
+      picture: "X(1)"
+      default: ""
     dac:
-      pos: [72,72]
-      picture: '9(1)'
+      pos: [72, 72]
+      picture: "9(1)"
     nome_empresa:
-      pos: [73,102]
-      picture: 'X(30)'
+      pos: [73, 102]
+      picture: "X(30)"
     nome_banco:
-      pos: [103,132]
-      picture: 'X(30)'
-      default: 'BANCO ITAU SA'
+      pos: [103, 132]
+      picture: "X(30)"
+      default: "BANCO ITAU SA"
     brancos_05:
-      pos: [133,142]
-      picture: 'X(10)'
-      default: ''
+      pos: [133, 142]
+      picture: "X(10)"
+      default: ""
     codigo_arquivo:
-      pos: [143,143]
-      picture: '9(1)'
+      pos: [143, 143]
+      picture: "9(1)"
       default: 1
     data_geracao:
-      pos: [144,151]
-      picture: '9(8)'
+      pos: [144, 151]
+      picture: "9(8)"
     hora_geracao:
-      pos: [152,157]
-      picture: '9(6)'
+      pos: [152, 157]
+      picture: "9(6)"
     numero_sequencial_arquivo_retorno:
-      pos: [158,163]
-      picture: '9(6)'
+      pos: [158, 163]
+      picture: "9(6)"
     versao_layout_arquivo:
-      pos: [164,166]
-      picture: '9(3)'
-      default: '040'
+      pos: [164, 166]
+      picture: "9(3)"
+      default: "040"
     zeros_03:
-      pos: [167,171]
-      picture: '9(5)'
-      default: '00000'
+      pos: [167, 171]
+      picture: "9(5)"
+      default: "00000"
     brancos_06:
-      pos: [172,225]
-      picture: 'X(54)'
-      default: ''
+      pos: [172, 225]
+      picture: "X(54)"
+      default: ""
     zeros_04:
-      pos: [226,228]
-      picture: '9(3)'
-      default: '000'
+      pos: [226, 228]
+      picture: "9(3)"
+      default: "000"
     brancos_07:
-      pos: [229,240]
-      picture: 'X(12)'
-      default: ''
+      pos: [229, 240]
+      picture: "X(12)"
+      default: ""
 
   header_lote:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
+      pos: [4, 7]
+      picture: "9(4)"
     tipo_registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 1
     tipo_operacao:
-      pos: [9,9]
-      picture: 'X(1)'
-      default: 'R'
+      pos: [9, 9]
+      picture: "X(1)"
+      default: "R"
     tipo_pagamento:
-      pos: [10,11]
-      picture: '9(2)'
-      default: '20'
+      pos: [10, 11]
+      picture: "9(2)"
+      default: "20"
     forma_pagamento:
-      pos: [12,13]
-      picture: '9(2)'
+      pos: [12, 13]
+      picture: "9(2)"
     versao_layout_lote:
-      pos: [14,16]
-      picture: '9(3)'
-      default: '040'
+      pos: [14, 16]
+      picture: "9(3)"
+      default: "040"
     brancos_01:
-      pos: [17,17]
-      picture: 'X(1)'
-      default: ''
+      pos: [17, 17]
+      picture: "X(1)"
+      default: ""
     tipo_inscricao:
-      pos: [18,18]
-      picture: '9(1)'
+      pos: [18, 18]
+      picture: "9(1)"
       default: 2
     inscricao_numero:
-      pos: [19,32]
-      picture: '9(14)'
+      pos: [19, 32]
+      picture: "9(14)"
     identificacao_lancamento:
-      pos: [33,36]
-      picture: 'X(4)'
-      default: ''
+      pos: [33, 36]
+      picture: "X(4)"
+      default: ""
     brancos_02:
-      pos: [37,52]
-      picture: 'X(16)'
-      default: ''
+      pos: [37, 52]
+      picture: "X(16)"
+      default: ""
     agencia:
-      pos: [53,57]
-      picture: '9(5)'
+      pos: [53, 57]
+      picture: "9(5)"
     brancos_03:
-      pos: [58,58]
-      picture: 'X(1)'
-      default: ''
+      pos: [58, 58]
+      picture: "X(1)"
+      default: ""
     conta:
-      pos: [59,70]
-      picture: '9(12)'
+      pos: [59, 70]
+      picture: "9(12)"
     brancos_04:
-      pos: [71,71]
-      picture: 'X(1)'
-      default: ''
+      pos: [71, 71]
+      picture: "X(1)"
+      default: ""
     digito_verificador_conta:
-      pos: [72,72]
-      picture: '9(1)'
+      pos: [72, 72]
+      picture: "9(1)"
     nome_empresa:
-      pos: [73,102]
-      picture: 'X(30)'
+      pos: [73, 102]
+      picture: "X(30)"
     brancos_05:
-      pos: [103,142]
-      picture: 'X(40)'
-      default: ''
+      pos: [103, 142]
+      picture: "X(40)"
+      default: ""
     endereco:
-      pos: [143,172]
-      picture: 'X(30)'
+      pos: [143, 172]
+      picture: "X(30)"
     numero:
-      pos: [173,177]
-      picture: '9(5)'
+      pos: [173, 177]
+      picture: "9(5)"
     complemento:
-      pos: [178,192]
-      picture: 'X(15)'
+      pos: [178, 192]
+      picture: "X(15)"
     cidade:
-      pos: [193,212]
-      picture: 'X(20)'
+      pos: [193, 212]
+      picture: "X(20)"
     cep:
-      pos: [213,220]
-      picture: '9(8)'
+      pos: [213, 220]
+      picture: "9(8)"
     uf:
-      pos: [221,222]
-      picture: 'X(2)'
+      pos: [221, 222]
+      picture: "X(2)"
     complemento_registro:
-      pos: [223,230]
-      picture: 'X(8)'
+      pos: [223, 230]
+      picture: "X(8)"
     ocorrencia:
-      pos: [231,240]
-      picture: 'X(10)'
+      pos: [231, 240]
+      picture: "X(10)"
 
   trailer_lote:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
+      pos: [4, 7]
+      picture: "9(4)"
     tipo_registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 5
     brancos_01:
-      pos: [9,17]
-      picture: 'X(9)'
-      default: ''
+      pos: [9, 17]
+      picture: "X(9)"
+      default: ""
     quantidade_registros_lote:
-      pos: [18,23]
-      picture: '9(6)'
+      pos: [18, 23]
+      picture: "9(6)"
     quantidade_cobranca_simples:
-      pos: [24,29]
-      picture: '9(6)'
+      pos: [24, 29]
+      picture: "9(6)"
     valor_total_cobranca_simples:
-      pos: [30,46]
-      picture: '9(15)V9(2)'
+      pos: [30, 46]
+      picture: "9(15)V9(2)"
     quantidade_cobranca_vinculada:
-      pos: [47,52]
-      picture: '9(6)'
+      pos: [47, 52]
+      picture: "9(6)"
     valor_total_cobranca_vinculada:
-      pos: [53,69]
-      picture: '9(15)V9(2)'
+      pos: [53, 69]
+      picture: "9(15)V9(2)"
     zeros_01:
-      pos: [70,115]
-      picture: '9(46)'
-      default: '0'
+      pos: [70, 115]
+      picture: "9(46)"
+      default: "0"
     #
     # Campo: aviso_bancario
     # Refere-se ao código do extrato de Movimentação de Títulos (MT) associado a esse movimento
     #
     aviso_bancario:
-      pos: [116,123]
-      picture: 'X(8)'
-      default: ''
+      pos: [116, 123]
+      picture: "X(8)"
+      default: ""
     brancos_02:
-      pos: [124,240]
-      picture: 'X(117)'
-      default: ''
+      pos: [124, 240]
+      picture: "X(117)"
+      default: ""
 
   trailer_arquivo:
     codigo_banco:
-      pos: [1,3]
-      picture: '9(3)'
+      pos: [1, 3]
+      picture: "9(3)"
       default: 341
     lote_servico:
-      pos: [4,7]
-      picture: '9(4)'
+      pos: [4, 7]
+      picture: "9(4)"
       default: 9999
     registro:
-      pos: [8,8]
-      picture: '9(1)'
+      pos: [8, 8]
+      picture: "9(1)"
       default: 9
     brancos_01:
-      pos: [9,17]
-      picture: 'X(9)'
-      default: ''
+      pos: [9, 17]
+      picture: "X(9)"
+      default: ""
     total_lotes:
-      pos: [18,23]
-      picture: '9(6)'
+      pos: [18, 23]
+      picture: "9(6)"
     total_registros:
-      pos: [24,29]
-      picture: '9(6)'
+      pos: [24, 29]
+      picture: "9(6)"
     zeros_01:
-      pos: [30,35]
-      picture: '9(6)'
-      default: '000000'
+      pos: [30, 35]
+      picture: "9(6)"
+      default: "000000"
     brancos_02:
-      pos: [36,240]
-      picture: 'X(205)'
-      default: ''
+      pos: [36, 240]
+      picture: "X(205)"
+      default: ""
 
   detalhes:
     # obrigatorio
     segmento_t:
       codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
+        pos: [1, 3]
+        picture: "9(3)"
         default: 341
       codigo_lote:
-        pos: [4,7]
-        picture: '9(4)'
+        pos: [4, 7]
+        picture: "9(4)"
       tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
+        pos: [8, 8]
+        picture: "9(1)"
         default: 3
       numero_sequencial_registro:
-        pos: [9,13]
-        picture: '9(5)'
+        pos: [9, 13]
+        picture: "9(5)"
       codigo_segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        default: 'T'
+        pos: [14, 14]
+        picture: "X(1)"
+        default: "T"
       boleto_dda:
-        pos: [15,15]
-        picture: 'X(1)'
+        pos: [15, 15]
+        picture: "X(1)"
       codigo_ocorrencia:
-        pos: [16,17]
-        picture: '9(2)'
+        pos: [16, 17]
+        picture: "9(2)"
       zeros_01:
-        pos: [18,18]
-        picture: '9(1)'
+        pos: [18, 18]
+        picture: "9(1)"
         default: 0
       agencia_mantenedora:
-        pos: [19,22]
-        picture: '9(4)'
+        pos: [19, 22]
+        picture: "9(4)"
       zeros_02:
-        pos: [23,30]
-        picture: '9(8)'
-        default: '00000000'
+        pos: [23, 30]
+        picture: "9(8)"
+        default: "00000000"
       conta:
-        pos: [31,35]
-        picture: '9(5)'
+        pos: [31, 35]
+        picture: "9(5)"
       zeros_03:
-        pos: [36,35]
-        picture: '9(1)'
+        pos: [36, 35]
+        picture: "9(1)"
         default: 0
       dac:
-        pos: [37,37]
-        picture: '9(1)'
+        pos: [37, 37]
+        picture: "9(1)"
       carteira:
-        pos: [38,40]
-        picture: '9(3)'
+        pos: [38, 40]
+        picture: "9(3)"
       nosso_numero:
-        pos: [41,48]
-        picture: '9(8)'
+        pos: [41, 48]
+        picture: "9(8)"
       dac_nosso_numero:
-        pos: [49,49]
-        picture: '9(1)'
+        pos: [49, 49]
+        picture: "9(1)"
       brancos_01:
-        pos: [50,57]
-        picture: 'X(8)'
-        default: ''
+        pos: [50, 57]
+        picture: "X(8)"
+        default: ""
       zeros_04:
-        pos: [58,58]
-        picture: '9(1)'
+        pos: [58, 58]
+        picture: "9(1)"
         default: 0
       numero_documento:
-        pos: [59,68]
-        picture: 'X(10)'
+        pos: [59, 68]
+        picture: "X(10)"
       brancos_02:
-        pos: [69,73]
-        picture: 'X(5)'
-        default: ''
+        pos: [69, 73]
+        picture: "X(5)"
+        default: ""
       vencimento:
-        pos: [74,81]
-        picture: '9(8)'
+        pos: [74, 81]
+        picture: "9(8)"
       valor:
-        pos: [82,96]
-        picture: '9(13)V9(2)'
+        pos: [82, 96]
+        picture: "9(13)V9(2)"
       zeros_05:
-        pos: [97,99]
-        picture: '9(3)'
+        pos: [97, 99]
+        picture: "9(3)"
         default: 0
       agencia_cobradora:
-        pos: [100,104]
-        picture: '9(5)'
+        pos: [100, 104]
+        picture: "9(5)"
       dac_cobradora:
-        pos: [105,105]
-        picture: '9(1)'
+        pos: [105, 105]
+        picture: "9(1)"
       uso_empresa:
-        pos: [106,130]
-        picture: 'X(25)'
+        pos: [106, 130]
+        picture: "X(25)"
       zeros_06:
-        pos: [131,132]
-        picture: '9(2)'
+        pos: [131, 132]
+        picture: "9(2)"
         default: 0
       tipo_inscricao_pagador:
-        pos: [133,133]
-        picture: '9(1)'
+        pos: [133, 133]
+        picture: "9(1)"
       inscricao_numero:
-        pos: [134,148]
-        picture: '9(15)'
+        pos: [134, 148]
+        picture: "9(15)"
       nome_pagador:
-        pos: [149,178]
-        picture: 'X(30)'
+        pos: [149, 178]
+        picture: "X(30)"
       brancos_03:
         pos: [179, 188]
-        picture: 'X(10)'
-        default: ''
+        picture: "X(10)"
+        default: ""
       zeros_07:
-        pos: [189,198]
-        picture: '9(10)'
+        pos: [189, 198]
+        picture: "9(10)"
         default: 0
       tarifas_custas:
-        pos: [199,213]
-        picture: '9(13)V9(2)'
+        pos: [199, 213]
+        picture: "9(13)V9(2)"
       erros:
-        pos: [214,221]
-        picture: '9(8)'
+        pos: [214, 221]
+        picture: "9(8)"
       codigo_liquidacao:
-        pos: [222,223]
-        picture: 'X(2)'
+        pos: [222, 223]
+        picture: "X(2)"
       brancos_04:
-        pos: [224,240]
-        picture: 'X(17)'
-        default: ''
+        pos: [224, 240]
+        picture: "X(17)"
+        default: ""
 
     # obrigatorio
     segmento_u:
       codigo_banco:
-        pos: [1,3]
-        picture: '9(3)'
+        pos: [1, 3]
+        picture: "9(3)"
         default: 341
       codigo_lote:
-        pos: [4,7]
-        picture: '9(4)'
+        pos: [4, 7]
+        picture: "9(4)"
       tipo_registro:
-        pos: [8,8]
-        picture: '9(1)'
+        pos: [8, 8]
+        picture: "9(1)"
         default: 3
       numero_sequencial_registro:
-        pos: [9,13]
-        picture: '9(5)'
+        pos: [9, 13]
+        picture: "9(5)"
       segmento:
-        pos: [14,14]
-        picture: 'X(1)'
-        deafault: 'U'
+        pos: [14, 14]
+        picture: "X(1)"
+        deafault: "U"
       brancos_01:
-        pos: [15,15]
-        picture: 'X(1)'
-        default: ''
+        pos: [15, 15]
+        picture: "X(1)"
+        default: ""
       codigo_ocorrencia:
-        pos: [16,17]
-        picture: '9(2)'
+        pos: [16, 17]
+        picture: "9(2)"
       juros_multa:
-        pos: [18,32]
-        picture: '9(13)V9(2)'
+        pos: [18, 32]
+        picture: "9(13)V9(2)"
       valor_desconto:
-        pos: [33,47]
-        picture: '9(13)V9(2)'
+        pos: [33, 47]
+        picture: "9(13)V9(2)"
       valor_abatimento:
-        pos: [48,62]
-        picture: '9(13)V9(2)'
+        pos: [48, 62]
+        picture: "9(13)V9(2)"
       valor_iof:
-        pos: [63,77]
-        picture: '9(13)V9(2)'
+        pos: [63, 77]
+        picture: "9(13)V9(2)"
       valor_creditado_01:
-        pos: [78,92]
-        picture: '9(13)V9(2)'
+        pos: [78, 92]
+        picture: "9(13)V9(2)"
       valor_creditado_02:
-        pos: [93,107]
-        picture: '9(13)V9(2)'
+        pos: [93, 107]
+        picture: "9(13)V9(2)"
       zeros_01:
-        pos: [108,137]
-        picture: '9(30)'
+        pos: [108, 137]
+        picture: "9(30)"
         default: 0
       data_ocorrencia_banco:
-        pos: [138,145]
-        picture: '9(8)'
+        pos: [138, 145]
+        picture: "9(8)"
       data_credito:
-        pos: [146,153]
-        picture: '9(8)'
+        pos: [146, 153]
+        picture: "9(8)"
       codigo_ocorrencia_pagador:
-        pos: [154,157]
-        picture: '9(4)'
+        pos: [154, 157]
+        picture: "9(4)"
       data_ocorrencia_pagador:
-        pos: [158,165]
-        picture: '9(8)'
+        pos: [158, 165]
+        picture: "9(8)"
       valor_ocorrencia_pagador:
-        pos: [166,180]
-        picture: '9(13)V9(2)'
+        pos: [166, 180]
+        picture: "9(13)V9(2)"
       brancos_02:
-        pos: [181,210]
-        picture: 'X(30)'
-        default: ''
+        pos: [181, 210]
+        picture: "X(30)"
+        default: ""
       zeros_02:
-        pos: [211,233]
-        picture: '9(23)'
+        pos: [211, 233]
+        picture: "9(23)"
         default: 0
       brancos_03:
-        pos: [234,240]
-        picture: 'X(7)'
-        default: ''
+        pos: [234, 240]
+        picture: "X(7)"
+        default: ""
