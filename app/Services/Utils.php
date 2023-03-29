@@ -6,24 +6,30 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
-use App\Models\HotelApprovalFlow;
 use App\Models\ApprovalFlowSupply;
 use App\Models\PaidBillingInfo;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDelivery;
 use App\Models\SupplyApprovalFlow;
+use App\Models\HotelApprovalFlow;
 use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Billing;
 use App\Models\BillingLog;
 use App\Models\HotelLog;
+use App\Models\NotificationCatalog;
+use App\Models\NotificationCatalogHasRoles;
+use App\Models\NotificationCatalogHasUsers;
+use App\Models\PaymentRequestHasInstallmentLinked;
+use App\Models\PaymentRequestHasInstallments;
 use Carbon\Carbon;
 use Config;
 use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
 use Spatie\Activitylog\Contracts\Activity;
+use Storage;
 
 class Utils
 {
@@ -573,6 +579,10 @@ class Utils
             });
         }
 
+        if (array_key_exists('installment_linked', $requestInfo)) {
+            $paymentRequest = $paymentRequest->withoutGlobalScopes();
+        }
+
         if (array_key_exists('card_identifier', $requestInfo)) {
             $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
                 $query->whereLike('card_identifier', "%{$requestInfo['card_identifier']}%");
@@ -869,6 +879,10 @@ class Utils
                 $installment->whereBetween('extension_date', [now(), now()->addMonths(1)]);
             }
         }
+
+        if (array_key_exists('installment_linked', $requestInfo)) {
+            $installment = $installment->where('linked', false);
+        }
         return $installment;
     }
 
@@ -992,7 +1006,6 @@ class Utils
         }
         return $groupBilling;
     }
-
     public static function createManualLogPaymentRequest($old, $new, $causerID, $model)
     {
         activity()
@@ -1051,7 +1064,7 @@ class Utils
     {
         $arrayStatus = [];
         if (array_key_exists('status', $requestInfo)) {
-            if (is_array($requestInfo['status'])) {
+            if (is_array($requestInfo['status']) && !empty($requestInfo['status'])) {
                 if (in_array(0, $requestInfo['status'])) {
                     array_push($arrayStatus, 0);
                 }
@@ -1066,5 +1079,31 @@ class Utils
         }
 
         return $arrayStatus;
+    }
+
+    public static function userWithActiveNotification($type, $schedule)
+    {
+        $notificationId = NotificationCatalog::where(['type' => $type, 'active' => true, 'schedule' => $schedule])->firstOrFail(['id', 'type']);
+        $usersId = [];
+        $usersId = NotificationCatalogHasUsers::where('notification_catalog_id', $notificationId->id)->with('user')->get('user_id')->pluck('user_id')->toArray();
+
+        foreach (NotificationCatalogHasRoles::where('notification_catalog_id', $notificationId->id)->with('user')->get() as $roleUsers) {
+            foreach ($roleUsers->user as $user) {
+                $usersId[] = $user->id;
+            }
+        }
+
+        return array_unique($usersId);
+    }
+
+    public static function paiOutInstallmentLinked($installmentId)
+    {
+        $installment = PaymentRequestHasInstallments::with('payment_request.approval')->findOrFail($installmentId);
+        if ($installment->payment_request->approval->status == Config::get('constants.status.paid out')) {
+            if (PaymentRequestHasInstallmentLinked::where('payment_request_id', $installment->payment_request_id)->exists()) {
+                $installmentLinked = PaymentRequestHasInstallmentLinked::where('payment_request_id', $installment->payment_request_id)->get('payment_requests_installment_id');
+                DB::table('payment_requests_installments')->whereIn('id', $installmentLinked->pluck('payment_requests_installment_id')->toArray())->update(['status' => Config::get('constants.status.paid out')]);
+            }
+        }
     }
 }

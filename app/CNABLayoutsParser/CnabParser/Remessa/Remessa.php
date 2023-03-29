@@ -7,7 +7,7 @@ use Carbon\Carbon;
 
 class Remessa
 {
-    public static function gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedInstallment, $installmentsIds)
+    public static function gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedInstallment, $installmentsIds, $headerDate, $headerTime)
     {
         $remessa->header->codigo_banco = Utils::formatCnab('9', $bankAccount->bank->bank_code, 3);
         $remessa->header->tipo_inscricao = 2; // CNPJ
@@ -19,8 +19,8 @@ class Remessa
         $remessa->header->digito_verificador_conta = Utils::formatCnab('X', $bankAccount->account_check_number, 1);
         $remessa->header->dac = 9;
         $remessa->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
-        $remessa->header->data_geracao = Utils::formatCnab('9', date('dmY'), 8);
-        $remessa->header->hora_geracao = Utils::formatCnab('9', date('His'), 6);
+        $remessa->header->data_geracao = $headerDate;
+        $remessa->header->hora_geracao = $headerTime;
         //$remessa->header->numero_sequencial_arquivo_retorno = 1;
 
         $lotQuantity = 0;
@@ -185,7 +185,7 @@ class Remessa
         return $remessa;
     }
 
-    public static function gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedInstallment, $installmentsIds)
+    public static function gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedInstallment, $installmentsIds, $headerDate, $headerTime)
     {
         $remessa->header->codigo_banco = $bankAccount->bank->bank_code;
         $remessa->header->tipo_inscricao = 2; // CNPJ
@@ -196,8 +196,8 @@ class Remessa
         $remessa->header->conta = $bankAccount->account_number;
         $remessa->header->digito_verificador_conta = $bankAccount->account_check_number;
         $remessa->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
-        $remessa->header->data_geracao = date('dmY');
-        $remessa->header->hora_geracao = date('His');
+        $remessa->header->data_geracao = $headerDate;
+        $remessa->header->hora_geracao = $headerTime;
         $remessa->header->numero_sequencial_arquivo_retorno = 1;
 
         $lotQuantity = 0;
@@ -368,7 +368,7 @@ class Remessa
         return $remessa;
     }
 
-    public static function gerarRemessaSantander($remessa, $company, $bankAccount, $allGroupedInstallment, $installmentsIds)
+    public static function gerarRemessaSantander($remessa, $company, $bankAccount, $allGroupedInstallment, $installmentsIds, $headerDate, $headerTime)
     {
 
         $remessa->header->codigo_banco = Utils::formatCnab('9', $bankAccount->bank->bank_code, 3);
@@ -381,8 +381,8 @@ class Remessa
         $remessa->header->conta = Utils::formatCnab('9', $bankAccount->account_number, 12);
         $remessa->header->digito_verificador_conta = Utils::formatCnab('X', $bankAccount->account_check_number, 1);
         $remessa->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
-        $remessa->header->data_geracao = Utils::formatCnab('9', date('dmY'), 8);
-        $remessa->header->hora_geracao = Utils::formatCnab('9', date('His'), 6);
+        $remessa->header->data_geracao = $headerDate;
+        $remessa->header->hora_geracao = $headerTime;
         //$remessa->header->numero_sequencial_arquivo_retorno = 1;
 
         $lotQuantity = 0;

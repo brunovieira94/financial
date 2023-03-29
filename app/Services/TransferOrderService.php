@@ -260,7 +260,7 @@ class TransferOrderService
 
             $purchase_order = PurchaseOrder::where('id', $purchase_order_id)->firstOrFail();
 
-            NotificationService::generateDataSendRedisPurchaseOrder($purchase_order, $usersMail->toArray(), 'Pedido de Compra pendente de aprovação', 'purchase-order-to-approve', $approveUser, '', 'transferido');
+            NotificationService::generateDataSendRedisPurchaseOrder($purchase_order, $usersMail->toArray(), 'Pedido de Compra pendente de aprovação', 'purchase-order-to-approve', $approveUser, '', 'transferida');
         }
     }
 }

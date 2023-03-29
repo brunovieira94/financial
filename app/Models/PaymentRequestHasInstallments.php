@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Exception;
+use Illuminate\Database\Eloquent\Casts\AsCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -15,16 +16,21 @@ class PaymentRequestHasInstallments extends Model
     protected static $logName = 'payment_request_installments';
     public function tapActivity(Activity $activity, string $eventName)
     {
-        $user = auth()->user();
-        $user->role = Role::findOrFail($user->role_id);
-        $activity->causer_id = $user->id;
-        $activity->causer_object = $user;
+        if (auth()->user() != null) {
+            $user = auth()->user();
+            $user->role = Role::findOrFail($user->role_id);
+            $activity->causer_id = $user->id;
+            $activity->causer_object = $user;
+        }
     }
 
     protected $table = 'payment_requests_installments';
     public $timestamps = false;
-    protected $fillable = ['card_identifier', 'text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received'];
+    protected $fillable = ['payment_made_date', 'paid_value', 'bank_account_company_id', 'group_form_payment_made_id', 'system_payment_method', 'card_identifier', 'text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received', 'reference_number', 'revenue_code', 'tax_file_phone_number', 'verification_period'];
     protected $appends = ['billet_link'];
+    protected $casts = [
+        'verification_period' => AsCollection::class
+    ];
 
     public function payment_request()
     {
@@ -64,5 +70,27 @@ class PaymentRequestHasInstallments extends Model
             $billet = $this->attributes['billet_file'];
             return Storage::disk('s3')->temporaryUrl("billet/{$billet}", now()->addMinutes(30));
         }
+    }
+
+    public function getLinkedAccountAttribute()
+    {
+        if ($this->linked) {
+            $linked = PaymentRequestHasInstallmentLinked::where('payment_requests_installment_id', $this->id)->first();
+            if ($linked != null) {
+                return $linked->payment_request_id;
+            }
+        }
+
+        return null;
+    }
+
+    public function bank_account_company()
+    {
+        return $this->hasOne(BankAccount::class, 'id', 'bank_account_company_id')->with('bank');
+    }
+
+    public function group_payment_received()
+    {
+        return $this->hasOne(GroupFormPayment::class, 'id', 'group_form_payment_made_id');
     }
 }

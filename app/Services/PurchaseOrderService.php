@@ -206,7 +206,6 @@ class PurchaseOrderService
             $this->putServices($id, $purchaseOrderInfo);
 
             // caso o valor for maior do que o Aprovado o pedido deve voltar para o início da aprovação
-
             if ((($purchaseOrderInfo['negotiated_total_value'] > $approvedInstallmentValue) && ($purchaseOrderInfo['negotiated_total_value'] > $approvedTotalValue)) || $purchaseOrderInfo['final_negotiated_total_value'] > $approvedInstallmentValue) {
                 $supplyApprovalFlow = SupplyApprovalFlow::find($purchaseOrder->approval['id']);
                 $supplyApprovalFlow['order'] = 1;

@@ -49,7 +49,7 @@ class BillingTransfeeraExport implements FromCollection, ShouldAutoSize, WithMap
             $billing->supplier_value,
             $billing->reserve,
             '',
-            $billing->reserve,
+            $billing->cangooroo_service_id,
         ];
     }
 

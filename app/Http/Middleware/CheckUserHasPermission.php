@@ -38,8 +38,8 @@ class CheckUserHasPermission
             'update-date-installment',
             'delivery',
             'purchase-order-export',
-            'other-payments',
             'change-logged-user',
+            'other-payments',
             'pluto-table-state',
         ];
 
@@ -103,6 +103,9 @@ class CheckUserHasPermission
             case 'due-installments':
                 $routeAccessed = 'due-bills';
                 break;
+            case 'installment-paid-import':
+                $routeAccessed = 'approved-installments';
+                break;
             case 'cangooroo':
             case 'show':
             case 'refresh':
@@ -117,10 +120,10 @@ class CheckUserHasPermission
             case 'installment';
                 $routeAccessed = 'payment-request';
                 break;
-            // case 'billing-rejected':
-            // case 'billing-open':
-            //     $routeAccessed = 'billing';
-            //     break;
+                // case 'billing-rejected':
+                // case 'billing-open':
+                //     $routeAccessed = 'billing';
+                //     break;
         }
 
         foreach ($roles as $role) {
@@ -146,6 +149,11 @@ class CheckUserHasPermission
                     }
                 }
                 if ($request->isMethod('POST')) {
+                    if ($routeAccessed == 'approved-installments') {
+                        if ($role->import == true) {
+                            return $next($request);
+                        }
+                    }
                     if (count($route) > 2) {
                         if ($route[count($route) - 1] == '{approvalStatus}') $route[count($route) - 1] = $url[count($url) - 2];
                         if ($route[count($route) - 1] == 'import') {

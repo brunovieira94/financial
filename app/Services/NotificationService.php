@@ -27,7 +27,7 @@ class NotificationService
         Redis::rpush('active', $queueID);
     }
 
-    public static function generateDataSendRedisPaymentRequest($paymentRequestModel, $mails = [], $titleMail, $typeMail)
+    public static function generateDataSendRedisPaymentRequest($paymentRequestModel, $mails = [], $titleMail, $typeMail, $order, $maxOrder)
     {
         $company = [
             'name' =>  'empresa',
@@ -45,6 +45,20 @@ class NotificationService
             'name' =>  'valor',
             'value' =>  $paymentRequestModel->currency->currency_symbol . ' ' . $paymentRequestModel->net_value,
         ];
+        $order = [
+            'name' =>  'etapa',
+            'value' =>  $order
+        ];
+        $maxOrder = [
+            'name' =>  'totalEtapa',
+            'value' =>  $maxOrder,
+        ];
+
+        $approverStage = [
+            'name' =>  'nomeEtapa',
+            'value' =>  $paymentRequestModel->approver_stage_first->title ?? ''
+        ];
+
         return [
             'to' => $mails,
             'subject' => $titleMail,
@@ -54,6 +68,9 @@ class NotificationService
                 $paymentRequest,
                 $paymentRequestNetValue,
                 $provider,
+                $order,
+                $maxOrder,
+                $approverStage,
             ]
         ];
     }
@@ -292,6 +309,33 @@ class NotificationService
                 ]
             ]
         ];
+        self::sendEmail($data);
+    }
+
+    public static function generateDataSendImportInstallmentsPaidReport($mail = [], $titleMail, $typeMail, $fileName, $failures, $errors = [])
+    {
+        $args = [
+            [
+                'name' => 'file',
+                'value' => $fileName,
+            ],
+            [
+                'name' => 'failures',
+                'value' => $failures,
+            ],
+            [
+                'name' => 'errors',
+                'value' => $errors,
+            ]
+        ];
+
+        $data = [
+            'to' => $mail,
+            'subject' => $titleMail,
+            'type' => $typeMail,
+            'args' => $args,
+        ];
+
         self::sendEmail($data);
     }
 }
