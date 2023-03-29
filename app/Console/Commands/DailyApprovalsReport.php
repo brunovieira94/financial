@@ -45,8 +45,7 @@ class DailyApprovalsReport extends Command
      */
     public function handle()
     {
-        //$users = User::with(['cost_center', 'role'])->where('status', 0)->where('daily_notification_accounts_approval_mail', true)->get();
-        $users = User::with(['cost_center', 'role'])->where('status', 0)->get();
+        if (NotificationCatalog::where(['type' => 'payment-request-due-report', 'active' => true, 'schedule' => 1])->exists()) {
 
             $users = User::with(['cost_center', 'role'])->where('status', 0)->whereIn('id', Utils::userWithActiveNotification('payment-request-due-report', true))->get();
 
