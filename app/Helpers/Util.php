@@ -5,6 +5,7 @@ namespace App\Helpers;
 use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use App\Helpers\Contracts\Boleto\Boleto as BoletoContract;
+use App\Models\GroupFormPayment;
 
 /**
  * Class Util
@@ -1113,5 +1114,18 @@ final class Util
             default:
                 return '000';
         }
+    }
+
+    public static function getGroupFormPaymentIdByName($groupFormPaymentName)
+    {
+        $uppercasedName = strtoupper($groupFormPaymentName);
+
+        if ($uppercasedName == 'DEBITO EM CONTA') {
+            $uppercasedName = 'DÉBITO EM CONTA';
+        }
+
+        $groupFormPayment = GroupFormPayment::where('title', $uppercasedName)->get()->first();
+
+        return isset($groupFormPayment) ? $groupFormPayment->id : null;
     }
 }

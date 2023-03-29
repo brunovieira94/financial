@@ -427,6 +427,9 @@ class BancoBrasil
             case '00':
                 return true;
                 break;
+            case 'BD':
+                return true;
+                break;
             default:
                 return false;
         }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowLog;
+use App\Models\AttachmentLogDownload;
 use App\Models\LogActivity;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasTax;
@@ -268,5 +269,15 @@ class InfoController extends Controller
         $requestInfo = $request->all();
         Redis::del($requestInfo['key']);
     }
+
+    public function failedJob(Request $request)
+    {
+        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 10");
+    }
+    public function archiveDownloadLog(Request $request)
+    {
+        return AttachmentLogDownload::orderBy('id', 'desc')->limit(30)->get();
+    }
+
 
 }

@@ -36,8 +36,8 @@ class NotificationCatalogController extends Controller
         return $this->notificationCatalogService->putNotificationCatalogStatus($request->all());
     }
 
-    public function teste()
+    /* public function teste()
     {
         return $this->notificationCatalogService->getTeste();
-    }
+    } */
 }

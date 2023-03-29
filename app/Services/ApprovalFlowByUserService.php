@@ -11,6 +11,7 @@ use App\Http\Resources\RouteApprovalFlowByUserCollection;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
+use App\Models\NotificationCatalog;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
@@ -386,30 +387,34 @@ class ApprovalFlowByUserService
     public function notifyUsers($accountApproval, $notify, $maxOrder)
     {
         if ($notify) {
-            $approvalFlowOrders = $this->approvalFlow
-                ->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)
-                ->where('order', $accountApproval->order)
-                ->get('role_id')->pluck('role_id');
+            if (NotificationCatalog::where(['type' => 'payment-request-to-approve', 'active' => true, 'schedule' => 0])->exists()) {
+                $approvalFlowOrders = $this->approvalFlow
+                    ->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)
+                    ->where('order', $accountApproval->order)
+                    ->get('role_id')->pluck('role_id');
 
-            $usersNotify = $this->user->with((['cost_center' => function ($query) use ($accountApproval) {
-                $query->where('cost_center_id', $accountApproval->payment_request->cost_center_id);
-            }]))
-                //->where('email_account_approval_notification', true)
-                ->whereIn('role_id', $approvalFlowOrders)
-                ->orWhere(function ($query) use ($approvalFlowOrders) {
-                    $query->where('email_account_approval_notification', true);
-                    $query->whereIn('role_id', $approvalFlowOrders);
-                    $query->with((['role' => function ($query) {
-                        $query->where('filter_cost_center', false);
-                    }]));
-                })
-                ->where('status', 0)
-                ->get(['id', 'email', 'phone']);
+                $usersId = Utils::userWithActiveNotification('payment-request-to-approve', false);
 
-            $usersMail = $usersNotify->pluck('email');
-            $paymentRequest = PaymentRequestClean::with(['provider', 'company', 'cost_center', 'chart_of_accounts', 'approval'])->withOutGlobalScopes()->where('id', $accountApproval->payment_request->id)->first();
-            $dataSendMail = NotificationService::generateDataSendRedisPaymentRequest($paymentRequest, $usersMail, 'Conta pendente de aprovação', 'payment-request-to-approve', $accountApproval->order, $maxOrder);
-            NotificationService::sendEmail($dataSendMail);
+                $usersNotify = $this->user->with((['cost_center' => function ($query) use ($accountApproval) {
+                    $query->where('cost_center_id', $accountApproval->payment_request->cost_center_id);
+                }]))
+                    ->whereIn('role_id', $approvalFlowOrders)
+                    ->orWhere(function ($query) use ($approvalFlowOrders, $usersId) {
+                        $query->whereIn('role_id', $approvalFlowOrders);
+                        $query->whereIn('id', $usersId);
+                        $query->with((['role' => function ($query) {
+                            $query->where('filter_cost_center', false);
+                        }]));
+                    })
+                    ->where('status', 0)
+                    ->whereIn('id', $usersId)
+                    ->get(['id', 'email', 'phone']);
+
+                $usersMail = $usersNotify->pluck('email');
+                $paymentRequest = PaymentRequestClean::with(['provider', 'company', 'cost_center', 'chart_of_accounts', 'approval'])->withOutGlobalScopes()->where('id', $accountApproval->payment_request->id)->first();
+                $dataSendMail = NotificationService::generateDataSendRedisPaymentRequest($paymentRequest, $usersMail, 'Conta pendente de aprovação', 'payment-request-to-approve', $accountApproval->order, $maxOrder);
+                NotificationService::sendEmail($dataSendMail);
+            }
         }
     }
 

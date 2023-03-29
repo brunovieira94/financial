@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\DB;
-
 use App\Http\Requests\OtherPaymentsRequest;
 
 use App\Models\OtherPayment;
@@ -12,9 +10,13 @@ use App\Models\OtherPaymentHasExchangeRates;
 use App\Models\PaymentRequestHasInstallmentsThatHaveOtherPayments;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\PaymentRequestHasInstallmentsClean;
-use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
+
+use App\Exports\Utils as ExportUtils;
+
+use Illuminate\Foundation\Http\FormRequest;
 use Config;
+use DB;
 
 class OtherPaymentsService
 {
@@ -24,13 +26,43 @@ class OtherPaymentsService
     private $paymentRequestHasInstallments;
     private $paymentRequestHasInstallmentsThatHaveOtherPayments;
 
-    public function __construct(OtherPayment $otherPayment, OtherPaymentHasAttachments $otherPaymentHasAttachments, OtherPaymentHasExchangeRates $otherPaymentHasExchangeRates, PaymentRequestHasInstallments $paymentRequestHasInstallments, PaymentRequestHasInstallmentsThatHaveOtherPayments $paymentRequestHasInstallmentsThatHaveOtherPayments)
-    {
+    public function __construct(
+        OtherPayment $otherPayment,
+        OtherPaymentHasAttachments $otherPaymentHasAttachments,
+        OtherPaymentHasExchangeRates $otherPaymentHasExchangeRates,
+        PaymentRequestHasInstallments $paymentRequestHasInstallments,
+        PaymentRequestHasInstallmentsThatHaveOtherPayments $paymentRequestHasInstallmentsThatHaveOtherPayments,
+    ) {
         $this->otherPayment = $otherPayment;
         $this->otherPaymentHasAttachments = $otherPaymentHasAttachments;
         $this->otherPaymentHasExchangeRates = $otherPaymentHasExchangeRates;
         $this->paymentRequestHasInstallments = $paymentRequestHasInstallments;
         $this->paymentRequestHasInstallmentsThatHaveOtherPayments = $paymentRequestHasInstallmentsThatHaveOtherPayments;
+    }
+
+    public function storeImported($userId, $installmentInfo, $importFile)
+    {
+        $otherPayment = $this->otherPayment->create([
+            'group_form_payment_id' => $installmentInfo['group_form_payment_id'],
+            'bank_account_company_id' => $installmentInfo['bank_account_company_id'],
+            'system_payment_method' => $installmentInfo['system_payment_method'],
+            'payment_date' => $installmentInfo['payment_date'],
+            'user_id' => $userId,
+            'import_file' => $importFile,
+        ]);
+
+        $this->updateSingleInstallmentStateToPaid(
+            $installmentInfo['installment_id'],
+            $installmentInfo,
+            $installmentInfo['system_payment_method']
+        );
+
+        $installment = $this->paymentRequestHasInstallments->findOrFail($installmentInfo['installment_id']);
+        if(!PaymentRequestClean::with('installments')->where('id', $installment->payment_request_id)->whereHas('installments', function ($query) {
+            $query->where('status', '!=', Config::get('constants.status.paid out'));
+        })->exists()) {
+            DB::table('accounts_payable_approval_flows')->where('payment_request_id', $installment->payment_request_id)->update(['status' => Config::get('constants.status.paid out')]);
+        }
     }
 
     public function storePayment(OtherPaymentsRequest $request)
@@ -62,16 +94,14 @@ class OtherPaymentsService
             'bank_account_company_id' => $requestInfo['bank_account_company_id'],
             'note' => array_key_exists('note', $requestInfo) ? $requestInfo['note'] : null,
             'payment_date' => $requestInfo['payment_date'],
+            'system_payment_method' => Config::get('constants.systemPaymentMethod.gui'),
             'user_id' => $request->user()->id,
         ]);
 
         $this->storeAttachments($request, $requestInfo, $otherPayment->id);
-
-        if ($requestInfo['group_form_payment_id'] == 5)
-            $this->storeExchangeRate($requestInfo, $otherPayment->id);
-
+        $this->storeExchangeRate($requestInfo, $otherPayment->id);
         $this->storeInstallmentsOtherPayments($requestInfo, $otherPayment->id);
-        $this->updateInstallmentsStateToPaidOut($requestInfo);
+        $this->updateInstallmentsStateToPaidOut($requestInfo, Config::get('constants.systemPaymentMethod.gui'));
         $this->resolvePaymentRequestsStates($requestInfo);
 
         return response()->json(['success' => 'Sucesso'], 200);
@@ -89,12 +119,12 @@ class OtherPaymentsService
         ]);
     }
 
-    private function resolvePaymentRequestsStates($requestInfo)
+    public function resolvePaymentRequestsStates($requestInfo)
     {
         if (!array_key_exists('payment_request_ids', $requestInfo))
             return;
 
-        $paymentRequests = PaymentRequest::with(['installments', 'approval'])->whereIn('id', $requestInfo['payment_request_ids'])->get();
+        $paymentRequests = PaymentRequestClean::with(['installments', 'approval'])->whereIn('id', $requestInfo['payment_request_ids'])->get();
 
         foreach ($paymentRequests as $paymentRequest) {
             $allPaid = true;
@@ -104,6 +134,7 @@ class OtherPaymentsService
                 if ($installment->status != Config::get('constants.status.paid out')) {
                     $allPaid = false;
                 }
+
                 if ($installment->status != Config::get('constants.status.cnab generated') && $installment->status != Config::get('constants.status.paid out')) {
                     $allPaidOrCnab = false;
                 }
@@ -123,16 +154,27 @@ class OtherPaymentsService
         }
     }
 
-    private function updateInstallmentsStateToPaidOut($requestInfo)
+    private function updateInstallmentsStateToPaidOut($requestInfo, $systemPaymentMethod)
     {
         if (!array_key_exists('installments_ids', $requestInfo) || is_null($requestInfo['installments_ids']))
             return;
 
         foreach ($requestInfo['installments_ids'] as $installmentId) {
-            $installment = $this->paymentRequestHasInstallments->findOrFail($installmentId);
-            $installment->status = Config::get('constants.status.paid out');
-            $installment->save();
+            $this->updateSingleInstallmentStateToPaid($installmentId, $requestInfo, $systemPaymentMethod);
         }
+    }
+
+    private function updateSingleInstallmentStateToPaid($installmentId, $requestInfo, $systemPaymentMethod)
+    {
+        $installment = $this->paymentRequestHasInstallments->findOrFail($installmentId);
+        $installment->status = Config::get('constants.status.paid out');
+        $installment->bank_account_company_id = $requestInfo['bank_account_company_id'];
+        $installment->group_form_payment_made_id = $requestInfo['group_form_payment_id'];
+        $installment->paid_value = $requestInfo['paid_value'] ?? ExportUtils::installmentTotalFinalValue($installment);
+        $installment->payment_made_date = $requestInfo['payment_date'];
+        $installment->system_payment_method = $systemPaymentMethod;
+        $installment->save();
+        Utils::paiOutInstallmentLinked($installmentId);
     }
 
     private function storeInstallmentsOtherPayments($requestInfo, $otherPaymentId)
@@ -162,33 +204,34 @@ class OtherPaymentsService
         }
     }
 
-    private function storeAttachments(OtherPaymentsRequest $request, $requestInfo, $otherPaymentId)
+    private function storeAttachments(FormRequest $request, $requestInfo, $otherPaymentId)
     {
         if (!array_key_exists('attachments', $requestInfo) || is_null($requestInfo['attachments']))
             return;
 
         foreach ($requestInfo['attachments'] as $key => $attachment) {
             $attachmentRecord = $this->otherPaymentHasAttachments->create([
-                'attachment' => $this->storeAttachmentFile($request, $key),
+                'attachment' => $this->saveFile($request, "attachments.{$key}.attachment", "attachment"),
                 'other_payment_id' => $otherPaymentId,
             ]);
         }
     }
 
-    private function storeAttachmentFile(OtherPaymentsRequest $request, $key)
+    public function saveFile(FormRequest $request, $fileName, $storagePath)
     {
         $dateTimeIdentifier = uniqid(date('HisYmd'));
-        $keyIdentifier = "attachments.{$key}.attachment";
 
-        if ($request->hasFile($keyIdentifier) && $request->file($keyIdentifier)->isValid()) {
-            $attachmentFileExtension = $request[$keyIdentifier]->extension();
-            $attachmentFileOriginalName = explode('.', $request[$keyIdentifier]->getClientOriginalName());
-            $fileName = "{$attachmentFileOriginalName[0]}_{$dateTimeIdentifier}.{$attachmentFileExtension}";
-            $uploadFileResult = $request[$keyIdentifier]->storeAs('attachment', $fileName);
+        if ($request->hasFile($fileName) && $request->file($fileName)->isValid()) {
+            $nameSplit = explode('.', $request[$fileName]->getClientOriginalName());
+            $extension  = $nameSplit[count($nameSplit) - 1];
+            $newName = "{$nameSplit[0]}_{$dateTimeIdentifier}.{$extension}";
+            $fileStored = $request[$fileName]->storeAs($storagePath, $newName);
 
-            if (!$uploadFileResult)
-                return response('Falha ao realizar o upload do arquivo.', 500)->send();
-            return $fileName;
+            if ($fileStored) {
+                return $newName;
+            }
         }
+
+        return response('Falha ao realizar o upload do arquivo.', 500)->send();
     }
 }

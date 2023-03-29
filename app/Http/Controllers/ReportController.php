@@ -17,7 +17,7 @@ use App\Exports\CnabGeneratedExport;
 use App\Exports\DueInstallmentsExport;
 use App\Exports\InstallmentsPayableExport;
 use App\Exports\UserApprovalsReportExport;
-
+use App\Exports\AllApprovedInstallmentExportForPaidImport;
 
 class ReportController extends Controller
 {
@@ -88,12 +88,39 @@ class ReportController extends Controller
 
     public function approvedInstallmentExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllApprovedInstallment($request->all()))->download('parcelasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+        $requestInfo = $request->all();
+
+        if (array_key_exists('isForImportPayment', $requestInfo) && filter_var($requestInfo['isForImportPayment'], FILTER_VALIDATE_BOOLEAN)) {
+            return $this->approvedInstallmentForImportPaymentExport($request);
+        } 
+
+        if (array_key_exists('exportFormat', $requestInfo)) {
+            if ($requestInfo['exportFormat'] == 'csv') {
+                return (new AllApprovedInstallment($requestInfo))->download('parcelasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
             }
         }
-        return (new AllApprovedInstallment($request->all()))->download('parcelasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+
+        return (new AllApprovedInstallment($requestInfo))->download('parcelasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function approvedInstallmentForImportPaymentExport(Request $request)
+    {
+        $requestInfo = $request->all();
+
+        $headers = null;
+        $format = \Maatwebsite\Excel\Excel::XLSX;
+        $ext = '.xlsx';
+
+        if (array_key_exists('exportFormat', $requestInfo)) {
+            if ($requestInfo['exportFormat'] == 'csv') {
+                $headers = ['Content-Type' => 'text/csv'];
+                $format = \Maatwebsite\Excel\Excel::CSV;
+                $ext = '.csv';
+            }
+        }
+
+        $name = 'parcelasAprovadasParaPagamento' . $ext;
+        return (new AllApprovedInstallmentExportForPaidImport($requestInfo))->download($name, $format, $headers);
     }
 
     public function disapprovedPaymentRequest(Request $request)

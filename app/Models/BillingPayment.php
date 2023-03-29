@@ -69,7 +69,7 @@ class BillingPayment extends Model
     public function getInvoicedValueAttribute()
     {
         $sum = 0;
-        foreach ($this->billings as $billing){
+        foreach ($this->billings as $billing) {
             $sum += $billing->supplier_value;
         }
         return $sum;

@@ -162,7 +162,7 @@ class BillingService
         if ($billing->order >= $maxOrder) {
             $billing->approval_status = Config::get('constants.billingStatus.approved');
             $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-            if($billingPayment){
+            if ($billingPayment) {
                 $this->openOrApprovePaymentBilling($billingPayment, $billing);
             }
             $stage = $billing->order;
@@ -303,7 +303,7 @@ class BillingService
         $billing->approval_status = Config::get('constants.billingStatus.disapproved');
 
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-        if($billingPayment){
+        if ($billingPayment) {
             $billingPayment->status = Config::get('constants.billingStatus.open');
             $billingPayment->save();
         }
@@ -357,7 +357,7 @@ class BillingService
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
-        if(array_key_exists('preview', $billingInfo) && $billingInfo['preview']){
+        if (array_key_exists('preview', $billingInfo) && $billingInfo['preview']) {
             return [
                 'status_123' => $billingInfo['status_123'],
                 'payment_status' => $billingInfo['payment_status'],
@@ -368,13 +368,12 @@ class BillingService
         $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'error' => 'Existem divergências para esse Código de Boleto: '. self::translatedField[$billingInfo['billing_payment_id']['error']],
                 'code' => 'INCONSISTENT_VALUES',
                 'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
         }
-        if(array_key_exists('bank_account', $billingInfo))
-        {
+        if (array_key_exists('bank_account', $billingInfo)) {
             $bankAccount = new BankAccount;
             $bankAccount = $bankAccount->create($billingInfo['bank_account']);
             $billingInfo['bank_account_id'] = $bankAccount->id;
@@ -423,7 +422,7 @@ class BillingService
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
-        if(array_key_exists('preview', $billingInfo) && $billingInfo['preview']){
+        if (array_key_exists('preview', $billingInfo) && $billingInfo['preview']) {
             return [
                 'status_123' => $billingInfo['status_123'],
                 'payment_status' => $billingInfo['payment_status'],
@@ -435,7 +434,7 @@ class BillingService
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             $this->billingPayment->where('id', $billing->billing_payment_id)->update(['deleted_at' => null]);
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'error' => 'Existem divergências para esse Código de Boleto: '. self::translatedField[$billingInfo['billing_payment_id']['error']],
                 'code' => 'INCONSISTENT_VALUES',
                 'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
@@ -443,8 +442,8 @@ class BillingService
         if(array_key_exists('bank_account', $billingInfo))
         {
             $bankAccount = BankAccount::where('id', $billing['bank_account_id'])->first();
-            if($bankAccount) $bankAccount->fill($billingInfo['bank_account'])->save();
-            else{
+            if ($bankAccount) $bankAccount->fill($billingInfo['bank_account'])->save();
+            else {
                 $bankAccount = new BankAccount;
                 $bankAccount = $bankAccount->create($billingInfo['bank_account']);
                 $billingInfo['bank_account_id'] = $bankAccount->id;
@@ -459,9 +458,9 @@ class BillingService
     {
         $billing = $this->billing->findOrFail($id);
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-        if($billingPayment){
-            if(count($billingPayment->billings) <= 1) $billingPayment->delete();
-            else{
+        if ($billingPayment) {
+            if (count($billingPayment->billings) <= 1) $billingPayment->delete();
+            else {
                 $this->openOrApprovePaymentBilling($billingPayment, $billing);
             }
         }
@@ -478,13 +477,12 @@ class BillingService
         $paidReserves = PaidBillingInfo::where('service_id', $cangooroo['service_id'])->get();
         if(empty($paidReserves->toArray())){
             return "Não Pago";
-        }
-        else{
+        } else {
             $sum = 0;
             foreach ($paidReserves as $paidReserve) {
                 $sum += $paidReserve['supplier_value'];
             }
-            if($sum >= ($cangooroo['selling_price']-5)) return "Pago";
+            if ($sum >= ($cangooroo['selling_price'] - 5)) return "Pago";
             else return "Pago - Parcial";
         }
     }
@@ -493,8 +491,8 @@ class BillingService
     {
         $suggestionReason = '';
         $cancellationValueToUse = 0;
-        if($billingInfo['payment_status'] != 'Não Pago'){
-            $suggestionReason = $suggestionReason.' | Reserva deve estar em aberto';
+        if ($billingInfo['payment_status'] != 'Não Pago') {
+            $suggestionReason = $suggestionReason . ' | Reserva deve estar em aberto';
         }
         if($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido' && $billingInfo['status_123'] != 'Reservado'){
             $suggestionReason = $suggestionReason.' | Reserva não emitida no Admin';
@@ -503,39 +501,36 @@ class BillingService
         if($this->billing->where('id', '!=' , $billingId)->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
             $suggestionReason = $suggestionReason.' | Reserva cadastrada em duplicidade';
         }
-        if($cangooroo['status'] == 'Cancelled'){
+        if ($cangooroo['status'] == 'Cancelled') {
             $cancellationDate = (!$cangooroo['cancellation_date'] || strtotime($cangooroo['cancellation_date']) <= 1) ? $cangooroo['last_update'] : $cangooroo['cancellation_date'];
-            $cancellationStartDate = (strtotime($cangooroo['check_in']) > strtotime("+5 days",strtotime($cangooroo['reservation_date']))) ? strtotime("+3 days",strtotime($cangooroo['cancellation_policies_start_date'])) : strtotime($cangooroo['cancellation_policies_start_date']);
-            if(strtotime($cancellationDate) > strtotime($cangooroo['check_in'])){
+            $cancellationStartDate = (strtotime($cangooroo['check_in']) > strtotime("+5 days", strtotime($cangooroo['reservation_date']))) ? strtotime("+3 days", strtotime($cangooroo['cancellation_policies_start_date'])) : strtotime($cangooroo['cancellation_policies_start_date']);
+            if (strtotime($cancellationDate) > strtotime($cangooroo['check_in'])) {
                 $cancellationValueToUse = $cangooroo['selling_price'];
-            }
-            else if(strtotime($cancellationDate) > $cancellationStartDate){
+            } else if (strtotime($cancellationDate) > $cancellationStartDate) {
                 $cancellationValueToUse = $cangooroo['cancellation_policies_value'];
             }
-            if($cancellationValueToUse != $billingInfo['supplier_value']){
-                $suggestionReason = $suggestionReason.' | Valor informado diferente do valor de Cancelamento: R$ '.$cancellationValueToUse;
+            if ($cancellationValueToUse != $billingInfo['supplier_value']) {
+                $suggestionReason = $suggestionReason . ' | Valor informado diferente do valor de Cancelamento: R$ ' . $cancellationValueToUse;
             }
-        }
-        else{
-            if($cangooroo['status'] != 'Confirmed'){
-                $suggestionReason = $suggestionReason.' | Reserva não confirmada no Cangooroo';
+        } else {
+            if ($cangooroo['status'] != 'Confirmed') {
+                $suggestionReason = $suggestionReason . ' | Reserva não confirmada no Cangooroo';
             }
-            if($billingInfo['form_of_payment'] == 0){
-                if($cangooroo['selling_price'] != $billingInfo['supplier_value']){
-                    $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
+            if ($billingInfo['form_of_payment'] == 0) {
+                if ($cangooroo['selling_price'] != $billingInfo['supplier_value']) {
+                    $suggestionReason = $suggestionReason . ' | Valor informado diferente do valor no Cangooroo';
+                }
+            } else {
+                if (($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']) {
+                    $suggestionReason = $suggestionReason . ' | Valor informado diferente do valor no Cangooroo';
                 }
             }
-            else{
-                if(($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']){
-                    $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
-                }
-            }
         }
-        if(!$cangooroo->hotel->is_valid){
-            $suggestionReason = $suggestionReason.' | Hotel não validado';
+        if (!$cangooroo->hotel->is_valid) {
+            $suggestionReason = $suggestionReason . ' | Hotel não validado';
         }
-        if($cangooroo->hotel->cpf_cnpj != $billingInfo['cnpj'] && $cangooroo->hotel->cnpj_extra != $billingInfo['cnpj']){
-            $suggestionReason = $suggestionReason.' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
+        if ($cangooroo->hotel->cpf_cnpj != $billingInfo['cnpj'] && $cangooroo->hotel->cnpj_extra != $billingInfo['cnpj']) {
+            $suggestionReason = $suggestionReason . ' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
         }
         if($cangooroo['provider_name'] != 'Omnibees' && $cangooroo['provider_name'] != 'HSystem' && $cangooroo['provider_name'] != 'Trend'){
             $suggestionReason = $suggestionReason.' | Reserva referente a Broker';
@@ -545,8 +540,7 @@ class BillingService
         }
         if($suggestionReason == ''){
             $suggestion = true;
-        }
-        else{
+        } else {
             $suggestion = false;
             $suggestionReason = substr_replace($suggestionReason, '', 0, 3);
         }
@@ -559,7 +553,7 @@ class BillingService
     public function get123Status($cangooroo)
     {
         $token = $this->get123Token();
-        if($token){
+        if ($token) {
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
             ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/").$cangooroo['123_id']);
@@ -630,9 +624,9 @@ class BillingService
         $changeAllPayment = isset($billingInfo['change_all_payment']) && $billingInfo['change_all_payment'] == true;
         $fields = ['pay_date', 'recipient_name', 'oracle_protocol', 'cnpj'];
         $billingInfo['hotel_id'] = $cangooroo['hotel_id'];
-        if(!is_null($billingInfo['boleto_code'])){
+        if (!is_null($billingInfo['boleto_code'])) {
             $findBillingPayment = BillingPayment::where('boleto_code', $billingInfo['boleto_code'])->where('status', 0)->first();
-            if($findBillingPayment){
+            if ($findBillingPayment) {
                 foreach ($fields as $field) {
                     if($changeAllPayment){
                         $findBillingPayment[$field] = $billingInfo[$field];
@@ -646,14 +640,12 @@ class BillingService
                 $findBillingPayment->status = Config::get('constants.billingStatus.open');
                 $findBillingPayment->save();
                 return $findBillingPayment->id;
-            }
-            else{
+            } else {
                 $billingPayment = new BillingPayment();
                 $billingPayment = $billingPayment->create($billingInfo);
                 return $billingPayment->id;
             }
-        }
-        else{
+        } else {
             $billingPayment = new BillingPayment();
             $billingPayment = $billingPayment->create($billingInfo);
             return $billingPayment->id;
@@ -663,8 +655,8 @@ class BillingService
     public function openOrApprovePaymentBilling($billingPayment, $billing)
     {
         $billingPayment->status = Config::get('constants.billingStatus.approved');
-        foreach($billingPayment->billings as $value){
-            if($value->approval_status != Config::get('constants.billingStatus.approved') && $value->id != $billing->id){
+        foreach ($billingPayment->billings as $value) {
+            if ($value->approval_status != Config::get('constants.billingStatus.approved') && $value->id != $billing->id) {
                 $billingPayment->status = Config::get('constants.billingStatus.open');
                 break;
             }
@@ -687,4 +679,12 @@ class BillingService
         }
         return $usersArray;
     }
+
+    const translatedField = [
+        'pay_date' => 'Data de Pagamento',
+        'recipient_name' => 'Nome do titular',
+        'oracle_protocol' => 'Protocolo Oracle',
+        'cnpj' => 'CNPJ',
+        'hotel_id' => 'Id do Hotel'
+    ];
 }

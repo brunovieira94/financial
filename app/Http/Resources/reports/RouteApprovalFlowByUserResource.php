@@ -34,6 +34,9 @@ class RouteApprovalFlowByUserResource extends JsonResource
             'currency' => new ReportsCurrencyResource($this->currency),
             'first_approval_financial_analyst' => new ReportsFirstApprovalPaymentRequestResource($this->first_approval_financial_analyst),
             'stage_for_disapproval' => ReportsStageForDisapproval::collection($this->stage_for_disapproval),
+            'installment_link' => $this->installment_link,
+            'advance' => $this->advance,
+            'allow_binding' => $this->allow_binding,
         ];
     }
 }

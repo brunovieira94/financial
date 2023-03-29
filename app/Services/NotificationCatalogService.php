@@ -95,7 +95,6 @@ class NotificationCatalogService
 
         return true;
     }
-
     public static function getTeste()
     {
         /* if (NotificationCatalog::where(['type' => 'purchase-order-renovation', 'active' => true, 'schedule' => 1])->exists()) {

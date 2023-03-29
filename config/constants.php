@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Config;
 
 return [
@@ -40,5 +41,17 @@ return [
         'Cancelada',
         'Paga',
         'Finalizada',
+    ],
+    'systemPaymentMethod' => [
+        'cnab' => 0,
+        'gui' => 1,
+        'import' => 2,
+        'update by import' => 3, // Used if an installment was updated after being paid by any of the other payment methods above.
+    ],
+    'systemPaymentMethodPt' => [
+        'CNAB',
+        'Interface Gráfica',
+        'Baixa por Importação de Planilha',
+        'Atualização por Importação de Planilha'
     ],
 ];
