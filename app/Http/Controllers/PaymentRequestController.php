@@ -66,7 +66,7 @@ class PaymentRequestController extends Controller
         foreach ($requestInfo['installments'] as $installment) {
             if (array_key_exists('bar_code', $installment) && $installment['bar_code'] != NULL) {
                 // O Código do Boleto nunca pode repetir
-                if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo) && $installment['type_billet'] != 3) {
                     return response()->json([
                         'error' => 'O código de barras informado já existe no sistema na conta ' .
                             PaymentRequest::with('installments')
@@ -80,7 +80,7 @@ class PaymentRequestController extends Controller
             }
             if (array_key_exists('billet_number', $installment) && $installment['billet_number'] != NULL) {
                 // O número do Boleto só pode repetir se forem fornecedores diferentes
-                if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo) && $installment['type_billet'] != 3) {
                     return response()->json([
                         'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
                             PaymentRequest::with(['provider', 'installments'])
@@ -145,7 +145,7 @@ class PaymentRequestController extends Controller
                 if (!PaymentRequestHasInstallments::where('bar_code', $installment['bar_code'])
                     ->where('payment_request_id', $id)
                     ->exists()) {
-                    if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo)) {
+                    if (!self::checkInvoiceOrBilletExists('bar_code', $installment['bar_code'], $requestInfo) && $installment['type_billet'] != 3) {
                         return response()->json([
                             'error' => 'O código de barras informado já existe no sistema na conta ' .
                                 PaymentRequest::with('installments')
@@ -162,7 +162,7 @@ class PaymentRequestController extends Controller
                 if (!PaymentRequestHasInstallments::where('billet_number', $installment['billet_number'])
                     ->where('payment_request_id', $id)
                     ->exists()) {
-                    if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo)) {
+                    if (!self::checkInvoiceOrBilletProviderExists('billet_number', $installment['billet_number'], $requestInfo) && $installment['type_billet'] != 3) {
                         return response()->json([
                             'error' => 'O número do boleto já foi cadastrado para este fornecedor na conta ' .
                                 PaymentRequest::with(['provider', 'installments'])
