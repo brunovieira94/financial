@@ -8,8 +8,9 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;

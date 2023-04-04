@@ -12,8 +12,9 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class InstallmentsPayableExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $filterCanceled = false;

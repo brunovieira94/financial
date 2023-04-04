@@ -338,4 +338,30 @@ class NotificationService
 
         self::sendEmail($data);
     }
+
+    public static function generateDataSendRedisAttachment($mails = [], $typeMail, $link, $initialDate, $finalDate)
+    {
+        $initialDate = [
+            'name' =>  'dataInicial',
+            'value' =>  $initialDate,
+        ];
+        $finalDate = [
+            'name' =>  'dataFinal',
+            'value' =>  $finalDate,
+        ];
+        $link = [
+            'name' =>  'link',
+            'value' =>  $link,
+        ];
+
+        return [
+            'to' => $mails,
+            'type' => $typeMail,
+            "args" => [
+                $initialDate,
+                $finalDate,
+                $link
+            ]
+        ];
+    }
 }

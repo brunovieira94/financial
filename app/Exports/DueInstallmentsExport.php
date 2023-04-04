@@ -11,8 +11,9 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $filterCanceled = false;

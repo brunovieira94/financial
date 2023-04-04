@@ -41,6 +41,7 @@ class CheckUserHasPermission
             'change-logged-user',
             'other-payments',
             'pluto-table-state',
+            'user-export'
         ];
 
         $unverifiedSubRoutes = [
