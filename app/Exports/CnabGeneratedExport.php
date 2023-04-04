@@ -19,16 +19,19 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
 use Config;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class CnabGeneratedExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class CnabGeneratedExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $id;
+    private $fileName;
 
-    public function __construct($requestInfo, $id)
+    public function __construct($requestInfo, $id, $fileName)
     {
         $this->requestInfo = $requestInfo;
         $this->id = $id;
+        $this->fileName = $fileName;
     }
 
     use Exportable;

@@ -8,6 +8,9 @@ use App\Http\Requests\StoreHotelRequest;
 use App\Http\Requests\PutHotelRequest;
 use App\Imports\HotelsImport;
 use App\Exports\HotelsExport;
+use App\Exports\Utils as UtilsExport;
+use App\Jobs\NotifyUserOfCompletedExport;
+use App\Models\Export;
 
 class HotelController extends Controller
 {
@@ -56,9 +59,14 @@ class HotelController extends Controller
 
     public function export(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-            return (new HotelsExport($request->all()))->download('hotéis.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-        }
-        return (new HotelsExport($request->all()))->download('hotéis.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'hotéis');
+
+        (new HotelsExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 }

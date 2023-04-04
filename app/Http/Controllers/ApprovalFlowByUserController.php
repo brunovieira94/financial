@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Services\ApprovalFlowByUserService;
 use App\Http\Requests\PutAccountsPayableApprovalFlowRequest;
 use App\Exports\AccountsPayableApprovalFlowExport;
+use App\Exports\Utils;
 use App\Http\Requests\MultipleApproval;
+use App\Jobs\NotifyUserOfCompletedExport;
 
 class ApprovalFlowByUserController extends Controller
 {
@@ -24,14 +26,15 @@ class ApprovalFlowByUserController extends Controller
 
     public function accountsApproveUserExport(Request $request)
     {
-        if(array_key_exists('exportFormat', $request->all()))
-        {
-            if($request->all()['exportFormat'] == 'csv')
-            {
-                return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AccountsPayableApprovalFlowExport($request->all()))->download('contasAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = Utils::exportFile($request->all(), 'contasAAprovar');
+
+        (new AccountsPayableApprovalFlowExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function approveAccount($id, Request $request)
@@ -64,6 +67,4 @@ class ApprovalFlowByUserController extends Controller
     {
         return $this->accountsPayableApprovalFlowService->transferApproval($request->all());
     }
-
-
 }

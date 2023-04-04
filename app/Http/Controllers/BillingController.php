@@ -9,6 +9,9 @@ use App\Http\Requests\StoreBillingRequest;
 use App\Http\Requests\PutBillingRequest;
 use App\Exports\BillingExport;
 use App\Exports\BillingForApprovalExport;
+use App\Exports\Utils as UtilsExport;
+use App\Jobs\NotifyUserOfCompletedExport;
+use App\Models\Export;
 
 class BillingController extends Controller
 {
@@ -89,18 +92,28 @@ class BillingController extends Controller
 
     public function export(Request $request, $approvalStatus)
     {
-        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-            return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-        }
-        return (new BillingExport($request->all(), $approvalStatus))->download('faturamento.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'faturamento');
+
+        (new BillingExport($request->all(), $approvalStatus, $exportFile['export']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function exportBillingForApproval(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-            return (new BillingForApprovalExport($request->all()))->download('faturamentoAAprovar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-        }
-        return (new BillingForApprovalExport($request->all()))->download('faturamentoAAprovar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'faturamentoAAprovar');
+
+        (new BillingForApprovalExport($request->all(), $exportFile['export']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function refreshStatuses($id)

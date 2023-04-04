@@ -11,14 +11,17 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
+    private $fileName;
 
-    public function __construct($requestInfo)
+    public function __construct($requestInfo, $fileName)
     {
         $this->requestInfo = $requestInfo;
+        $this->fileName = $fileName;
     }
 
     use Exportable;

@@ -495,6 +495,11 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::put('/get', [PlutoTableStateController::class, 'getState']);
         Route::put('/save', [PlutoTableStateController::class, 'saveState']);
     });
+
+    Route::prefix('user-export')->group(function () {
+        Route::get('/', [ReportController::class, 'getReport']);
+        Route::get('/{id}', [ReportController::class, 'getReportById']);
+    });
 });
 
 

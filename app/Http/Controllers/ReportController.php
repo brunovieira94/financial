@@ -17,6 +17,10 @@ use App\Exports\CnabGeneratedExport;
 use App\Exports\DueInstallmentsExport;
 use App\Exports\InstallmentsPayableExport;
 use App\Exports\UserApprovalsReportExport;
+use App\Exports\Utils as UtilsExport;
+use App\Jobs\NotifyUserOfCompletedExport;
+use App\Models\Export;
+use DB;
 use App\Exports\AllApprovedInstallmentExportForPaidImport;
 
 class ReportController extends Controller
@@ -27,6 +31,7 @@ class ReportController extends Controller
     public function __construct(ReportService $reportService)
     {
         $this->reportService = $reportService;
+        ini_set('memory_limit', '1024M');
     }
 
     public function duePaymentRequest(Request $request)
@@ -41,22 +46,28 @@ class ReportController extends Controller
 
     public function duePaymentRequestExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllDuePaymentRequestExport($request->all()))->download('contasVencidas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllDuePaymentRequestExport($request->all()))->download('contasVencidas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasVencidas');
+
+        (new AllDuePaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function dueInstallmentsExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new DueInstallmentsExport($request->all()))->download('parcelasVencidas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new DueInstallmentsExport($request->all()))->download('parcelasVencidas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'parcelasVencidas');
+
+        (new DueInstallmentsExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function approvedPaymentRequest(Request $request)
@@ -73,12 +84,15 @@ class ReportController extends Controller
 
     public function approvedPaymentRequestExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllApprovedPaymentRequestExport($request->all()))->download('contasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllApprovedPaymentRequestExport($request->all()))->download('contasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasAprovadas');
+
+        (new AllApprovedPaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function approvedInstallment(Request $request)
@@ -88,39 +102,15 @@ class ReportController extends Controller
 
     public function approvedInstallmentExport(Request $request)
     {
-        $requestInfo = $request->all();
+        $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAprovadas');
 
-        if (array_key_exists('isForImportPayment', $requestInfo) && filter_var($requestInfo['isForImportPayment'], FILTER_VALIDATE_BOOLEAN)) {
-            return $this->approvedInstallmentForImportPaymentExport($request);
-        } 
+        (new AllApprovedInstallment($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
 
-        if (array_key_exists('exportFormat', $requestInfo)) {
-            if ($requestInfo['exportFormat'] == 'csv') {
-                return (new AllApprovedInstallment($requestInfo))->download('parcelasAprovadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-
-        return (new AllApprovedInstallment($requestInfo))->download('parcelasAprovadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
-    }
-
-    public function approvedInstallmentForImportPaymentExport(Request $request)
-    {
-        $requestInfo = $request->all();
-
-        $headers = null;
-        $format = \Maatwebsite\Excel\Excel::XLSX;
-        $ext = '.xlsx';
-
-        if (array_key_exists('exportFormat', $requestInfo)) {
-            if ($requestInfo['exportFormat'] == 'csv') {
-                $headers = ['Content-Type' => 'text/csv'];
-                $format = \Maatwebsite\Excel\Excel::CSV;
-                $ext = '.csv';
-            }
-        }
-
-        $name = 'parcelasAprovadasParaPagamento' . $ext;
-        return (new AllApprovedInstallmentExportForPaidImport($requestInfo))->download($name, $format, $headers);
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function disapprovedPaymentRequest(Request $request)
@@ -130,12 +120,15 @@ class ReportController extends Controller
 
     public function disapprovedPaymentRequestExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllDisapprovedPaymentRequestExport($request->all()))->download('contasRejeitadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllDisapprovedPaymentRequestExport($request->all()))->download('contasRejeitadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasReprovadas');
+
+        (new AllDisapprovedPaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function paymentRequestsDeleted(Request $request)
@@ -145,12 +138,15 @@ class ReportController extends Controller
 
     public function paymentRequestsDeletedExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllPaymentRequestsDeletedExport($request->all()))->download('contasDeletadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllPaymentRequestsDeletedExport($request->all()))->download('contasDeletadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasDeletadas');
+
+        (new AllPaymentRequestsDeletedExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function generatedCNABPaymentRequestCNAB(Request $request)
@@ -160,13 +156,15 @@ class ReportController extends Controller
 
     public function generatedCNABPaymentRequestCNABExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
+        $exportFile = UtilsExport::exportFile($request->all(), 'CnabGerados');
 
-                return (new AllGeneratedCNABPaymentRequestExport($request->all()))->download('CNABgerados.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllGeneratedCNABPaymentRequestExport($request->all()))->download('CNABgerados.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        (new AllGeneratedCNABPaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function billsToPay(Request $request)
@@ -176,13 +174,15 @@ class ReportController extends Controller
 
     public function billsToPayExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new BillsToPayExport($request->all()))->download('contasAPagar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasAPagar');
 
-        return (new BillsToPayExport($request->all()))->download('contasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        (new BillsToPayExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function installmentsPayable(Request $request)
@@ -192,12 +192,15 @@ class ReportController extends Controller
 
     public function installmentsPayableExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new InstallmentsPayableExport($request->all()))->download('parcelasAPagar.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new InstallmentsPayableExport($request->all()))->download('parcelasAPagar.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAPagar');
+
+        (new InstallmentsPayableExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function paymentRequestPaid(Request $request)
@@ -207,12 +210,15 @@ class ReportController extends Controller
 
     public function paymentRequestPaidExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllPaymentRequestPaidExport($request->all()))->download('contasPagas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllPaymentRequestPaidExport($request->all()))->download('contasPagas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasPagas');
+
+        (new AllPaymentRequestPaidExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function paymentRequestFinished(Request $request)
@@ -222,12 +228,15 @@ class ReportController extends Controller
 
     public function paymentRequestFinishedExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new AllPaymentRequestFinishedExport($request->all()))->download('contasFinalizadas.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new AllPaymentRequestFinishedExport($request->all()))->download('contasFinalizadas.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'contasFinalizadas');
+
+        (new AllPaymentRequestFinishedExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function approvedPurchaseOrder(Request $request)
@@ -257,21 +266,37 @@ class ReportController extends Controller
 
     public function userApprovalsReportExport(Request $request)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new userApprovalsReportExport($request->all()))->download('relatórioAprovações.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new UserApprovalsReportExport($request->all()))->download('relatórioAprovações.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'usuarioAprovacoes');
+
+        (new UserApprovalsReportExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
     }
 
     public function getCnabGenerateExport(Request $request, $id)
     {
-        if (array_key_exists('exportFormat', $request->all())) {
-            if ($request->all()['exportFormat'] == 'csv') {
-                return (new CnabGeneratedExport($request->all(), $id))->download('CNABGerado.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-            }
-        }
-        return (new CnabGeneratedExport($request->all(), $id))->download('CNABGerado.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+        $exportFile = UtilsExport::exportFile($request->all(), 'cnabGerado');
+
+        (new CnabGeneratedExport($request->all(), $id, $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
+    }
+
+    public function getReport()
+    {
+        return Export::where('user_id', auth()->user()->id)->where('updated_at', '>', now()->subDays(1))->orderBy('id', 'DESC')->get();
+    }
+
+    public function getReportById(Request $request, $id)
+    {
+        return Export::findOrFail($id);
     }
 }
