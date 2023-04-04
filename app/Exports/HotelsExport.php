@@ -15,6 +15,15 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
 
     use Exportable;
 
+    private $requestInfo;
+    private $fileName;
+
+    public function __construct($requestInfo, $fileName)
+    {
+        $this->requestInfo = $requestInfo;
+        $this->fileName = $fileName;
+    }
+
     public function collection()
     {
         return Hotel::with(['bank_account'])->get();

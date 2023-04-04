@@ -94,7 +94,7 @@ class BillingController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'faturamento');
 
-        (new BillingExport($request->all(), $approvalStatus, $exportFile['export']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+        (new BillingExport($request->all(), $approvalStatus, $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
             new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
         ]);
 
@@ -107,7 +107,7 @@ class BillingController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'faturamentoAAprovar');
 
-        (new BillingForApprovalExport($request->all(), $exportFile['export']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+        (new BillingForApprovalExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
             new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
         ]);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PaidBillingInfoExport;
 use Illuminate\Http\Request;
 use App\Services\PaidBillingInfoService as PaidBillingInfoService;
 //use App\Exports\PaidBillingInfoExport;
@@ -9,6 +10,9 @@ use App\Imports\PaidBillingInfoImport;
 use App\Imports\DailyPaidBillingInfoImport;
 use App\Models\PaidBillingInfo;
 use Illuminate\Support\Facades\Artisan;
+use App\Exports\Utils as UtilsExport;
+use App\Jobs\NotifyUserOfCompletedExport;
+use App\Models\Export;
 
 class PaidBillingInfoController extends Controller
 {
@@ -68,11 +72,16 @@ class PaidBillingInfoController extends Controller
         return response('');
     }
 
-    // public function export(Request $request, $approvalStatus)
-    // {
-    //     if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-    //         return (new PaidBillingInfoExport($request->all(), $approvalStatus))->download('faturamentosPagos.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
-    //     }
-    //     return (new PaidBillingInfoExport($request->all(), $approvalStatus))->download('faturamentosPagos.xlsx', \Maatwebsite\Excel\Excel::XLSX);
-    // }
+    public function export(Request $request)
+    {
+        $exportFile = UtilsExport::exportFile($request->all(), 'faturamentosPagos');
+
+        (new PaidBillingInfoExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
+    }
 }
