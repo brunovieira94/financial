@@ -215,6 +215,7 @@ Route::middleware(['auth:api', 'check.permission'])->group(function () {
         Route::get('/{id}', [BillingPaymentController::class, 'show']);
         Route::delete('/{id}', [BillingPaymentController::class, 'destroy']);
         Route::post('/export', [BillingPaymentController::class, 'transfeeraExport']);
+        Route::post('/billing-payment/export', [BillingPaymentController::class, 'export']);
         Route::post('/import', [BillingPaymentController::class, 'import']);
     });
 
