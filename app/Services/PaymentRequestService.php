@@ -329,24 +329,16 @@ class PaymentRequestService
                 $archives
             ];
         }
-
-        $type = ($paymentRequest->payment_type == 0) ? 'NF_' : (($paymentRequest->payment_type == 3) ? 'IN_' : (($paymentRequest->payment_type == 2) ? 'AV_' : (($paymentRequest->payment_type == 1) ? 'BL_' : null)));
-        if ($parcelNumber == null) {
-            $newNameArchive = $type . $paymentRequest->id;
-        } else {
-            $newNameArchive = $type . $paymentRequest->id . '_' . $parcelNumber;
-        }
-
         foreach ($archives as $archive) {
-
             $generatedName = null;
             $data = uniqid(date('HisYmd'));
             if (is_array($archive)) {
                 $archive = $archive['attachment'];
             }
             $originalName  = explode('.', $archive->getClientOriginalName());
+            $originalName[0] = Utils::replaceCharacterUpload($originalName[0]);
             $extension = $originalName[count($originalName) - 1];
-            $generatedName = "{$newNameArchive}_{$data}.{$extension}";
+            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
             //$upload = $archive->storeAs($folder, $generatedName);
             $s3Client = new S3Client([
                 'region' => env('AWS_DEFAULT_REGION'),
