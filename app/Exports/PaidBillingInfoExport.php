@@ -9,8 +9,9 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Config;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings
+class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;
