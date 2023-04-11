@@ -181,6 +181,8 @@ class Utils
                 return 'Guia de Impostos';
             case 4:
                 return 'Boleto de Concessionária';
+            case 5:
+                return 'Boleto Jurídico';
             default:
                 return 'Outro';
         }
@@ -275,6 +277,10 @@ class Utils
             $paymentRequest->approval->approver_stage_first['title'],
             self::approver($paymentRequest),
             $paymentRequest->note,
+            $paymentRequest->or,
+            $paymentRequest->hash,
+            $paymentRequest->admin_id,
+            $paymentRequest->process_number,
             $paymentRequest->allow_binding == true ? 'Sim' : 'Não',
             $paymentRequest['installment_link'],
         ];
@@ -319,6 +325,10 @@ class Utils
             'Etapa Atual',
             'Aprovador',
             'Observações',
+            'OR',
+            'HASH',
+            'Admin ID',
+            'Numero do Processo'
             'Agrupar Parcela',
             'Parcelas Agrupadas'
         ];
@@ -391,6 +401,8 @@ class Utils
             $installment->group_payment_received->title ?? '',
             $installment->paid_value ?? '',
             self::formatDate($installment->payment_made_date) ?? '',
+            $installment->client_identifier ?? '',
+            $installment->client_name ?? '',
         ];
     }
 
@@ -453,7 +465,9 @@ class Utils
             'Identificador do Cartão',
             'Forma de pagamento - Pago',
             'Valor - Pago',
-            'Data do pagamento - Pago'
+            'Data do pagamento - Pago',
+            'Identificação do Cliente',
+            'Nome do Cliente',
         ];
     }
 
