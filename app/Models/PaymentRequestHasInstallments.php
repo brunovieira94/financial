@@ -26,7 +26,7 @@ class PaymentRequestHasInstallments extends Model
 
     protected $table = 'payment_requests_installments';
     public $timestamps = false;
-    protected $fillable = ['payment_made_date', 'paid_value', 'bank_account_company_id', 'group_form_payment_made_id', 'system_payment_method', 'card_identifier', 'text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received', 'reference_number', 'revenue_code', 'tax_file_phone_number', 'verification_period'];
+    protected $fillable = ['client_identifier', 'client_name', 'payment_made_date', 'paid_value', 'bank_account_company_id', 'group_form_payment_made_id', 'system_payment_method', 'card_identifier', 'text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received', 'reference_number', 'revenue_code', 'tax_file_phone_number', 'verification_period'];
     protected $appends = ['billet_link'];
     protected $casts = [
         'verification_period' => AsCollection::class
