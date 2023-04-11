@@ -408,7 +408,6 @@ class Remessa
             $lote->header->tipo_operacao = 'C';
             $lote->header->tipo_servico = '98';
             $lote->header->inscricao_numero = Utils::onlyNumbers($company->cnpj);
-            $lote->header->numero_convenio = Utils::formatCnab('9', $bankAccount->covenant, 9);
             $lote->header->nome_empresa = Utils::formatCnab('X', $company->company_name, 30);
             $lote->header->tipo_inscricao = 2;
             $lote->header->data_gravacao = date('dmY');
