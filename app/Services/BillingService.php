@@ -352,15 +352,15 @@ class BillingService
         }
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
         //$billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['status_123'] = $this->get123Status($cangooroo);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
+        $billingInfo['status_123'] = $cangooroo['status_123'];
+        $billingInfo['payment_status'] = $cangooroo['payment_status'];
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
         if (array_key_exists('preview', $billingInfo) && $billingInfo['preview']) {
             return [
-                'status_123' => $billingInfo['status_123'],
-                'payment_status' => $billingInfo['payment_status'],
+                // 'status_123' => $billingInfo['status_123'],
+                // 'payment_status' => $billingInfo['payment_status'],
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
@@ -417,15 +417,15 @@ class BillingService
         $billingInfo['reason_to_reject_id'] = null;
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
         // $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['status_123'] = $this->get123Status($cangooroo);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
+        $billingInfo['status_123'] = $cangooroo['status_123'];
+        $billingInfo['payment_status'] = $cangooroo['payment_status'];
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
         if (array_key_exists('preview', $billingInfo) && $billingInfo['preview']) {
             return [
-                'status_123' => $billingInfo['status_123'],
-                'payment_status' => $billingInfo['payment_status'],
+                // 'status_123' => $billingInfo['status_123'],
+                // 'payment_status' => $billingInfo['payment_status'],
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
@@ -471,7 +471,7 @@ class BillingService
         return true;
     }
 
-    public function getPaymentStatus($billing, $cangooroo)
+    public static function getPaymentStatus($cangooroo)
     {
         // $paidReserves = PaidBillingInfo::where('reserve', $billing['reserve'])->get();
         $paidReserves = PaidBillingInfo::where('service_id', $cangooroo['service_id'])->get();
@@ -550,10 +550,10 @@ class BillingService
         ];
     }
 
-    public function get123Status($cangooroo)
+    public static function get123Status($cangooroo)
     {
-        $token = $this->get123Token();
-        if ($token) {
+        $token = self::get123Token();
+        if($token){
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
             ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/").$cangooroo['123_id']);
@@ -587,7 +587,7 @@ class BillingService
     //     }
     // }
 
-    public function get123Token()
+    public static function get123Token()
     {
         $apiCall = Http::withHeaders([
             'secret' => env('API_123_SECRET', Config::get('constants.123_secret')),
@@ -608,7 +608,7 @@ class BillingService
             ], 422);
         }
         $status['cangooroo'] = $cangooroo['status'];
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        $billingInfo['payment_status'] = $this->getPaymentStatus($cangooroo);
         $billingInfo['status_123'] = $this->get123Status($cangooroo);
         $billing->fill($billingInfo);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
