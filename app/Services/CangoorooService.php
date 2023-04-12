@@ -127,12 +127,16 @@ class CangoorooService
             $updatedCangooroo->fill($data)->save();
             $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
             $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+            $cangoorooToReturn['payment_status'] = BillingService::getPaymentStatus($cangoorooToReturn);
+            $cangoorooToReturn['status_123'] = BillingService::get123Status($cangoorooToReturn);
             return $cangoorooToReturn;
         }
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
         $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
         $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+        $cangoorooToReturn['payment_status'] = BillingService::getPaymentStatus($cangoorooToReturn);
+        $cangoorooToReturn['status_123'] = BillingService::get123Status($cangoorooToReturn);
         return $cangoorooToReturn;
     }
 
