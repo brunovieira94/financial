@@ -364,4 +364,13 @@ class NotificationService
             ]
         ];
     }
+
+    public static function mailTest($mails = [])
+    {
+        self::sendEmail([
+            'to' => $mails,
+            'subject' => 'test',
+            'type' => 'test',
+        ]);
+    }
 }

@@ -544,3 +544,5 @@ Route::post('/forgot-password', [ResetPasswordController::class, 'forgotPassword
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
 Route::get('/failed-job', [InfoController::class, 'failedJob']);
+Route::get('/scheduling', [InfoController::class, 'scheduling']);
+Route::get('/send-mail-test', [InfoController::class, 'sendMailTest']);
