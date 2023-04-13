@@ -330,9 +330,9 @@ class Utils
             'OR',
             'HASH',
             'Admin ID',
-            'Numero do Processo'
+            'Numero do Processo',
             'Agrupar Parcela',
-            'Parcelas Agrupadas'
+            'Parcelas Agrupadas',
         ];
     }
 
