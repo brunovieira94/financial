@@ -41,12 +41,12 @@ class BillingController extends Controller
 
     public function store(StoreBillingRequest $request)
     {
-        return $this->billingService->postBilling($request->all());
+        return $this->billingService->postBilling($request);
     }
 
     public function update(PutBillingRequest $request, $id)
     {
-        return $this->billingService->putBilling($id, $request->all());
+        return $this->billingService->putBilling($id, $request);
     }
 
     public function approve($id)
