@@ -179,7 +179,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/', [ProviderController::class, 'index']);
         Route::get('/{id}', [ProviderController::class, 'show']);
         Route::post('/', [ProviderController::class, 'store']);
-        Route::put('/{id}', [ProviderController::class, 'update']);
+        Route::post('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
         Route::post('/import', [ProviderController::class, 'import']);
         Route::post('/export', [ProviderController::class, 'export']);
@@ -206,7 +206,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
         Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/', [BillingController::class, 'store']);
-        Route::put('/{id}', [BillingController::class, 'update']);
+        Route::post('/{id}', [BillingController::class, 'update']);
         Route::put('/approve/{id}', [BillingController::class, 'approve']);
         Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);

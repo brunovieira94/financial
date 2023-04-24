@@ -59,4 +59,9 @@ class Provider extends Model
     {
         return $this->hasOne(City::class, 'id', 'cities_id')->with('state');
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(ProviderHasAttachments::class, 'provider_id', 'id');
+    }
 }
