@@ -957,10 +957,10 @@ class Utils
                         $groupBilling['30'] = [$billing];
                     }
                 } else {
-                    if (array_key_exists('11', $groupBilling)) {
-                        array_push($groupBilling['11'], $billing);
+                    if (array_key_exists('31', $groupBilling)) {
+                        array_push($groupBilling['31'], $billing);
                     } else {
-                        $groupBilling['11'] = [$billing];
+                        $groupBilling['31'] = [$billing];
                     }
                 }
             }
