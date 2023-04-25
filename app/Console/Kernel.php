@@ -14,8 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\StatusUserUpdate::class,
-        'App\Console\Commands\DailyApprovalsReport',
-        'App\Console\Commands\DailyPurchaseOrderRenewal',
+        \App\Console\Commands\DailyApprovalsReport::class,
+        \App\Console\Commands\DailyPurchaseOrderRenewal::class,
     ];
 
     /**
@@ -26,11 +26,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        //$schedule->command('php artisan alter:user-status')->dailyAt('03:00');
-        //desativar mails agendados
-        //$schedule->command('command:payment-request-approvals-email')
-        //->dailyAt('06:00');
-        //$schedule->command('command:purchase-order-renewal')->dailyAt('07:00');
+        $schedule->command('command:user-status')->dailyAt('03:00')->onOneServer();
+        $schedule->command('command:payment-request-approvals-email')
+        ->dailyAt('06:00')->onOneServer();
+        $schedule->command('command:purchase-order-renewal')->dailyAt('07:00')->onOneServer();
     }
 
     /**

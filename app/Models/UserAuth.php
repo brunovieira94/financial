@@ -74,4 +74,9 @@ class UserAuth extends Authenticatable
             return CostCenter::whereIn('id', $costCentersIDs->toArray())->get();
         }
     }
+
+    public function filters()
+    {
+        return $this->hasMany(UserHasSavedFilter::class, 'user_id', 'id');
+    }
 }

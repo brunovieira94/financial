@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\reports\RoutePaymentRequestAllResource;
+use App\Jobs\SendAllAttachmentJob;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\AccountsPayableApprovalFlow;
@@ -12,11 +13,13 @@ use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\ApprovalFlow;
+use App\Models\AttachmentReport;
 use App\Models\BankAccount;
 use App\Models\CostCenter;
 use App\Models\GroupFormPayment;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasAttachments;
+use App\Models\PaymentRequestHasInstallmentLinked;
 use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\PaymentRequestHasPurchaseOrderInstallments;
 use App\Models\PaymentRequestHasPurchaseOrders;
@@ -24,9 +27,10 @@ use App\Models\Provider;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDelivery;
 use App\Models\PurchaseOrderHasInstallments;
-use App\Models\PurchaseOrderHasProducts;
 use App\Models\PurchaseOrderHasServices;
 use App\Models\TemporaryLogUploadPaymentRequest;
+use App\Models\PurchaseOrderHasProducts;
+use AWS\CRT\HTTP\Response;
 use Config;
 use Exception;
 use Aws\S3\S3Client;
@@ -46,13 +50,14 @@ class PaymentRequestService
     private $attachments;
     private $paymentRequestClean;
     private $installmentClean;
+    private $attachmentReport;
     private $approval;
 
-    private $with = ['currency_old', 'group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['installments_linked.payment_request.provider', 'installments_linked.payment_request.company', 'installments_linked.payment_request.cost_center', 'currency_old', 'group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
     private $withLog = ['currency_old', 'cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
     private $installmentWith = ['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'];
 
-    public function __construct(PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
+    public function __construct(AttachmentReport $attachmentReport, PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
     {
         $this->paymentRequest = $paymentRequest;
         $this->installments = $installments;
@@ -63,6 +68,7 @@ class PaymentRequestService
         $this->attachments = $attachments;
         $this->paymentRequestClean = $paymentRequestClean;
         $this->installmentClean = $installmentClean;
+        $this->attachmentReport = $attachmentReport;
     }
 
     public function getPaymentRequestByUser($requestInfo)
@@ -71,7 +77,6 @@ class PaymentRequestService
         auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
         $paymentRequests = Utils::pagination($paymentRequests->with(['provider', 'currency'])->where('user_id', auth()->user()->id), $requestInfo);
         /*foreach ($paymentRequests as $paymentRequest) {
->>>>>>> main
             foreach ($paymentRequest->purchase_order as $purchaseOrder) {
                 foreach ($purchaseOrder->purchase_order_installments as $key => $installment) {
                     $installment = [
@@ -130,64 +135,74 @@ class PaymentRequestService
 
     public function postPaymentRequest(Request $request)
     {
-        $paymentRequestInfo = $request->all();
-        $paymentRequestInfo['user_id'] = auth()->user()->id;
+        DB::beginTransaction();
+        try {
+            $paymentRequestInfo = $request->all();
+            $paymentRequestInfo['user_id'] = auth()->user()->id;
 
-        $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
+            $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
 
-        if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? null;
-        }
-        if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
-        }
-        if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? null;
-        }
-
-        if (!array_key_exists('bar_code', $paymentRequestInfo)) {
-            if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
-                if (array_key_exists('invoice_number', $paymentRequestInfo)) {
-                    $invoiceType = DB::table('payment_requests')
-                        ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
-                        ->where('invoice_type', '<>', null)
-                        ->groupBy('invoice_type')
-                        ->orderBy('repeated', 'desc')
-                        ->get();
-                    $paymentRequestInfo['invoice_type'] = $invoiceType[0]->invoice_type ?? null;
+            if (!array_key_exists('bar_code', $paymentRequestInfo)) {
+                if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
+                    if (array_key_exists('invoice_number', $paymentRequestInfo)) {
+                        $invoiceType = DB::table('payment_requests')
+                            ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
+                            ->where('invoice_type', '<>', null)
+                            ->groupBy('invoice_type')
+                            ->orderBy('repeated', 'desc')
+                            ->get();
+                        $paymentRequestInfo['invoice_type'] = $invoiceType[0]->invoice_type ?? null;
+                    }
                 }
             }
+
+            $paymentRequest = new PaymentRequest;
+            $paymentRequest = $paymentRequest->create($paymentRequestInfo);
+
+            if (array_key_exists('attachments', $paymentRequestInfo)) {
+                $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request', $paymentRequest);
+                $this->syncAttachments($arrayAttachments, $paymentRequest);
+            }
+            if (array_key_exists('invoice_file', $paymentRequestInfo)) {
+                $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice', $paymentRequest)[0] ?? null;
+            }
+            if (array_key_exists('billet_file', $paymentRequestInfo)) {
+                $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet', $paymentRequest)[0] ?? null;
+            }
+            if (array_key_exists('xml_file', $paymentRequestInfo)) {
+                $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML', $paymentRequest)[0] ?? null;
+            }
+
+            activity()->disableLogging();
+            $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
+            $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
+                'payment_request_id' => $paymentRequest->id,
+                'order' => 1,
+                'status' => 0,
+                'group_approval_flow_id' => $paymentRequest->group_approval_flow_id,
+            ]);
+            activity()->enableLogging();
+            $paymentRequest->fill($paymentRequestInfo)->save();
+            activity()->enableLogging();
+
+            $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
+            if ($paymentRequest->payment_type == 0) {
+                $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo);
+                $this->notifyUsers($paymentRequest, $paymentRequestInfo, auth()->user());
+            }
+            $this->syncTax($paymentRequest, $paymentRequestInfo);
+            $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
+            $this->syncProviderGeneric($paymentRequestInfo);
+            $this->syncInstallmentsLinked($paymentRequest, $paymentRequestInfo);
+            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'created', null, null, 0, $paymentRequestInfo['user_id'], null);
+            DB::commit();
+            return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'error' => 'Erro ao cadastrar a solicitação de pagamento, tente novamente.',
+            ], 422);
         }
-
-
-
-        $paymentRequest = new PaymentRequest;
-        $paymentRequest = $paymentRequest->create($paymentRequestInfo);
-
-        $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
-        activity()->disableLogging();
-        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
-            'payment_request_id' => $paymentRequest->id,
-            'order' => 1,
-            'status' => 0,
-            'group_approval_flow_id' => $paymentRequest->group_approval_flow_id,
-        ]);
-        activity()->enableLogging();
-
-        if (array_key_exists('attachments', $paymentRequestInfo)) {
-            $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request');
-            $this->syncAttachments($arrayAttachments, $paymentRequest);
-        }
-
-        $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
-        if ($paymentRequest->payment_type == 0) {
-            $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo);
-        }
-        $this->syncTax($paymentRequest, $paymentRequestInfo);
-        $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
-        $this->syncProviderGeneric($paymentRequestInfo);
-        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'created', null, null, 0, $paymentRequestInfo['user_id'], null);
-        return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
 
     public function putPaymentRequest($id, Request $request)
@@ -240,16 +255,16 @@ class PaymentRequestService
         activity()->enableLogging();
 
         if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice')[0] ?? null;
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice', $paymentRequest)[0] ?? null;
         }
         if (array_key_exists('attachments', $paymentRequestInfo)) {
             $this->putAttachments($id, $paymentRequestInfo, $request);
         }
         if (array_key_exists('xml_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML')[0] ?? null;
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML', $paymentRequest)[0] ?? null;
         }
         if (array_key_exists('billet_file', $paymentRequestInfo)) {
-            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet', $paymentRequest)[0] ?? null;
         }
         $this->putTax($id, $paymentRequestInfo);
 
@@ -266,6 +281,7 @@ class PaymentRequestService
         activity()->disableLogging();
         $paymentRequest->fill($paymentRequestInfo)->save();
         activity()->enableLogging();
+        $this->syncInstallmentsLinked($paymentRequest, $paymentRequestInfo);
 
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($id);
         Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
@@ -305,24 +321,22 @@ class PaymentRequestService
         }
     }
 
-    public function storeArchive($archives, $folder)
+    public function storeArchive($archives, $folder, $paymentRequest, $parcelNumber = null)
     {
         $nameFiles = [];
-
         if (!is_array($archives)) {
             $archives = [
                 $archives
             ];
         }
-
         foreach ($archives as $archive) {
-
             $generatedName = null;
             $data = uniqid(date('HisYmd'));
             if (is_array($archive)) {
                 $archive = $archive['attachment'];
             }
             $originalName  = explode('.', $archive->getClientOriginalName());
+            $originalName[0] = Utils::replaceCharacterUpload($originalName[0]);
             $extension = $originalName[count($originalName) - 1];
             $generatedName = "{$originalName[0]}_{$data}.{$extension}";
             //$upload = $archive->storeAs($folder, $generatedName);
@@ -363,7 +377,7 @@ class PaymentRequestService
                     $installments['status'] = 0;
                 }
                 if (array_key_exists('billet_file', $installments)) {
-                    $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet')[0] ?? null;
+                    $installments['billet_file'] = $this->storeArchive($request->installments[$key]['billet_file'], 'billet', $paymentRequest, $key)[0] ?? null;
                 }
                 if (array_key_exists('portion_amount', $installments)) {
                     if ($installments['portion_amount'] <= 0) {
@@ -401,8 +415,18 @@ class PaymentRequestService
                             $installments['extension_date'] = $installments['due_date'];
                         }
                     }
+                    $verificationPeriod = null;
+                    if (array_key_exists('verification_period', $installments)) {
+                        $verificationPeriod = $installments['verification_period'];
+                        unset($installments['verification_period']);
+                    }
                     $paymentRequestHasInstallments = $paymentRequestHasInstallments->create($installments);
                     $notDeleteInstallmentsID[] = $paymentRequestHasInstallments->id;
+                    activity()->disableLogging();
+                    $installment = PaymentRequestHasInstallmentsClean::findOrFail($paymentRequestHasInstallments->id);
+                    $installment->verification_period = $verificationPeriod;
+                    $installment->save();
+                    activity()->enableLogging();
                 }
             }
             self::destroyInstallments($notDeleteInstallmentsID, $paymentRequest['id']);
@@ -496,7 +520,7 @@ class PaymentRequestService
 
         foreach ($paymentRequestInfo['attachments'] as $key => $attachment) {
             $paymentRequestHasAttachment = new PaymentRequestHasAttachments;
-            $attachment['attachment'] = $this->storeArchive($request->attachments[$key], 'attachment-payment-request')[0] ?? null;
+            $attachment['attachment'] = $this->storeArchive($request->attachments[$key], 'attachment-payment-request', PaymentRequestClean::findOrFail($id))[0] ?? null;
             $paymentRequestHasAttachment = $paymentRequestHasAttachment->create([
                 'payment_request_id' => $id,
                 'attachment' => $attachment['attachment'],
@@ -611,6 +635,22 @@ class PaymentRequestService
                         $purchaseInstallment->save();
                     }
                 }
+
+                if ($paymentRequestInfo['payment_type'] == 0) {
+                    //update status delivery
+                    foreach (PurchaseOrderHasProducts::where('purchase_order_id', $purchaseOrders['order'])->get() as $porchaseOrderHasProductDelivery) {
+                        PurchaseOrderDelivery::create(
+                            [
+                                'payment_request_id' => $paymentRequest->id,
+                                'purchase_order_id' => $purchaseOrders['order'],
+                                'product_id' => $porchaseOrderHasProductDelivery->product_id,
+                                'delivery_quantity' => 0,
+                                'quantity' => $porchaseOrderHasProductDelivery->quantity,
+                                'status' => 0
+                            ]
+                        );
+                    }
+                }
             }
 
             PaymentRequestHasPurchaseOrders::destroy($paymentRequestHasPurchaseOrdersIDsDelete);
@@ -643,7 +683,7 @@ class PaymentRequestService
         $installment = $this->installments->findOrFail($id);
         $paymentRequestOld = $this->paymentRequest->with($this->withLog)->findOrFail($installment->payment_request_id);
         if (array_key_exists('billet_file', $requestInfo)) {
-            $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet')[0] ?? null;
+            $requestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet', PaymentRequestClean::findOrFail($installment->payment_request_id), $installment->parcel_number)[0] ?? null;
         }
         if (array_key_exists('status', $requestInfo) && $requestInfo['status'] != 4) {
             $requestInfo['status'] = 0;
@@ -664,16 +704,18 @@ class PaymentRequestService
             if ($provider->generic_provider) {
                 foreach ($requestInfo['installments'] as $installment) {
                     if ($installment['group_form_payment_id'] != 1) {
-                        $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
-                        $bankAccount->hidden = true;
-                        $bankAccount->save();
-                        $providerHasBankAccount = ProviderHasBankAccounts::create(
-                            [
-                                'provider_id' => $provider->id,
-                                'bank_account_id' => $installment['bank_account_provider_id'],
-                                'default_bank' => false
-                            ]
-                        );
+                        if (array_key_exists('bank_account_provider_id', $installment) && $installment['bank_account_provider_id'] != null) {
+                            $bankAccount = BankAccount::findOrFail($installment['bank_account_provider_id']);
+                            $bankAccount->hidden = true;
+                            $bankAccount->save();
+                            $providerHasBankAccount = ProviderHasBankAccounts::create(
+                                [
+                                    'provider_id' => $provider->id,
+                                    'bank_account_id' => $installment['bank_account_provider_id'],
+                                    'default_bank' => false
+                                ]
+                            );
+                        }
                     }
                 }
             }
@@ -682,6 +724,27 @@ class PaymentRequestService
     public function getInstallment($id)
     {
         return $this->installmentClean->with($this->installmentWith)->findOrFail($id);
+    }
+
+    public function attachment($requestInfo)
+    {
+        $requestInfo['attachment-id'] = AttachmentReport::create([
+            'from' => $requestInfo['from'],
+            'to' => $requestInfo['to'],
+            'mails' => implode(', ', $requestInfo['mails']),
+            'user_id' => auth()->user()->id
+        ])->id;
+        SendAllAttachmentJob::dispatch($requestInfo);
+
+        return Response()->json([
+            'Sucesso' => 'Processo finalizado.'
+        ], 200);
+    }
+
+    public function getAttachment($requestInfo)
+    {
+        $attachment = Utils::search($this->attachmentReport, $requestInfo);
+        return Utils::pagination($attachment->with('user')->where('created_at', '>', Carbon::now()->subDays(7)), $requestInfo);
     }
 
     public function syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo, $id = null)
@@ -730,6 +793,58 @@ class PaymentRequestService
                 }
             }
             PurchaseOrderDelivery::destroy($purchaseOrdersDelveryDelete);
+        }
+    }
+
+    public function syncInstallmentsLinked($paymentRequest, $paymentRequestInfo)
+    {
+        if (array_key_exists('installments_linked', $paymentRequestInfo)) {
+
+            $idsInstallments = [];
+
+            foreach ($paymentRequestInfo['installments_linked'] as $installment) {
+                if (array_key_exists('id', $installment)) {
+                    if (!PaymentRequestHasInstallmentLinked::where('payment_requests_installment_id', $installment['id'])->where('payment_request_id', '!=', $paymentRequest->id)->exists() && !PaymentRequestHasInstallmentsClean::where('payment_request_id', $paymentRequest->id)->where('id', $installment['id'])->exists()) {
+                        array_push($idsInstallments, $installment['id']);
+                    }
+                }
+            }
+
+            $installmentLinked = PaymentRequestHasInstallmentLinked::where('payment_request_id', $paymentRequest->id)->get('payment_requests_installment_id');
+            PaymentRequestHasInstallmentLinked::where('payment_request_id', $paymentRequest->id)->delete();
+            DB::table('payment_requests_installments')->whereIn('id', $installmentLinked->pluck('payment_requests_installment_id')->toArray())->update(
+                [
+                    'linked' => false,
+                    'status' => 0
+                ]
+            );
+            $paymentRequest->installments_linked()->sync($idsInstallments);
+            DB::table('payment_requests_installments')->whereIn('id', $idsInstallments)->update(
+                [
+                    'linked' => true,
+                    'status' => $paymentRequest->approval->status == 4 ? 4 : 0,
+                ]
+            );
+        } else {
+            $installmentLinked = PaymentRequestHasInstallmentLinked::where('payment_request_id', $paymentRequest->id)->get('payment_requests_installment_id');
+            PaymentRequestHasInstallmentLinked::where('payment_request_id', $paymentRequest->id)->delete();
+            DB::table('payment_requests_installments')->whereIn('id', $installmentLinked->pluck('payment_requests_installment_id')->toArray())->update(
+                [
+                    'linked' => false,
+                    'status' => 0
+                ]
+            );
+        }
+    }
+
+    public function notifyUsers($paymentRequest, $paymentRequestInfo, $approverUser)
+    {
+        if (array_key_exists('purchase_orders', $paymentRequestInfo)) {
+            foreach ($paymentRequestInfo['purchase_orders'] as $purchaseOrder) {
+                $usersMail = [];
+                $purchaseOrderInfo = PurchaseOrder::where('id', $purchaseOrder['order'])->firstOrFail();
+                NotificationService::generateDataSendRedisPurchaseOrderPaymentRequest($paymentRequest, $purchaseOrderInfo, $usersMail, 'Nota fiscal vinculada ao pedido de compra', 'purchase-order-vinculated', $approverUser);
+            }
         }
     }
 }

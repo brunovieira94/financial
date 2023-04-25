@@ -18,17 +18,20 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
 use Config;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $totalTax;
     private $filterCanceled = false;
     private $paymentRequestCleanWith = ['currency_old', 'installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
+    private $fileName;
 
-    public function __construct($requestInfo)
+    public function __construct($requestInfo, $fileName)
     {
         $this->requestInfo = $requestInfo;
+        $this->fileName = $fileName;
     }
 
     use Exportable;

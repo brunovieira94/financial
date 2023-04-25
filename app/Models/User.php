@@ -25,7 +25,7 @@ class User extends Model
     }
 
     use SoftDeletes;
-    protected $table = 'users';
+    protected $table='users';
 
     protected $fillable = [
         'name',
@@ -63,5 +63,10 @@ class User extends Model
     public function additional_users()
     {
         return $this->belongsToMany(User::class, 'additional_users', 'user_id', 'user_additional_id');
+    }
+
+    public function filters()
+    {
+        return $this->hasMany(UserHasSavedFilter::class, 'user_id', 'id');
     }
 }

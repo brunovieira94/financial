@@ -10,9 +10,9 @@ class CnabGenerated extends Model
 {
     protected $table='cnab_generated';
     public $timestamps = false;
-    protected $fillable = ['user_id', 'user_id', 'file_date', 'status', 'file_name', 'company_id', 'bank_account_company_id'];
+    protected $fillable = ['archive_return', 'header_date', 'header_time', 'user_id', 'user_id', 'file_date', 'status', 'file_name', 'company_id', 'bank_account_company_id'];
     protected $hidden = ['pivot'];
-    protected $appends = ['cnab_link'];
+    protected $appends = ['cnab_link', 'cnab_return_link'];
 
     public function getCnabLinkAttribute()
     {
@@ -41,4 +41,13 @@ class CnabGenerated extends Model
     {
         return $this->hasOne(BankAccount::class, 'id', 'bank_account_company_id');
     }
+
+    public function getCnabReturnLinkAttribute()
+    {
+        if (!is_null($this->attributes['archive_return'])) {
+            $fileName = $this->attributes['archive_return'];
+            return Storage::disk('s3')->temporaryUrl("tempCNAB/{$fileName}", now()->addMinutes(30));
+        }
+    }
+
 }

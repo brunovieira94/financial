@@ -43,7 +43,7 @@ class BillingPayment extends Model
 
     public function billings()
     {
-        return $this->hasMany(Billing::class, 'billing_payment_id', 'id')->with(['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow']);
+        return $this->hasMany(Billing::class, 'billing_payment_id', 'id')->with(['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow', 'attachments']);
     }
 
     public function hotel()
@@ -69,7 +69,7 @@ class BillingPayment extends Model
     public function getInvoicedValueAttribute()
     {
         $sum = 0;
-        foreach ($this->billings as $billing){
+        foreach ($this->billings as $billing) {
             $sum += $billing->supplier_value;
         }
         return $sum;

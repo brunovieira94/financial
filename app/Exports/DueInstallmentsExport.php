@@ -11,8 +11,9 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $filterCanceled = false;
@@ -27,7 +28,7 @@ class DueInstallmentsExport implements FromCollection, ShouldAutoSize, WithMappi
     public function collection()
     {
         $query = PaymentRequestHasInstallments::query();
-        $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider']);
+        $query = $query->with(['cnab_generated_installment', 'payment_request', 'group_payment', 'bank_account_provider', 'bank_account_company', 'group_payment_received']);
         $requestInfo = $this->requestInfo;
 
         $query->whereHas('payment_request', function ($query) use ($requestInfo) {

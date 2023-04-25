@@ -22,6 +22,9 @@ class ReportsPaymentRequestResource extends JsonResource
             'net_value' =>  $this->net_value,
             'provider' => new ReportsProviderResource($this->provider),
             'currency' => new ReportsCurrencyResource($this->currency),
+            'installment_link' => $this->installment_link,
+            'advance' => $this->advance,
+            'allow_binding' => $this->allow_binding,
         ];
     }
 }

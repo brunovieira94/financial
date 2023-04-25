@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\ApprovalFlowSupply;
 use App\Models\NotificationCatalog;
 use App\Models\NotificationCatalogHasRoles;
 use App\Models\NotificationCatalogHasUsers;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderHasCostCenters;
 use App\Models\SupplyApprovalFlow;
+use App\Models\User;
 use Carbon\Carbon;
 
 class NotificationCatalogService
@@ -92,10 +95,9 @@ class NotificationCatalogService
 
         return true;
     }
-
     public static function getTeste()
     {
-        if (NotificationCatalog::where(['type' => 'purchase-order-renovation', 'active' => true, 'schedule' => 1])->exists()) {
+        /* if (NotificationCatalog::where(['type' => 'purchase-order-renovation', 'active' => true, 'schedule' => 1])->exists()) {
             $purchaseOrdersIds = [];
             $notificationId = NotificationCatalog::where(['type' => 'purchase-order-renovation', 'active' => true, 'schedule' => 1])->firstOrFail(['id', 'type']);
 
@@ -172,7 +174,119 @@ class NotificationCatalogService
             //NotificationService::dailyPurchaseOrderRenewal($purchaseOrdersIds, $mails, $notificationId->type);
             dump($purchaseOrdersIds, $mails, $notificationId->type);
 
-            dd(auth()->user()->name, auth()->user()->id/* , auth()->user()->cost_center */);
+            dd(auth()->user()->name, auth()->user()->id); // , auth()->user()->cost_center);
+        } */
+
+        /* $purchase_order = PurchaseOrder::with('cost_centers')->findOrFail(193);
+        //dump($purchase_order);
+
+        $costCenterId = [];
+        $maxPercentage = 0;
+        $constCenterEqual = false;
+
+        foreach ($purchase_order->cost_centers as $costCenter) {
+            if ($costCenter->percentage > $maxPercentage) {
+                $constCenterEqual = false;
+                unset($costCenterId);
+                $costCenterId = [$costCenter->cost_center_id];
+                $maxPercentage = $costCenter->percentage;
+            } else if ($costCenter->percentage == $maxPercentage) {
+                $constCenterEqual = true;
+                $maxPercentage = $costCenter->percentage;
+            }
+            if ($costCenter->percentage == $maxPercentage) {
+                if (!in_array($costCenter->cost_center_id, $costCenterId)) {
+                    array_push($costCenterId, $costCenter->cost_center_id);
+                }
+            }
         }
+
+        dump($costCenterId);
+
+        //$approvalFlowOrders = ApprovalFlowSupply::where('order', 1)
+        //    ->get('role_id')->pluck('role_id');
+
+        $order = SupplyApprovalFlow::where('id_purchase_order', $purchase_order->id)->get('order')->pluck('order');
+        $approvalFlowOrders = ApprovalFlowSupply::where('order', $order)
+            ->get('role_id')->pluck('role_id');
+
+        dump($order, $approvalFlowOrders);
+
+        if ($constCenterEqual) {
+            $usersNotify = User::whereIn('role_id', $approvalFlowOrders)
+                ->where('deleted_at', null)
+                ->where('role_id', '!=', 1)
+                ->whereHas('cost_center', function ($query) use ($costCenterId) {
+                    $query->where('cost_center_id', $costCenterId[1]);
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
+        } else {
+            $usersNotify = User::whereIn('role_id', $approvalFlowOrders)
+                ->where('deleted_at', null)
+                ->where('role_id', '!=', 1)
+                ->whereHas('cost_center', function ($query) use ($costCenterId) {
+                    $query->whereIn('cost_center_id', $costCenterId);
+                })
+                ->where('status', 0)
+                ->get(['id', 'email', 'phone']);
+        }
+
+        $usersMail = $usersNotify->pluck('email');
+        dump($usersMail);
+
+        dump($costCenterId);
+
+        $mailsUsers = [];
+        $mailsRoles = [];
+
+        $typeMail = 'purchase-order-to-approve';
+
+        $notificationCatalog = NotificationCatalog::where(['type' => $typeMail, 'active' => true, 'schedule' => 0])->firstOrFail();
+
+        $users = NotificationCatalogHasUsers::where('notification_catalog_id', $notificationCatalog->id)->with('user')->get();
+
+        foreach ($users as $user) {
+            if (!in_array($user->user->email, $mailsUsers, true)) {
+                array_push($mailsUsers, $user->user->email);
+            }
+        }
+
+        if ($constCenterEqual) {
+            dump('okk');
+            $roles = NotificationCatalogHasRoles::where('notification_catalog_id', $notificationCatalog->id)
+                ->whereIn('role_id', $approvalFlowOrders)
+                ->with('user')->get();
+        } else {
+            $roles = NotificationCatalogHasRoles::where('notification_catalog_id', $notificationCatalog->id)
+                ->whereIn('role_id', $approvalFlowOrders)
+                ->get();
+        }
+
+        foreach ($roles as $role) {
+            foreach ($role->user as $roleUser) {
+                foreach ($roleUser->cost_center as $roleUserCostCenter) {
+                    if ($constCenterEqual) {
+                        if ($roleUserCostCenter->id == $costCenterId[0]) {
+                            dump($roleUserCostCenter->id);
+                            if (!in_array($roleUser->email, $mailsRoles, true)) {
+                                array_push($mailsRoles, $roleUser->email);
+                                array_push($mailsRoles, $roleUser->name);
+                            }
+                        }
+                    } else {
+                        if (in_array($roleUserCostCenter->id, $costCenterId, true)) {
+                            dump($roleUserCostCenter->id);
+                            if (!in_array($roleUser->email, $mailsRoles, true)) {
+                                array_push($mailsRoles, $roleUser->email);
+                                array_push($mailsRoles, $roleUser->name);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        dump($mailsUsers, $mailsRoles); */
     }
 }

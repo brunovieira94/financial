@@ -6,6 +6,7 @@ use App\Models\AdditionalUser;
 use App\Models\User;
 use App\Models\CostCenter;
 use App\Models\Business;
+use App\Models\UserHasSavedFilter;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
@@ -13,7 +14,7 @@ class UserService
     private $user;
     private $costCenter;
     private $business;
-    private $with = ['cost_center', 'business', 'role', 'additional_users.role'];
+    private $with = ['cost_center', 'business', 'role', 'additional_users.role', 'filters'];
 
     public function __construct(User $user, CostCenter $costCenter, Business $business)
     {
@@ -60,6 +61,7 @@ class UserService
         self::syncAdditionalUsers($user, $userInfo);
         self::syncBusiness($user, $userInfo);
         self::syncCostCenter($user, $userInfo);
+        self::syncFilters($user, $userInfo);
 
         return $this->user->with($this->with)->findOrFail($user->id);
     }
@@ -77,6 +79,7 @@ class UserService
         self::syncAdditionalUsers($user, $userInfo);
         self::syncCostCenter($user, $userInfo);
         self::syncBusiness($user, $userInfo);
+        self::syncFilters($user, $userInfo);
 
         $user = $this->user->with($this->with)->findOrFail($id);
 
@@ -116,6 +119,7 @@ class UserService
         }
 
         $user->fill($userInfo)->save();
+        self::syncFilters($user, $userInfo);
 
         return $this->user->with($this->with)->findOrFail(auth()->user()->id);
     }
@@ -138,6 +142,17 @@ class UserService
     {
         if (array_key_exists('additional_users', $userInfo)) {
             $user->additional_users()->sync($userInfo['additional_users']);
+        }
+    }
+
+    public function syncFilters($user, $userInfo)
+    {
+        if (array_key_exists('filters', $userInfo)) {
+            UserHasSavedFilter::where('user_id', auth()->user()->id)->delete();
+            foreach($userInfo['filters'] as $filter){
+                $filter['user_id'] = auth()->user()->id;
+                UserHasSavedFilter::create($filter);
+            }
         }
     }
 }

@@ -15,11 +15,12 @@
         "laravel/passport": "^10.1",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
-        "league/flysystem-aws-s3-v3": "~1.0",
+        "league/flysystem-aws-s3-v3": "^1.0",
         "maatwebsite/excel": "^3.1",
         "phpoffice/phpspreadsheet": "^1.20",
         "predis/predis": "^2.0",
         "spatie/laravel-activitylog": "^3.0",
+        "stechstudio/laravel-zipstream": "^4.9",
         "symfony/yaml": "^6.0",
         "tightenco/tlint": "^6.0"
     },

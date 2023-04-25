@@ -27,9 +27,15 @@ class PaymentRequestClean extends Model
     use SoftDeletes;
     protected $table = 'payment_requests';
     protected $hidden = ['provider_id', 'bank_account_provider_id', 'business_id', 'cost_center_id', 'chart_of_account_id', 'currency_id', 'user_id'];
-    protected $appends = ['stage_for_disapproval', 'first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
+    protected $appends = ['installment_link', 'stage_for_disapproval', 'first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'or',
+        'hash',
+        'admin_id',
+        'process_number',
+        'advance',
+        'allow_binding',
         'amount_old',
         'currency_old_id',
         'net_value_old',
@@ -195,7 +201,13 @@ class PaymentRequestClean extends Model
 
     public function getApplicantCanEditAttribute()
     {
+        if(auth()->user() == null){
+            return false;
+        }
         if (isset($this->approval)) {
+            if (auth()->user() == null) {
+                return false;
+            }
             // Super Admin pode (em processamento ou rejeitada)
             if (auth()->user()->role->id == 1 && ($this->approval->status == 2 || $this->approval->status == 0)) {
                 return true;
@@ -251,11 +263,21 @@ class PaymentRequestClean extends Model
     public function getStageForDisapprovalAttribute()
     {
         return ApprovalFlow::with(['role'])
-        ->where('group_approval_flow_id', $this->group_approval_flow_id)
-        ->where('order', '<', $this->approval->order)
-        ->groupBy('order')
-        ->orderBy('id', 'ASC')
-        ->get();
+            ->where('group_approval_flow_id', $this->group_approval_flow_id)
+            ->where('order', '<', $this->approval->order)
+            ->groupBy('order')
+            ->orderBy('id', 'ASC')
+            ->get();
+    }
+
+    public function installments_linked()
+    {
+        return $this->belongsToMany(PaymentRequestHasInstallments::class, 'payment_requests_installments_linked', 'payment_request_id', 'payment_requests_installment_id');
+    }
+
+    public function getInstallmentLinkAttribute()
+    {
+        return PaymentRequestHasInstallmentLinked::where('payment_request_id', $this->id)->count();
     }
 
     public function currency_old()

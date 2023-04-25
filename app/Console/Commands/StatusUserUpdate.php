@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 
 class StatusUserUpdate extends Command
 {
-    protected $signature = 'alter:user-status';
+    protected $signature = 'command:user-status';
 
     protected $description = 'Alter diary status user';
 

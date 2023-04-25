@@ -14,16 +14,19 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $totalTax;
     private $filterCanceled = false;
+    private $fileName;
 
-    public function __construct($requestInfo)
+    public function __construct($requestInfo, $fileName)
     {
         $this->requestInfo = $requestInfo;
+        $this->fileName = $fileName;
     }
 
     use Exportable;

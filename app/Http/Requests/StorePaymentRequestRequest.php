@@ -42,7 +42,7 @@ class StorePaymentRequestRequest extends FormRequest
             'cost_center_id' => 'required|integer|exists:cost_center,id',
             'chart_of_account_id' => 'required|integer|exists:chart_of_accounts,id',
             'currency_id' => 'required|integer|exists:currency,id',
-            'exchange_rate' => 'numeric',
+            //'exchange_rate' => 'numeric',
             'frequency_of_installments' => 'integer',
             'net_value' => 'numeric',
             'xml_file' => [
@@ -85,6 +85,10 @@ class StorePaymentRequestRequest extends FormRequest
             'currency_old_id' => 'integer|exists:currency,id',
             'amount_old' => 'numeric',
             'net_value_old' => 'numeric',
+            'or' => 'max:190',
+            'hash' => 'max:190',
+            'admin_id' => 'max:300',
+            'process_number' => 'max:190',
         ];
     }
 }

@@ -16,6 +16,8 @@ use Config;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use App\Http\Resources\reports\RouteBillingResource;
+use App\Models\BillingHasAttachments;
 
 class BillingService
 {
@@ -24,15 +26,17 @@ class BillingService
     private $cangoorooService;
     private $approvalFlow;
     private $billingPayment;
+    private $attachments;
 
-    private $with = ['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow', 'billing_payment'];
+    private $with = ['bank_account', 'user', 'cangooroo', 'attachments', 'reason_to_reject', 'approval_flow', 'billing_payment'];
 
-    public function __construct(Billing $billing, CangoorooService $cangoorooService, HotelApprovalFlow $approvalFlow, BillingPayment $billingPayment)
+    public function __construct(Billing $billing, CangoorooService $cangoorooService, HotelApprovalFlow $approvalFlow, BillingPayment $billingPayment, BillingHasAttachments $attachments)
     {
         $this->billing = $billing;
         $this->cangoorooService = $cangoorooService;
         $this->approvalFlow = $approvalFlow;
         $this->billingPayment = $billingPayment;
+        $this->attachments = $attachments;
     }
 
     public function getAllBilling($requestInfo, $approvalStatus)
@@ -43,29 +47,27 @@ class BillingService
         }
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
         $requestInfo['perPage'] = $requestInfo['perPage'] ?? 200;
-        return Utils::pagination($billing->with($this->with), $requestInfo);
+        return RouteBillingResource::collection(Utils::pagination($billing->with(['approval_flow', 'cangooroo', 'billing_payment']), $requestInfo));
     }
 
     public function getAllBillingsForApproval($requestInfo)
     {
-        $approvalFlowUserOrders = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order']);
-
-        if (!$approvalFlowUserOrders)
-            return response([], 404);
+        $approvalFlowUserOrders = $this->approvalFlow->where('role_id', auth()->user()->role_id)->pluck('order')->toArray();
 
         $billing = Utils::search($this->billing, $requestInfo);
         $billing = Utils::baseFilterBilling($billing, $requestInfo);
 
-        $billing = $billing->whereIn('approval_status', [0, 2])->where('deleted_at', '=', null);
+        $billing = $billing->whereIn('order', $approvalFlowUserOrders)->whereIn('approval_status', [0, 2])->where('deleted_at', '=', null);
 
-        $billingIDs = [];
-        foreach ($approvalFlowUserOrders as $approvalFlowOrder) {
-            $billingApprovalFlow = $this->billing->where('order', $approvalFlowOrder['order']);
-            $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
-        }
-        $billing = $billing->whereIn('id', $billingIDs);
+        // $billingIDs = [];
+        // foreach ($approvalFlowUserOrders as $approvalFlowOrder) {
+        //     $billingApprovalFlow = $this->billing->where('order', $approvalFlowOrder['order']);
+        //     $billingIDs = array_merge($billingIDs, $billingApprovalFlow->pluck('id')->toArray());
+        // }
+        // $billing = $billing->whereIn('id', $billingIDs);
+
         $requestInfo['perPage'] = $requestInfo['perPage'] ?? 200;
-        return Utils::pagination($billing->with($this->with), $requestInfo);
+        return RouteBillingResource::collection(Utils::pagination($billing->with(['approval_flow', 'cangooroo', 'billing_payment']), $requestInfo));
     }
 
     public function approveAll($requestInfo)
@@ -91,12 +93,11 @@ class BillingService
         $billingPayments = [];
         $maxOrder = $this->approvalFlow->max('order');
         $arrayOrder = $this->approvalFlow
-        ->where('role_id', auth()->user()->role_id)
-        ->pluck('order')->toArray();
+            ->where('role_id', auth()->user()->role_id)
+            ->pluck('order')->toArray();
         foreach ($billings as $billing) {
             $stage = 0;
-            if (!in_array($billing->order, $arrayOrder)
-            ) {
+            if (!in_array($billing->order, $arrayOrder)) {
                 DB::rollback();
                 return response()->json([
                     'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
@@ -105,7 +106,7 @@ class BillingService
 
             if ($billing->order >= $maxOrder) {
                 $billing->approval_status = Config::get('constants.billingStatus.approved');
-                if($billing->billing_payment_id && !in_array($billing->billing_payment_id,$billingPayments)) {
+                if ($billing->billing_payment_id && !in_array($billing->billing_payment_id, $billingPayments)) {
                     $billingPayments[] = $billing->billing_payment_id;
                 }
                 // $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
@@ -127,10 +128,10 @@ class BillingService
 
         foreach ($billingPayments as $billingPaymentId) {
             $billingPayment = $this->billingPayment->with(['billings'])->find($billingPaymentId);
-            if($billingPayment){
+            if ($billingPayment) {
                 $billingPayment->status = Config::get('constants.billingStatus.approved');
-                foreach($billingPayment->billings as $value){
-                    if($value->approval_status != Config::get('constants.billingStatus.approved')){
+                foreach ($billingPayment->billings as $value) {
+                    if ($value->approval_status != Config::get('constants.billingStatus.approved')) {
                         $billingPayment->status = Config::get('constants.billingStatus.open');
                         break;
                     }
@@ -163,7 +164,7 @@ class BillingService
         if ($billing->order >= $maxOrder) {
             $billing->approval_status = Config::get('constants.billingStatus.approved');
             $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-            if($billingPayment){
+            if ($billingPayment) {
                 $this->openOrApprovePaymentBilling($billingPayment, $billing);
             }
             $stage = $billing->order;
@@ -224,13 +225,12 @@ class BillingService
                 $billingPayments = [];
                 $maxOrder = $this->approvalFlow->max('order');
                 $arrayOrder = $this->approvalFlow
-                ->where('role_id', auth()->user()->role_id)
-                ->pluck('order')->toArray();
+                    ->where('role_id', auth()->user()->role_id)
+                    ->pluck('order')->toArray();
                 $billings = $this->billing->whereIn('id', $requestInfo['ids'])->get();
                 foreach ($billings as $billing) {
                     $stage = 0;
-                    if (!in_array($billing->order, $arrayOrder)
-                    ) {
+                    if (!in_array($billing->order, $arrayOrder)) {
                         DB::rollback();
                         return response()->json([
                             'error' => 'Não é permitido a esse usuário aprovar a conta ' . $billing->id . ', modifique o fluxo de aprovação.',
@@ -239,7 +239,7 @@ class BillingService
 
                     if ($billing->order >= $maxOrder) {
                         $billing->approval_status = Config::get('constants.billingStatus.approved');
-                        if($billing->billing_payment_id && !in_array($billing->billing_payment_id,$billingPayments)) {
+                        if ($billing->billing_payment_id && !in_array($billing->billing_payment_id, $billingPayments)) {
                             $billingPayments[] = $billing->billing_payment_id;
                         }
                         // $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
@@ -261,10 +261,10 @@ class BillingService
 
                 foreach ($billingPayments as $billingPaymentId) {
                     $billingPayment = $this->billingPayment->with(['billings'])->find($billingPaymentId);
-                    if($billingPayment){
+                    if ($billingPayment) {
                         $billingPayment->status = Config::get('constants.billingStatus.approved');
-                        foreach($billingPayment->billings as $value){
-                            if($value->approval_status != Config::get('constants.billingStatus.approved')){
+                        foreach ($billingPayment->billings as $value) {
+                            if ($value->approval_status != Config::get('constants.billingStatus.approved')) {
                                 $billingPayment->status = Config::get('constants.billingStatus.open');
                                 break;
                             }
@@ -304,7 +304,7 @@ class BillingService
         $billing->approval_status = Config::get('constants.billingStatus.disapproved');
 
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-        if($billingPayment){
+        if ($billingPayment) {
             $billingPayment->status = Config::get('constants.billingStatus.open');
             $billingPayment->save();
         }
@@ -329,18 +329,20 @@ class BillingService
     public function getBilling($id)
     {
         $billing = $this->billing->findOrFail($id);
-        $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
-        $billingInfo['status_123'] = $this->get123Status($cangooroo);
-        $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
-        $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
-        $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
-        $billing->fill($billingInfo)->save();
+        // $cangooroo = $this->cangoorooService->updateCangoorooData($billing['reserve'], $billing['cangooroo_booking_id'], $billing['cangooroo_service_id']);
+        // $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        // $billingInfo['status_123'] = $this->get123Status($cangooroo);
+        // $billing->fill($billingInfo);
+        // $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
+        // $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
+        // $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
+        // $billing->fill($billingInfo)->save();
         return $this->billing->with($this->with)->findOrFail($id);
     }
 
-    public function postBilling($billingInfo)
+    public function postBilling(Request $request)
     {
+        $billingInfo = $request->all();
         $billingInfo['user_id'] = auth()->user()->id;
         $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
         $billingInfo['order'] =  1;
@@ -352,15 +354,15 @@ class BillingService
         }
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
         //$billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['status_123'] = $this->get123Status($cangooroo);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
+        $billingInfo['status_123'] = $cangooroo['status_123'];
+        $billingInfo['payment_status'] = $cangooroo['payment_status'];
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
-        if(array_key_exists('preview', $billingInfo) && $billingInfo['preview']){
+        if (array_key_exists('preview', $billingInfo) && $billingInfo['preview']) {
             return [
-                'status_123' => $billingInfo['status_123'],
-                'payment_status' => $billingInfo['payment_status'],
+                // 'status_123' => $billingInfo['status_123'],
+                // 'payment_status' => $billingInfo['payment_status'],
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
@@ -368,25 +370,26 @@ class BillingService
         $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'error' => 'Existem divergências para esse Código de Boleto: '. self::translatedField[$billingInfo['billing_payment_id']['error']],
                 'code' => 'INCONSISTENT_VALUES',
                 'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
         }
-        if(array_key_exists('bank_account', $billingInfo))
-        {
+        if (array_key_exists('bank_account', $billingInfo)) {
             $bankAccount = new BankAccount;
             $bankAccount = $bankAccount->create($billingInfo['bank_account']);
             $billingInfo['bank_account_id'] = $bankAccount->id;
         }
         $billing = new Billing;
         $billing = $billing->create($billingInfo);
+        $this->syncAttachments($billing, $billingInfo, $request);
         Utils::createBillingLog($billing->id, 'created', null, null, 0, $billingInfo['user_id']);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
 
-    public function putBilling($id, $billingInfo)
+    public function putBilling($id, Request $request)
     {
+        $billingInfo = $request->all();
         $billing = $this->billing->findOrFail($id);
         if ($billing->approval_status == Config::get('constants.billingStatus.approved')) {
             return response()->json([
@@ -407,9 +410,9 @@ class BillingService
         $billingInfo['order'] = 1;
         $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-        if($billingPayment){
-            if(count($billingPayment->billings) <= 1) $billingPayment->delete();
-            else{
+        if ($billingPayment) {
+            if (count($billingPayment->billings) <= 1) $billingPayment->delete();
+            else {
                 $billingPayment->status = Config::get('constants.billingStatus.open');
                 $billingPayment->save();
             }
@@ -418,15 +421,15 @@ class BillingService
         $billingInfo['reason_to_reject_id'] = null;
         //$cangooroo = Cangooroo::where('service_id', $billingInfo['cangooroo_service_id'])->first();
         // $billingInfo['cangooroo_booking_id'] = $cangooroo['booking_id'];
-        $billingInfo['status_123'] = $this->get123Status($cangooroo);
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billingInfo, $cangooroo);
+        $billingInfo['status_123'] = $cangooroo['status_123'];
+        $billingInfo['payment_status'] = $cangooroo['payment_status'];
         $billingSuggestion = $this->getBillingSuggestion($billingInfo, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
-        if(array_key_exists('preview', $billingInfo) && $billingInfo['preview']){
+        if (array_key_exists('preview', $billingInfo) && $billingInfo['preview']) {
             return [
-                'status_123' => $billingInfo['status_123'],
-                'payment_status' => $billingInfo['payment_status'],
+                // 'status_123' => $billingInfo['status_123'],
+                // 'payment_status' => $billingInfo['payment_status'],
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
             ];
@@ -435,22 +438,22 @@ class BillingService
         if (is_array($billingInfo['billing_payment_id']) && (array_key_exists('error', $billingInfo['billing_payment_id']))) {
             $this->billingPayment->where('id', $billing->billing_payment_id)->update(['deleted_at' => null]);
             return response()->json([
-                'error' => 'Existem divergências para esse Código de Boleto: '. $billingInfo['billing_payment_id']['error'],
+                'error' => 'Existem divergências para esse Código de Boleto: '. self::translatedField[$billingInfo['billing_payment_id']['error']],
                 'code' => 'INCONSISTENT_VALUES',
                 'field' => $billingInfo['billing_payment_id']['error']
             ], 422);
         }
-        if(array_key_exists('bank_account', $billingInfo))
-        {
+        if (array_key_exists('bank_account', $billingInfo)) {
             $bankAccount = BankAccount::where('id', $billing['bank_account_id'])->first();
-            if($bankAccount) $bankAccount->fill($billingInfo['bank_account'])->save();
-            else{
+            if ($bankAccount) $bankAccount->fill($billingInfo['bank_account'])->save();
+            else {
                 $bankAccount = new BankAccount;
                 $bankAccount = $bankAccount->create($billingInfo['bank_account']);
                 $billingInfo['bank_account_id'] = $bankAccount->id;
             }
         }
         $billing->fill($billingInfo)->save();
+        $this->putAttachments($id, $billingInfo, $request);
         Utils::createBillingLog($billing->id, 'updated', null, null, $billing->order, auth()->user()->id);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -459,9 +462,9 @@ class BillingService
     {
         $billing = $this->billing->findOrFail($id);
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
-        if($billingPayment){
-            if(count($billingPayment->billings) <= 1) $billingPayment->delete();
-            else{
+        if ($billingPayment) {
+            if (count($billingPayment->billings) <= 1) $billingPayment->delete();
+            else {
                 $this->openOrApprovePaymentBilling($billingPayment, $billing);
             }
         }
@@ -472,19 +475,18 @@ class BillingService
         return true;
     }
 
-    public function getPaymentStatus($billing, $cangooroo)
+    public static function getPaymentStatus($cangooroo)
     {
         // $paidReserves = PaidBillingInfo::where('reserve', $billing['reserve'])->get();
         $paidReserves = PaidBillingInfo::where('service_id', $cangooroo['service_id'])->get();
-        if(empty($paidReserves->toArray())){
+        if (empty($paidReserves->toArray())) {
             return "Não Pago";
-        }
-        else{
+        } else {
             $sum = 0;
             foreach ($paidReserves as $paidReserve) {
                 $sum += $paidReserve['supplier_value'];
             }
-            if($sum >= ($cangooroo['selling_price']-5)) return "Pago";
+            if ($sum >= ($cangooroo['selling_price'] - 5)) return "Pago";
             else return "Pago - Parcial";
         }
     }
@@ -493,60 +495,56 @@ class BillingService
     {
         $suggestionReason = '';
         $cancellationValueToUse = 0;
-        if($billingInfo['payment_status'] != 'Não Pago'){
-            $suggestionReason = $suggestionReason.' | Reserva deve estar em aberto';
+        if ($billingInfo['payment_status'] != 'Não Pago') {
+            $suggestionReason = $suggestionReason . ' | Reserva deve estar em aberto';
         }
-        if($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido' && $billingInfo['status_123'] != 'Reservado'){
-            $suggestionReason = $suggestionReason.' | Reserva não emitida no Admin';
+        if ($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido' && $billingInfo['status_123'] != 'Reservado') {
+            $suggestionReason = $suggestionReason . ' | Reserva não emitida no Admin';
         }
         //if($this->billing->where('id', '!=' , $billingId)->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
-        if($this->billing->where('id', '!=' , $billingId)->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
-            $suggestionReason = $suggestionReason.' | Reserva cadastrada em duplicidade';
+        if ($this->billing->where('id', '!=', $billingId)->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0, 1])->first()) {
+            $suggestionReason = $suggestionReason . ' | Reserva cadastrada em duplicidade';
         }
-        if($cangooroo['status'] == 'Cancelled'){
+        if ($cangooroo['status'] == 'Cancelled') {
             $cancellationDate = (!$cangooroo['cancellation_date'] || strtotime($cangooroo['cancellation_date']) <= 1) ? $cangooroo['last_update'] : $cangooroo['cancellation_date'];
-            $cancellationStartDate = (strtotime($cangooroo['check_in']) > strtotime("+5 days",strtotime($cangooroo['reservation_date']))) ? strtotime("+3 days",strtotime($cangooroo['cancellation_policies_start_date'])) : strtotime($cangooroo['cancellation_policies_start_date']);
-            if(strtotime($cancellationDate) > strtotime($cangooroo['check_in'])){
+            $cancellationStartDate = (strtotime($cangooroo['check_in']) > strtotime("+5 days", strtotime($cangooroo['reservation_date']))) ? strtotime("+3 days", strtotime($cangooroo['cancellation_policies_start_date'])) : strtotime($cangooroo['cancellation_policies_start_date']);
+            if (strtotime($cancellationDate) > strtotime($cangooroo['check_in'])) {
                 $cancellationValueToUse = $cangooroo['selling_price'];
-            }
-            else if(strtotime($cancellationDate) > $cancellationStartDate){
+            } else if (strtotime($cancellationDate) > $cancellationStartDate) {
                 $cancellationValueToUse = $cangooroo['cancellation_policies_value'];
             }
-            if($cancellationValueToUse != $billingInfo['supplier_value']){
-                $suggestionReason = $suggestionReason.' | Valor informado diferente do valor de Cancelamento: R$ '.$cancellationValueToUse;
+            if ($cancellationValueToUse != $billingInfo['supplier_value']) {
+                $suggestionReason = $suggestionReason . ' | Valor informado diferente do valor de Cancelamento: R$ ' . $cancellationValueToUse;
             }
-        }
-        else{
-            if($cangooroo['status'] != 'Confirmed'){
-                $suggestionReason = $suggestionReason.' | Reserva não confirmada no Cangooroo';
+        } else {
+            if ($cangooroo['status'] != 'Confirmed') {
+                $suggestionReason = $suggestionReason . ' | Reserva não confirmada no Cangooroo';
             }
-            if($billingInfo['form_of_payment'] == 0){
-                if($cangooroo['selling_price'] != $billingInfo['supplier_value']){
-                    $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
+            if ($billingInfo['form_of_payment'] == 0) {
+                if ($cangooroo['selling_price'] != $billingInfo['supplier_value']) {
+                    $suggestionReason = $suggestionReason . ' | Valor informado diferente do valor no Cangooroo';
+                }
+            } else {
+                if (($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']) {
+                    $suggestionReason = $suggestionReason . ' | Valor informado diferente do valor no Cangooroo';
                 }
             }
-            else{
-                if(($cangooroo['selling_price'] - 5) >= $billingInfo['supplier_value'] || ($cangooroo['selling_price'] + 5) <= $billingInfo['supplier_value']){
-                    $suggestionReason = $suggestionReason.' | Valor informado diferente do valor no Cangooroo';
-                }
-            }
         }
-        if(!$cangooroo->hotel->is_valid){
-            $suggestionReason = $suggestionReason.' | Hotel não validado';
+        if (!$cangooroo->hotel->is_valid) {
+            $suggestionReason = $suggestionReason . ' | Hotel não validado';
         }
-        if($cangooroo->hotel->cpf_cnpj != $billingInfo['cnpj'] && $cangooroo->hotel->cnpj_extra != $billingInfo['cnpj']){
-            $suggestionReason = $suggestionReason.' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
+        if ($cangooroo->hotel->cpf_cnpj != $billingInfo['cnpj'] && $cangooroo->hotel->cnpj_extra != $billingInfo['cnpj']) {
+            $suggestionReason = $suggestionReason . ' | Cnpj do Titular diferente dos CNPJ cadastrados para esse hotel';
         }
-        if($cangooroo['provider_name'] != 'Omnibees' && $cangooroo['provider_name'] != 'HSystem' && $cangooroo['provider_name'] != 'Trend'){
-            $suggestionReason = $suggestionReason.' | Reserva referente a Broker';
+        if ($cangooroo['provider_name'] != 'Omnibees' && $cangooroo['provider_name'] != 'HSystem' && $cangooroo['provider_name'] != 'Trend') {
+            $suggestionReason = $suggestionReason . ' | Reserva referente a Broker';
         }
-        if($cangooroo['is_vcn']){
-            $suggestionReason = $suggestionReason.' | A forma de pagamento para essa reserva é VCN';
+        if ($cangooroo['is_vcn']) {
+            $suggestionReason = $suggestionReason . ' | A forma de pagamento para essa reserva é VCN';
         }
-        if($suggestionReason == ''){
+        if ($suggestionReason == '') {
             $suggestion = true;
-        }
-        else{
+        } else {
             $suggestion = false;
             $suggestionReason = substr_replace($suggestionReason, '', 0, 3);
         }
@@ -556,14 +554,14 @@ class BillingService
         ];
     }
 
-    public function get123Status($cangooroo)
+    public static function get123Status($cangooroo)
     {
-        $token = $this->get123Token();
+        $token = self::get123Token();
         if($token){
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
-            ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/").$cangooroo['123_id']);
-            if ($apiCall->status() != 200){
+            ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/") . $cangooroo['123_id']);
+            if ($apiCall->status() != 200) {
 
                 $packageCall = Http::withHeaders([
                     'Shared-Id' => '123',
@@ -593,7 +591,7 @@ class BillingService
     //     }
     // }
 
-    public function get123Token()
+    public static function get123Token()
     {
         $apiCall = Http::withHeaders([
             'secret' => env('API_123_SECRET', Config::get('constants.123_secret')),
@@ -614,14 +612,15 @@ class BillingService
             ], 422);
         }
         $status['cangooroo'] = $cangooroo['status'];
-        $billingInfo['payment_status'] = $this->getPaymentStatus($billing, $cangooroo);
+        $billingInfo['payment_status'] = $this->getPaymentStatus($cangooroo);
         $billingInfo['status_123'] = $this->get123Status($cangooroo);
+        $billing->fill($billingInfo);
         $billingSuggestion = $this->getBillingSuggestion($billing, $cangooroo, $id);
         $billingInfo['suggestion'] = $billingSuggestion['suggestion'];
         $billingInfo['suggestion_reason'] = $billingSuggestion['suggestion_reason'];
         $billing->fill($billingInfo)->save();
-        $billingInfo['cangooroo'] = $cangooroo['status'];
-        return $billingInfo;
+        $billing['cangooroo'] = $cangooroo['status'];
+        return $billing;
     }
 
     public function syncBillingPayment($billingInfo, $cangooroo)
@@ -629,30 +628,26 @@ class BillingService
         $changeAllPayment = isset($billingInfo['change_all_payment']) && $billingInfo['change_all_payment'] == true;
         $fields = ['pay_date', 'recipient_name', 'oracle_protocol', 'cnpj'];
         $billingInfo['hotel_id'] = $cangooroo['hotel_id'];
-        if(!is_null($billingInfo['boleto_code'])){
+        if (!is_null($billingInfo['boleto_code'])) {
             $findBillingPayment = BillingPayment::where('boleto_code', $billingInfo['boleto_code'])->where('status', 0)->first();
-            if($findBillingPayment){
+            if ($findBillingPayment) {
                 foreach ($fields as $field) {
-                    if($changeAllPayment){
+                    if ($changeAllPayment) {
                         $findBillingPayment[$field] = $billingInfo[$field];
                         $this->billing->where('billing_payment_id', $findBillingPayment->id)->update([$field => $billingInfo[$field]]);
-                    }
-                    else if($field == 'pay_date'){
-                        if(strtotime($billingInfo[$field]) != strtotime($findBillingPayment[$field])) return ['error' => $field];
-                    }
-                    else if($billingInfo[$field] != $findBillingPayment[$field]) return ['error' => $field];
+                    } else if ($field == 'pay_date') {
+                        if (strtotime($billingInfo[$field]) != strtotime($findBillingPayment[$field])) return ['error' => $field];
+                    } else if ($billingInfo[$field] != $findBillingPayment[$field]) return ['error' => $field];
                 }
                 $findBillingPayment->status = Config::get('constants.billingStatus.open');
                 $findBillingPayment->save();
                 return $findBillingPayment->id;
-            }
-            else{
+            } else {
                 $billingPayment = new BillingPayment();
                 $billingPayment = $billingPayment->create($billingInfo);
                 return $billingPayment->id;
             }
-        }
-        else{
+        } else {
             $billingPayment = new BillingPayment();
             $billingPayment = $billingPayment->create($billingInfo);
             return $billingPayment->id;
@@ -662,8 +657,8 @@ class BillingService
     public function openOrApprovePaymentBilling($billingPayment, $billing)
     {
         $billingPayment->status = Config::get('constants.billingStatus.approved');
-        foreach($billingPayment->billings as $value){
-            if($value->approval_status != Config::get('constants.billingStatus.approved') && $value->id != $billing->id){
+        foreach ($billingPayment->billings as $value) {
+            if ($value->approval_status != Config::get('constants.billingStatus.approved') && $value->id != $billing->id) {
                 $billingPayment->status = Config::get('constants.billingStatus.open');
                 break;
             }
@@ -686,4 +681,67 @@ class BillingService
         }
         return $usersArray;
     }
+
+    public function syncAttachments($billing, $billingInfo, Request $request)
+    {
+        if (array_key_exists('attachments', $billingInfo)) {
+            foreach ($billingInfo['attachments'] as $key => $attachment) {
+                $billingHasAttachments = new BillingHasAttachments;
+                $attachment['attachment'] = $this->storeAttachment($request, $key);
+                $billingHasAttachments = $billingHasAttachments->create([
+                    'billing_id' => $billing->id,
+                    'attachment' => $attachment['attachment'],
+                ]);
+            }
+        }
+    }
+
+       public function putAttachments($id, $billingInfo, Request $request)
+    {
+
+        $updateAttachments = [];
+        $createdAttachments = [];
+
+        if (array_key_exists('attachments', $billingInfo)) {
+            foreach ($billingInfo['attachments'] as $key => $attachment) {
+                if (array_key_exists('id', $attachment)) {
+                    $updateAttachments[] = $attachment['id'];
+                } else {
+                    $billingHasAttachments = new BillingHasAttachments;
+                    $attachment['attachment'] = $this->storeAttachment($request, $key);
+                    $billingHasAttachments = $billingHasAttachments->create([
+                        'billing_id' => $id,
+                        'attachment' => $attachment['attachment'],
+                    ]);
+                    $createdAttachments[] = $billingHasAttachments->id;
+                }
+            }
+        }
+        $this->attachments->where('billing_id', $id)->whereNotIn('id', $updateAttachments)->whereNotIn('id', $createdAttachments)->delete();
+    }
+
+    public function storeAttachment(Request $request, $key)
+    {
+        $data = uniqid(date('HisYmd'));
+
+        if ($request->hasFile('attachments.' . $key . '.attachment') && $request->file('attachments.' . $key . '.attachment')->isValid()) {
+            $extensionAttachment = $request['attachments.' . $key . '.attachment']->extension();
+            $originalNameAttachment  = explode('.', $request['attachments.' . $key . '.attachment']->getClientOriginalName());
+            $nameFileAttachment = "{$originalNameAttachment[0]}_{$data}.{$extensionAttachment}";
+            $uploadAttachment = $request['attachments.' . $key . '.attachment']->storeAs('attachment', $nameFileAttachment);
+
+            if (!$uploadAttachment) {
+                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+            }
+            return $nameFileAttachment;
+        }
+    }
+
+    const translatedField = [
+        'pay_date' => 'Data de Pagamento',
+        'recipient_name' => 'Nome do titular',
+        'oracle_protocol' => 'Protocolo Oracle',
+        'cnpj' => 'CNPJ',
+        'hotel_id' => 'Id do Hotel'
+    ];
 }

@@ -6,24 +6,30 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
-use App\Models\HotelApprovalFlow;
 use App\Models\ApprovalFlowSupply;
 use App\Models\PaidBillingInfo;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDelivery;
 use App\Models\SupplyApprovalFlow;
+use App\Models\HotelApprovalFlow;
 use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Billing;
 use App\Models\BillingLog;
 use App\Models\HotelLog;
+use App\Models\NotificationCatalog;
+use App\Models\NotificationCatalogHasRoles;
+use App\Models\NotificationCatalogHasUsers;
+use App\Models\PaymentRequestHasInstallmentLinked;
+use App\Models\PaymentRequestHasInstallments;
 use Carbon\Carbon;
 use Config;
 use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
 use Spatie\Activitylog\Contracts\Activity;
+use Storage;
 
 class Utils
 {
@@ -144,6 +150,17 @@ class Utils
                                 PaymentRequestHasInstallmentsClean::where('id', $installment['id'])->update(['status' => Config::get('constants.status.error')]);
                             }
                         } elseif ($payment_form->group_form_payment_id == 1) {
+                            if ($installment->type_billet == 4) {
+                                if ($payment_form->concessionaire_billet) {
+                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                        break;
+                                    } else {
+                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                        break;
+                                    }
+                                }
+                            } else
                             if (substr($installment->bar_code, 0, 3) == $bankCode) {
                                 if ($payment_form->same_ownership) {
                                     if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
@@ -274,8 +291,22 @@ class Utils
 
     public static function codigoBarrasBB($linhaDigitavel)
     {
-        return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 10, 10) . substr($linhaDigitavel, 21, 10);
+        $linhaDigitavel = self::onlyNumbers($linhaDigitavel);
+        switch (strlen($linhaDigitavel)) {
+            case 47:
+                return substr($linhaDigitavel, 0, 4) . substr($linhaDigitavel, 32, 15) . substr($linhaDigitavel, 4, 5) . substr($linhaDigitavel, 10, 10) . substr($linhaDigitavel, 21, 10);
+                break;
+            case 44:
+                return $linhaDigitavel;
+                break;
+            case 48:
+                return substr($linhaDigitavel, 0, 11) . substr($linhaDigitavel, 12, 11) . substr($linhaDigitavel, 24, 11) . substr($linhaDigitavel, 36, 11);
+                break;
+            default:
+                return $linhaDigitavel;
+        }
     }
+
 
     public static function identificacaoTipoTransferencia($tipoConta)
     {
@@ -546,6 +577,10 @@ class Utils
                     }
                 });
             });
+        }
+
+        if (array_key_exists('installment_linked', $requestInfo)) {
+            $paymentRequest = $paymentRequest->withoutGlobalScopes();
         }
 
         if (array_key_exists('card_identifier', $requestInfo)) {
@@ -844,6 +879,10 @@ class Utils
                 $installment->whereBetween('extension_date', [now(), now()->addMonths(1)]);
             }
         }
+
+        if (array_key_exists('installment_linked', $requestInfo)) {
+            $installment = $installment->where('linked', false);
+        }
         return $installment;
     }
 
@@ -967,7 +1006,6 @@ class Utils
         }
         return $groupBilling;
     }
-
     public static function createManualLogPaymentRequest($old, $new, $causerID, $model)
     {
         activity()
@@ -1026,7 +1064,7 @@ class Utils
     {
         $arrayStatus = [];
         if (array_key_exists('status', $requestInfo)) {
-            if (is_array($requestInfo['status'])) {
+            if (is_array($requestInfo['status']) && !empty($requestInfo['status'])) {
                 if (in_array(0, $requestInfo['status'])) {
                     array_push($arrayStatus, 0);
                 }
@@ -1041,5 +1079,50 @@ class Utils
         }
 
         return $arrayStatus;
+    }
+
+    public static function userWithActiveNotification($type, $schedule)
+    {
+        $notificationId = NotificationCatalog::where(['type' => $type, 'active' => true, 'schedule' => $schedule])->firstOrFail(['id', 'type']);
+        $usersId = [];
+        $usersId = NotificationCatalogHasUsers::where('notification_catalog_id', $notificationId->id)->with('user')->get('user_id')->pluck('user_id')->toArray();
+
+        foreach (NotificationCatalogHasRoles::where('notification_catalog_id', $notificationId->id)->with('user')->get() as $roleUsers) {
+            foreach ($roleUsers->user as $user) {
+                $usersId[] = $user->id;
+            }
+        }
+
+        return array_unique($usersId);
+    }
+
+    public static function paiOutInstallmentLinked($installmentId)
+    {
+        $installment = PaymentRequestHasInstallments::with('payment_request.approval')->findOrFail($installmentId);
+        if ($installment->payment_request->approval->status == Config::get('constants.status.paid out')) {
+            if (PaymentRequestHasInstallmentLinked::where('payment_request_id', $installment->payment_request_id)->exists()) {
+                $installmentLinked = PaymentRequestHasInstallmentLinked::where('payment_request_id', $installment->payment_request_id)->get('payment_requests_installment_id');
+                DB::table('payment_requests_installments')->whereIn('id', $installmentLinked->pluck('payment_requests_installment_id')->toArray())->update(['status' => Config::get('constants.status.paid out')]);
+            }
+        }
+    }
+
+    public static function replaceCharacterUpload($string)
+    {
+        $normalizeChars = array(
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A', 'Ä' => 'A', 'Æ' => 'AE', 'Ç' => 'C',
+            'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Í' => 'I', 'Ì' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ð' => 'Eth',
+            'Ñ' => 'N', 'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y', 'Ŕ' => 'R',
+
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'å' => 'a', 'ä' => 'a', 'æ' => 'ae', 'ç' => 'c',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'eth',
+            'ñ' => 'n', 'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'ŕ' => 'r', 'ÿ' => 'y',
+
+            'ß' => 'sz', 'þ' => 'thorn', 'º' => '', 'ª' => '', '°' => '',
+        );
+
+        return preg_replace('/[^0-9a-zA-Z *\-\\[\]\{\}\/\\_]/', '', strtr($string, $normalizeChars));
     }
 }

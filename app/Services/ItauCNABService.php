@@ -25,6 +25,7 @@ use App\CNABLayoutsParser\CnabParser\Input\RetornoFile;
 use App\CNABLayoutsParser\CnabParser\Retorno\BancoBrasil;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\PaymentRequestClean;
+use App\Models\PaymentRequestHasInstallmentLinked;
 
 class ItauCNABService
 {
@@ -183,17 +184,54 @@ class ItauCNABService
         $arrayString = preg_split("/\r\n|\n|\r/", file_get_contents($requestInfo->file('return-file')));
         $arrayInstallments = [];
         $arrayPaymentRequest = [];
+        $arrayInstallmentsPayOut = [];
         $codeBankReturn = substr($arrayString[0], 0, 3);
+
+        $headerDate = substr($arrayString[0], 143, 8);
+        $headerTime = substr($arrayString[0], 151, 6);
+
+        $cnabBankAccountCompany = null;
+        if ((CnabGenerated::where('header_date', $headerDate)->where('header_time', $headerTime)->exists())) {
+            $cnabGenerated = CnabGenerated::where('header_date', $headerDate)->where('header_time', $headerTime)->orderBy('id', 'DESC')->first();
+            $cnabBankAccountCompany = $cnabGenerated->bank_account_company_id;
+            $file = $requestInfo->file('return-file');
+            $originalName  = explode('.', $file->getClientOriginalName());
+            $extension = $originalName[count($originalName) - 1];
+            $generatedName = 'return-' . uniqid(date('HisYmd')) . '.' . $extension;
+
+            $file->storeAs(
+                'tempCNAB',
+                $generatedName,
+                's3'
+            );
+            $cnabGenerated->archive_return = $generatedName;
+            $cnabGenerated->save();
+        }
 
         foreach ($arrayString as $line) {
 
             $recordType = substr($line, 7, 1); // 3
             $segmentCode = substr($line, 13, 1); // A or J
-            $installmentID = trim(substr($line, 182, 20)); //id installment
             $codeReturn = trim(substr($line, 230, 2)); //id installment
 
             if ($recordType == '3') {
                 if ($segmentCode == 'A' or $segmentCode == 'J') {
+
+                    $paymentDate = null;
+                    $valuePayment = null;
+
+                    if ($segmentCode == 'A') {
+                        $installmentID = trim(substr($line, 73, 20));
+                        $paymentDate = substr($line, 158, 4) . substr($line, 156, 2) . substr($line, 154, 2);
+                        $valuePayment =  ltrim(substr($line, 162, 13), '0')  . '.' . substr($line, 175, 2);
+                    } else if ($segmentCode == 'J') {
+                        $installmentID = trim(substr($line, 182, 20));
+                        $paymentDate = substr($line, 148, 4) . substr($line, 146, 2) . substr($line, 144, 2);
+                        $valuePayment =  ltrim(substr($line, 152, 13), '0')  . '.' . substr($line, 165, 2);
+                    }
+
+                    //   dd($paymentDate, $installmentID, $valuePayment);
+
                     if (PaymentRequestHasInstallments::where('id', (int)$installmentID)->exists()) {
                         array_push($arrayInstallments, (int)$installmentID);
 
@@ -208,6 +246,11 @@ class ItauCNABService
                         $installment->status = $statusReturnCnab;
                         $installment->status_cnab_code = $codeReturn;
                         $installment->text_cnab = BancoBrasil::codeReturnBrazilBank($codeReturn);
+                        $installment->system_payment_method = 0;
+                        $installment->group_form_payment_made_id = $installment->group_form_payment_id;
+                        $installment->bank_account_company_id = $cnabBankAccountCompany;
+                        $installment->paid_value = $valuePayment;
+                        $installment->payment_made_date = $paymentDate;
                         $installment->save();
 
                         DB::table('accounts_payable_approval_flows')->where('payment_request_id', $installment->payment_request_id)
@@ -219,6 +262,10 @@ class ItauCNABService
 
                         if (!in_array($installment->payment_request_id, $arrayPaymentRequest)) {
                             array_push($arrayPaymentRequest, $installment->payment_request_id);
+                        }
+
+                        if ($statusReturnCnab == Config::get('constants.status.paid out')) {
+                            array_push($arrayInstallmentsPayOut, $installment->id);
                         }
                     }
 
@@ -235,6 +282,10 @@ class ItauCNABService
                                     );
                             }
                         }
+                    }
+
+                    foreach ($arrayInstallmentsPayOut as $installmentID){
+                        Utils::paiOutInstallmentLinked($installmentID);
                     }
                 }
             }
@@ -275,21 +326,24 @@ class ItauCNABService
             $bankAccount->bank->bank_code
         );
 
+        $headerDate = Utils::formatCnab('9', date('dmY'), 8);
+        $headerTime = Utils::formatCnab('9', date('His'), 6);
+
         switch ($bankAccount->bank->bank_code) {
             case '001':
                 $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/bb/cnab240/cobranca.yml');
                 $remessa = new Remessa($remessaLayout);
-                $remessa = GerarRemessa::gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
+                $remessa = GerarRemessa::gerarRemessaBancoBrasil($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids'], $headerDate, $headerTime);
                 break;
             case '341':
                 $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/itau/cnab240/cobranca.yml');
                 $remessa = new Remessa($remessaLayout);
-                $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
+                $remessa = GerarRemessa::gerarRemessaItau($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids'], $headerDate, $headerTime);
                 break;
             case '033':
                 $remessaLayout = new Layout(app_path() . '/CNABLayoutsParser/config/santander/cnab240/cobranca.yml');
                 $remessa = new Remessa($remessaLayout);
-                $remessa = GerarRemessa::gerarRemessaSantander($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids']);
+                $remessa = GerarRemessa::gerarRemessaSantander($remessa, $company, $bankAccount, $allGroupedInstallment, $requestInfo['installments_ids'], $headerDate, $headerTime);
                 break;
             default:
                 return Response()->json([
@@ -337,7 +391,9 @@ class ItauCNABService
                 'file_date' => Carbon::now()->format('Y/m/d H:i:s'),
                 'file_name' => $archiveName,
                 'company_id' => $company->id,
-                'bank_account_company_id' => $bankAccount->id
+                'bank_account_company_id' => $bankAccount->id,
+                'header_date' => $headerDate,
+                'header_time' => $headerTime,
             ]
         );
 

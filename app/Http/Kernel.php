@@ -63,10 +63,13 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'integrations' => \App\Http\Middleware\IntegrationsMiddleware::class,
         'check.permission' => \App\Http\Middleware\CheckUserHasPermission::class,
         'check.installments' => \App\Http\Middleware\CheckPortionAmounts::class,
         'check.values.invoice' => \App\Http\Middleware\CheckValuesWhenSendingInvoice::class,
         'check.values.payment.request.integration' => \App\Http\Middleware\CheckStorePaymentRequestIntegration::class,
         'check.data.generate.cnab' => \App\Http\Middleware\CheckDataRequestGenerateCNAB::class,
+        'downtime.user' => \App\Http\Middleware\DownTimeUser::class,
+        'check.installment.integration' => \App\Http\Middleware\CheckIntegrationInstallment::class,
     ];
 }

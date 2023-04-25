@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\AdditionalUser;
+use App\Models\DowntimeUser;
 use App\Models\Module;
 use App\Models\RoleHasModule;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserAuth;
 use Auth;
+use DB;
 use Response;
 
 class AuthService
@@ -46,7 +48,7 @@ class AuthService
             activity()->enableLogging();
         }
 
-        $user = $this->user->with(['role', 'additional_users.role', 'cost_center', 'business'])->findOrFail($id);
+        $user = $this->user->with(['role', 'additional_users.role', 'cost_center', 'business', 'filters'])->findOrFail($id);
 
         if ($user->status != 0) {
             return response()->json([
@@ -71,6 +73,12 @@ class AuthService
 
         unset($user->role_id);
         $user->permissions = $permissions;
+
+        $downtime = DowntimeUser::firstOrNew([
+            'user_id' => $user->id
+        ]);
+        $downtime->updated_at = now()->timezone('America/Sao_Paulo')->format('Y-m-d H:i:s');
+        $downtime->save(['timestamps' => FALSE]);
 
         return response(['user' => $user, 'access_token' => $tokenResponse->access_token, 'refresh_token' => $tokenResponse->refresh_token]);
     }

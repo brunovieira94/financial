@@ -54,13 +54,33 @@ class CangoorooService
         $supplierName = null;
         $sellingPrice = null;
         $isVcn = 0;
+        $hasUsdConvertion = false;
+        $convertion = 1;
         foreach ($room['CustomFields'] as $customField) {
             if ($customField['Name'] == 'SupplierName')
                 $supplierName = $customField['Value'];
             if ($customField['Name'] == 'SupplierPrice.Price')
-                $sellingPrice = $customField['Value'];
+            {
+                if (mb_strpos($customField['Value'], ',') !== false)
+                {
+                    $sellingPrice = floatval(str_replace(",", ".",$customField['Value']));
+                }
+                else{
+                    $sellingPrice = floatval($customField['Value']);
+                }
+            }
             if ($customField['Name'] == 'SupplierVCNpayment')
                 $isVcn = $customField['Value'] == 'true' ? 1 : 0;
+            if ($customField['Name'] == 'SupplierTax.Currency' && $customField['Value'] == "USD")
+                $hasUsdConvertion = true;
+        }
+
+        if($hasUsdConvertion){
+            foreach ($room['CustomFields'] as $customField) {
+                if ($customField['Name'] == 'Currency')
+                    $convertion = floatval(explode("}",explode('ConvertionValue":',$customField['Value'])[1])[0]);
+            }
+            $sellingPrice = $sellingPrice * $convertion;
         }
 
         $lastUpdate = explode("-0300", explode("Date(", $response['LastUpdate'])[1])[0];
@@ -107,12 +127,16 @@ class CangoorooService
             $updatedCangooroo->fill($data)->save();
             $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
             $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+            $cangoorooToReturn['payment_status'] = BillingService::getPaymentStatus($cangoorooToReturn);
+            $cangoorooToReturn['status_123'] = BillingService::get123Status($cangoorooToReturn);
             return $cangoorooToReturn;
         }
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
         $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
         $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+        $cangoorooToReturn['payment_status'] = BillingService::getPaymentStatus($cangoorooToReturn);
+        $cangoorooToReturn['status_123'] = BillingService::get123Status($cangoorooToReturn);
         return $cangoorooToReturn;
     }
 

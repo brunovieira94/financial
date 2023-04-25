@@ -12,15 +12,18 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use App\Exports\Utils as ExportsUtils;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     private $requestInfo;
     private $totalTax;
+    private $fileName;
 
-    public function __construct($requestInfo)
+    public function __construct($requestInfo, $fileName)
     {
         $this->requestInfo = $requestInfo;
+        $this->fileName = $fileName;
     }
 
     use Exportable;
