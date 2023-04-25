@@ -25,6 +25,7 @@ use App\Models\PaymentRequestHasInstallmentLinked;
 use App\Models\PaymentRequestHasInstallments;
 use Carbon\Carbon;
 use Config;
+use DateTime;
 use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
@@ -1124,5 +1125,78 @@ class Utils
         );
 
         return preg_replace('/[^0-9a-zA-Z *\-\\[\]\{\}\/\\_]/', '', strtr($string, $normalizeChars));
+    }
+
+    public static function getHolidayList($ano = null) {
+
+        if ($ano === null) {
+            $ano = intval(date('Y'));
+        }
+
+        $pascoa = easter_date($ano); // retorna data da pascoa do ano especificado
+        $diaPascoa = date('j', $pascoa);
+        $mesPacoa = date('n', $pascoa);
+        $anoPascoa = date('Y', $pascoa);
+
+        $feriados = [
+            // Feriados nacionais fixos
+            mktime(0, 0, 0, 1, 1, $ano),   // Confraternização Universal
+            mktime(0, 0, 0, 4, 21, $ano),  // Tiradentes
+            mktime(0, 0, 0, 5, 1, $ano),   // Dia do Trabalhador
+            mktime(0, 0, 0, 9, 7, $ano),   // Dia da Independência
+            mktime(0, 0, 0, 10, 12, $ano), // N. S. Aparecida
+            mktime(0, 0, 0, 11, 2, $ano),  // Todos os santos
+            mktime(0, 0, 0, 11, 15, $ano), // Proclamação da republica
+            mktime(0, 0, 0, 12, 25, $ano), // Natal
+            //
+            // Feriados variaveis
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa - 48, $anoPascoa), // 2º feria Carnaval
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa - 47, $anoPascoa), // 3º feria Carnaval
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa - 2, $anoPascoa),  // 6º feira Santa
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa, $anoPascoa),      // Pascoa
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa + 60, $anoPascoa), // Corpus Christ
+        ];
+
+        sort($feriados);
+
+        $listaDiasFeriado = [];
+        foreach ($feriados as $feriado) {
+            $data = date('Y-m-d', $feriado);
+            $listaDiasFeriado[$data] = $data;
+        }
+
+        return $listaDiasFeriado;
+    }
+
+    public static function isHoliday($data) {
+        $holidayList = self::getHolidayList(date('Y', strtotime($data)));
+        if (isset($holidayList[$data])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function getUtileDays($from, $daysQuantity = 30, $reverse = false) {
+        $dateTime = new DateTime($from);
+
+        $utilesDayList = [];
+        $count = 0;
+        $sumWeekday = $reverse ? '-1 weekday' : '+1 weekday';
+        while ($count < $daysQuantity) {
+            $dateTime->modify($sumWeekday);
+            $data = $dateTime->format('Y-m-d');
+            if (!self::isHoliday($data)) {
+                $utilesDayList[] = $data;
+                $count++;
+            }
+        }
+
+        return $utilesDayList;
+    }
+
+    public static function getLastUtileDay($from, $daysQuantity = 30, $reverse = false) {
+        $list = self::getUtileDays($from, $daysQuantity, $reverse);
+        return end($list);
     }
 }
