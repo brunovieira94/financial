@@ -42,6 +42,9 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
             $hotel->cpf_cnpj,
             $hotel->is_valid ? 'Sim' : 'Não',
             $hotel->created_at,
+            $hotel->payment_condition_days,
+            !is_null($hotel->payment_condition) ? $hotel->paymentConditions[$hotel->payment_condition] : '',
+            !is_null($hotel->payment_condition_before) ? $hotel->paymentConditionsBefore[$hotel->payment_condition_before] : '',
         ];
     }
 
@@ -66,6 +69,9 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
             'CPF/CNPJ',
             'CNPJ Válido?',
             'Data de Criação',
+            'Dias (Condição de pagamento)',
+            'Condição de pagamento',
+            'Antes/Após'
         ];
     }
 }
