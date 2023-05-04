@@ -365,6 +365,7 @@ class BillingService
                 // 'payment_status' => $billingInfo['payment_status'],
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
+                'suggested_date' => $this->getSuggestedDate($cangooroo)
             ];
         }
         $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
@@ -432,6 +433,7 @@ class BillingService
                 // 'payment_status' => $billingInfo['payment_status'],
                 'suggestion' => $billingInfo['suggestion'],
                 'suggestion_reason' => $billingInfo['suggestion_reason'],
+                'suggested_date' => $this->getSuggestedDate($cangooroo),
             ];
         }
         $billingInfo['billing_payment_id'] = $this->syncBillingPayment($billingInfo, $cangooroo);
@@ -735,6 +737,37 @@ class BillingService
             }
             return $nameFileAttachment;
         }
+    }
+
+    public function getSuggestedDate($cangooroo)
+    {
+        $paymentCondition = $cangooroo->hotel->payment_condition;
+        $paymentConditionDays = $cangooroo->hotel->payment_condition_days;
+        $paymentConditionBefore = $cangooroo->hotel->payment_condition_before;
+        $paymentConditionUtile = $cangooroo->hotel->payment_condition_utile;
+        if($paymentCondition == 0)
+        {
+            return null;
+        }
+        $dateUsed = null;
+        switch ($paymentCondition) {
+            case 1:
+                $dateUsed = $cangooroo->check_in;
+                break;
+            case 2:
+                $dateUsed = $cangooroo->check_out;
+                break;
+            case 3:
+                $dateUsed = $cangooroo->reservation_date;
+                break;
+        }
+        if(!$paymentConditionUtile){
+            return date('Y-m-d', strtotime($dateUsed. ' '.($paymentConditionBefore ? '-':'+').' '.$paymentConditionDays.' days'));
+        }
+        if($paymentConditionBefore){
+            return Utils::getLastUtileDay($dateUsed, $paymentConditionDays, true);
+        }
+        return Utils::getLastUtileDay($dateUsed, $paymentConditionDays);
     }
 
     const translatedField = [
