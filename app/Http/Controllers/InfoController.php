@@ -281,6 +281,7 @@ class InfoController extends Controller
         return AttachmentLogDownload::orderBy('id', 'desc')->limit(30)->get();
     }
 
+
     public function scheduling(Request $request)
     {
         Artisan::call($request->command);
