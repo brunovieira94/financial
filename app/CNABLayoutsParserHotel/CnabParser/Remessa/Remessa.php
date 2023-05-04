@@ -231,6 +231,7 @@ class Remessa
                     $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($billing->cnpj);
                     unset($detalhe->segmento_a);
                     unset($detalhe->segmento_b);
+                    unset($detalhe->segmento_j52);
 
                     $lote->inserirDetalhe($detalhe);
                 } else {
