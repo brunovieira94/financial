@@ -338,7 +338,7 @@ class PaymentRequestService
             $originalName  = explode('.', $archive->getClientOriginalName());
             $originalName[0] = Utils::replaceCharacterUpload($originalName[0]);
             $extension = $originalName[count($originalName) - 1];
-            $generatedName = "{$originalName[0]}_{$data}.{$extension}";
+            $generatedName = "{$newNameArchive}_{$data}.{$extension}";
             //$upload = $archive->storeAs($folder, $generatedName);
             $s3Client = new S3Client([
                 'region' => env('AWS_DEFAULT_REGION'),
