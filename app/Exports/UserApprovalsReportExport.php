@@ -35,7 +35,7 @@ class UserApprovalsReportExport implements FromCollection, ShouldAutoSize, WithM
         if (!array_key_exists('user_approval_id', $requestInfo)) {
             return collect([]);
         }
-        $logPaymentRequest = $logPaymentRequest->where('user_id',  $requestInfo['user_approval_id']);
+        $logPaymentRequest = $logPaymentRequest->whereIn('user_id',  (array)$requestInfo['user_approval_id']);
         $logPaymentRequest = $logPaymentRequest->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });

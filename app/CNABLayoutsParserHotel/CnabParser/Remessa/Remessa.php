@@ -223,7 +223,7 @@ class Remessa
 
 
                     //segmento j52 detalhe
-                    $lotQuantityDetails++;
+                    //$lotQuantityDetails++;
                     $detalhe->segmento_j52->lote_servico = $lotQuantity;
                     $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
                     $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
@@ -231,6 +231,7 @@ class Remessa
                     $detalhe->segmento_j52->numero_inscricao_beneficiario = Utils::onlyNumbers($billing->cnpj);
                     unset($detalhe->segmento_a);
                     unset($detalhe->segmento_b);
+                    unset($detalhe->segmento_j52);
 
                     $lote->inserirDetalhe($detalhe);
                 } else {

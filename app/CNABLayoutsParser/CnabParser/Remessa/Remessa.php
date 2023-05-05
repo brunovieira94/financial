@@ -302,9 +302,8 @@ class Remessa
                         $detalhe->segmento_j->boleto_valor_favorecido = Utils::valorBoleto(Utils::onlyNumbers($installment->bar_code));
                         $detalhe->segmento_j->boleto_campo_livre_favorecido = Utils::campoLivreBoleto(Utils::onlyNumbers($installment->bar_code));
 
-
                         //segmento j52 detalhe
-                        $lotQuantityDetails++;
+                        //$lotQuantityDetails++;
                         $detalhe->segmento_j52->lote_servico = $lotQuantity;
                         $detalhe->segmento_j52->numero_registro = $lotQuantityDetails;
                         $detalhe->segmento_j52->numero_inscricao_pagador = Utils::onlyNumbers($company->cnpj);
@@ -313,6 +312,7 @@ class Remessa
                         unset($detalhe->segmento_a);
                         unset($detalhe->segmento_b);
                         unset($detalhe->segmento_o);
+                        unset($detalhe->segmento_j52);
 
                         $lote->inserirDetalhe($detalhe);
                     }

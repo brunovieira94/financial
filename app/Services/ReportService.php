@@ -359,7 +359,7 @@ class ReportService
                 'total' => 0
             ], 200);
         }
-        $logPaymentRequest = $logPaymentRequest->where('user_id',  $requestInfo['user_approval_id']);
+        $logPaymentRequest = $logPaymentRequest->whereIn('user_id',  (array)$requestInfo['user_approval_id']);
         $logPaymentRequest = $logPaymentRequest->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
