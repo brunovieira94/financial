@@ -47,9 +47,9 @@ class BillingTransfeeraExport implements FromCollection, ShouldAutoSize, WithMap
             !is_null($bankAccount) ? $bankAccount->account_check_number : '',
             !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypesTransfeera[$bankAccount->account_type] : '',
             $billing->supplier_value,
-            $billing->reserve,
-            '',
             $billing->cangooroo_service_id,
+            '',
+            $billing->reserve,
         ];
     }
 
