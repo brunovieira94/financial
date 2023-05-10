@@ -335,7 +335,7 @@ remessa:
         picture: 'X(8)'
         default: '00000000'
       identificacao_transferencia:
-        pos: [112,113]
+        pos: [113,114]
         picture: 'X(2)'
       zero01:
         pos: [115,119]
