@@ -176,13 +176,13 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
     });
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {
+        Route::post('/import', [ProviderController::class, 'import']);
+        Route::post('/export', [ProviderController::class, 'export']);
         Route::get('/', [ProviderController::class, 'index']);
         Route::get('/{id}', [ProviderController::class, 'show']);
         Route::post('/', [ProviderController::class, 'store']);
         Route::post('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
-        Route::post('/import', [ProviderController::class, 'import']);
-        Route::post('/export', [ProviderController::class, 'export']);
     });
 
     Route::prefix('hotel')->group(function () {
