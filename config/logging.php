@@ -37,7 +37,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single', 'discord'],
+            'channels' => ['single', (env('APP_ENV') == 'local' ? '' : 'discord')],
             'ignore_exceptions' => false,
         ],
 
