@@ -322,7 +322,8 @@ class Remessa
                     $lote->header->tipo_servico = '20';
 
                     //detalhes do seguimento A
-                    $detalhe->segmento_a->codigo_camara_centralizadora = Utils::centralizadoraBB($key);
+                    //$detalhe->segmento_a->codigo_camara_centralizadora = Utils::centralizadoraBB($key);
+                    $detalhe->segmento_a->codigo_camara_centralizadora = $key == 45 ? '009' : '000';
                     $detalhe->segmento_a->lote_servico = $lotQuantity;
                     $detalhe->segmento_a->numero_registro = $lotQuantityDetails;
                     //$detalhe->segmento_a->tipo_movimento = strlen(Utils::onlyNumbers($paymentRequest->provider->provider_type)) == 'J' ? 002 : 001;
