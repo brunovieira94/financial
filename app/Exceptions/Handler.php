@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -41,14 +42,19 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
+        //$path = $request->path() ?? 'not detected';
         if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+            //Log::alert('error route: ' . $path . ' => ' . $exception->getMessage());
             return response($exception, 404);
         } elseif ($exception instanceof \Illuminate\Auth\AuthenticationException){
+            //Log::emergency('error route: ' . $path . ' => ' . 'user without permission');
             return response($exception, 401);
         }elseif ($exception instanceof \Exception && !($exception instanceof \Illuminate\Validation\ValidationException)){
+            //Log::emergency('error route: ' . $path . ' => ' . $exception->getMessage());
             return response($exception, 500);
         }
 
+        //Log::error('error route: ' . $path . ' => ' . $exception->getMessage());
         return parent::render($request, $exception);
     }
 }
