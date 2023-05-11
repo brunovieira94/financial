@@ -501,6 +501,14 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/', [ReportController::class, 'getReport']);
         Route::get('/{id}', [ReportController::class, 'getReportById']);
     });
+
+    Route::prefix('integration-system')->group(function () {
+        Route::post('/', [IntegrationController::class, 'storeClient']);
+        Route::get('/', [IntegrationController::class, 'getAllClient']);
+        Route::get('/{id}', [IntegrationController::class, 'getClient']);
+        Route::put('/{id}', [IntegrationController::class, 'updateClient']);
+        Route::delete('/{id}', [IntegrationController::class, 'deleteClient']);
+    });
 });
 
 
@@ -519,7 +527,7 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
-Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
+//Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
 Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
 Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
