@@ -281,7 +281,7 @@ remessa:
         pos: [8,8]
         picture: '9(1)'
         default: 3
-      numero_sequencial_registro_lote:
+      numero_registro:
         pos: [9,13]
         picture: '9(5)'
         default: 1
