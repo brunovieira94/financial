@@ -18,7 +18,7 @@ class ProviderQuotationService
     private $providerQuotation;
     private $providerQuotationHasProducts;
     private $providerQuotationHasServices;
-    private $providerQuotationItem;
+    private $providerQuotationItems;
 
     private $with = ['quotation_items', 'cost_centers', 'company'];
 
@@ -33,6 +33,12 @@ class ProviderQuotationService
     public function getAllProviderQuotation($requestInfo)
     {
         $providerQuotation = Utils::search($this->providerQuotation, $requestInfo);
+        //filter cost center
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $providerQuotation->whereHas('cost_centers', function ($query) {
+                $query->whereIn('cost_center_id', auth()->user()->cost_center->pluck('id')->toArray() ?? []);
+            });
+        }
         return Utils::pagination($providerQuotation->with($this->with), $requestInfo);
     }
 
