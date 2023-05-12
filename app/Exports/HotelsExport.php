@@ -45,6 +45,7 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
             $hotel->payment_condition_days,
             !is_null($hotel->payment_condition) ? $hotel->paymentConditions[$hotel->payment_condition] : '',
             !is_null($hotel->payment_condition_before) ? $hotel->paymentConditionsBefore[$hotel->payment_condition_before] : '',
+            !is_null($hotel->payment_condition_utile) ? ($hotel->payment_condition_utile ? 'Sim' :'Não') : '',
         ];
     }
 
@@ -71,7 +72,8 @@ class HotelsExport implements FromCollection, ShouldAutoSize, WithMapping, WithH
             'Data de Criação',
             'Dias (Condição de pagamento)',
             'Condição de pagamento',
-            'Antes/Após'
+            'Antes/Após',
+            'Dias Uteis'
         ];
     }
 }
