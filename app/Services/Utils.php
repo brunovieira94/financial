@@ -965,6 +965,9 @@ class Utils
         if (array_key_exists('user_id', $requestInfo)) {
             $billing->where('user_id', $requestInfo['user_id']);
         }
+        if (array_key_exists('reserve', $requestInfo)) {
+            $billing->whereIn('reserve', $requestInfo['reserve']);
+        }
         return $billing;
     }
 
