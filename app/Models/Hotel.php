@@ -62,4 +62,16 @@ class Hotel extends Model
         "Pré-pagamento",
         "VCN",
     ];
+
+    public array $paymentConditions = [
+        "",
+        "Check-In",
+        "Check-Out",
+        "Reserva",
+    ];
+
+    public array $paymentConditionsBefore = [
+        "Antes",
+        "Após",
+    ];
 }
