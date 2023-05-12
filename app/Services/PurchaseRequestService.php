@@ -68,6 +68,13 @@ class PurchaseRequestService
             }
         }
 
+        //filter cost center
+        if (auth()->user()->role->filter_cost_center_supply) {
+            $purchaseRequest->whereHas('cost_centers', function ($query) {
+                $query->whereIn('cost_center_id', auth()->user()->cost_center->pluck('id')->toArray() ?? []);
+            });
+        }
+
         return Utils::pagination($purchaseRequest->with($this->with), $requestInfo);
     }
 
