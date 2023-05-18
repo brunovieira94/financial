@@ -368,4 +368,28 @@ class LogsService
         }
         return $responseLog;
     }
+
+    public function getLogBillingUpdate($id, $requestInfo)
+    {
+        $dataLog = LogActivity::where([
+            ['log_name', 'billing'],
+            ['subject_id', $id],
+            ['description', 'updated']
+        ])->get();
+
+        $responseLog = [];
+        foreach ($dataLog as $log) {
+
+            array_push(
+                $responseLog,
+                [
+                    'old' => $log->properties['old'],
+                    'date-log' => $log->created_at,
+                    'new' => $log->properties['attributes'],
+                    'causer' => $log->causer_object,
+                ]
+            );
+        }
+        return $responseLog;
+    }
 }
