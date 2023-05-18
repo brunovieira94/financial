@@ -3,18 +3,20 @@
 namespace App\Services;
 
 use Config;
+use Hash;
 
+use Illuminate\Database\Eloquent\Builder;
 use App\Http\Resources\Integrations\ApprovedPaymentRequestsSAPResource;
 use App\Http\Resources\Integrations\PaidInstallmentsSAPResource;
 use App\Models\IntegrationClient;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\PaymentRequest;
-use Hash;
 
 class IntegrationService
 {
     private $paymentRequestHasInstallments;
     private $paymentRequest;
+    private $integration;
 
     private $withPaidInstallments = [
         'payment_request',
@@ -51,58 +53,76 @@ class IntegrationService
         'purchase_order.purchase_order.cost_centers',
     ];
 
-    public function __construct(PaymentRequestHasInstallments $paymentRequestHasInstallments, PaymentRequest $paymentRequest)
+    public function __construct(PaymentRequestHasInstallments $paymentRequestHasInstallments, PaymentRequest $paymentRequest, IntegrationClient $integration)
     {
         $this->paymentRequestHasInstallments = $paymentRequestHasInstallments;
         $this->paymentRequest = $paymentRequest;
+        $this->integration = $integration;
     }
 
     public function sapBillsApproved($requestInfo)
     {
         $bills = $this->paymentRequest::with($this->withApprovedPaymentRequests)
-            ->whereHas('approval', fn ($query) => $query->where('status', Config::get('constants.status.approved')));
+            ->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.approved')));
 
         $bills = $this->filterByDateCreated($bills, $requestInfo);
 
-        if (array_key_exists('date_from', $requestInfo)) {
-            $bills = $bills->whereHas('log_approval_flow', fn ($q) => $q->where('updated_at', '>=', $requestInfo['date_from']));
-        }
-        if (array_key_exists('date_to', $requestInfo)) {
-            $bills = $bills->whereHas('log_approval_flow', fn ($q) => $q->where('updated_at', '<=', $requestInfo['date_to']));
-        }
+        $bills = $bills->get()->filter(function ($bill) use (&$requestInfo) {
+            $lastApproval = $bill->log_approval_flow->where('id', $bill->log_approval_flow->max('id'))->first();
 
-        return ApprovedPaymentRequestsSAPResource::collection($bills->get())->collection->toArray();
+            if (is_null($lastApproval)) {
+                // XXX: There's no log record for this bill,
+                //  is this the best approach?
+                return false;
+            }
+
+            $passes = $lastApproval->type == 'approved';
+
+            if (array_key_exists('date_from', $requestInfo)) {
+                $date_from = $requestInfo['date_from'] . ' 00:00:00';
+                $passes = $passes && $lastApproval->created_at >= $date_from;
+            }
+
+            if (array_key_exists('date_to', $requestInfo)) {
+                $date_to = $requestInfo['date_to'] . ' 23:59:59';
+                $passes = $passes && $lastApproval->created_at <= $date_to;
+            }
+
+            return $passes;
+        });
+
+        return ApprovedPaymentRequestsSAPResource::collection($bills)->collection->toArray();
     }
 
     public function sapInstallmentsPaid($requestInfo)
     {
         $installments = $this->paymentRequestHasInstallments::with($this->withPaidInstallments)
             ->whereHas('payment_request', function ($query) use (&$requestInfo) {
-                $query->whereHas('approval', fn ($query) => $query->where('status', Config::get('constants.status.paid out')));
+                $query->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.paid out')));
                 $query = $this->filterByDateCreated($query, $requestInfo);
             });
 
-        if (array_key_exists('date_from', $requestInfo) || array_key_exists('date_to', $requestInfo)) {
-            $installments = $installments
-                ->whereHas('cnab_generated_installment', function ($query) use (&$requestInfo) {
-                    $query->whereHas('generated_cnab', function ($query) use (&$requestInfo) {
-                        if (array_key_exists('date_from', $requestInfo)) {
-                            $query->where('file_date', '>=', $requestInfo['date_from']);
-                        }
-                        if (array_key_exists('date_to', $requestInfo)) {
-                            $query->where('file_date', '<=', $requestInfo['date_to']);
-                        }
-                    });
-                })
-                ->orWhereHas('other_payments', function ($query) use (&$requestInfo) {
-                    if (array_key_exists('date_from', $requestInfo)) {
-                        $query->where('payment_date', '>=', $requestInfo['date_from']);
-                    }
-                    if (array_key_exists('date_to', $requestInfo)) {
-                        $query->where('payment_date', '<=', $requestInfo['date_to']);
-                    }
+        $installments = $installments
+            ->whereHas('cnab_generated_installment', function ($query) use (&$requestInfo) {
+                $query->whereHas('generated_cnab', function ($q) use (&$requestInfo) {
+                    if (array_key_exists('date_from', $requestInfo))
+                        $q->where('file_date', '>=', $requestInfo['date_from'] . ' 00:00:00');
+                    if (array_key_exists('date_to', $requestInfo))
+                        $q->where('file_date', '<=', $requestInfo['date_to'] . ' 23:59:59');
                 });
-        }
+            })
+            ->orWhereHas('other_payments', function ($query) use (&$requestInfo) {
+                if (array_key_exists('date_from', $requestInfo))
+                    $query->where('payment_date', '>=', $requestInfo['date_from']);
+                if (array_key_exists('date_to', $requestInfo))
+                    $query->where('payment_date', '<=', $requestInfo['date_to']);
+            })
+            ->orWhere(function (Builder $query) use (&$requestInfo) {
+                if (array_key_exists('date_from', $requestInfo))
+                    $query->where('payment_made_date', '>=', $requestInfo['date_to']);
+                if (array_key_exists('date_to', $requestInfo))
+                    $query->where('payment_made_date', '<=', $requestInfo['date_to']);
+            });
 
         return PaidInstallmentsSAPResource::collection($installments->get())->collection->toArray();
     }
@@ -110,12 +130,10 @@ class IntegrationService
 
     private function filterByDateCreated($query, $requestInfo)
     {
-        if (array_key_exists('date_created_from', $requestInfo)) {
+        if (array_key_exists('date_created_from', $requestInfo))
             $query = $query->where('created_at', '>=', $requestInfo['date_created_from']);
-        }
-        if (array_key_exists('date_created_to', $requestInfo)) {
+        if (array_key_exists('date_created_to', $requestInfo))
             $query = $query->where('created_at', '<=', $requestInfo['date_created_to']);
-        }
         return $query;
     }
 
@@ -127,5 +145,39 @@ class IntegrationService
         } else {
             return response()->json(["error" => "Bad Request"], 400);
         }
+    }
+
+    public function getAllClient($requestInfo)
+    {
+        $integration = Utils::search($this->integration, $requestInfo);
+        return Utils::pagination($integration, $requestInfo);
+    }
+
+    public function getClient($id)
+    {
+        return $this->integration->findOrFail($id);
+    }
+
+    public function updateClient($requestInfo, $id)
+    {
+        $integration = $this->integration->findOrFail($id);
+        $integration->fill($requestInfo);
+
+        if (array_key_exists('cpass', $requestInfo)) {
+            $integration->client_secret = Hash::make($requestInfo['cpass']);
+        }
+
+        if (array_key_exists('cid', $requestInfo)) {
+            $integration->client_id = $requestInfo['cid'];
+        }
+
+        $integration->save();
+        return $integration;
+    }
+
+    public function deleteClient($id)
+    {
+        $this->integration->findOrFail($id)->delete();
+        return true;
     }
 }

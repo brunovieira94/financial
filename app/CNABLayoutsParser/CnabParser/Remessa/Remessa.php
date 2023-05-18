@@ -322,7 +322,8 @@ class Remessa
                     $lote->header->tipo_servico = '20';
 
                     //detalhes do seguimento A
-                    $detalhe->segmento_a->codigo_camara_centralizadora = Utils::centralizadoraBB($key);
+                    //$detalhe->segmento_a->codigo_camara_centralizadora = Utils::centralizadoraBB($key);
+                    $detalhe->segmento_a->camara_centralizadora = $key == 45 ? '009' : '000';
                     $detalhe->segmento_a->lote_servico = $lotQuantity;
                     $detalhe->segmento_a->numero_registro = $lotQuantityDetails;
                     //$detalhe->segmento_a->tipo_movimento = strlen(Utils::onlyNumbers($paymentRequest->provider->provider_type)) == 'J' ? 002 : 001;
@@ -336,7 +337,7 @@ class Remessa
                     $dataPagamento = new Carbon($installment->extension_date); //validar
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_a->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $detalhe->segmento_a->identificacao_transferencia = Utils::identificacaoTipoTransferencia($installment->bank_account_provider->account_type ?? 3);
+                    $detalhe->segmento_a->identificacao_transferencia = $key == 45 ? Utils::identificacaoTipoTransferencia($installment->bank_account_provider->account_type ?? 3) : '00';
                     $detalhe->segmento_a->numero_inscricao_favorecido = Utils::onlyNumbers($inscricao);
 
                     unset($detalhe->segmento_j);

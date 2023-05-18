@@ -5,6 +5,7 @@ namespace App\Http\Resources\Integrations;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 use App\Exports\Utils as ExportUtils;
+use App\Helpers\Tools;
 
 class ApprovedPaymentRequestsSAPResource extends JsonResource
 {
@@ -16,14 +17,15 @@ class ApprovedPaymentRequestsSAPResource extends JsonResource
      */
     public function toArray($request)
     {
-        $date_created = isset($this->created_at) ? explode(' ', $this->created_at)[0] : '';
+        $last_approval_log = $this->log_approval_flow->where('id', $this->log_approval_flow->max('id'))->first();
+        $date_approval = isset($last_approval_log) ?  $last_approval_log['created_at']->format('Y-m-d') : '';
 
         return [
             'OPCH' => [
                 'TipOP' => "A",
                 'U_RBH_IdTransOrig' => $this->id,
                 'VATRegNum' => isset($this->company) ? $this->company->cnpj : '',
-                'DocDate' => $date_created,
+                'DocDate' => $date_approval,
                 'TaxDate' => $this->emission_date,
                 'GroupNum' => "-1",
                 'DocType' => "S",
@@ -114,26 +116,18 @@ class ApprovedPaymentRequestsSAPResource extends JsonResource
 
     private function providerCity()
     {
-        if (is_null($this->provider) || is_null($this->provider->city)) {
-            return '';
-        }
-        return $this->provider->city->title;
+        return Tools::getOrElse($this, 'provider.city.title', '');
     }
 
     private function providerState()
     {
-        if (is_null($this->provider) || is_null($this->provider->city) || is_null($this->provider->city->state)) {
-            return '';
-        }
-        return $this->provider->city->state->title;
+        return Tools::getOrElse($this, 'provider.city.state.title', '');
     }
 
     private function providerCountry()
     {
-        if (is_null($this->provider) || is_null($this->provider->city) || is_null($this->provider->city->state) || is_null($this->provider->city->state->country)) {
-            return '';
-        }
-        return $this->provider->city->state->country->title;
+        return Tools::getOrElse($this, 'provider.city.state.country.title', '');
+
     }
 
     private function installmentsMetaResource($installments)
@@ -142,11 +136,13 @@ class ApprovedPaymentRequestsSAPResource extends JsonResource
         $total = $installments->count();
 
         foreach ($installments as $installment) {
+            $insTotal = ExportUtils::installmentTotalFinalValue($installment);
+
             array_push($res, [
                 'TotalParcelas' => $total,
                 'InstlmntID' => $installment->parcel_number,
                 'DueDate' => $installment->due_date,
-                'InsTotal' => ExportUtils::installmentTotalFinalValue($installment),
+                'InsTotal' => round($insTotal, 2),
             ]);
         }
 
