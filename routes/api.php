@@ -514,8 +514,8 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
 
 Route::middleware(['integrations'])->group(function () {
     Route::prefix('integration')->group(function () {
-        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills']);
-        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments']);
+        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills'])->middleware(['check.data.integration']);
+        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments'])->middleware(['check.data.integration']);
     });
 
     //Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
