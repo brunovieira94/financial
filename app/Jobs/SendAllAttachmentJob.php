@@ -18,12 +18,15 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Zip as ZipStream;
 use Storage;
+use Throwable;
 
 class SendAllAttachmentJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $request;
+    public $maxExceptions = 3;
+    public $timeout = 10800; //3 hours
 
     public function __construct($request)
     {
@@ -32,50 +35,42 @@ class SendAllAttachmentJob implements ShouldQueue
 
     public function handle()
     {
-        try {
-            $folder = uniqid(date('HisYmd'));
-            $requestInfo = $this->request;
-            $paymentRequests = PaymentRequestClean::withOutGlobalScopes();
-            $zip = ZipStream::create($folder . '.zip');
+        $folder = uniqid(date('HisYmd'));
+        $requestInfo = $this->request;
+        $paymentRequests = PaymentRequestClean::withOutGlobalScopes();
+        $zip = ZipStream::create($folder . '.zip');
 
-            if (array_key_exists('from', $requestInfo)) {
-                $paymentRequests = $paymentRequests->where('created_at', '>=', $requestInfo['from']);
-            }
-            if (array_key_exists('to', $requestInfo)) {
-                $paymentRequests = $paymentRequests->where('created_at', '<=', $requestInfo['to']);
-            }
-
-            $paymentRequests = $paymentRequests->with(['attachments', 'installments'])->get();
-
-            foreach ($paymentRequests as $paymentRequest) {
-                $type = ($paymentRequest->payment_type == 0) ? 'NF_' : (($paymentRequest->payment_type == 3) ? 'IN_' : (($paymentRequest->payment_type == 2) ? 'AV_' : (($paymentRequest->payment_type == 1) ? 'BL_' : null)));
-                $zip = self::generateZipAws('invoice', $paymentRequest->invoice_file, $paymentRequest->id, $type, null, $zip);
-                foreach ($paymentRequest->attachments as $attachments) {
-                    $zip = self::generateZipAws('attachment-payment-request', $attachments->attachment, $paymentRequest->id, $type, null, $zip);
-                }
-                foreach ($paymentRequest->installments as $installment) {
-                    $zip = self::generateZipAws('billet', $installment->billet_file, $paymentRequest->id, $type, $installment->parcel_number, $zip);
-                }
-            }
-
-            $zip->saveTo('s3://' . env('AWS_BUCKET') . '/all-attachment-temporary/' . $folder);
-            $link = Storage::disk('s3')->temporaryUrl('all-attachment-temporary/' . $folder . '/' . $folder . '.zip', now()->addDay(7));
-
-            AttachmentReport::where('id', $requestInfo['attachment-id'])
-                ->update([
-                    'link' => $link,
-                    'path' => $folder,
-                    'status' => 1
-                ]);
-
-            self::notifyUsers($requestInfo['mails'], $requestInfo['from'], $requestInfo['to'], $link);
-        } catch (Exception $e) {
-            AttachmentReport::where('id', $requestInfo['attachment-id'])
-                ->update([
-                    'status' => 2,
-                    'error' => $e->getMessage(),
-                ]);
+        if (array_key_exists('from', $requestInfo)) {
+            $paymentRequests = $paymentRequests->where('created_at', '>=', $requestInfo['from']);
         }
+        if (array_key_exists('to', $requestInfo)) {
+            $paymentRequests = $paymentRequests->where('created_at', '<=', $requestInfo['to']);
+        }
+
+        $paymentRequests = $paymentRequests->with(['attachments', 'installments'])->get();
+
+        foreach ($paymentRequests as $paymentRequest) {
+            $type = ($paymentRequest->payment_type == 0) ? 'NF_' : (($paymentRequest->payment_type == 3) ? 'IN_' : (($paymentRequest->payment_type == 2) ? 'AV_' : (($paymentRequest->payment_type == 1) ? 'BL_' : null)));
+            $zip = self::generateZipAws('invoice', $paymentRequest->invoice_file, $paymentRequest->id, $type, null, $zip);
+            foreach ($paymentRequest->attachments as $attachments) {
+                $zip = self::generateZipAws('attachment-payment-request', $attachments->attachment, $paymentRequest->id, $type, null, $zip);
+            }
+            foreach ($paymentRequest->installments as $installment) {
+                $zip = self::generateZipAws('billet', $installment->billet_file, $paymentRequest->id, $type, $installment->parcel_number, $zip);
+            }
+        }
+
+        $zip->saveTo('s3://' . env('AWS_BUCKET') . '/all-attachment-temporary/' . $folder);
+        $link = Storage::disk('s3')->temporaryUrl('all-attachment-temporary/' . $folder . '/' . $folder . '.zip', now()->addDay(7));
+
+        AttachmentReport::where('id', $requestInfo['attachment-id'])
+            ->update([
+                'link' => $link,
+                'path' => $folder,
+                'status' => 1
+            ]);
+
+        self::notifyUsers($requestInfo['mails'], $requestInfo['from'], $requestInfo['to'], $link);
     }
 
     public static function generateZipAws($defaultFolder, $nameArchive = null, $paymentRequestID, $type, $parcelNumber = null, $zip)
@@ -98,5 +93,14 @@ class SendAllAttachmentJob implements ShouldQueue
     {
         $dataSendMail = NotificationService::generateDataSendRedisAttachment($mails, 'send-file-accounting', $link, $from, $to);
         NotificationService::sendEmail($dataSendMail);
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        AttachmentReport::where('id', $this->request['attachment-id'])
+            ->update([
+                'status' => 2,
+                'error' => $exception->getMessage(),
+            ]);
     }
 }
