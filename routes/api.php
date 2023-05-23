@@ -539,7 +539,7 @@ Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'tem
 Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
-Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::get('/log-payment-request/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
