@@ -280,6 +280,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
         Route::get('/log-billing-update/{id}', [LogsController::class, 'getLogBillingUpdate']);
         Route::get('/log-hotel/{id}', [LogsController::class, 'getHotelLogs']);
+        Route::get('/log-hotel-update/{id}', [LogsController::class, 'getLogHotelUpdate']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
