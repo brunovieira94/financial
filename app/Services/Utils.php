@@ -139,7 +139,7 @@ class Utils
                     if ($payment_form->bank_code == $bankCode) {
                         if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
                         {
-                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider.bank')->where('id', $installment['id'])->exists()) {
+                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider')->where('id', $installment['id'])->exists()) {
                                 if (array_key_exists('45', $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
@@ -1130,7 +1130,8 @@ class Utils
         return preg_replace('/[^0-9a-zA-Z *\-\\[\]\{\}\/\\_]/', '', strtr($string, $normalizeChars));
     }
 
-    public static function getHolidayList($ano = null) {
+    public static function getHolidayList($ano = null)
+    {
 
         if ($ano === null) {
             $ano = intval(date('Y'));
@@ -1171,7 +1172,8 @@ class Utils
         return $listaDiasFeriado;
     }
 
-    public static function isHoliday($data) {
+    public static function isHoliday($data)
+    {
         $holidayList = self::getHolidayList(date('Y', strtotime($data)));
         if (isset($holidayList[$data])) {
             return true;
@@ -1180,7 +1182,8 @@ class Utils
         return false;
     }
 
-    public static function getUtileDays($from, $daysQuantity = 30, $reverse = false) {
+    public static function getUtileDays($from, $daysQuantity = 30, $reverse = false)
+    {
         $dateTime = new DateTime($from);
 
         $utilesDayList = [];
@@ -1198,8 +1201,76 @@ class Utils
         return $utilesDayList;
     }
 
-    public static function getLastUtileDay($from, $daysQuantity = 30, $reverse = false) {
+    public static function getLastUtileDay($from, $daysQuantity = 30, $reverse = false)
+    {
         $list = self::getUtileDays($from, $daysQuantity, $reverse);
         return end($list);
+    }
+
+    public static function getBankDetailsCnab($installment)
+    {
+        $nomeBeneficiario = '';
+        $inscricao = '';
+
+        if ($installment->bank_account_provider == null) {
+            if ($installment->client_identifier != null && !empty($installment->client_identifier)) {
+                $inscricao = self::onlyNumbers($installment->client_identifier);
+                $nomeBeneficiario = $installment->client_name;
+            } else {
+                $inscricao = $installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf);
+                $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+            }
+        } else {
+            if ($installment->bank_account_provider->entity_name == null) {
+                $inscricao = $installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf);
+                $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+            } else {
+                $inscricao = $installment->bank_account_provider->cpf_cnpj == null ? ($installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf)) : self::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
+                $nomeBeneficiario = $installment->bank_account_provider->entity_name;
+            }
+        }
+
+        return [
+            'nomeBeneficiario' => $nomeBeneficiario,
+            'inscricao' => $inscricao
+        ];
+    }
+
+    public static function typeKeyPix($bankAccount)
+    {
+        switch ($bankAccount->pix_key_type) {
+            case 0:
+            case 1:
+                return '03';
+                break;
+            case 2:
+                return '02';
+                break;
+            case 3:
+                return '01';
+                break;
+            case 4:
+                return '04';
+                break;
+            default:
+                '00';
+        }
+    }
+
+    public static function formatPixKey($bankAccount)
+    {
+        switch ($bankAccount->pix_key_type) {
+            case 0:
+            case 1:
+            case 3:
+                return Utils::formatCnab('X', self::onlyNumbers($bankAccount->pix_key), '100');
+                break;
+            case 2:
+            case 4:
+                return Utils::formatCnab('X', $bankAccount->pix_key, '100');
+                break;
+            default:
+                '';
+        }
     }
 }
