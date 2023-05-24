@@ -396,7 +396,7 @@ class LogsService
     public function getLogHotelUpdate($id, $requestInfo)
     {
         $dataLog = LogActivity::where([
-            ['log_name', 'hotel'],
+            ['log_name', 'hotels'],
             ['subject_id', $id],
             ['description', 'updated']
         ])->get();
