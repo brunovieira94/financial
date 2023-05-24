@@ -227,7 +227,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
-        //Route::post('/export', [PaidBillingInfoController::class, 'export']);
+        Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {
