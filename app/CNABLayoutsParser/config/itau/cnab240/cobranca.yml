@@ -544,6 +544,55 @@ remessa:
         picture: 'X(53)'
         default: ''
 
+    segmento_bpix:
+      codigo_banco:
+        pos: [1,3]
+        picture: '9(3)'
+        default: 341
+      lote_servico:
+        pos: [4,7]
+        picture: '9(4)'
+      tipo_registro:
+        pos: [8,8]
+        picture: '9(1)'
+        default: 3
+      numero_registro:
+        pos: [9,13]
+        picture: '9(5)'
+        default: 1
+      segmento:
+        pos: [14,14]
+        picture: 'X(1)'
+        default: 'B'
+      tipo_chave:
+        pos: [15,16]
+        picture: 'X(2)'
+      branco_01:
+        pos: [17,17]
+        picture: 'X(1)'
+        default: ''
+      tipo_inscricao:
+        pos: [18,18]
+        picture: '9(1)'
+      numero_inscricao_favorecido:
+        pos: [19,32]
+        picture: '9(14)'
+      branco_02:
+        pos: [33,62]
+        picture: 'X(30)'
+        default: ''
+      msg_user_branco:
+        pos: [63,127]
+        picture: '9(65)'
+        default: '00000000000000000000000000000000000000000000000000000000000000000'
+      chave_pix:
+        pos: [128,227]
+        picture: 'X(100)'
+      branco_03:
+        pos: [228,240]
+        picture: 'X(13)'
+        default: ''
+
 retorno:
   header_arquivo:
     codigo_banco:
