@@ -25,6 +25,7 @@ use App\Models\PaymentRequestHasInstallmentLinked;
 use App\Models\PaymentRequestHasInstallments;
 use Carbon\Carbon;
 use Config;
+use DateTime;
 use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
@@ -138,7 +139,7 @@ class Utils
                     if ($payment_form->bank_code == $bankCode) {
                         if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
                         {
-                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider.bank')->where('id', $installment['id'])->exists()) {
+                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider')->where('id', $installment['id'])->exists()) {
                                 if (array_key_exists('45', $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
@@ -964,6 +965,9 @@ class Utils
         if (array_key_exists('user_id', $requestInfo)) {
             $billing->where('user_id', $requestInfo['user_id']);
         }
+        if (array_key_exists('reserve', $requestInfo) && !is_null($requestInfo['reserve']) && count($requestInfo['reserve']) > 0){
+            $billing->whereIn('reserve', $requestInfo['reserve']);
+        }
         return $billing;
     }
 
@@ -996,10 +1000,10 @@ class Utils
                         $groupBilling['30'] = [$billing];
                     }
                 } else {
-                    if (array_key_exists('11', $groupBilling)) {
-                        array_push($groupBilling['11'], $billing);
+                    if (array_key_exists('31', $groupBilling)) {
+                        array_push($groupBilling['31'], $billing);
                     } else {
-                        $groupBilling['11'] = [$billing];
+                        $groupBilling['31'] = [$billing];
                     }
                 }
             }
@@ -1104,6 +1108,169 @@ class Utils
                 $installmentLinked = PaymentRequestHasInstallmentLinked::where('payment_request_id', $installment->payment_request_id)->get('payment_requests_installment_id');
                 DB::table('payment_requests_installments')->whereIn('id', $installmentLinked->pluck('payment_requests_installment_id')->toArray())->update(['status' => Config::get('constants.status.paid out')]);
             }
+        }
+    }
+
+    public static function replaceCharacterUpload($string)
+    {
+        $normalizeChars = array(
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A', 'Ä' => 'A', 'Æ' => 'AE', 'Ç' => 'C',
+            'É' => 'E', 'È' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Í' => 'I', 'Ì' => 'I', 'Î' => 'I', 'Ï' => 'I', 'Ð' => 'Eth',
+            'Ñ' => 'N', 'Ó' => 'O', 'Ò' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ö' => 'O', 'Ø' => 'O',
+            'Ú' => 'U', 'Ù' => 'U', 'Û' => 'U', 'Ü' => 'U', 'Ý' => 'Y', 'Ŕ' => 'R',
+
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'å' => 'a', 'ä' => 'a', 'æ' => 'ae', 'ç' => 'c',
+            'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'eth',
+            'ñ' => 'n', 'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o', 'ø' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u', 'ý' => 'y', 'ŕ' => 'r', 'ÿ' => 'y',
+
+            'ß' => 'sz', 'þ' => 'thorn', 'º' => '', 'ª' => '', '°' => '',
+        );
+
+        return preg_replace('/[^0-9a-zA-Z *\-\\[\]\{\}\/\\_]/', '', strtr($string, $normalizeChars));
+    }
+
+    public static function getHolidayList($ano = null)
+    {
+
+        if ($ano === null) {
+            $ano = intval(date('Y'));
+        }
+
+        $pascoa = easter_date($ano); // retorna data da pascoa do ano especificado
+        $diaPascoa = date('j', $pascoa);
+        $mesPacoa = date('n', $pascoa);
+        $anoPascoa = date('Y', $pascoa);
+
+        $feriados = [
+            // Feriados nacionais fixos
+            mktime(0, 0, 0, 1, 1, $ano),   // Confraternização Universal
+            mktime(0, 0, 0, 4, 21, $ano),  // Tiradentes
+            mktime(0, 0, 0, 5, 1, $ano),   // Dia do Trabalhador
+            mktime(0, 0, 0, 9, 7, $ano),   // Dia da Independência
+            mktime(0, 0, 0, 10, 12, $ano), // N. S. Aparecida
+            mktime(0, 0, 0, 11, 2, $ano),  // Todos os santos
+            mktime(0, 0, 0, 11, 15, $ano), // Proclamação da republica
+            mktime(0, 0, 0, 12, 25, $ano), // Natal
+            //
+            // Feriados variaveis
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa - 48, $anoPascoa), // 2º feria Carnaval
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa - 47, $anoPascoa), // 3º feria Carnaval
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa - 2, $anoPascoa),  // 6º feira Santa
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa, $anoPascoa),      // Pascoa
+            mktime(0, 0, 0, $mesPacoa, $diaPascoa + 60, $anoPascoa), // Corpus Christ
+        ];
+
+        sort($feriados);
+
+        $listaDiasFeriado = [];
+        foreach ($feriados as $feriado) {
+            $data = date('Y-m-d', $feriado);
+            $listaDiasFeriado[$data] = $data;
+        }
+
+        return $listaDiasFeriado;
+    }
+
+    public static function isHoliday($data)
+    {
+        $holidayList = self::getHolidayList(date('Y', strtotime($data)));
+        if (isset($holidayList[$data])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function getUtileDays($from, $daysQuantity = 30, $reverse = false)
+    {
+        $dateTime = new DateTime($from);
+
+        $utilesDayList = [];
+        $count = 0;
+        $sumWeekday = $reverse ? '-1 weekday' : '+1 weekday';
+        while ($count < $daysQuantity) {
+            $dateTime->modify($sumWeekday);
+            $data = $dateTime->format('Y-m-d');
+            if (!self::isHoliday($data)) {
+                $utilesDayList[] = $data;
+                $count++;
+            }
+        }
+
+        return $utilesDayList;
+    }
+
+    public static function getLastUtileDay($from, $daysQuantity = 30, $reverse = false)
+    {
+        $list = self::getUtileDays($from, $daysQuantity, $reverse);
+        return end($list);
+    }
+
+    public static function getBankDetailsCnab($installment)
+    {
+        $nomeBeneficiario = '';
+        $inscricao = '';
+
+        if ($installment->bank_account_provider == null) {
+            if ($installment->client_identifier != null && !empty($installment->client_identifier)) {
+                $inscricao = self::onlyNumbers($installment->client_identifier);
+                $nomeBeneficiario = $installment->client_name;
+            } else {
+                $inscricao = $installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf);
+                $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+            }
+        } else {
+            if ($installment->bank_account_provider->entity_name == null) {
+                $inscricao = $installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf);
+                $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+            } else {
+                $inscricao = $installment->bank_account_provider->cpf_cnpj == null ? ($installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf)) : self::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
+                $nomeBeneficiario = $installment->bank_account_provider->entity_name;
+            }
+        }
+
+        return [
+            'nomeBeneficiario' => $nomeBeneficiario,
+            'inscricao' => $inscricao
+        ];
+    }
+
+    public static function typeKeyPix($bankAccount)
+    {
+        switch ($bankAccount->pix_key_type) {
+            case 0:
+            case 1:
+                return '03';
+                break;
+            case 2:
+                return '02';
+                break;
+            case 3:
+                return '01';
+                break;
+            case 4:
+                return '04';
+                break;
+            default:
+                '00';
+        }
+    }
+
+    public static function formatPixKey($bankAccount)
+    {
+        switch ($bankAccount->pix_key_type) {
+            case 0:
+            case 1:
+            case 3:
+                return Utils::formatCnab('X', self::onlyNumbers($bankAccount->pix_key), '100');
+                break;
+            case 2:
+            case 4:
+                return Utils::formatCnab('X', $bankAccount->pix_key, '100');
+                break;
+            default:
+                '';
         }
     }
 }

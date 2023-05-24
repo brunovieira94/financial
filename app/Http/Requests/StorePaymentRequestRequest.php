@@ -85,6 +85,10 @@ class StorePaymentRequestRequest extends FormRequest
             'currency_old_id' => 'integer|exists:currency,id',
             'amount_old' => 'numeric',
             'net_value_old' => 'numeric',
+            'or' => 'max:190',
+            'hash' => 'max:190',
+            'admin_id' => 'max:300',
+            'process_number' => 'max:190',
         ];
     }
 }

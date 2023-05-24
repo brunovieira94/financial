@@ -11,7 +11,7 @@ class Billing extends Model
 {
     // Logs
     use LogsActivity;
-    protected static $logAttributes = ['user', 'cangooroo', 'reason_to_reject', 'approval_flow', 'bank_account', 'billing_payment', '*'];
+    protected static $logAttributes = ['user', 'cangooroo', 'attachments', 'reason_to_reject', 'approval_flow', 'bank_account', 'billing_payment', '*'];
     protected static $logName = 'billing';
     public function tapActivity(Activity $activity)
     {
@@ -80,6 +80,11 @@ class Billing extends Model
     public function billing_payment()
     {
         return $this->hasOne(BillingPayment::class, 'id', 'billing_payment_id')->with(['billings']);
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(BillingHasAttachments::class, 'billing_id', 'id');
     }
 
     public static function boot()

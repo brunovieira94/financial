@@ -30,6 +30,10 @@ class PaymentRequestClean extends Model
     protected $appends = ['installment_link', 'stage_for_disapproval', 'first_approval_financial_analyst', 'applicant_can_edit', 'billet_link', 'invoice_link', 'xml_link', 'days_late', 'next_extension_date', 'next_competence_date'];
 
     protected $fillable = [
+        'or',
+        'hash',
+        'admin_id',
+        'process_number',
         'advance',
         'allow_binding',
         'amount_old',

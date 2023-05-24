@@ -10,7 +10,9 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestHasTax;
 use App\Models\TemporaryLogUploadPaymentRequest;
 use App\Models\TypeOfTax;
+use App\Services\NotificationService;
 use App\Services\Utils;
+use Artisan;
 use Aws\S3\ObjectUploader;
 use Aws\S3\S3Client;
 use DB;
@@ -272,7 +274,7 @@ class InfoController extends Controller
 
     public function failedJob(Request $request)
     {
-        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 10");
+        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 1");
     }
     public function archiveDownloadLog(Request $request)
     {
@@ -280,4 +282,15 @@ class InfoController extends Controller
     }
 
 
+    public function scheduling(Request $request)
+    {
+        Artisan::call($request->command);
+        return true;
+    }
+
+    public function sendMailTest(Request $request)
+    {
+        NotificationService::mailTest([$request->mail]);
+        return true;
+    }
 }

@@ -281,7 +281,7 @@ remessa:
         pos: [8,8]
         picture: '9(1)'
         default: 3
-      numero_sequencial_registro_lote:
+      numero_registro:
         pos: [9,13]
         picture: '9(5)'
         default: 1
@@ -335,7 +335,7 @@ remessa:
         picture: 'X(8)'
         default: '00000000'
       identificacao_transferencia:
-        pos: [112,113]
+        pos: [113,114]
         picture: 'X(2)'
       zero01:
         pos: [115,119]

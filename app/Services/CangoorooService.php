@@ -5,6 +5,7 @@ namespace App\Services;
 use Illuminate\Support\Facades\Http;
 use App\Models\Cangooroo;
 use App\Models\Hotel;
+use App\Models\PaidBillingInfo;
 
 class CangoorooService
 {
@@ -102,7 +103,7 @@ class CangoorooService
                 "check_in" => $room['CheckIn'],
                 "check_out" => $room['CheckOut'],
                 "cancellation_policies_start_date" => $room['CancellationPolicies'][0]['StartDate'],
-                "cancellation_policies_value" => $room['CancellationPolicies'][0]['Value']['Value'],
+                "cancellation_policies_value" => ($room['CancellationPolicies'][0] && $room['CancellationPolicies'][0]['Value'] && $room['CancellationPolicies'][0]['Value']['Value']) ? $room['CancellationPolicies'][0]['Value']['Value'] : 0,
                 "cancellation_date" => $room['CancellationDate'],
                 "last_update" => date('Y-m-d H:i:s', $lastUpdate*0.001),
                 "provider_name" => $room['ProviderName'],
@@ -120,6 +121,7 @@ class CangoorooService
             ];
 
         if (!Hotel::where('id_hotel_cangooroo', $data['hotel_id'])->first()) return ['invalid_hotel' => 'Hotel não cadastrado na base de dados. Id_hotel_cangooroo: ' . $data['hotel_id'], 'id_hotel_cangooroo' => $data['hotel_id']];
+        $existentPaid = PaidBillingInfo::where('service_id',$data['service_id'])->first();
 
         $cangooroo = $this->cangooroo->where('service_id', $data['service_id'])->first('id');
         if ($cangooroo) {
@@ -127,12 +129,26 @@ class CangoorooService
             $updatedCangooroo->fill($data)->save();
             $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
             $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+            $cangoorooToReturn['payment_status'] = BillingService::getPaymentStatus($cangoorooToReturn);
+            $cangoorooToReturn['status_123'] = BillingService::get123Status($cangoorooToReturn);
+            if($existentPaid){
+                $cangoorooToReturn['pay_date'] = $existentPaid['pay_date'];
+                $cangoorooToReturn['oracle_protocol'] = $existentPaid['oracle_protocol'];
+                $cangoorooToReturn['form_of_payment'] = (strtolower($existentPaid['form_of_payment']) == 'boleto') ? 0 : 1;
+            }
             return $cangoorooToReturn;
         }
         $cangooroo = new Cangooroo();
         $cangooroo = $cangooroo->create($data);
         $cangoorooToReturn = $this->cangooroo->with('hotel')->findOrFail($cangooroo['id']);
         $cangoorooToReturn['multiples_services'] = [$cangoorooToReturn['service_id']];
+        $cangoorooToReturn['payment_status'] = BillingService::getPaymentStatus($cangoorooToReturn);
+        $cangoorooToReturn['status_123'] = BillingService::get123Status($cangoorooToReturn);
+        if($existentPaid){
+            $cangoorooToReturn['pay_date'] = $existentPaid['pay_date'];
+            $cangoorooToReturn['oracle_protocol'] = $existentPaid['oracle_protocol'];
+            $cangoorooToReturn['form_of_payment'] = (strtolower($existentPaid['form_of_payment']) == 'boleto') ? 0 : 1;
+        }
         return $cangoorooToReturn;
     }
 

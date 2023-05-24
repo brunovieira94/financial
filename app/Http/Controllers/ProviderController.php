@@ -35,12 +35,12 @@ class ProviderController extends Controller
 
     public function store(StoreProviderRequest $request)
     {
-        return $this->providerService->postProvider($request->all());
+        return $this->providerService->postProvider($request);
     }
 
     public function update(PutProviderRequest $request, $id)
     {
-        return $this->providerService->putProvider($id, $request->all());
+        return $this->providerService->putProvider($id, $request);
     }
 
     public function destroy($id)

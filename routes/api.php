@@ -176,13 +176,13 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
     });
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {
+        Route::post('/import', [ProviderController::class, 'import']);
+        Route::post('/export', [ProviderController::class, 'export']);
         Route::get('/', [ProviderController::class, 'index']);
         Route::get('/{id}', [ProviderController::class, 'show']);
         Route::post('/', [ProviderController::class, 'store']);
-        Route::put('/{id}', [ProviderController::class, 'update']);
+        Route::post('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
-        Route::post('/import', [ProviderController::class, 'import']);
-        Route::post('/export', [ProviderController::class, 'export']);
     });
 
     Route::prefix('hotel')->group(function () {
@@ -206,7 +206,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
         Route::get('/{approvalStatus}', [BillingController::class, 'index']);
         Route::post('/', [BillingController::class, 'store']);
-        Route::put('/{id}', [BillingController::class, 'update']);
+        Route::post('/{id}', [BillingController::class, 'update']);
         Route::put('/approve/{id}', [BillingController::class, 'approve']);
         Route::put('/reprove/{id}', [BillingController::class, 'reprove']);
         Route::delete('/{id}', [BillingController::class, 'destroy']);
@@ -218,6 +218,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/{id}', [BillingPaymentController::class, 'show']);
         Route::delete('/{id}', [BillingPaymentController::class, 'destroy']);
         Route::post('/export', [BillingPaymentController::class, 'transfeeraExport']);
+        Route::post('/billing-payment/export', [BillingPaymentController::class, 'export']);
         Route::post('/import', [BillingPaymentController::class, 'import']);
     });
 
@@ -500,13 +501,21 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/', [ReportController::class, 'getReport']);
         Route::get('/{id}', [ReportController::class, 'getReportById']);
     });
+
+    Route::prefix('integration-system')->group(function () {
+        Route::post('/', [IntegrationController::class, 'storeClient']);
+        Route::get('/', [IntegrationController::class, 'getAllClient']);
+        Route::get('/{id}', [IntegrationController::class, 'getClient']);
+        Route::put('/{id}', [IntegrationController::class, 'updateClient']);
+        Route::delete('/{id}', [IntegrationController::class, 'deleteClient']);
+    });
 });
 
 
 Route::middleware(['integrations'])->group(function () {
     Route::prefix('integration')->group(function () {
-        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills']);
-        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments']);
+        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills'])->middleware(['check.data.integration']);
+        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments'])->middleware(['check.data.integration']);
     });
 
     //Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
@@ -518,7 +527,7 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
-Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
+//Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
 Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
 Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
@@ -528,7 +537,7 @@ Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'tem
 Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
-Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::get('/log-payment-request/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
@@ -544,3 +553,5 @@ Route::post('/forgot-password', [ResetPasswordController::class, 'forgotPassword
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
 Route::get('/failed-job', [InfoController::class, 'failedJob']);
+Route::get('/scheduling', [InfoController::class, 'scheduling']);
+Route::get('/send-mail-test', [InfoController::class, 'sendMailTest']);

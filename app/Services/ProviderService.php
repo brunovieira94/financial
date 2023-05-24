@@ -4,19 +4,25 @@ namespace App\Services;
 
 use App\Models\Provider;
 use App\Models\BankAccount;
+use App\Models\ProviderHasAttachments;
 use App\Models\ProviderHasBankAccounts;
+use Aws\S3\ObjectUploader;
+use Aws\S3\S3Client;
+use Illuminate\Http\Request;
 
 class ProviderService
 {
     private $provider;
     private $bankAccount;
     private $providerHasBankAccounts;
-    private $with = ['bank_account', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city'];
-    public function __construct(Provider $provider, BankAccount $bankAccount, ProviderHasBankAccounts $providerHasBankAccounts)
+    private $attachments;
+    private $with = ['bank_account', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city', 'attachments'];
+    public function __construct(Provider $provider, BankAccount $bankAccount, ProviderHasBankAccounts $providerHasBankAccounts, ProviderHasAttachments $attachments)
     {
         $this->provider = $provider;
         $this->bankAccount = $bankAccount;
         $this->providerHasBankAccounts = $providerHasBankAccounts;
+        $this->attachments = $attachments;
     }
 
     public function getAllProvider($requestInfo)
@@ -30,8 +36,9 @@ class ProviderService
         return $this->provider->with($this->with)->findOrFail($id);
     }
 
-    public function postProvider($providerInfo)
+    public function postProvider(Request $request)
     {
+        $providerInfo = $request->all();
         $provider = new Provider;
         if (!array_key_exists('trade_name', $providerInfo)) {
             $providerInfo['trade_name'] = $providerInfo['full_name'];
@@ -39,11 +46,13 @@ class ProviderService
         $provider = $provider->create($providerInfo);
 
         $this->syncBankAccounts($provider, $providerInfo);
+        $this->syncAttachments($provider, $providerInfo, $request);
         return $this->provider->with($this->with)->findOrFail($provider->id);
     }
 
-    public function putProvider($id, $providerInfo)
+    public function putProvider($id, Request $request)
     {
+        $providerInfo = $request->all();
         $provider = $this->provider->findOrFail($id);
         if ($provider->provider_type == 'F') {
             $providerInfo['trade_name'] = $providerInfo['full_name'];
@@ -52,6 +61,7 @@ class ProviderService
         $provider->fill($providerInfo)->save();
 
         $this->putBankAccounts($id, $providerInfo);
+        $this->putAttachments($id, $providerInfo, $request);
         return $this->provider->with($this->with)->findOrFail($provider->id);
     }
 
@@ -135,6 +145,61 @@ class ProviderService
                 ];
             }
             $provider->bank_account()->sync($syncArray);
+        }
+    }
+
+    public function syncAttachments($provider, $providerInfo, Request $request)
+    {
+        if (array_key_exists('attachments', $providerInfo)) {
+            foreach ($providerInfo['attachments'] as $key => $attachment) {
+                $providerHasAttachments = new ProviderHasAttachments;
+                $attachment['attachment'] = $this->storeAttachment($request, $key);
+                $providerHasAttachments = $providerHasAttachments->create([
+                    'provider_id' => $provider->id,
+                    'attachment' => $attachment['attachment'],
+                ]);
+            }
+        }
+    }
+
+       public function putAttachments($id, $providerInfo, Request $request)
+    {
+
+        $updateAttachments = [];
+        $createdAttachments = [];
+
+        if (array_key_exists('attachments', $providerInfo)) {
+            foreach ($providerInfo['attachments'] as $key => $attachment) {
+                if (array_key_exists('id', $attachment)) {
+                    $updateAttachments[] = $attachment['id'];
+                } else {
+                    $providerHasAttachments = new ProviderHasAttachments;
+                    $attachment['attachment'] = $this->storeAttachment($request, $key);
+                    $providerHasAttachments = $providerHasAttachments->create([
+                        'provider_id' => $id,
+                        'attachment' => $attachment['attachment'],
+                    ]);
+                    $createdAttachments[] = $providerHasAttachments->id;
+                }
+            }
+        }
+        $this->attachments->where('provider_id', $id)->whereNotIn('id', $updateAttachments)->whereNotIn('id', $createdAttachments)->delete();
+    }
+
+    public function storeAttachment(Request $request, $key)
+    {
+        $data = uniqid(date('HisYmd'));
+
+        if ($request->hasFile('attachments.' . $key . '.attachment') && $request->file('attachments.' . $key . '.attachment')->isValid()) {
+            $extensionAttachment = $request['attachments.' . $key . '.attachment']->extension();
+            $originalNameAttachment  = explode('.', $request['attachments.' . $key . '.attachment']->getClientOriginalName());
+            $nameFileAttachment = "{$originalNameAttachment[0]}_{$data}.{$extensionAttachment}";
+            $uploadAttachment = $request['attachments.' . $key . '.attachment']->storeAs('attachment', $nameFileAttachment);
+
+            if (!$uploadAttachment) {
+                return response('Falha ao realizar o upload do arquivo.', 500)->send();
+            }
+            return $nameFileAttachment;
         }
     }
 }

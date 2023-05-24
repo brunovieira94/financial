@@ -43,7 +43,7 @@ class BillingPayment extends Model
 
     public function billings()
     {
-        return $this->hasMany(Billing::class, 'billing_payment_id', 'id')->with(['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow']);
+        return $this->hasMany(Billing::class, 'billing_payment_id', 'id')->with(['bank_account', 'user', 'cangooroo', 'reason_to_reject', 'approval_flow', 'attachments']);
     }
 
     public function hotel()

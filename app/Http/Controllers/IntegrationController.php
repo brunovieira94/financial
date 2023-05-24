@@ -29,4 +29,24 @@ class IntegrationController extends Controller
     {
         return $this->integrationService->storeClient($request->all());
     }
+
+    public function getAllClient(Request $request)
+    {
+        return $this->integrationService->getAllClient($request->all());
+    }
+
+    public function getClient($id)
+    {
+        return $this->integrationService->getClient($id);
+    }
+
+    public function updateClient(Request $request, $id)
+    {
+        return $this->integrationService->updateClient($request->all(), $id);
+    }
+
+    public function deleteClient($id)
+    {
+        return $this->integrationService->deleteClient($id);
+    }
 }

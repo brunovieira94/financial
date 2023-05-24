@@ -368,4 +368,5 @@ class LogsService
         }
         return $responseLog;
     }
+
 }
