@@ -65,13 +65,18 @@ class HotelService
 
     public function putHotel($id, $hotelInfo)
     {
-        $hotel = $this->hotel->findOrFail($id);
+        $hotel = $this->hotel->with($this->with)->findOrFail($id);
+        $hotelOld = $hotel;
         if($hotelInfo['cnpj_hotel'] != $hotel['cnpj_hotel'] || $hotelInfo['cpf_cnpj'] != $hotel['cpf_cnpj'] || $hotelInfo['holder_full_name'] != $hotel['holder_full_name'] || ($hotelInfo['cnpj_extra'] && ($hotelInfo['cnpj_extra'] != $hotel['cnpj_extra']))){
             $hotelInfo['is_valid'] = false;
         }
+        activity()->disableLogging();
         $hotel->fill($hotelInfo)->save();
+        activity()->enableLogging();
         $this->putBankAccounts($id, $hotelInfo);
+        $hotelNew = $this->hotel->with($this->with)->findOrFail($id);
         $stage = $hotelInfo['is_valid'] ? 1 : 0;
+        Utils::createManualLog($hotelOld, $hotelNew, auth()->user()->id, $this->hotel, 'hotels');
         Utils::createHotelLog($hotel->id, 'updated', null, null, $stage, auth()->user()->id);
         return $this->hotel->with($this->with)->findOrFail($hotel->id);
     }

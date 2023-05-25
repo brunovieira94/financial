@@ -284,7 +284,7 @@ class PaymentRequestService
         $this->syncInstallmentsLinked($paymentRequest, $paymentRequestInfo);
 
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($id);
-        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
+        Utils::createManualLog($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest, 'payment_request');
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null, null, $approval->order);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
@@ -571,7 +571,7 @@ class PaymentRequestService
         activity()->enableLogging();
 
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($requestInfo['payment_request_id']);
-        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
+        Utils::createManualLog($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest, 'payment_request');
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
@@ -693,7 +693,7 @@ class PaymentRequestService
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($installment->payment_request_id);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($installment->payment_request_id);
-        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
+        Utils::createManualLog($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest, 'payment_request');
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
 
