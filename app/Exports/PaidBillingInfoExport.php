@@ -18,6 +18,8 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
 
     private $requestInfo;
     private $fileName;
+    public $timeout = 20000;
+    public $maxExceptions = 3;
 
     public function __construct($requestInfo, $fileName)
     {
