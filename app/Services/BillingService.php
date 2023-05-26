@@ -391,7 +391,8 @@ class BillingService
     public function putBilling($id, Request $request)
     {
         $billingInfo = $request->all();
-        $billing = $this->billing->findOrFail($id);
+        $billing = $this->billing->with($this->with)->findOrFail($id);
+        $billingOld = $billing;
         if ($billing->approval_status == Config::get('constants.billingStatus.approved')) {
             return response()->json([
                 'error' => 'Pedido previamente aprovado, não é possível editar',
@@ -454,8 +455,12 @@ class BillingService
                 $billingInfo['bank_account_id'] = $bankAccount->id;
             }
         }
+        activity()->disableLogging();
         $billing->fill($billingInfo)->save();
+        activity()->enableLogging();
         $this->putAttachments($id, $billingInfo, $request);
+        $billingNew = $this->billing->with($this->with)->findOrFail($id);
+        Utils::createManualLog($billingOld, $billingNew, auth()->user()->id, $this->billing, 'billing');
         Utils::createBillingLog($billing->id, 'updated', null, null, $billing->order, auth()->user()->id);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
