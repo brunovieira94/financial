@@ -8,6 +8,8 @@ use App\Models\Mail;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Services\NotificationService;
+use App\Services\Utils;
+use Aws\S3\Exception\S3Exception;
 use Error;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
@@ -26,7 +28,7 @@ class SendAllAttachmentJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $request;
-    public $maxExceptions = 30;
+    public $maxExceptions = 1000;
     public $timeout = 14800; //3 hours
 
     public function __construct($request)
@@ -82,6 +84,7 @@ class SendAllAttachmentJob implements ShouldQueue
             $newNameArchive = $type . $paymentRequestID . '_' . $parcelNumber . '_' . uniqid(date('HisYmd'));
         }
         if ($nameArchive != null) {
+            $nameArchive = Utils::replaceCharacterUpload($nameArchive);
             if (Storage::disk('s3')->exists($defaultFolder . '/' . $nameArchive)) {
                 $extension = explode('.', $nameArchive);
                 try {
