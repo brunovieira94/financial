@@ -391,8 +391,8 @@ class BillingService
     public function putBilling($id, Request $request)
     {
         $billingInfo = $request->all();
-        $billing = $this->billing->with($this->with)->findOrFail($id);
-        $billingOld = $billing;
+        $billing = $this->billing->findOrFail($id);
+        $billingOld = $this->billing->with($this->with)->findOrFail($id);
         if ($billing->approval_status == Config::get('constants.billingStatus.approved')) {
             return response()->json([
                 'error' => 'Pedido previamente aprovado, não é possível editar',
