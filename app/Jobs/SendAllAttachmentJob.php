@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AttachmentLogDownload;
 use App\Models\AttachmentReport;
 use App\Models\Mail;
 use App\Models\PaymentRequest;
@@ -25,8 +26,8 @@ class SendAllAttachmentJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $request;
-    public $maxExceptions = 3;
-    public $timeout = 10800; //3 hours
+    public $maxExceptions = 30;
+    public $timeout = 14800; //3 hours
 
     public function __construct($request)
     {
@@ -83,7 +84,15 @@ class SendAllAttachmentJob implements ShouldQueue
         if ($nameArchive != null) {
             if (Storage::disk('s3')->exists($defaultFolder . '/' . $nameArchive)) {
                 $extension = explode('.', $nameArchive);
-                $zip->add('s3://' . env('AWS_BUCKET') . '/' . $defaultFolder . '/' . $nameArchive, $newNameArchive . '.' . end($extension));
+                try {
+                    $zip->add('s3://' . env('AWS_BUCKET') . '/' . $defaultFolder . '/' . $nameArchive, $newNameArchive . '.' . end($extension));
+                } catch (Exception $e) {
+                    AttachmentLogDownload::create([
+                        'archive' => $nameArchive,
+                        'payment_request_id' => $paymentRequestID,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
         return $zip;
