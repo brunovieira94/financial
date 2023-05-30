@@ -4,8 +4,8 @@
 
 return [
     'temporary_files' => [
-        'local_path'          => storage_path('framework/cache/laravel-excel'),
-        'remote_disk'         => null,
+        'local_path'          => 'export',
+        'remote_disk'         => 's3',
         'remote_prefix'       => null,
         'force_resync_remote' => null,
     ],
