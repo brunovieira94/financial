@@ -4,7 +4,7 @@
 
 return [
     'temporary_files' => [
-        'local_path'          => 'export',
+        'local_path'          => storage_path('app/export'),
         'remote_disk'         => 's3',
         'remote_prefix'       => null,
         'force_resync_remote' => null,
