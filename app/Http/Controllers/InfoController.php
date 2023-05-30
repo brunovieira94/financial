@@ -293,4 +293,9 @@ class InfoController extends Controller
         NotificationService::mailTest([$request->mail]);
         return true;
     }
+
+    public function getLocalStorage(Request $request)
+    {
+        return storage_path('framework/cache/laravel-excel');
+    }
 }
