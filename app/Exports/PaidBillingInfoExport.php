@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Config;
+use Illuminate\Bus\Queueable;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
@@ -15,11 +16,14 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
 {
 
     use Exportable;
+    use Queueable;
+
+    public $queue = 'long-running';
+    public $timeout = 20000;
+    public $maxExceptions = 3;
 
     private $requestInfo;
     private $fileName;
-    public $timeout = 20000;
-    public $maxExceptions = 3;
 
     public function __construct($requestInfo, $fileName)
     {
@@ -118,5 +122,10 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
             'Observação de pagamento',
             'ID Serviço Cangooroo',
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 2000;
     }
 }
