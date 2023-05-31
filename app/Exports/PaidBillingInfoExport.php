@@ -18,7 +18,6 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
     use Exportable;
     use Queueable;
 
-    public $queue = 'long-running';
     public $timeout = 20000;
     public $maxExceptions = 3;
 
@@ -29,6 +28,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
     {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
+        $this->queue = 'long-running';
     }
 
     public function query()
