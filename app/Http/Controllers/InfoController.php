@@ -298,4 +298,9 @@ class InfoController extends Controller
     {
         return DB::select("SELECT * FROM jobs ORDER BY id DESC LIMIT 1");
     }
+
+    public function getAllJob(Request $request)
+    {
+        return DB::select("SELECT * FROM jobs ORDER BY id DESC");
+    }
 }
