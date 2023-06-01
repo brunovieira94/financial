@@ -126,6 +126,6 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
 
     public function chunkSize(): int
     {
-        return 5000;
+        return 10000;
     }
 }
