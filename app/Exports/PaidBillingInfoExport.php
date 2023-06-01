@@ -21,19 +21,55 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
     public $timeout = 20000;
     public $maxExceptions = 3;
 
-    private $collection;
+    private $requestInfo;
     private $fileName;
 
-    public function __construct($collection, $fileName)
+    public function __construct($requestInfo, $fileName)
     {
-        $this->collection = $collection;
+        $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
         $this->queue = 'long-running';
     }
 
     public function collection()
     {
-        return $this->collection;
+        $infoRequest = $this->requestInfo;
+        $paidBillingInfo = PaidBillingInfo::query();
+        if (array_key_exists('created_at', $infoRequest)) {
+            if (array_key_exists('from', $infoRequest['created_at'])) {
+                $paidBillingInfo->where('created_at', '>=', $infoRequest['created_at']['from']);
+            }
+            if (array_key_exists('to', $infoRequest['created_at'])) {
+                $paidBillingInfo->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($infoRequest['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $infoRequest['created_at']) && !array_key_exists('from', $infoRequest['created_at'])) {
+                $paidBillingInfo->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $infoRequest)) {
+            if (array_key_exists('from', $infoRequest['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '>=', $infoRequest['pay_date']['from']);
+            }
+            if (array_key_exists('to', $infoRequest['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '<=', $infoRequest['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $infoRequest['pay_date']) && !array_key_exists('from', $infoRequest['pay_date'])) {
+                $paidBillingInfo->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        if (array_key_exists('form_of_payment', $infoRequest)) {
+            $paidBillingInfo->where('form_of_payment', $infoRequest['form_of_payment']);
+        }
+        if (array_key_exists('cnpj', $infoRequest)) {
+            $paidBillingInfo->where('cnpj_hotel', $infoRequest['cnpj']);
+        }
+        if (array_key_exists('service_id', $infoRequest)) {
+            $paidBillingInfo->where('service_id', $infoRequest['service_id']);
+        }
+        if (array_key_exists('reserve', $infoRequest)) {
+            $paidBillingInfo->where('reserve', $infoRequest['reserve']);
+        }
+        return $paidBillingInfo->get();
     }
 
     public function map($paidBillingInfo): array
