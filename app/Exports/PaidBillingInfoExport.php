@@ -8,7 +8,6 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Config;
-use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Maatwebsite\Excel\Concerns\FromCollection;
 
@@ -16,7 +15,6 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
 {
 
     use Exportable;
-    use Queueable;
 
     public $timeout = 20000;
     public $maxExceptions = 3;
@@ -28,7 +26,6 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
     {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
-        $this->queue = 'long-running';
     }
 
     public function collection()
