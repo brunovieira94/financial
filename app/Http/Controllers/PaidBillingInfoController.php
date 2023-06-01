@@ -74,8 +74,6 @@ class PaidBillingInfoController extends Controller
 
     public function export(Request $request)
     {
-        $exportFile = UtilsExport::exportFile($request->all(), 'faturamentosPagos');
-
         $infoRequest = $request->all();
         $paidBillingInfo = PaidBillingInfo::query();
         if (array_key_exists('created_at', $infoRequest)) {
@@ -117,8 +115,10 @@ class PaidBillingInfoController extends Controller
         $totalPages = intval(ceil($count/$perPage));
 
         for($i = 0; $i < $totalPages; $i++) {
+            $fileName = $totalPages == 1 ? 'faturamentosPagos' : 'faturamentosPagos - Parte '.($i+1);
+            $exportFile = UtilsExport::exportFile($request->all(), $fileName);
             $paginated = $paidBillingInfo->paginate($perPage, ['*'], 'page', ($i+1));
-            (new PaidBillingInfoExport($paginated, $exportFile['nameFile'].' - Parte '.($i+1)))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            (new PaidBillingInfoExport($paginated, $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
                 new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
             ]);
         }
