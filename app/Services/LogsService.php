@@ -384,6 +384,7 @@ class LogsService
         $paymentRequest['amount'] = (float) $paymentRequest['amount'];
         $paymentRequest['net_value'] = (float) $paymentRequest['net_value'];
         $paymentRequest['frequency_of_installments'] = (float) $paymentRequest['frequency_of_installments'];
+        $paymentRequest['invoice_file'] = (is_array($paymentRequest['invoice_file']) ? "" : $paymentRequest['invoice_file']);
 
 
         if (array_key_exists('installments', $paymentRequest)) {
