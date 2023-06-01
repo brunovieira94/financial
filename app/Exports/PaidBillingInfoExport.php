@@ -73,7 +73,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
         if (array_key_exists('reserve', $infoRequest)) {
             $paidBillingInfo->where('reserve', $infoRequest['reserve']);
         }
-        return $paidBillingInfo->limit($this->perPage)->offset($this->offset);
+        return $paidBillingInfo->limit(100)->offset(0);
     }
 
     public function map($paidBillingInfo): array
