@@ -383,6 +383,8 @@ class LogsService
     {
         $paymentRequest['amount'] = (float) $paymentRequest['amount'];
         $paymentRequest['net_value'] = (float) $paymentRequest['net_value'];
+        $paymentRequest['frequency_of_installments'] = (float) $paymentRequest['frequency_of_installments'];
+
 
         if (array_key_exists('installments', $paymentRequest)) {
             foreach ($paymentRequest['installments'] as $installment) {
