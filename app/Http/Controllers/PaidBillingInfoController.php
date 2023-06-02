@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Artisan;
 use App\Exports\Utils as UtilsExport;
 use App\Jobs\NotifyUserOfCompletedExport;
 use App\Models\Export;
+use App\Services\Utils;
 
 class PaidBillingInfoController extends Controller
 {
@@ -75,42 +76,8 @@ class PaidBillingInfoController extends Controller
     public function export(Request $request)
     {
         ini_set('memory_limit', '1024M');
-        $infoRequest = $request->all();
         $paidBillingInfo = PaidBillingInfo::query();
-        if (array_key_exists('created_at', $infoRequest)) {
-            if (array_key_exists('from', $infoRequest['created_at'])) {
-                $paidBillingInfo->where('created_at', '>=', $infoRequest['created_at']['from']);
-            }
-            if (array_key_exists('to', $infoRequest['created_at'])) {
-                $paidBillingInfo->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($infoRequest['created_at']['to']))));
-            }
-            if (!array_key_exists('to', $infoRequest['created_at']) && !array_key_exists('from', $infoRequest['created_at'])) {
-                $paidBillingInfo->whereBetween('created_at', [now()->addMonths(-1), now()]);
-            }
-        }
-        if (array_key_exists('pay_date', $infoRequest)) {
-            if (array_key_exists('from', $infoRequest['pay_date'])) {
-                $paidBillingInfo->where('pay_date', '>=', $infoRequest['pay_date']['from']);
-            }
-            if (array_key_exists('to', $infoRequest['pay_date'])) {
-                $paidBillingInfo->where('pay_date', '<=', $infoRequest['pay_date']['to']);
-            }
-            if (!array_key_exists('to', $infoRequest['pay_date']) && !array_key_exists('from', $infoRequest['pay_date'])) {
-                $paidBillingInfo->whereBetween('pay_date', [now(), now()->addMonths(1)]);
-            }
-        }
-        if (array_key_exists('form_of_payment', $infoRequest)) {
-            $paidBillingInfo->where('form_of_payment', $infoRequest['form_of_payment']);
-        }
-        if (array_key_exists('cnpj', $infoRequest)) {
-            $paidBillingInfo->where('cnpj_hotel', $infoRequest['cnpj']);
-        }
-        if (array_key_exists('service_id', $infoRequest)) {
-            $paidBillingInfo->where('service_id', $infoRequest['service_id']);
-        }
-        if (array_key_exists('reserve', $infoRequest)) {
-            $paidBillingInfo->where('reserve', $infoRequest['reserve']);
-        }
+        $paidBillingInfo = Utils::baseFilterPaidBillingInfo($paidBillingInfo, $request->all());
         $count = $paidBillingInfo->count();
         $perPage = $count <= 20000 ? $count : 20000;
         $totalPages = $perPage == 0 ? 0 : intval(ceil($count/$perPage));
@@ -118,7 +85,7 @@ class PaidBillingInfoController extends Controller
         for($i = 0; $i < $totalPages; $i++) {
             $fileName = $totalPages == 1 ? 'faturamentosPagos' : 'faturamentosPagosPt'.($i+1);
             $exportFile = UtilsExport::exportFile($request->all(), $fileName);
-            (new PaidBillingInfoExport($paidBillingInfo, $perPage, ($i*$perPage), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            (new PaidBillingInfoExport($request->all(), $perPage, ($i*$perPage), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
                 new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
             ]);
         }
