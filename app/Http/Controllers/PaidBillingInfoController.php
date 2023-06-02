@@ -113,7 +113,7 @@ class PaidBillingInfoController extends Controller
         }
         $count = $paidBillingInfo->count();
         $perPage = $count <= 20000 ? $count : 20000;
-        $totalPages = intval(ceil($count/$perPage));
+        $totalPages = $perPage == 0 ? 0 : intval(ceil($count/$perPage));
 
         for($i = 0; $i < $totalPages; $i++) {
             $fileName = $totalPages == 1 ? 'faturamentosPagos' : 'faturamentosPagosPt'.($i+1);
