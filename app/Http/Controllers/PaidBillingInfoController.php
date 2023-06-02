@@ -74,6 +74,7 @@ class PaidBillingInfoController extends Controller
 
     public function export(Request $request)
     {
+        ini_set('memory_limit', '1024M');
         $infoRequest = $request->all();
         $paidBillingInfo = PaidBillingInfo::query();
         if (array_key_exists('created_at', $infoRequest)) {
@@ -117,7 +118,7 @@ class PaidBillingInfoController extends Controller
         for($i = 0; $i < $totalPages; $i++) {
             $fileName = $totalPages == 1 ? 'faturamentosPagos' : 'faturamentosPagosPt'.($i+1);
             $exportFile = UtilsExport::exportFile($request->all(), $fileName);
-            (new PaidBillingInfoExport($request->all(), $perPage, ($i*$perPage), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            (new PaidBillingInfoExport($paidBillingInfo, $perPage, ($i*$perPage), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
                 new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
             ]);
         }
