@@ -558,3 +558,5 @@ Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
 Route::get('/failed-job', [InfoController::class, 'failedJob']);
 Route::get('/scheduling', [InfoController::class, 'scheduling']);
 Route::get('/send-mail-test', [InfoController::class, 'sendMailTest']);
+Route::get('/last-job', [InfoController::class, 'getLastJob']);
+Route::get('/all-jobs', [InfoController::class, 'getAllJob']);

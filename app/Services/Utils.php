@@ -971,6 +971,45 @@ class Utils
         return $billing;
     }
 
+    public static function baseFilterPaidBillingInfo($paidBillingInfo, $requestInfo)
+    {
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $paidBillingInfo->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $paidBillingInfo->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $paidBillingInfo->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                $paidBillingInfo->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        if (array_key_exists('form_of_payment', $requestInfo)) {
+            $paidBillingInfo->where('form_of_payment', $requestInfo['form_of_payment']);
+        }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $paidBillingInfo->where('cnpj_hotel', $requestInfo['cnpj']);
+        }
+        if (array_key_exists('service_id', $requestInfo)) {
+            $paidBillingInfo->where('service_id', $requestInfo['service_id']);
+        }
+        if (array_key_exists('reserve', $requestInfo)) {
+            $paidBillingInfo->where('reserve', $requestInfo['reserve']);
+        }
+        return $paidBillingInfo;
+    }
+
     public static function baseFilterGroupFormPayment($groupFormPayment, $requestInfo)
     {
         if (array_key_exists('only_not_main_payments', $requestInfo) && ($requestInfo['only_not_main_payments'] == 1 || $requestInfo['only_not_main_payments'] == '1')) {

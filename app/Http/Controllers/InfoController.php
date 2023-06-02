@@ -293,4 +293,14 @@ class InfoController extends Controller
         NotificationService::mailTest([$request->mail]);
         return true;
     }
+
+    public function getLastJob(Request $request)
+    {
+        return DB::select("SELECT * FROM jobs ORDER BY id DESC LIMIT 1");
+    }
+
+    public function getAllJob(Request $request)
+    {
+        return DB::select("SELECT * FROM jobs ORDER BY id DESC");
+    }
 }

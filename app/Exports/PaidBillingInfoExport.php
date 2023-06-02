@@ -8,65 +8,48 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Config;
-use Maatwebsite\Excel\Concerns\FromQuery;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use App\Services\Utils;
+use Maatwebsite\Excel\Concerns\FromQuery;
 
 class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;
+    use Queueable;
+
+    public $timeout = 20000;
+    public $maxExceptions = 3;
 
     private $requestInfo;
     private $fileName;
-    public $timeout = 20000;
-    public $maxExceptions = 3;
+    // private $perPage;
+    // private $offset;
 
     public function __construct($requestInfo, $fileName)
     {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
+        // $this->perPage = $perPage;
+        // $this->offset = $offset;
+        $this->queue = 'long-running';
     }
 
     public function query()
     {
-        $infoRequest = $this->requestInfo;
-        $paidBillingInfo = PaidBillingInfo::query();
-        if (array_key_exists('created_at', $infoRequest)) {
-            if (array_key_exists('from', $infoRequest['created_at'])) {
-                $paidBillingInfo->where('created_at', '>=', $infoRequest['created_at']['from']);
-            }
-            if (array_key_exists('to', $infoRequest['created_at'])) {
-                $paidBillingInfo->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($infoRequest['created_at']['to']))));
-            }
-            if (!array_key_exists('to', $infoRequest['created_at']) && !array_key_exists('from', $infoRequest['created_at'])) {
-                $paidBillingInfo->whereBetween('created_at', [now()->addMonths(-1), now()]);
-            }
-        }
-        if (array_key_exists('pay_date', $infoRequest)) {
-            if (array_key_exists('from', $infoRequest['pay_date'])) {
-                $paidBillingInfo->where('pay_date', '>=', $infoRequest['pay_date']['from']);
-            }
-            if (array_key_exists('to', $infoRequest['pay_date'])) {
-                $paidBillingInfo->where('pay_date', '<=', $infoRequest['pay_date']['to']);
-            }
-            if (!array_key_exists('to', $infoRequest['pay_date']) && !array_key_exists('from', $infoRequest['pay_date'])) {
-                $paidBillingInfo->whereBetween('pay_date', [now(), now()->addMonths(1)]);
-            }
-        }
-        if (array_key_exists('form_of_payment', $infoRequest)) {
-            $paidBillingInfo->where('form_of_payment', $infoRequest['form_of_payment']);
-        }
-        if (array_key_exists('cnpj', $infoRequest)) {
-            $paidBillingInfo->where('cnpj_hotel', $infoRequest['cnpj']);
-        }
-        if (array_key_exists('service_id', $infoRequest)) {
-            $paidBillingInfo->where('service_id', $infoRequest['service_id']);
-        }
-        if (array_key_exists('reserve', $infoRequest)) {
-            $paidBillingInfo->where('reserve', $infoRequest['reserve']);
-        }
-        return $paidBillingInfo;
+        $query = PaidBillingInfo::query();
+        $query = Utils::baseFilterPaidBillingInfo($query, $this->requestInfo);
+        return $query; //get()
     }
+
+    // public function collection()
+    // {
+    //     $query = PaidBillingInfo::query();
+    //     $query = Utils::baseFilterPaidBillingInfo($query, $this->requestInfo);
+    //     return $query->limit($this->perPage)->offset($this->offset)->cursor(); //get()
+    // }
 
     public function map($paidBillingInfo): array
     {
@@ -118,5 +101,10 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
             'Observação de pagamento',
             'ID Serviço Cangooroo',
         ];
+    }
+
+    public function chunkSize(): int
+    {
+        return 5000;
     }
 }
