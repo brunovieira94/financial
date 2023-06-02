@@ -24,14 +24,12 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
 
     private $requestInfo;
     private $fileName;
-    private $perPage;
     private $offset;
 
-    public function __construct($requestInfo, $perPage, $offset, $fileName)
+    public function __construct($requestInfo, $offset, $fileName)
     {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
-        $this->perPage = $perPage;
         $this->offset = $offset;
         $this->queue = 'long-running';
     }
@@ -39,6 +37,7 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
     public function collection()
     {
         $infoRequest = $this->requestInfo;
+        $diff = intval($this->offset);
         $paidBillingInfo = PaidBillingInfo::query();
         if (array_key_exists('created_at', $infoRequest)) {
             if (array_key_exists('from', $infoRequest['created_at'])) {
@@ -74,7 +73,7 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
         if (array_key_exists('reserve', $infoRequest)) {
             $paidBillingInfo->where('reserve', $infoRequest['reserve']);
         }
-        return $paidBillingInfo->limit($this->perPage)->offset($this->offset)->get();
+        return $paidBillingInfo->limit(20000)->offset($diff*20000)->get();
     }
 
     public function map($paidBillingInfo): array
