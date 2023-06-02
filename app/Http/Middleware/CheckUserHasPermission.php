@@ -58,11 +58,11 @@ class CheckUserHasPermission
             'transfer-approval',
             'listinvoice',
             'getinvoice',
-            'get-users'
+            'get-users',
+            'status',
         ];
 
         $routeAccessed = $route[count($route) - 1];
-
 
         if ('{id}' == $routeAccessed) {
             $routeAccessed = $route[count($route) - 2];
@@ -116,7 +116,7 @@ class CheckUserHasPermission
             case 'approved-purchase-order-integration';
                 $routeAccessed = 'payment-request';
             case 'bank-account';
-                $routeAccessed = 'provider';
+                $routeAccessed = 'payment-request';
                 break;
             case 'installment';
                 $routeAccessed = 'payment-request';

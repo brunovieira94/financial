@@ -304,5 +304,4 @@ class PaymentRequestController extends Controller
     {
         return $this->paymentRequestService->getAttachment($request->all());
     }
-
 }

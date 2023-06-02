@@ -53,8 +53,8 @@ class PaymentRequestService
     private $attachmentReport;
     private $approval;
 
-    private $with = ['installments_linked.payment_request.provider', 'installments_linked.payment_request.company', 'installments_linked.payment_request.cost_center', 'currency_old', 'group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
-    private $withLog = ['currency_old', 'cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
+    private $with = ['installments_linked.payment_request.provider', 'installments_linked.payment_request.company', 'installments_linked.payment_request.cost_center', 'currency_old', 'group_approval_flow', 'purchase_order.purchase_order', 'purchase_order.purchase_order_installments', 'company.bank_account', 'company.managers', 'attachments', 'group_payment.form_payment', 'tax.typeOfTax', 'approval.approval_flow', 'installments.bank_account_provider', 'installments.group_payment.form_payment', 'provider.bank_account', 'provider.provider_category', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user', 'installments.bank_account_company', 'installments.group_payment_received'];
+    private $withLog = ['installments_linked.payment_request', 'currency_old', 'cnab_payment_request', 'tax', 'bank_account_provider', 'company', 'approval', 'attachments', 'group_payment', 'purchase_order', 'group_approval_flow', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user'];
     private $installmentWith = ['group_payment.form_payment', 'payment_request.provider', 'payment_request.company', 'bank_account_provider', 'cnab_generated_installment.generated_cnab', 'payment_request.purchase_order.purchase_order_installments', 'payment_request.purchase_order.purchase_order'];
 
     public function __construct(AttachmentReport $attachmentReport, PaymentRequestHasInstallmentsClean $installmentClean, PaymentRequestClean $paymentRequestClean, PaymentRequestHasAttachments $attachments, ApprovalFlow $approvalFlow, PaymentRequest $paymentRequest, PaymentRequestHasInstallments $installments, AccountsPayableApprovalFlow $approval, PaymentRequestHasTax $tax, GroupFormPayment $groupFormPayment)
@@ -284,7 +284,7 @@ class PaymentRequestService
         $this->syncInstallmentsLinked($paymentRequest, $paymentRequestInfo);
 
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($id);
-        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
+        Utils::createManualLog($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest, 'payment_request');
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $stageAccount, auth()->user()->id, null, null, $approval->order);
         return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
     }
@@ -571,7 +571,7 @@ class PaymentRequestService
         activity()->enableLogging();
 
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($requestInfo['payment_request_id']);
-        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
+        Utils::createManualLog($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest, 'payment_request');
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         return response()->json([
             'sucesso' => 'Os dados foram atualizados com sucesso.'
@@ -693,7 +693,7 @@ class PaymentRequestService
         $paymentRequest = PaymentRequest::with('approval')->findOrFail($installment->payment_request_id);
         Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'updated', null, null, $paymentRequest->approval->order, auth()->user()->id, null, null, $paymentRequest->approval->order);
         $paymentRequestNew = $this->paymentRequest->with($this->withLog)->findOrFail($installment->payment_request_id);
-        Utils::createManualLogPaymentRequest($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest);
+        Utils::createManualLog($paymentRequestOld, $paymentRequestNew, auth()->user()->id, $this->paymentRequest, 'payment_request');
         return $this->installments->with(['payment_request', 'group_payment', 'bank_account_provider'])->findOrFail($id);
     }
 

@@ -59,6 +59,16 @@ class LogsController extends Controller
         return $this->logsService->getLogPaymentRequestUpdate($id, $request->all());
     }
 
+    public function getLogBillingUpdate(Request $request, $id)
+    {
+        return $this->logsService->getLogBillingUpdate($id, $request->all());
+    }
+
+    public function getLogHotelUpdate(Request $request, $id)
+    {
+        return $this->logsService->getLogHotelUpdate($id, $request->all());
+    }
+
     public function approvalManualPaymentRequest(Request $request, $id)
     {
         if (DB::table('payment_requests_installments')->where('id', $id)->exists()) {

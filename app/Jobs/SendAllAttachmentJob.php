@@ -84,7 +84,9 @@ class SendAllAttachmentJob implements ShouldQueue
             $newNameArchive = $type . $paymentRequestID . '_' . $parcelNumber . '_' . uniqid(date('HisYmd'));
         }
         if ($nameArchive != null) {
-            $nameArchive = Utils::replaceCharacterUpload($nameArchive);
+            $nameArchive = explode('.' , $nameArchive);
+            $nameArchive[0] = Utils::replaceCharacterUpload($nameArchive[0]);
+            $nameArchive = implode('.', $nameArchive);
             if (Storage::disk('s3')->exists($defaultFolder . '/' . $nameArchive)) {
                 $extension = explode('.', $nameArchive);
                 try {

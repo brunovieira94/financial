@@ -12,10 +12,10 @@ use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\BankAccount;
 use App\Models\Bank;
 use App\Services\NotificationService;
-
+use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Queue\ShouldQueue;
-
+use Illuminate\Support\Facades\Redis;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
@@ -84,7 +84,13 @@ class InstallmentsPaidImport implements
             $installment = $installment->get()->first();
             $groupFormPaymentId = Util::getGroupFormPaymentIdByName($row['forma_de_pagamento']);
             $bankAccountCompany = $this->getCompanyBankAccount($row);
-            $paymentDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($row['data_do_pagamento'])->format('Y-m-d');
+            $paymentDate =  preg_replace('/[^0-9 *-\_]/', '', $row['data_do_pagamento']);
+            $paymentDate = explode('/', $paymentDate);
+            if (count($paymentDate) > 2) {
+                $paymentDate = $paymentDate[2] . '-' . $paymentDate[1] . '-' . $paymentDate[0];
+            } else {
+                $paymentDate = null;
+            }
 
             if (isset($installment) && isset($groupFormPaymentId) && isset($bankAccountCompany) && isset($paymentDate)) {
                 if (!in_array($row['conta'], $paymentRequests)) {
@@ -107,18 +113,43 @@ class InstallmentsPaidImport implements
 
                 $this->otherPaymentsService->storeImported($this->user->id, $installmentInfo, $this->fileStoredName);
             } else {
-                self::$failures[$this->fileStoredName][] = [
-                    'row' => $row['row'],
-                    'paymentRequest' =>  $row['conta'],
-                    'installment' => $row['parcela'],
-                    'error' => is_null($installment)
-                        ? 'A parcela não foi encontrada'
-                        : (is_null($groupFormPaymentId)
-                            ? 'A Forma de pagamento não foi reconhecida'
-                            : (is_null($paymentDate)
-                                ? 'A Data de Pagamento não está no formato esperado "dd/mm/YYYY"'
-                                : 'A Conta bancária não foi encontrada')),
-                ];
+                if (Redis::exists($this->fileStoredName)) {
+                    $data = [
+                        'row' => $row['row'],
+                        'paymentRequest' =>  $row['conta'],
+                        'installment' => $row['parcela'],
+                        'error' => is_null($installment)
+                            ? 'A parcela não foi encontrada'
+                            : (is_null($groupFormPaymentId)
+                                ? 'A Forma de pagamento não foi reconhecida'
+                                : (is_null($paymentDate)
+                                    ? 'A Data de Pagamento não está no formato esperado "dd/mm/YYYY"'
+                                    : 'A Conta bancária não foi encontrada'))
+                    ];
+                    try {
+                        $redisData = Redis::get($this->fileStoredName);
+                        $redisData = json_decode($redisData, true);
+                        $redisData[] = $data;
+                        Redis::set($this->fileStoredName, json_encode($redisData));
+                    } catch (Exception $e) {
+                        Redis::del('h', $this->fileStoredName);
+                    }
+                } else {
+                    Redis::set($this->fileStoredName, json_encode([
+                        [
+                            'row' => $row['row'],
+                            'paymentRequest' =>  $row['conta'],
+                            'installment' => $row['parcela'],
+                            'error' => is_null($installment)
+                                ? 'A parcela não foi encontrada'
+                                : (is_null($groupFormPaymentId)
+                                    ? 'A Forma de pagamento não foi reconhecida'
+                                    : (is_null($paymentDate)
+                                        ? 'A Data de Pagamento não está no formato esperado "dd/mm/YYYY"'
+                                        : 'A Conta bancária não foi encontrada'))
+                        ]
+                    ]));
+                }
             }
         }
 
@@ -132,21 +163,14 @@ class InstallmentsPaidImport implements
         $accountInfo = explode('-', $row['conta_bancaria']);
         $agencyInfo = explode('-', $row['agencia']);
 
-        $bank = Bank::where('bank_code', $row['codigo_do_banco'])->get()->first();
+        $bankAccountCompany = BankAccount::with('bank')->whereLike('agency_number', "%{$agencyInfo[0]}%")->whereLike('account_number', "%{$accountInfo[0]}%");
+        $bankAccountCompany = $bankAccountCompany->whereHas('bank', fn ($q) => $q->whereLike('bank_code', $row['codigo_do_banco']));
 
-        if (is_null($bank)) return null;
-
-        $bankAccountCompany = BankAccount::where('bank_id', $bank->id)
-            ->whereLike('agency_number', "%{$agencyInfo[0]}%")->whereLike('account_number', "%{$accountInfo[0]}%");
-
-
-        if (count($agencyInfo) == 2) {
+        if (count($agencyInfo) == 2)
             $bankAccountCompany = $bankAccountCompany->whereLike('agency_check_number', "%{$agencyInfo[1]}%");
-        }
 
-        if (count($accountInfo) == 2) {
+        if (count($accountInfo) == 2)
             $bankAccountCompany = $bankAccountCompany->whereLike('account_check_number', "%{$accountInfo[1]}%");
-        }
 
         if ($bankAccountCompany->exists()) {
             return $bankAccountCompany->get()->first();
@@ -292,9 +316,10 @@ class InstallmentsPaidImport implements
             'Relatório da Importação de Parcelas Pagas',
             'installments-paid-import-report',
             $import->fileOriginalName,
-            $failures,
+            Redis::exists($import->fileStoredName) == true ? json_decode(Redis::get($import->fileStoredName)) : [],
             $errors
         );
+        Redis::del('h', $import->fileStoredName);
 
         //nota: se uma job externa vir a ser usada, remova as linhas abaixo
 

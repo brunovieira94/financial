@@ -20,8 +20,9 @@ use App\Exports\UserApprovalsReportExport;
 use App\Exports\Utils as UtilsExport;
 use App\Jobs\NotifyUserOfCompletedExport;
 use App\Models\Export;
-use DB;
 use App\Exports\AllApprovedInstallmentExportForPaidImport;
+
+use DB;
 
 class ReportController extends Controller
 {
@@ -103,6 +104,31 @@ class ReportController extends Controller
     public function approvedInstallmentExport(Request $request)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAprovadas');
+
+        if (array_key_exists('isForImportPayment', $request->all()) && $request->all()['isForImportPayment'] == true) {
+            (new AllApprovedInstallmentExportForPaidImport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', \Maatwebsite\Excel\Excel::XLSX)->chain([
+                new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+            ]);
+        } else {
+            (new AllApprovedInstallment($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+                new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+            ]);
+        }
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
+
+    }
+
+    public function approvedInstallmentForImportPaymentExport(Request $request)
+    {
+        $requestInfo = $request->all();
+        $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAprovadasImport');
+
+        $headers = null;
+        $format = \Maatwebsite\Excel\Excel::XLSX;
+        $ext = '.xlsx';
 
         (new AllApprovedInstallment($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
             new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
@@ -299,4 +325,5 @@ class ReportController extends Controller
     {
         return Export::findOrFail($id);
     }
+
 }

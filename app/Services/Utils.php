@@ -135,7 +135,6 @@ class Utils
         foreach ($installments as $installment) {
             try {
                 foreach ($installment->group_payment->form_payment as $payment_form) {
-
                     if ($payment_form->bank_code == $bankCode) {
                         if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
                         {
@@ -161,25 +160,26 @@ class Utils
                                         break;
                                     }
                                 }
-                            } else
-                            if (substr($installment->bar_code, 0, 3) == $bankCode) {
-                                if ($payment_form->same_ownership) {
-                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                        break;
-                                    } else {
-                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                        break;
-                                    }
-                                }
                             } else {
-                                if (!$payment_form->same_ownership) {
-                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                        break;
-                                    } else {
-                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                        break;
+                                if (substr($installment->bar_code, 0, 3) == $bankCode) {
+                                    if ($payment_form->same_ownership) {
+                                        if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                            break;
+                                        } else {
+                                            $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    if (!$payment_form->same_ownership) {
+                                        if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                            break;
+                                        } else {
+                                            $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -1010,7 +1010,7 @@ class Utils
         }
         return $groupBilling;
     }
-    public static function createManualLogPaymentRequest($old, $new, $causerID, $model)
+    public static function createManualLog($old, $new, $causerID, $model, $logName, $log = 'updated')
     {
         activity()
             ->causedBy(User::findOrFail($causerID))
@@ -1019,15 +1019,15 @@ class Utils
                 'old' => $old,
                 'attributes' => $new,
             ])
-            ->tap(function (Activity $activity) use ($causerID, $new) {
+            ->tap(function (Activity $activity) use ($causerID, $new, $logName) {
                 $user = User::with(['cost_center', 'business', 'role'])->findOrFail($causerID);
                 $user->role = Role::findOrFail($user->role_id);
                 $activity->causer_id = $user->id;
                 $activity->causer_object = $user;
                 $activity->subject_id = $new->id;
-                $activity->log_name = 'payment_request';
+                $activity->log_name = $logName;
             })
-            ->log('updated');
+            ->log($log);
     }
 
     public static function createPaiBillingInfo($billings)

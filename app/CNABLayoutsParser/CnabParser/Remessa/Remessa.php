@@ -57,7 +57,6 @@ class Remessa
                 $detalhe = $lote->novoDetalhe();
 
                 $amount = ($installment->initial_value + $installment->fees + $installment->fine) - $installment->discount;
-
                 $lotValue += $amount;
 
                 $dataBankInstallment = Utils::getBankDetailsCnab($installment);
@@ -429,11 +428,9 @@ class Remessa
                         unset($detalhe->segmento_j52);
                         $lote->inserirDetalhe($detalhe);
                     } else {
-
                         $lotQuantityDetails++;
                         $detalhe->segmento_j->lote_servico = $lote->sequencial;
                         $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                         $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                         $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
                         $dataVencimento = new Carbon($installment->extension_date); // data vendimento

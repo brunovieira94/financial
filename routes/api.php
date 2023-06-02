@@ -47,6 +47,7 @@ use App\Http\Controllers\InfoController;
 use App\Http\Controllers\BillingPaymentController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\TransferOrderController;
@@ -278,7 +279,9 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/log-payment-request-update/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
+        Route::get('/log-billing-update/{id}', [LogsController::class, 'getLogBillingUpdate']);
         Route::get('/log-hotel/{id}', [LogsController::class, 'getHotelLogs']);
+        Route::get('/log-hotel-update/{id}', [LogsController::class, 'getLogHotelUpdate']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
