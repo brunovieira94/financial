@@ -14,7 +14,7 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromQuery;
 
-class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;
@@ -25,24 +25,31 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
 
     private $requestInfo;
     private $fileName;
-    private $perPage;
-    private $offset;
+    // private $perPage;
+    // private $offset;
 
-    public function __construct($requestInfo, $perPage, $offset, $fileName)
+    public function __construct($requestInfo, $fileName)
     {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
-        $this->perPage = $perPage;
-        $this->offset = $offset;
+        // $this->perPage = $perPage;
+        // $this->offset = $offset;
         $this->queue = 'long-running';
     }
 
-    public function collection()
+    public function query()
     {
         $query = PaidBillingInfo::query();
         $query = Utils::baseFilterPaidBillingInfo($query, $this->requestInfo);
-        return $query->limit($this->perPage)->offset($this->offset)->get();
+        return $query; //get()
     }
+
+    // public function collection()
+    // {
+    //     $query = PaidBillingInfo::query();
+    //     $query = Utils::baseFilterPaidBillingInfo($query, $this->requestInfo);
+    //     return $query->limit($this->perPage)->offset($this->offset)->cursor(); //get()
+    // }
 
     public function map($paidBillingInfo): array
     {
@@ -98,6 +105,6 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 5000;
     }
 }
