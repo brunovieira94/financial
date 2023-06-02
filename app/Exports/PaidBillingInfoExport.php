@@ -10,9 +10,10 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Config;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\FromQuery;
 
-class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;
@@ -35,7 +36,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
         $this->queue = 'long-running';
     }
 
-    public function query()
+    public function collection()
     {
         $infoRequest = $this->requestInfo;
         $paidBillingInfo = PaidBillingInfo::query();
@@ -73,7 +74,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
         if (array_key_exists('reserve', $infoRequest)) {
             $paidBillingInfo->where('reserve', $infoRequest['reserve']);
         }
-        return $paidBillingInfo->limit(100)->offset(0);
+        return $paidBillingInfo->limit(100)->offset(0)->get();
     }
 
     public function map($paidBillingInfo): array
@@ -130,6 +131,6 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
 
     public function chunkSize(): int
     {
-        return 10000;
+        return 1000;
     }
 }
