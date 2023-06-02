@@ -74,7 +74,7 @@ class PaidBillingInfoExport implements FromCollection, ShouldAutoSize, WithMappi
         if (array_key_exists('reserve', $infoRequest)) {
             $paidBillingInfo->where('reserve', $infoRequest['reserve']);
         }
-        return $paidBillingInfo->limit(100)->offset(0)->get();
+        return $paidBillingInfo->limit($this->perPage)->offset($this->offset)->get();
     }
 
     public function map($paidBillingInfo): array
