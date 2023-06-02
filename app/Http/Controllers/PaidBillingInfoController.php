@@ -111,13 +111,13 @@ class PaidBillingInfoController extends Controller
             $paidBillingInfo->where('reserve', $infoRequest['reserve']);
         }
         $count = $paidBillingInfo->count();
-        $perPage = 20000;
+        $perPage = $count <= 20000 ? $count : 20000;
         $totalPages = intval(ceil($count/$perPage));
 
         for($i = 0; $i < $totalPages; $i++) {
             $fileName = $totalPages == 1 ? 'faturamentosPagos' : 'faturamentosPagosPt'.($i+1);
             $exportFile = UtilsExport::exportFile($request->all(), $fileName);
-            (new PaidBillingInfoExport($request->all(), intval(intval($i)+1), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            (new PaidBillingInfoExport($request->all(), $perPage, ($i*$perPage), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
                 new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
             ]);
         }
