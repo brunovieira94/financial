@@ -35,10 +35,10 @@ class PaymentRequest extends Model
         'admin_id',
         'process_number',
         'advance',
-        'allow_binding',
         'amount_old',
         'currency_old_id',
         'net_value_old',
+        'allow_binding',
         'edit_counter',
         'group_approval_flow_id',
         'company_id',
@@ -66,6 +66,11 @@ class PaymentRequest extends Model
         'invoice_type',
         'form_payment',
         'payment_type',
+        'payment_made_date',
+        'paid_value',
+        'bank_account_company_id',
+        'group_form_payment_made_id',
+        'system_payment_method',
         'verification_period',
         'reference_number',
         'revenue_code',
@@ -263,16 +268,16 @@ class PaymentRequest extends Model
                 });
             }
         )->where('payment_request_id', $this->id)
-            ->orderBy('created_at', 'asc')
-            ->first();
+        ->orderBy('created_at', 'asc')
+        ->first();
 
-        if ($firstLogFinancialAnalyst != null) {
+        if($firstLogFinancialAnalyst != null){
             return [
                 'user_name' => $firstLogFinancialAnalyst->user_name,
                 'user_role' => $firstLogFinancialAnalyst->user_role,
                 'created_at' => $firstLogFinancialAnalyst->created_at,
             ];
-        } else {
+        }else {
             return null;
         }
     }

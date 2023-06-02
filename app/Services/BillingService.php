@@ -392,6 +392,7 @@ class BillingService
     {
         $billingInfo = $request->all();
         $billing = $this->billing->findOrFail($id);
+        $billingOld = $this->billing->with($this->with)->findOrFail($id);
         if ($billing->approval_status == Config::get('constants.billingStatus.approved')) {
             return response()->json([
                 'error' => 'Pedido previamente aprovado, não é possível editar',
@@ -454,8 +455,12 @@ class BillingService
                 $billingInfo['bank_account_id'] = $bankAccount->id;
             }
         }
+        activity()->disableLogging();
         $billing->fill($billingInfo)->save();
+        activity()->enableLogging();
         $this->putAttachments($id, $billingInfo, $request);
+        $billingNew = $this->billing->with($this->with)->findOrFail($id);
+        Utils::createManualLog($billingOld, $billingNew, auth()->user()->id, $this->billing, 'billing');
         Utils::createBillingLog($billing->id, 'updated', null, null, $billing->order, auth()->user()->id);
         return $this->billing->with($this->with)->findOrFail($billing->id);
     }
@@ -559,7 +564,7 @@ class BillingService
     public static function get123Status($cangooroo)
     {
         $token = self::get123Token();
-        if($token){
+        if ($token) {
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
             ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/") . $cangooroo['123_id']);

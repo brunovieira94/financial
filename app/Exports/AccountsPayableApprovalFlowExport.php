@@ -74,7 +74,6 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         $ids = array_merge($ids, $paymentRequestIDs);
         $paymentRequest = PaymentRequestClean::withoutGlobalScopes()->whereIn('id', $ids)->with($this->paymentRequestCleanWith);
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
-
         return $paymentRequest->get();
     }
 

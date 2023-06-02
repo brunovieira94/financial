@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\Models\Activity;
-
 class User extends Model
 {
     // Logs
@@ -42,6 +41,7 @@ class User extends Model
     ];
 
     protected $hidden = [
+        'password', 'pivot',
         'password', 'pivot',
     ];
 

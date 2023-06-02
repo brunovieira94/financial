@@ -26,8 +26,8 @@ class PaymentRequestHasInstallments extends Model
 
     protected $table = 'payment_requests_installments';
     public $timestamps = false;
-    protected $fillable = ['client_identifier', 'client_name', 'payment_made_date', 'paid_value', 'bank_account_company_id', 'group_form_payment_made_id', 'system_payment_method', 'card_identifier', 'text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received', 'reference_number', 'revenue_code', 'tax_file_phone_number', 'verification_period'];
-    protected $appends = ['billet_link'];
+    protected $fillable = ['client_identifier', 'client_name', 'card_identifier', 'text_cnab', 'status_cnab_code', 'type_billet', 'billet_file', 'fine', 'billet_number', 'bar_code', 'group_form_payment_id', 'bank_account_provider_id', 'percentage_discount', 'initial_value', 'discount', 'fees', 'extension_date', 'competence_date', 'parcel_number', 'payment_request_id', 'due_date', 'note', 'portion_amount', 'status', 'amount_received', 'verification_period', 'reference_number', 'revenue_code', 'tax_file_phone_number', 'payment_made_date', 'paid_value', 'bank_account_company_id', 'group_form_payment_made_id', 'system_payment_method', 'verification_period'];
+    protected $appends = ['billet_link', 'latest_other_payment', 'linked_account'];
     protected $casts = [
         'verification_period' => AsCollection::class
     ];
@@ -62,6 +62,11 @@ class PaymentRequestHasInstallments extends Model
         $latestCreationDate = $this->other_payments()->get()->max('created_at');
         $arr = $this->other_payments()->where('created_at', $latestCreationDate)->get();
         return empty($arr) ? null : $arr->first();
+    }
+
+    public function cnab_generated_installment_all()
+    {
+        return $this->hasMany(CnabPaymentRequestsHasInstallments::class, 'installment_id', 'id')->with('generated_cnab')->orderBy('id', 'asc');
     }
 
     public function getBilletLinkAttribute()

@@ -27,6 +27,8 @@ class UserAuth extends Authenticatable
         'logged_user_id',
         'return_date',
         'role_id',
+        'email_account_approval_notification',
+        'daily_notification_accounts_approval_mail',
         'temporary',
     ];
 

@@ -77,7 +77,8 @@ class DailyApprovalsReport extends Command
                         }
                     }
                 }
-                NotificationService::dailyMailPerUser($paymentRequests, [$user->email]);
+
+                NotificationService::dailyMailPerUser($paymentRequests, [$user->email], count(array_unique($paymentRequests)));
             }
         }
     }

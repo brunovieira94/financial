@@ -35,10 +35,10 @@ class PaymentRequestClean extends Model
         'admin_id',
         'process_number',
         'advance',
-        'allow_binding',
         'amount_old',
         'currency_old_id',
         'net_value_old',
+        'allow_binding',
         'edit_counter',
         'company_id',
         'group_form_payment_id',
@@ -254,7 +254,6 @@ class PaymentRequestClean extends Model
             return null;
         }
     }
-
     public function log_approval_flow()
     {
         return $this->hasMany(AccountsPayableApprovalFlowLog::class, 'payment_request_id', 'id');
