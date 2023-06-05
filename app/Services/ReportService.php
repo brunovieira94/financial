@@ -313,7 +313,7 @@ class ReportService
             $accountApproval = $accountApproval->whereIn('id_purchase_order', $purchaseOrderIds);
         }
 
-        $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
+        $accountApproval = $accountApproval->whereHas('purchase_order', function ($query) use ($requestInfo) {
             if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
             }
