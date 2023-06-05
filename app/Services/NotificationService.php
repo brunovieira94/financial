@@ -75,7 +75,7 @@ class NotificationService
         ];
     }
 
-    public static function dailyMailPerUser($idPaymentRequest = [], $userMail)
+    public static function dailyMailPerUser($idPaymentRequest = [], $userMail, $quantityPaymentRequest)
     {
         $paymentRequests = PaymentRequestClean::withoutGlobalScopes()
             ->with(['provider', 'company', 'cost_center', 'currency'])
@@ -86,7 +86,12 @@ class NotificationService
             'to' => $userMail,
             'subject' => 'E-mail diário de contas a aprovar',
             'type' => 'daily-mail-user',
-            'args' => []
+            'args' => [
+                [
+                    'name' =>  'quantidadeRegistro',
+                    'value' =>  $quantityPaymentRequest,
+                ]
+            ]
         ];
 
         foreach ($paymentRequests as $paymentRequest) {

@@ -386,6 +386,8 @@ class ApprovalFlowByUserService
 
     public function notifyUsers($accountApproval, $notify, $maxOrder)
     {
+       /*
+       solve problem notification snapshot approval account
         if ($notify) {
             if (NotificationCatalog::where(['type' => 'payment-request-to-approve', 'active' => true, 'schedule' => 0])->exists()) {
                 $approvalFlowOrders = $this->approvalFlow
@@ -416,6 +418,7 @@ class ApprovalFlowByUserService
                 NotificationService::sendEmail($dataSendMail);
             }
         }
+       */
     }
 
     public function updateOrder($objRequest)

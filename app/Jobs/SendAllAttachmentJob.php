@@ -2,11 +2,14 @@
 
 namespace App\Jobs;
 
+use App\Models\AttachmentLogDownload;
 use App\Models\AttachmentReport;
 use App\Models\Mail;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Services\NotificationService;
+use App\Services\Utils;
+use Aws\S3\Exception\S3Exception;
 use Error;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
@@ -25,8 +28,8 @@ class SendAllAttachmentJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private $request;
-    public $maxExceptions = 3;
-    public $timeout = 10800; //3 hours
+    public $maxExceptions = 1000;
+    public $timeout = 14800; //3 hours
 
     public function __construct($request)
     {
@@ -81,9 +84,20 @@ class SendAllAttachmentJob implements ShouldQueue
             $newNameArchive = $type . $paymentRequestID . '_' . $parcelNumber . '_' . uniqid(date('HisYmd'));
         }
         if ($nameArchive != null) {
+            $nameArchive = explode('.' , $nameArchive);
+            $nameArchive[0] = Utils::replaceCharacterUpload($nameArchive[0]);
+            $nameArchive = implode('.', $nameArchive);
             if (Storage::disk('s3')->exists($defaultFolder . '/' . $nameArchive)) {
                 $extension = explode('.', $nameArchive);
-                $zip->add('s3://' . env('AWS_BUCKET') . '/' . $defaultFolder . '/' . $nameArchive, $newNameArchive . '.' . end($extension));
+                try {
+                    $zip->add('s3://' . env('AWS_BUCKET') . '/' . $defaultFolder . '/' . $nameArchive, $newNameArchive . '.' . end($extension));
+                } catch (Exception $e) {
+                    AttachmentLogDownload::create([
+                        'archive' => $nameArchive,
+                        'payment_request_id' => $paymentRequestID,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
         return $zip;

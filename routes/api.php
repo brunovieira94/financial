@@ -47,6 +47,7 @@ use App\Http\Controllers\InfoController;
 use App\Http\Controllers\BillingPaymentController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\TransferOrderController;
@@ -227,7 +228,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
-        //Route::post('/export', [PaidBillingInfoController::class, 'export']);
+        Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {
@@ -557,3 +558,5 @@ Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
 Route::get('/failed-job', [InfoController::class, 'failedJob']);
 Route::get('/scheduling', [InfoController::class, 'scheduling']);
 Route::get('/send-mail-test', [InfoController::class, 'sendMailTest']);
+Route::get('/last-job', [InfoController::class, 'getLastJob']);
+Route::get('/all-jobs', [InfoController::class, 'getAllJob']);

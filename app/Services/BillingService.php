@@ -564,7 +564,7 @@ class BillingService
     public static function get123Status($cangooroo)
     {
         $token = self::get123Token();
-        if($token){
+        if ($token) {
             $apiCall = Http::withHeaders([
                 'Shared-Id' => '123',
             ])->withToken($token)->get(env('API_123_STATUS_URL', "https://api.123milhas.com/api/v3/hotel/booking/status/") . $cangooroo['123_id']);

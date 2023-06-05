@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PaidBillingInfoExport;
 use Illuminate\Http\Request;
 use App\Services\PaidBillingInfoService as PaidBillingInfoService;
 //use App\Exports\PaidBillingInfoExport;
@@ -9,6 +10,10 @@ use App\Imports\PaidBillingInfoImport;
 use App\Imports\DailyPaidBillingInfoImport;
 use App\Models\PaidBillingInfo;
 use Illuminate\Support\Facades\Artisan;
+use App\Exports\Utils as UtilsExport;
+use App\Jobs\NotifyUserOfCompletedExport;
+use App\Models\Export;
+use App\Services\Utils;
 
 class PaidBillingInfoController extends Controller
 {
@@ -68,11 +73,43 @@ class PaidBillingInfoController extends Controller
         return response('');
     }
 
-    // public function export(Request $request, $approvalStatus)
+    // public function export(Request $request)
     // {
-    //     if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {
-    //         return (new PaidBillingInfoExport($request->all(), $approvalStatus))->download('faturamentosPagos.csv', \Maatwebsite\Excel\Excel::CSV, ['Content-Type' => 'text/csv']);
+    //     ini_set('memory_limit', '1024M');
+    //     $paidBillingInfo = PaidBillingInfo::query();
+    //     $paidBillingInfo = Utils::baseFilterPaidBillingInfo($paidBillingInfo, $request->all());
+    //     $count = $paidBillingInfo->count();
+    //     $perPage = $count <= 20000 ? $count : 20000;
+    //     $totalPages = $perPage == 0 ? 0 : intval(ceil($count/$perPage));
+
+    //     for($i = 0; $i < $totalPages; $i++) {
+    //         $fileName = $totalPages == 1 ? 'faturamentosPagos' : 'faturamentosPagosPt'.($i+1);
+    //         $exportFile = UtilsExport::exportFile($request->all(), $fileName);
+    //         (new PaidBillingInfoExport($request->all(), $perPage, ($i*$perPage), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+    //             new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+    //         ]);
     //     }
-    //     return (new PaidBillingInfoExport($request->all(), $approvalStatus))->download('faturamentosPagos.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+
+    //     return response()->json([
+    //         'sucess' => $exportFile['export']->id
+    //     ], 200);
     // }
+
+    public function export(Request $request)
+    {
+        ini_set('memory_limit', '1024M');
+        $paidBillingInfo = PaidBillingInfo::query();
+        $paidBillingInfo = Utils::baseFilterPaidBillingInfo($paidBillingInfo, $request->all());
+        $count = $paidBillingInfo->count();
+        if($count > 25000) return response()->json([
+            'error' => 'O arquivo gerado deve conter no máximo 25000 linhas'
+        ], 422);
+        $exportFile = UtilsExport::exportFile($request->all(), 'faturamentosPagos');
+        (new PaidBillingInfoExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
+    }
 }

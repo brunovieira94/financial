@@ -135,7 +135,6 @@ class Utils
         foreach ($installments as $installment) {
             try {
                 foreach ($installment->group_payment->form_payment as $payment_form) {
-
                     if ($payment_form->bank_code == $bankCode) {
                         if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
                         {
@@ -161,25 +160,26 @@ class Utils
                                         break;
                                     }
                                 }
-                            } else
-                            if (substr($installment->bar_code, 0, 3) == $bankCode) {
-                                if ($payment_form->same_ownership) {
-                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                        break;
-                                    } else {
-                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                        break;
-                                    }
-                                }
                             } else {
-                                if (!$payment_form->same_ownership) {
-                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                        break;
-                                    } else {
-                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                        break;
+                                if (substr($installment->bar_code, 0, 3) == $bankCode) {
+                                    if ($payment_form->same_ownership) {
+                                        if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                            break;
+                                        } else {
+                                            $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    if (!$payment_form->same_ownership) {
+                                        if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                            break;
+                                        } else {
+                                            $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -969,6 +969,45 @@ class Utils
             $billing->whereIn('reserve', $requestInfo['reserve']);
         }
         return $billing;
+    }
+
+    public static function baseFilterPaidBillingInfo($paidBillingInfo, $requestInfo)
+    {
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $paidBillingInfo->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $paidBillingInfo->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $paidBillingInfo->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                $paidBillingInfo->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        if (array_key_exists('form_of_payment', $requestInfo)) {
+            $paidBillingInfo->where('form_of_payment', $requestInfo['form_of_payment']);
+        }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $paidBillingInfo->where('cnpj_hotel', $requestInfo['cnpj']);
+        }
+        if (array_key_exists('service_id', $requestInfo)) {
+            $paidBillingInfo->where('service_id', $requestInfo['service_id']);
+        }
+        if (array_key_exists('reserve', $requestInfo)) {
+            $paidBillingInfo->where('reserve', $requestInfo['reserve']);
+        }
+        return $paidBillingInfo;
     }
 
     public static function baseFilterGroupFormPayment($groupFormPayment, $requestInfo)
