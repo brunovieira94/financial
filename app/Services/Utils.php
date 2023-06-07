@@ -162,7 +162,7 @@ class Utils
                                 }
                             } else {
                                 if (substr($installment->bar_code, 0, 3) == $bankCode) {
-                                    if ($payment_form->same_ownership) {
+                                    if ($payment_form->same_ownership && $payment_form->concessionaire_billet == false) {
                                         if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
                                             array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                             break;
@@ -172,7 +172,7 @@ class Utils
                                         }
                                     }
                                 } else {
-                                    if (!$payment_form->same_ownership) {
+                                    if (!$payment_form->same_ownership && $payment_form->concessionaire_billet == false) {
                                         if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
                                             array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                             break;
