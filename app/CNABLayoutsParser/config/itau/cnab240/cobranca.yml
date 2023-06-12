@@ -419,15 +419,15 @@ remessa:
       boleto_banco_favorecido:
         pos: [18,20]
         picture: '9(3)'
+      boleto_moeda_favorecido:
+        pos: [21,21]
+        picture: '9(1)'
       boleto_dv_favorecido:
         pos: [22,22]
         picture: '9(1)'
       boleto_vencimento_favorecido:
         pos: [23,26]
         picture: '9(4)'
-      boleto_moeda_favorecido:
-        pos: [21,21]
-        picture: '9(1)'
       boleto_valor_favorecido:
         pos: [27,36]
         picture: '9(10)'
