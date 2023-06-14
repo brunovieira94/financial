@@ -357,14 +357,14 @@ class ReportService
 
         return Utils::pagination(
             $cnabGenerated
-                ->with(['user', 'company', 'payment_requests', 'bank_account_company.bank']),
+                ->with(['user', 'company', 'bank_account_company.bank']),
             $requestInfo
         );
     }
 
     public function getCnabGenerate($requestInfo, $id)
     {
-        return $this->cnabGenerated->with(['user', 'company', 'payment_requests.installments_cnab.installment.bank_account_provider', 'bank_account_company.bank'])->findOrFail($id);
+        return $this->cnabGenerated->with(['user', 'company', 'payment_requests.installments_cnab.installment.bank_account_provider', 'bank_account_company.bank', 'payment_requests.payment_request'])->findOrFail($id);
     }
 
     public function getUserApprovalsReport($requestInfo)
