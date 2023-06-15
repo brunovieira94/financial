@@ -966,7 +966,9 @@ class Utils
             $billing->where('user_id', $requestInfo['user_id']);
         }
         if (array_key_exists('client_name', $requestInfo)) {
-            $billing->where('client_name', $requestInfo['client_name']);
+            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
+                $query->where('client_name', $requestInfo['client_name']);
+            });
         }
         if (array_key_exists('reserve', $requestInfo) && !is_null($requestInfo['reserve']) && count($requestInfo['reserve']) > 0){
             $billing->whereIn('reserve', $requestInfo['reserve']);
