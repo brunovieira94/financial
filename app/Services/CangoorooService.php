@@ -112,6 +112,7 @@ class CangoorooService
                 "hotel_name" => $room['HotelName'],
                 "city_name" => $room['CityName'],
                 "123_id" => $response['ControlNumber'],
+                "client_name" => $response['ClientName'],
                 "supplier_name" => $supplierName,
                 "agency_name" => array_key_exists('AgencyName', $room['CreationUserDetail']) ? $room['CreationUserDetail']['AgencyName'] : $room['CreationUserDetail']['Name'],
                 "creation_user" => $room['CreationUserDetail']['Name'],

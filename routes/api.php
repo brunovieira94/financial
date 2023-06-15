@@ -201,6 +201,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::put('/approve-all', [BillingController::class, 'approveAll']);
         Route::get('/get-billing-for-approve', [BillingController::class, 'getBillingsForApproval']);
         Route::get('/get-users', [BillingController::class, 'getBillingUsers']);
+        Route::get('/get-clients', [BillingController::class, 'getBillingClients']);
         Route::post('/get-billing-for-approve/export', [BillingController::class, 'exportBillingForApproval']);
         Route::get('/show/{id}', [BillingController::class, 'show']);
         Route::get('/refresh/{id}', [BillingController::class, 'refreshStatuses']);
@@ -227,6 +228,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
+        Route::get('/get-clients', [PaidBillingInfoController::class, 'getPaidBillingInfoClients']);
         //Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 

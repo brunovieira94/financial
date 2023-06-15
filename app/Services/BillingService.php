@@ -500,7 +500,7 @@ class BillingService
         if ($billingInfo['payment_status'] != 'Não Pago') {
             $suggestionReason = $suggestionReason . ' | Reserva deve estar em aberto';
         }
-        if ($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido' && $billingInfo['status_123'] != 'Reservado') {
+        if ($billingInfo['status_123'] != 'Emitida' && $billingInfo['status_123'] != 'Emitido' && $billingInfo['status_123'] != 'Reservado' && $cangooroo['client_name'] != 'MaxMilhas') {
             $suggestionReason = $suggestionReason . ' | Reserva não emitida no Admin';
         }
         //if($this->billing->where('id', '!=' , $billingId)->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
@@ -682,6 +682,12 @@ class BillingService
             array_push($usersArray, $data);
         }
         return $usersArray;
+    }
+
+    public function getBillingClients()
+    {
+        $clients = Cangooroo::where('client_name','!=',null)->distinct()->pluck('client_name');
+        return $clients;
     }
 
     public function syncAttachments($billing, $billingInfo, Request $request)

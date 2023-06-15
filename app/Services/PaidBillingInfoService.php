@@ -54,6 +54,9 @@ class PaidBillingInfoService
         if (array_key_exists('reserve', $requestInfo)) {
             $paidBillingInfo->where('reserve', $requestInfo['reserve']);
         }
+        if (array_key_exists('client_name', $requestInfo)) {
+            $paidBillingInfo->where('client_name', $requestInfo['client_name']);
+        }
         return Utils::pagination($paidBillingInfo->with($this->with), $requestInfo);
     }
 
@@ -66,5 +69,11 @@ class PaidBillingInfoService
     {
         $this->paidBillingInfo->findOrFail($id)->delete();
         return true;
+    }
+
+    public function getPaidBillingInfoClients()
+    {
+        $clients = $this->paidBillingInfo->where('client_name','!=',null)->distinct()->pluck('client_name');
+        return $clients;
     }
 }

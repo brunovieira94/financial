@@ -68,6 +68,11 @@ class PaidBillingInfoController extends Controller
         return response('');
     }
 
+    public function getPaidBillingInfoClients()
+    {
+        return $this->paidBbillingService->getPaidBillingInfoClients();
+    }
+
     // public function export(Request $request, $approvalStatus)
     // {
     //     if (array_key_exists('exportFormat', $request->all()) && $request->all()['exportFormat'] == 'csv') {

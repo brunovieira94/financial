@@ -125,4 +125,9 @@ class BillingController extends Controller
     {
         return $this->billingService->getBillingUsers();
     }
+
+    public function getBillingClients()
+    {
+        return $this->billingService->getBillingClients();
+    }
 }
