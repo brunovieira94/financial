@@ -1010,6 +1010,9 @@ class Utils
         if (array_key_exists('reserve', $requestInfo)) {
             $paidBillingInfo->where('reserve', $requestInfo['reserve']);
         }
+        if (array_key_exists('client_name', $requestInfo)) {
+            $paidBillingInfo->where('client_name', $requestInfo['client_name']);
+        }
         return $paidBillingInfo;
     }
 
