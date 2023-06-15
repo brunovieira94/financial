@@ -226,10 +226,10 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
 
     Route::prefix('paid-billing-info')->group(function () {
         Route::get('/', [PaidBillingInfoController::class, 'index']);
+        Route::get('/get-clients', [PaidBillingInfoController::class, 'getPaidBillingInfoClients']);
         Route::get('/{id}', [PaidBillingInfoController::class, 'show']);
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
-        Route::get('/get-clients', [PaidBillingInfoController::class, 'getPaidBillingInfoClients']);
         Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
