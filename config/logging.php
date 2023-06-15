@@ -37,7 +37,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => ['single', (env('APP_ENV') == 'local' ? '' : 'discord')],
             'ignore_exceptions' => false,
         ],
 
@@ -99,6 +99,14 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        'discord' => [
+            'driver' => 'custom',
+            'via'    => MarvinLabs\DiscordLogger\Logger::class,
+            'level'  => 'debug',
+            'url'    => env('LOG_DISCORD_WEBHOOK_URL', 'https://discord.com/api/webhooks/1103797808584212490/rpFvulkWdstHrYZEFKPbJmbXfzpOv4hUSf6ReeRtG-U3QZ3wX4lqh-01V7BkC3kfalve'),
+            'ignore_exceptions' => env('LOG_DISCORD_IGNORE_EXCEPTIONS', false),
         ],
     ],
 

@@ -7,6 +7,7 @@ use App\Http\Requests\OtherPaymentsRequest;
 use App\Imports\InstallmentsPaidImport;
 use App\Services\OtherPaymentsService;
 use App\Jobs\InstallmentImportJob;
+use App\Jobs\InstallmentImportJobTest;
 use App\Models\User;
 use finfo;
 
@@ -45,7 +46,7 @@ class OtherPaymentsController extends Controller
 
        // $fileStoredName = $this->saveLocalFile($request, 'import_file');
 
-        (new InstallmentsPaidImport($this->otherPaymentsService, $user, $fileOriginalName, $fileOriginalName))->import(request()->file('import_file'));
+        (new InstallmentsPaidImport($this->otherPaymentsService, $user, $fileOriginalName, $fileOriginalName . uniqid(date('HisYmd'))))->import(request()->file('import_file'));
 
         //InstallmentImportJob::dispatch($this->otherPaymentsService, $user, $fileStoredName, $fileOriginalName);
 

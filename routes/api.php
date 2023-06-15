@@ -47,6 +47,7 @@ use App\Http\Controllers\InfoController;
 use App\Http\Controllers\BillingPaymentController;
 use App\Http\Controllers\ProviderQuotationController;
 use App\Http\Controllers\IntegrationController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\OtherPaymentsController;
 use App\Http\Controllers\NotificationCatalogController;
 use App\Http\Controllers\TransferOrderController;
@@ -176,13 +177,13 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
     });
     //Restful route -> Provider
     Route::prefix('provider')->group(function () {
+        Route::post('/import', [ProviderController::class, 'import']);
+        Route::post('/export', [ProviderController::class, 'export']);
         Route::get('/', [ProviderController::class, 'index']);
         Route::get('/{id}', [ProviderController::class, 'show']);
         Route::post('/', [ProviderController::class, 'store']);
         Route::post('/{id}', [ProviderController::class, 'update']);
         Route::delete('/{id}', [ProviderController::class, 'destroy']);
-        Route::post('/import', [ProviderController::class, 'import']);
-        Route::post('/export', [ProviderController::class, 'export']);
     });
 
     Route::prefix('hotel')->group(function () {
@@ -229,7 +230,7 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::delete('/{id}', [PaidBillingInfoController::class, 'destroy']);
         Route::post('/import', [PaidBillingInfoController::class, 'dailyImport']);
         Route::get('/get-clients', [PaidBillingInfoController::class, 'getPaidBillingInfoClients']);
-        //Route::post('/export', [PaidBillingInfoController::class, 'export']);
+        Route::post('/export', [PaidBillingInfoController::class, 'export']);
     });
 
     Route::prefix('hotel-approval-flow')->group(function () {
@@ -280,7 +281,9 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/log-payment-request-update/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
         Route::get('/log-purchase-order/{id}', [LogsController::class, 'getPurchaseOrderLogs']);
         Route::get('/log-billing/{id}', [LogsController::class, 'getBillingLogs']);
+        Route::get('/log-billing-update/{id}', [LogsController::class, 'getLogBillingUpdate']);
         Route::get('/log-hotel/{id}', [LogsController::class, 'getHotelLogs']);
+        Route::get('/log-hotel-update/{id}', [LogsController::class, 'getLogHotelUpdate']);
         Route::get('/{log_name}/{subject_id}', [LogsController::class, 'getLogs']);
     });
 
@@ -503,13 +506,21 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
         Route::get('/', [ReportController::class, 'getReport']);
         Route::get('/{id}', [ReportController::class, 'getReportById']);
     });
+
+    Route::prefix('integration-system')->group(function () {
+        Route::post('/', [IntegrationController::class, 'storeClient']);
+        Route::get('/', [IntegrationController::class, 'getAllClient']);
+        Route::get('/{id}', [IntegrationController::class, 'getClient']);
+        Route::put('/{id}', [IntegrationController::class, 'updateClient']);
+        Route::delete('/{id}', [IntegrationController::class, 'deleteClient']);
+    });
 });
 
 
 Route::middleware(['integrations'])->group(function () {
     Route::prefix('integration')->group(function () {
-        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills']);
-        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments']);
+        Route::get('sap/bills/approved', [IntegrationController::class, 'sapGetApprovedBills'])->middleware(['check.data.integration']);
+        Route::get('sap/installments/paid', [IntegrationController::class, 'sapGetPaidInstallments'])->middleware(['check.data.integration']);
     });
 
     //Route::get('/notifications-testes', [NotificationCatalogController::class, 'teste']);
@@ -521,7 +532,7 @@ Route::prefix('/auth')->group(function () {
     Route::post('/', [AuthController::class, 'login']);
 });
 
-Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
+//Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
 Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
 Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
 Route::post('/solve-log', [AuthController::class, 'log']);
@@ -531,7 +542,7 @@ Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'tem
 Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
 Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
 Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
-Route::get('/log-payment-request/{id}', [LogsController::class, 'getAccountsPayableApprovalFlowLog']);
+Route::get('/log-payment-request/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
 Route::get('/redis-example', [InfoController::class, 'redisExample']);
 Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
 Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
@@ -549,3 +560,5 @@ Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
 Route::get('/failed-job', [InfoController::class, 'failedJob']);
 Route::get('/scheduling', [InfoController::class, 'scheduling']);
 Route::get('/send-mail-test', [InfoController::class, 'sendMailTest']);
+Route::get('/last-job', [InfoController::class, 'getLastJob']);
+Route::get('/all-jobs', [InfoController::class, 'getAllJob']);

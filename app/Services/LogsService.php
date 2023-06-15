@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Resources\LogResource\LogEditPaymentRequestResource;
 use App\Http\Resources\reports\RouteAccountsApprovalFlowLog;
 use App\Http\Resources\reports\RouteBillingLog;
 use App\Http\Resources\reports\RouteHotelLog;
@@ -303,6 +304,7 @@ class LogsService
 
         $purchaseOrderOldArray = [];
         $purchaseOrderNewArray = [];
+
         foreach ($dataLog as $log) {
             if (array_key_exists('purchase_order', $log->properties['old'])) {
                 foreach ($log->properties['old']['purchase_order'] as $key => $purchaseOrder) {
@@ -366,6 +368,86 @@ class LogsService
                 ]
             );
         }
+
+        $logResponseRefactor = [];
+        foreach ($responseLog as $log) {
+            $log['old'] = self::refactorTypeDataFloatValue($log['old']);
+            $log['new'] = self::refactorTypeDataFloatValue($log['new']);
+            $logResponseRefactor[] = $log;
+        }
+
+        return $logResponseRefactor;
+    }
+
+    public function getLogBillingUpdate($id, $requestInfo)
+    {
+        $dataLog = LogActivity::where([
+            ['log_name', 'billing'],
+            ['subject_id', $id],
+            ['description', 'updated']
+        ])->get();
+
+        $responseLog = [];
+        foreach ($dataLog as $log) {
+
+            array_push(
+                $responseLog,
+                [
+                    'old' => $log->properties['old'],
+                    'date-log' => $log->created_at,
+                    'new' => $log->properties['attributes'],
+                    'causer' => $log->causer_object,
+                ]
+            );
+        }
         return $responseLog;
+    }
+
+    public function getLogHotelUpdate($id, $requestInfo)
+    {
+        $dataLog = LogActivity::where([
+            ['log_name', 'hotels'],
+            ['subject_id', $id],
+            ['description', 'updated']
+        ])->get();
+
+        $responseLog = [];
+        foreach ($dataLog as $log) {
+
+            array_push(
+                $responseLog,
+                [
+                    'old' => $log->properties['old'],
+                    'date-log' => $log->created_at,
+                    'new' => $log->properties['attributes'],
+                    'causer' => $log->causer_object,
+                ]
+            );
+        }
+        return $responseLog;
+    }
+    
+    private function refactorTypeDataFloatValue($paymentRequest = [])
+    {
+        $paymentRequest['amount'] = (float) $paymentRequest['amount'];
+        $paymentRequest['net_value'] = (float) $paymentRequest['net_value'];
+        $paymentRequest['frequency_of_installments'] = (float) $paymentRequest['frequency_of_installments'];
+        $paymentRequest['invoice_file'] = (is_array($paymentRequest['invoice_file']) ? "" : $paymentRequest['invoice_file']);
+        $paymentRequest['payment_type'] = (int) $paymentRequest['payment_type'];
+
+
+        if (array_key_exists('installments', $paymentRequest)) {
+            foreach ($paymentRequest['installments'] as $installment) {
+                $installment['initial_value'] = (float) $installment['initial_value'];
+                $installment['portion_amount'] = (float) $installment['portion_amount'];
+            }
+        }
+
+        if (array_key_exists('tax', $paymentRequest)) {
+            foreach ($paymentRequest['tax'] as $tax) {
+                $tax['tax_amount'] = (float) $tax['tax_amount'];
+            }
+        }
+        return $paymentRequest;
     }
 }

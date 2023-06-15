@@ -18,8 +18,8 @@ class IntegrationsMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        $clientId = $request->getUser();
-        $clientSecret = $request->getPassword();
+        $clientId = $request->header('CLIENT-ID', $request->getUser());
+        $clientSecret = $request->header('CLIENT-SECRET', $request->getPassword());
 
         $check = IntegrationClient::where('client_id', $clientId)
             ->where('enabled', true)

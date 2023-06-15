@@ -135,11 +135,10 @@ class Utils
         foreach ($installments as $installment) {
             try {
                 foreach ($installment->group_payment->form_payment as $payment_form) {
-
                     if ($payment_form->bank_code == $bankCode) {
                         if ($payment_form->group_form_payment_id == 2) //Default PIX group 2
                         {
-                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider.bank')->where('id', $installment['id'])->exists()) {
+                            if (PaymentRequestHasInstallmentsClean::has('bank_account_provider')->where('id', $installment['id'])->exists()) {
                                 if (array_key_exists('45', $groupInstallment)) {
                                     array_push($groupInstallment[$payment_form->code_cnab], $installment);
                                     break;
@@ -161,25 +160,26 @@ class Utils
                                         break;
                                     }
                                 }
-                            } else
-                            if (substr($installment->bar_code, 0, 3) == $bankCode) {
-                                if ($payment_form->same_ownership) {
-                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                        break;
-                                    } else {
-                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                        break;
-                                    }
-                                }
                             } else {
-                                if (!$payment_form->same_ownership) {
-                                    if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
-                                        array_push($groupInstallment[$payment_form->code_cnab], $installment);
-                                        break;
-                                    } else {
-                                        $groupInstallment[$payment_form->code_cnab] = [$installment];
-                                        break;
+                                if (substr($installment->bar_code, 0, 3) == $bankCode) {
+                                    if ($payment_form->same_ownership && $payment_form->concessionaire_billet == false) {
+                                        if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                            break;
+                                        } else {
+                                            $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    if (!$payment_form->same_ownership && $payment_form->concessionaire_billet == false) {
+                                        if (array_key_exists($payment_form->code_cnab, $groupInstallment)) {
+                                            array_push($groupInstallment[$payment_form->code_cnab], $installment);
+                                            break;
+                                        } else {
+                                            $groupInstallment[$payment_form->code_cnab] = [$installment];
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -968,7 +968,49 @@ class Utils
         if (array_key_exists('client_name', $requestInfo)) {
             $billing->where('client_name', $requestInfo['client_name']);
         }
+        if (array_key_exists('reserve', $requestInfo) && !is_null($requestInfo['reserve']) && count($requestInfo['reserve']) > 0){
+            $billing->whereIn('reserve', $requestInfo['reserve']);
+        }
         return $billing;
+    }
+
+    public static function baseFilterPaidBillingInfo($paidBillingInfo, $requestInfo)
+    {
+        if (array_key_exists('created_at', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['created_at'])) {
+                $paidBillingInfo->where('created_at', '>=', $requestInfo['created_at']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['created_at'])) {
+                $paidBillingInfo->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+            }
+            if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
+                $paidBillingInfo->whereBetween('created_at', [now()->addMonths(-1), now()]);
+            }
+        }
+        if (array_key_exists('pay_date', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '>=', $requestInfo['pay_date']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['pay_date'])) {
+                $paidBillingInfo->where('pay_date', '<=', $requestInfo['pay_date']['to']);
+            }
+            if (!array_key_exists('to', $requestInfo['pay_date']) && !array_key_exists('from', $requestInfo['pay_date'])) {
+                $paidBillingInfo->whereBetween('pay_date', [now(), now()->addMonths(1)]);
+            }
+        }
+        if (array_key_exists('form_of_payment', $requestInfo)) {
+            $paidBillingInfo->where('form_of_payment', $requestInfo['form_of_payment']);
+        }
+        if (array_key_exists('cnpj', $requestInfo)) {
+            $paidBillingInfo->where('cnpj_hotel', $requestInfo['cnpj']);
+        }
+        if (array_key_exists('service_id', $requestInfo)) {
+            $paidBillingInfo->where('service_id', $requestInfo['service_id']);
+        }
+        if (array_key_exists('reserve', $requestInfo)) {
+            $paidBillingInfo->where('reserve', $requestInfo['reserve']);
+        }
+        return $paidBillingInfo;
     }
 
     public static function baseFilterGroupFormPayment($groupFormPayment, $requestInfo)
@@ -1010,7 +1052,7 @@ class Utils
         }
         return $groupBilling;
     }
-    public static function createManualLogPaymentRequest($old, $new, $causerID, $model)
+    public static function createManualLog($old, $new, $causerID, $model, $logName, $log = 'updated')
     {
         activity()
             ->causedBy(User::findOrFail($causerID))
@@ -1019,15 +1061,15 @@ class Utils
                 'old' => $old,
                 'attributes' => $new,
             ])
-            ->tap(function (Activity $activity) use ($causerID, $new) {
+            ->tap(function (Activity $activity) use ($causerID, $new, $logName) {
                 $user = User::with(['cost_center', 'business', 'role'])->findOrFail($causerID);
                 $user->role = Role::findOrFail($user->role_id);
                 $activity->causer_id = $user->id;
                 $activity->causer_object = $user;
                 $activity->subject_id = $new->id;
-                $activity->log_name = 'payment_request';
+                $activity->log_name = $logName;
             })
-            ->log('updated');
+            ->log($log);
     }
 
     public static function createPaiBillingInfo($billings)
@@ -1131,7 +1173,8 @@ class Utils
         return preg_replace('/[^0-9a-zA-Z *\-\\[\]\{\}\/\\_]/', '', strtr($string, $normalizeChars));
     }
 
-    public static function getHolidayList($ano = null) {
+    public static function getHolidayList($ano = null)
+    {
 
         if ($ano === null) {
             $ano = intval(date('Y'));
@@ -1172,7 +1215,8 @@ class Utils
         return $listaDiasFeriado;
     }
 
-    public static function isHoliday($data) {
+    public static function isHoliday($data)
+    {
         $holidayList = self::getHolidayList(date('Y', strtotime($data)));
         if (isset($holidayList[$data])) {
             return true;
@@ -1181,7 +1225,8 @@ class Utils
         return false;
     }
 
-    public static function getUtileDays($from, $daysQuantity = 30, $reverse = false) {
+    public static function getUtileDays($from, $daysQuantity = 30, $reverse = false)
+    {
         $dateTime = new DateTime($from);
 
         $utilesDayList = [];
@@ -1199,8 +1244,76 @@ class Utils
         return $utilesDayList;
     }
 
-    public static function getLastUtileDay($from, $daysQuantity = 30, $reverse = false) {
+    public static function getLastUtileDay($from, $daysQuantity = 30, $reverse = false)
+    {
         $list = self::getUtileDays($from, $daysQuantity, $reverse);
         return end($list);
+    }
+
+    public static function getBankDetailsCnab($installment)
+    {
+        $nomeBeneficiario = '';
+        $inscricao = '';
+
+        if ($installment->bank_account_provider == null) {
+            if ($installment->client_identifier != null && !empty($installment->client_identifier)) {
+                $inscricao = self::onlyNumbers($installment->client_identifier);
+                $nomeBeneficiario = $installment->client_name;
+            } else {
+                $inscricao = $installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf);
+                $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+            }
+        } else {
+            if ($installment->bank_account_provider->entity_name == null) {
+                $inscricao = $installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf);
+                $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
+            } else {
+                $inscricao = $installment->bank_account_provider->cpf_cnpj == null ? ($installment->payment_request->provider->provider_type == 'J' ? self::onlyNumbers($installment->payment_request->provider->cnpj) : self::onlyNumbers($installment->payment_request->provider->cpf)) : self::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
+                $nomeBeneficiario = $installment->bank_account_provider->entity_name;
+            }
+        }
+
+        return [
+            'nomeBeneficiario' => $nomeBeneficiario,
+            'inscricao' => $inscricao
+        ];
+    }
+
+    public static function typeKeyPix($bankAccount)
+    {
+        switch ($bankAccount->pix_key_type) {
+            case 0:
+            case 1:
+                return '03';
+                break;
+            case 2:
+                return '02';
+                break;
+            case 3:
+                return '01';
+                break;
+            case 4:
+                return '04';
+                break;
+            default:
+                '00';
+        }
+    }
+
+    public static function formatPixKey($bankAccount)
+    {
+        switch ($bankAccount->pix_key_type) {
+            case 0:
+            case 1:
+            case 3:
+                return Utils::formatCnab('X', self::onlyNumbers($bankAccount->pix_key), '100');
+                break;
+            case 2:
+            case 4:
+                return Utils::formatCnab('X', $bankAccount->pix_key, '100');
+                break;
+            default:
+                '';
+        }
     }
 }

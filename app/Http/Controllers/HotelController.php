@@ -61,7 +61,7 @@ class HotelController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'hotéis');
 
-        (new HotelsExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+        (new HotelsExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
             new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
         ]);
 

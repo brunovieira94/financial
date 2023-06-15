@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\CnabPaymentRequestsHasInstallments;
 use App\Models\Export;
 use App\Models\OtherPayment;
@@ -285,6 +286,9 @@ class Utils
             $paymentRequest->process_number,
             $paymentRequest->allow_binding == true ? 'Sim' : 'Não',
             $paymentRequest['installment_link'],
+            self::dateApprovalCostCenterVP($paymentRequest),
+            self::dateApprovalCostCenterManagers($paymentRequest),
+
         ];
     }
 
@@ -333,6 +337,9 @@ class Utils
             'Numero do Processo',
             'Agrupar Parcela',
             'Parcelas Agrupadas',
+            'Data Aprovação VP',
+            'Data Aprovação Gestor',
+
         ];
     }
 
@@ -623,4 +630,61 @@ class Utils
             'nameFile' => $nameFile
         ];
     }
+
+    public static function dateApprovalCostCenterVP($paymentRequest)
+    {
+        $vpsId = [];
+        $dateApproval = '';
+
+        if (isset($paymentRequest->cost_center)) {
+            foreach ($paymentRequest->cost_center->getVicePresidentsAttribute() as $vp) {
+                $vpsId[] = $vp->id;
+            }
+        }
+
+        if (!empty($vpsId) && AccountsPayableApprovalFlowLog::where([
+            'payment_request_id' => $paymentRequest->id,
+            'type' => 'approved'
+        ])
+        ->whereIn('user_id', $vpsId)
+        ->exists()) {
+            $dateApproval = AccountsPayableApprovalFlowLog::where([
+                'payment_request_id' => $paymentRequest->id,
+                'type' => 'approved'
+            ])
+            ->whereIn('user_id', $vpsId)
+            ->orderBy('id', 'asc')->first()->created_at;
+            $dateApproval = self::formatDate($dateApproval);
+        }
+        return $dateApproval;
+    }
+
+    public static function dateApprovalCostCenterManagers($paymentRequest)
+    {
+        $managersId = [];
+        $dateApproval = '';
+
+        if (isset($paymentRequest->cost_center)) {
+            foreach ($paymentRequest->cost_center->getManagersAttribute() as $m) {
+                $managersId[] = $m->id;
+            }
+        }
+
+        if (!empty($managersId) && AccountsPayableApprovalFlowLog::where([
+            'payment_request_id' => $paymentRequest->id,
+            'type' => 'approved'
+        ])
+        ->whereIn('user_id', $managersId)
+        ->exists()) {
+            $dateApproval = AccountsPayableApprovalFlowLog::where([
+                'payment_request_id' => $paymentRequest->id,
+                'type' => 'approved'
+            ])
+            ->whereIn('user_id', $managersId)
+            ->orderBy('id', 'asc')->first()->created_at;
+            $dateApproval = self::formatDate($dateApproval);
+        }
+        return $dateApproval;
+    }
+
 }

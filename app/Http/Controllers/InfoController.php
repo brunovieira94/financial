@@ -274,7 +274,7 @@ class InfoController extends Controller
 
     public function failedJob(Request $request)
     {
-        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 10");
+        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 1");
     }
     public function archiveDownloadLog(Request $request)
     {
@@ -292,5 +292,15 @@ class InfoController extends Controller
     {
         NotificationService::mailTest([$request->mail]);
         return true;
+    }
+
+    public function getLastJob(Request $request)
+    {
+        return DB::select("SELECT * FROM jobs ORDER BY id DESC LIMIT 1");
+    }
+
+    public function getAllJob(Request $request)
+    {
+        return DB::select("SELECT * FROM jobs ORDER BY id DESC");
     }
 }

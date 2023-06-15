@@ -281,7 +281,7 @@ remessa:
         pos: [8,8]
         picture: '9(1)'
         default: 3
-      numero_sequencial_registro_lote:
+      numero_registro:
         pos: [9,13]
         picture: '9(5)'
         default: 1
@@ -335,7 +335,7 @@ remessa:
         picture: 'X(8)'
         default: '00000000'
       identificacao_transferencia:
-        pos: [112,113]
+        pos: [113,114]
         picture: 'X(2)'
       zero01:
         pos: [115,119]
@@ -419,15 +419,15 @@ remessa:
       boleto_banco_favorecido:
         pos: [18,20]
         picture: '9(3)'
+      boleto_moeda_favorecido:
+        pos: [21,21]
+        picture: '9(1)'
       boleto_dv_favorecido:
         pos: [22,22]
         picture: '9(1)'
       boleto_vencimento_favorecido:
         pos: [23,26]
         picture: '9(4)'
-      boleto_moeda_favorecido:
-        pos: [21,21]
-        picture: '9(1)'
       boleto_valor_favorecido:
         pos: [27,36]
         picture: '9(10)'
@@ -542,6 +542,55 @@ remessa:
       uso_exclusivo_FEBRABAN:
         pos: [188,240]
         picture: 'X(53)'
+        default: ''
+
+    segmento_bpix:
+      codigo_banco:
+        pos: [1,3]
+        picture: '9(3)'
+        default: 341
+      lote_servico:
+        pos: [4,7]
+        picture: '9(4)'
+      tipo_registro:
+        pos: [8,8]
+        picture: '9(1)'
+        default: 3
+      numero_registro:
+        pos: [9,13]
+        picture: '9(5)'
+        default: 1
+      segmento:
+        pos: [14,14]
+        picture: 'X(1)'
+        default: 'B'
+      tipo_chave:
+        pos: [15,16]
+        picture: 'X(2)'
+      branco_01:
+        pos: [17,17]
+        picture: 'X(1)'
+        default: ''
+      tipo_inscricao:
+        pos: [18,18]
+        picture: '9(1)'
+      numero_inscricao_favorecido:
+        pos: [19,32]
+        picture: '9(14)'
+      branco_02:
+        pos: [33,62]
+        picture: 'X(30)'
+        default: ''
+      msg_user_branco:
+        pos: [63,127]
+        picture: '9(65)'
+        default: '00000000000000000000000000000000000000000000000000000000000000000'
+      chave_pix:
+        pos: [128,227]
+        picture: 'X(100)'
+      branco_03:
+        pos: [228,240]
+        picture: 'X(13)'
         default: ''
 
 retorno:

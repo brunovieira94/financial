@@ -10,8 +10,9 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AllApprovedInstallmentExportForPaidImport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
+class AllApprovedInstallmentExportForPaidImport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
 {
     use Exportable;
 

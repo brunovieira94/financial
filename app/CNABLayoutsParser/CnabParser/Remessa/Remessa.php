@@ -57,28 +57,11 @@ class Remessa
                 $detalhe = $lote->novoDetalhe();
 
                 $amount = ($installment->initial_value + $installment->fees + $installment->fine) - $installment->discount;
-
                 $lotValue += $amount;
 
-                $nomeBeneficiario = '';
-                $type = '';
-                $inscricao = '';
-
-                if ($installment->bank_account_provider == null) {
-                    $type = $installment->payment_request->provider->provider_type;
-                    $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
-                    $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
-                } else {
-                    if ($installment->bank_account_provider->entity_name == null) {
-                        $type = $installment->payment_request->provider->provider_type;
-                        $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
-                        $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
-                    } else {
-                        $type = $installment->bank_account_provider->entity_type;
-                        $inscricao = Utils::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
-                        $nomeBeneficiario = $installment->bank_account_provider->entity_name;
-                    }
-                }
+                $dataBankInstallment = Utils::getBankDetailsCnab($installment);
+                $nomeBeneficiario = $dataBankInstallment['nomeBeneficiario'];
+                $inscricao = $dataBankInstallment['inscricao'];
 
                 if ($installment->group_form_payment_id == 1 && $installment->bar_code != null) {
                     if ($installment->type_billet == 4) {
@@ -239,25 +222,9 @@ class Remessa
             foreach ($groupedInstallment as $installment) {
                 $amount = ($installment->initial_value + $installment->fees + $installment->fine) - $installment->discount;
 
-                $nomeBeneficiario = '';
-                $type = '';
-                $inscricao = '';
-
-                if ($installment->bank_account_provider == null) {
-                    $type = $installment->payment_request->provider->provider_type;
-                    $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
-                    $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
-                } else {
-                    if ($installment->bank_account_provider->entity_name == null) {
-                        $type = $installment->payment_request->provider->provider_type;
-                        $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
-                        $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
-                    } else {
-                        $type = $installment->bank_account_provider->entity_type;
-                        $inscricao = Utils::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
-                        $nomeBeneficiario = $installment->bank_account_provider->entity_name;
-                    }
-                }
+                $dataBankInstallment = Utils::getBankDetailsCnab($installment);
+                $nomeBeneficiario = $dataBankInstallment['nomeBeneficiario'];
+                $inscricao = $dataBankInstallment['inscricao'];
 
                 $detalhe = $lote->novoDetalhe();
 
@@ -281,6 +248,7 @@ class Remessa
                         unset($detalhe->segmento_b);
                         unset($detalhe->segmento_j);
                         unset($detalhe->segmento_j52);
+                        unset($detalhe->segmento_bpix);
 
                         $lote->inserirDetalhe($detalhe);
                     } else {
@@ -313,6 +281,7 @@ class Remessa
                         unset($detalhe->segmento_b);
                         unset($detalhe->segmento_o);
                         unset($detalhe->segmento_j52);
+                        unset($detalhe->segmento_bpix);
 
                         $lote->inserirDetalhe($detalhe);
                     }
@@ -322,26 +291,40 @@ class Remessa
                     $lote->header->tipo_servico = '20';
 
                     //detalhes do seguimento A
-                    $detalhe->segmento_a->codigo_camara_centralizadora = Utils::centralizadoraBB($key);
+                    //$detalhe->segmento_a->codigo_camara_centralizadora = Utils::centralizadoraBB($key);
+                    $detalhe->segmento_a->camara_centralizadora = $key == 45 ? '009' : '000';
                     $detalhe->segmento_a->lote_servico = $lotQuantity;
                     $detalhe->segmento_a->numero_registro = $lotQuantityDetails;
-                    //$detalhe->segmento_a->tipo_movimento = strlen(Utils::onlyNumbers($paymentRequest->provider->provider_type)) == 'J' ? 002 : 001;
-                    $detalhe->segmento_a->codigo_banco_favorecido = $installment->bank_account_provider->bank->bank_code;
-                    $detalhe->segmento_a->agencia_favorecido = $installment->bank_account_provider->agency_number;
-                    $detalhe->segmento_a->verificador_agencia_favorecido = $installment->bank_account_provider->agency_check_number;
-                    $detalhe->segmento_a->conta_favorecido = $installment->bank_account_provider->account_number;
-                    $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number;
+                    $detalhe->segmento_a->tipo_movimento = strlen(Utils::onlyNumbers($inscricao)) > 11 ? 003 : 001;
+                    $detalhe->segmento_a->codigo_banco_favorecido = $installment->bank_account_provider->bank->bank_code ?? '000';
+                    $detalhe->segmento_a->agencia_favorecido = $installment->bank_account_provider->agency_number ?? '0000';
+                    $detalhe->segmento_a->verificador_agencia_favorecido = $installment->bank_account_provider->agency_check_number ?? '0';
+                    $detalhe->segmento_a->conta_favorecido = $installment->bank_account_provider->account_number ?? '000000';
+                    $detalhe->segmento_a->verificador_conta_favorecido = $installment->bank_account_provider->account_check_number ?? '0';
                     $detalhe->segmento_a->nome_favorecido = Utils::formatCnab('X', $nomeBeneficiario, '30');
                     $detalhe->segmento_a->n_docto_atribuido_empresa = $installment->id;
                     $dataPagamento = new Carbon($installment->extension_date); //validar
                     $detalhe->segmento_a->data_pagamento = $dataPagamento->format('dmY');
                     $detalhe->segmento_a->valor_pagamento = Utils::formatCnab('9', number_format($amount, 2), 15);
-                    $detalhe->segmento_a->identificacao_transferencia = Utils::identificacaoTipoTransferencia($installment->bank_account_provider->account_type ?? 3);
+                    $detalhe->segmento_a->identificacao_transferencia = $key == 45 ? Utils::identificacaoTipoTransferencia($installment->bank_account_provider->account_type ?? 3) : '00';
                     $detalhe->segmento_a->numero_inscricao_favorecido = Utils::onlyNumbers($inscricao);
 
                     unset($detalhe->segmento_j);
                     unset($detalhe->segmento_j52);
                     unset($detalhe->segmento_o);
+
+                    if ($detalhe->segmento_a->identificacao_transferencia == '04') {
+                        $lotQuantityDetails++;
+                        $detalhe->segmento_bpix->lote_servico = $lotQuantity;
+                        $detalhe->segmento_bpix->numero_registro = $lotQuantityDetails;
+                        $detalhe->segmento_bpix->tipo_chave = Utils::typeKeyPix($installment->bank_account_provider);
+                        $detalhe->segmento_bpix->numero_inscricao_favorecido = Utils::onlyNumbers($inscricao);
+                        $detalhe->segmento_bpix->tipo_inscricao = strlen(Utils::onlyNumbers($inscricao)) > 11 ? 2 : 1;
+                        $detalhe->segmento_bpix->chave_pix = Utils::formatPixKey($installment->bank_account_provider);
+                    } else {
+                        unset($detalhe->segmento_bpix);
+                    }
+
                     $lote->inserirDetalhe($detalhe);
                 }
             }
@@ -358,7 +341,6 @@ class Remessa
             $sumDetails +=  $lotQuantityDetails; //somar todos registros
 
             $remessa->inserirLote($lote);
-
         }
 
 
@@ -417,25 +399,9 @@ class Remessa
 
             foreach ($groupedInstallment as $installment) {
 
-                $nomeBeneficiario = '';
-                $type = '';
-                $inscricao = '';
-
-                if ($installment->bank_account_provider == null) {
-                    $type = $installment->payment_request->provider->provider_type;
-                    $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
-                    $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
-                } else {
-                    if ($installment->bank_account_provider->entity_name == null) {
-                        $type = $installment->payment_request->provider->provider_type;
-                        $inscricao = $installment->payment_request->provider->provider_type == 'J' ? Utils::onlyNumbers($installment->payment_request->provider->cnpj) : Utils::onlyNumbers($installment->payment_request->provider->cpf);
-                        $nomeBeneficiario = $installment->payment_request->provider->provider_type == 'J' ? $installment->payment_request->provider->company_name : $installment->payment_request->provider->full_name;
-                    } else {
-                        $type = $installment->bank_account_provider->entity_type;
-                        $inscricao = Utils::onlyNumbers($installment->bank_account_provider->cpf_cnpj);
-                        $nomeBeneficiario = $installment->bank_account_provider->entity_name;
-                    }
-                }
+                $dataBankInstallment = Utils::getBankDetailsCnab($installment);
+                $nomeBeneficiario = $dataBankInstallment['nomeBeneficiario'];
+                $inscricao = $dataBankInstallment['inscricao'];
 
                 $detalhe = $lote->novoDetalhe();
                 $amount = ($installment->initial_value + $installment->fees + $installment->fine) - $installment->discount;
@@ -462,11 +428,9 @@ class Remessa
                         unset($detalhe->segmento_j52);
                         $lote->inserirDetalhe($detalhe);
                     } else {
-
                         $lotQuantityDetails++;
                         $detalhe->segmento_j->lote_servico = $lote->sequencial;
                         $detalhe->segmento_j->numero_registro = $lotQuantityDetails;
-                        $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                         $detalhe->segmento_j->codigo_barras = Utils::codigoBarrasBB(Utils::onlyNumbers($installment->bar_code));
                         $detalhe->segmento_j->nome_beneficiario = Utils::formatCnab('X', $nomeBeneficiario, '30');
                         $dataVencimento = new Carbon($installment->extension_date); // data vendimento

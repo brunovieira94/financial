@@ -102,6 +102,7 @@ class ReportService
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
+
         if (!array_key_exists('company', $requestInfo)) {
             return response()->json([
                 'current_page' => 1,
@@ -316,9 +317,31 @@ class ReportService
             if (array_key_exists('provider', $requestInfo)) {
                 $query->where('provider_id', $requestInfo['provider']);
             }
-        });
+            if (array_key_exists('cost_center', $requestInfo)) {
+                $query->whereHas('cost_centers', function ($cost_centers) use ($requestInfo) {
+                    $cost_centers->where('cost_center_id', $requestInfo['cost_center']);
+                });
+            }
+            if (array_key_exists('service', $requestInfo)) {
+                $query->whereHas('services', function ($services) use ($requestInfo) {
+                    $services->where('service_id', $requestInfo['service']);
+                });
+            }
+            if (array_key_exists('product', $requestInfo)) {
+                $query->whereHas('products', function ($products) use ($requestInfo) {
+                    $products->where('product_id', $requestInfo['product']);
+                });
+            }
 
-        $requestInfo['perPage'] = 15000;
+            if (array_key_exists('billing_date', $requestInfo)) {
+                if (array_key_exists('from', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '>=', $requestInfo['billing_date']['from']);
+                }
+                if (array_key_exists('to', $requestInfo['billing_date'])) {
+                    $query->where('billing_date', '<=', $requestInfo['billing_date']['to']);
+                }
+            }
+        });
 
         return Utils::pagination($accountApproval
             ->with('purchase_order')
@@ -334,14 +357,14 @@ class ReportService
 
         return Utils::pagination(
             $cnabGenerated
-                ->with(['user', 'company', 'payment_requests', 'bank_account_company.bank']),
+                ->with(['user', 'company', 'bank_account_company.bank']),
             $requestInfo
         );
     }
 
     public function getCnabGenerate($requestInfo, $id)
     {
-        return $this->cnabGenerated->with(['user', 'company', 'payment_requests.installments_cnab.installment.bank_account_provider', 'bank_account_company.bank'])->findOrFail($id);
+        return $this->cnabGenerated->with(['user', 'company', 'payment_requests.installments_cnab.installment.bank_account_provider', 'bank_account_company.bank', 'payment_requests.payment_request'])->findOrFail($id);
     }
 
     public function getUserApprovalsReport($requestInfo)
