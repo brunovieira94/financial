@@ -766,10 +766,10 @@ class Utils
 
         if (array_key_exists('created_at', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['created_at'])) {
-                $purchaseOrder = $purchaseOrder->where('created_at', '>=', $requestInfo['created_at']['from']);
+                $purchaseOrder = $purchaseOrder->whereDate('created_at', '>=', $requestInfo['created_at']['from']);
             }
             if (array_key_exists('to', $requestInfo['created_at'])) {
-                $purchaseOrder = $purchaseOrder->where('created_at', '<=', date("Y-m-d", strtotime("+1 days", strtotime($requestInfo['created_at']['to']))));
+                $purchaseOrder = $purchaseOrder->whereDate('created_at', '<=', $requestInfo['created_at']['to']);
             }
             if (!array_key_exists('to', $requestInfo['created_at']) && !array_key_exists('from', $requestInfo['created_at'])) {
                 $purchaseOrder = $purchaseOrder->whereBetween('created_at', [now()->addMonths(-1), now()]);
