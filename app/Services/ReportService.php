@@ -280,7 +280,12 @@ class ReportService
 
             if (array_key_exists('approval_date', $requestInfo)) {
                 $query->whereHas('approval', function ($approval) use ($requestInfo) {
-                    $approval->whereDate('updated_at', $requestInfo['approval_date']);
+                    if (array_key_exists('from', $requestInfo['approval_date'])) {
+                        $approval->whereDate('updated_at', '>=', $requestInfo['approval_date']['from']);
+                    }
+                    if (array_key_exists('to', $requestInfo['approval_date'])) {
+                        $approval->whereDate('updated_at', '<=', $requestInfo['approval_date']['to']);
+                    }
                 });
             }
         });

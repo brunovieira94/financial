@@ -61,10 +61,10 @@ class PurchaseRequestService
 
         if (array_key_exists('billing_date', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['billing_date'])) {
-                $purchaseRequest->where('created_at', '>=', $requestInfo['billing_date']['from']);
+                $purchaseRequest->whereDate('created_at', '>=', $requestInfo['billing_date']['from']);
             }
             if (array_key_exists('to', $requestInfo['billing_date'])) {
-                $purchaseRequest->where('created_at', '<=', $requestInfo['billing_date']['to']);
+                $purchaseRequest->whereDate('created_at', '<=', $requestInfo['billing_date']['to']);
             }
         }
 
