@@ -48,6 +48,7 @@ class Cangooroo extends Model
         'last_update',
         'provider_name',
         'is_vcn',
+        'client_name'
     ];
 
     public function hotel()

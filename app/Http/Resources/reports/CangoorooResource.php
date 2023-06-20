@@ -19,6 +19,7 @@ class CangoorooResource extends JsonResource
             'hotel_id' => $this->hotel_id,
             'status' => $this->status,
             'hotel' => new HotelResource($this->hotel),
+            'client_name' => $this->client_name
         ];
     }
 }

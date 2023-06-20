@@ -73,6 +73,12 @@ class PaidBillingInfoController extends Controller
         return response('');
     }
 
+    public function getPaidBillingInfoClients()
+    {
+        return $this->paidBbillingService->getPaidBillingInfoClients();
+    }
+
+    // public function export(Request $request, $approvalStatus)
     // public function export(Request $request)
     // {
     //     ini_set('memory_limit', '1024M');

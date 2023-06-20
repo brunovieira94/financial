@@ -965,6 +965,11 @@ class Utils
         if (array_key_exists('user_id', $requestInfo)) {
             $billing->where('user_id', $requestInfo['user_id']);
         }
+        if (array_key_exists('client_name', $requestInfo)) {
+            $billing->whereHas('cangooroo', function ($query) use ($requestInfo) {
+                $query->where('client_name', $requestInfo['client_name']);
+            });
+        }
         if (array_key_exists('reserve', $requestInfo) && !is_null($requestInfo['reserve']) && count($requestInfo['reserve']) > 0){
             $billing->whereIn('reserve', $requestInfo['reserve']);
         }
@@ -1006,6 +1011,9 @@ class Utils
         }
         if (array_key_exists('reserve', $requestInfo)) {
             $paidBillingInfo->where('reserve', $requestInfo['reserve']);
+        }
+        if (array_key_exists('client_name', $requestInfo)) {
+            $paidBillingInfo->where('client_name', $requestInfo['client_name']);
         }
         return $paidBillingInfo;
     }
@@ -1091,6 +1099,7 @@ class Utils
                     'account' => !is_null($bankAccount) ? (!!($bankAccount->account_check_number) || $bankAccount->account_check_number === '0' ? $bankAccount->account_number . '-' . $bankAccount->account_check_number : $bankAccount->account_number) : '',
                     'form_of_payment' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
                     'hotel_name' => !is_null($cangooroo) ? $cangooroo->hotel_name : '',
+                    'client_name' => !is_null($cangooroo) ? $cangooroo->client_name : '',
                     'cnpj_hotel' => $billing['cnpj'],
                     'payment_voucher' => '',
                     'payment_method' => !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',

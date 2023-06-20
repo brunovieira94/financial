@@ -46,6 +46,7 @@ class PaidBillingInfo extends Model
         'payment_remark',
         'created_at',
         'service_id',
+        'client_name'
     ];
 
     protected $hidden = ['user_id'];

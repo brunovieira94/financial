@@ -74,6 +74,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
             $paidBillingInfo->payment_bank,
             $paidBillingInfo->payment_remark,
             $paidBillingInfo->service_id,
+            $paidBillingInfo->client_name,
         ];
     }
 
@@ -100,6 +101,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
             'Banco de pagamento',
             'Observação de pagamento',
             'ID Serviço Cangooroo',
+            'Nome do cliente'
         ];
     }
 
