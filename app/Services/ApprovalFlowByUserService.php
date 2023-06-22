@@ -112,7 +112,7 @@ class ApprovalFlowByUserService
                     $value = self::updateOrder($value);
                     if (!Redis::exists($value)) {
                         Redis::set($value, 'payment-request', 'EX', '10');
-                        $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
+                        $accountApproval = $this->accountsPayableApprovalFlowClean->with((['payment_request' => function ($query) {
                             $query->withoutGlobalScopes();
                         }]))->findOrFail((int)  $value);
                         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
@@ -144,7 +144,7 @@ class ApprovalFlowByUserService
                     $value = self::updateOrder($value);
                     if (!Redis::exists($value)) {
                         Redis::set($value, 'payment-request', 'EX', '10');
-                        $accountApproval = $this->accountsPayableApprovalFlow->with((['payment_request' => function ($query) {
+                        $accountApproval = $this->accountsPayableApprovalFlowClean->with((['payment_request' => function ($query) {
                             $query->withoutGlobalScopes();
                         }]))->findOrFail($value);
                         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
