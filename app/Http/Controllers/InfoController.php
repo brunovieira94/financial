@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
+use App\Models\ApprovalFlow;
 use App\Models\AttachmentLogDownload;
 use App\Models\LogActivity;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasTax;
 use App\Models\TemporaryLogUploadPaymentRequest;
 use App\Models\TypeOfTax;
+use App\Models\User;
+use App\Models\UserHasPaymentRequest;
 use App\Services\NotificationService;
 use App\Services\Utils;
 use Artisan;
@@ -25,6 +31,8 @@ use Storage;
 
 class InfoController extends Controller
 {
+    private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
+
     public function duplicateInformationSystem(Request $request)
     {
         $resume = DB::select("SELECT provider_id, invoice_number, count(*) total FROM payment_requests where invoice_number is not null AND deleted_at IS NULL group by provider_id, invoice_number having count(*) > 1;");
@@ -303,4 +311,51 @@ class InfoController extends Controller
     {
         return DB::select("SELECT * FROM jobs ORDER BY id DESC");
     }
+
+    public function getAllAccountsForApproval(Request $request)
+    {
+        $requestInfo = $request->all();
+       // auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
+        $approvalFlowUserOrder = ApprovalFlow::where('role_id', 1)->get(['order', 'group_approval_flow_id']);
+
+        if (!$approvalFlowUserOrder)
+            return response([], 404);
+
+        $paymentRequest = Utils::search(new PaymentRequestClean, $requestInfo, ['order']);
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
+
+        $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $arrayStatus = Utils::statusApprovalFlowRequest($requestInfo);
+            $query->whereIn('status', $arrayStatus)
+                ->where('deleted_at', '=', null);
+        });
+        $idsPaymentRequestOrder = [];
+        foreach ($approvalFlowUserOrder as $approvalOrder) {
+            $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])
+            ->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id'])
+            ->get('payment_request_id');
+            $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
+        }
+        $paymentRequest = $paymentRequest->findMany($idsPaymentRequestOrder);
+        $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', $requestInfo['uid'])->where('status', 0)->get('payment_request_id');
+        //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
+        $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
+        $paymentRequestMultiple = PaymentRequestClean::withoutGlobalScopes()->findMany($ids);
+        $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
+        $paymentRequestMultiple->get('id');
+        $ids = $paymentRequestMultiple->pluck('id')->toArray();
+        //union ids payment request
+        $paymentRequestIDs = $paymentRequest->get('id');
+        $paymentRequestIDs = $paymentRequest->pluck('id')->toArray();
+        $ids = array_merge($ids, $paymentRequestIDs);
+        $paymentRequest = PaymentRequestClean::withoutGlobalScopes()->whereIn('id', $ids)->with($this->paymentRequestCleanWith);
+        $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
+        return RouteApprovalFlowByUserResource::collection(Utils::pagination($paymentRequest, $requestInfo)); //;
+    }
+
+    public function getUsers(Request $request)
+    {
+        return User::get();
+    }
+
 }

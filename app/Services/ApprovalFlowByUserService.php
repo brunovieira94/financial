@@ -67,10 +67,9 @@ class ApprovalFlowByUserService
         });
         $idsPaymentRequestOrder = [];
         foreach ($approvalFlowUserOrder as $approvalOrder) {
-            $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])->with('payment_request');
-            $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalOrder) {
-                $query->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id']);
-            })->get('payment_request_id');
+            $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])
+            ->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id'])
+            ->get('payment_request_id');
             $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
         }
         $paymentRequest = $paymentRequest->findMany($idsPaymentRequestOrder);
