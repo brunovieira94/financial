@@ -288,7 +288,7 @@ class Utils
             $paymentRequest['installment_link'],
             self::dateApprovalCostCenterVP($paymentRequest),
             self::dateApprovalCostCenterManagers($paymentRequest),
-
+            self::observationDisapproval($paymentRequest),
         ];
     }
 
@@ -339,7 +339,7 @@ class Utils
             'Parcelas Agrupadas',
             'Data Aprovação VP',
             'Data Aprovação Gestor',
-
+            'Observação de rejeição',
         ];
     }
 
@@ -382,9 +382,9 @@ class Utils
             !is_null($billing->form_of_payment) ? $billing->formsOfPayment[$billing->form_of_payment] : '',
             !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->title : '') : '',
             !is_null($bankAccount) ? (!is_null($bankAccount->bank) ? $bankAccount->bank->bank_code : '') : '',
-            !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) || $bankAccount->agency_check_number === '0' ? $bankAccount->agency_number.'-'.$bankAccount->agency_check_number : $bankAccount->agency_number) : '',
+            !is_null($bankAccount) ? (!!($bankAccount->agency_check_number) || $bankAccount->agency_check_number === '0' ? $bankAccount->agency_number . '-' . $bankAccount->agency_check_number : $bankAccount->agency_number) : '',
             !is_null($bankAccount) && !is_null($bankAccount->account_type) ? $bankAccount->accountTypes[$bankAccount->account_type] : '',
-            !is_null($bankAccount) ? (!!($bankAccount->account_check_number) || $bankAccount->account_check_number === '0' ? $bankAccount->account_number.'-'.$bankAccount->account_check_number : $bankAccount->account_number) : '',
+            !is_null($bankAccount) ? (!!($bankAccount->account_check_number) || $bankAccount->account_check_number === '0' ? $bankAccount->account_number . '-' . $bankAccount->account_check_number : $bankAccount->account_number) : '',
             $billing->recipient_name,
             $billing->cnpj,
             !is_null($hotel) ? ($hotel->is_valid ? 'Sim' : 'Não') : '',
@@ -642,18 +642,20 @@ class Utils
             }
         }
 
-        if (!empty($vpsId) && AccountsPayableApprovalFlowLog::where([
-            'payment_request_id' => $paymentRequest->id,
-            'type' => 'approved'
-        ])
-        ->whereIn('user_id', $vpsId)
-        ->exists()) {
-            $dateApproval = AccountsPayableApprovalFlowLog::where([
+        if (
+            !empty($vpsId) && AccountsPayableApprovalFlowLog::where([
                 'payment_request_id' => $paymentRequest->id,
                 'type' => 'approved'
             ])
             ->whereIn('user_id', $vpsId)
-            ->orderBy('id', 'asc')->first()->created_at;
+            ->exists()
+        ) {
+            $dateApproval = AccountsPayableApprovalFlowLog::where([
+                'payment_request_id' => $paymentRequest->id,
+                'type' => 'approved'
+            ])
+                ->whereIn('user_id', $vpsId)
+                ->orderBy('id', 'asc')->first()->created_at;
             $dateApproval = self::formatDate($dateApproval);
         }
         return $dateApproval;
@@ -670,21 +672,34 @@ class Utils
             }
         }
 
-        if (!empty($managersId) && AccountsPayableApprovalFlowLog::where([
-            'payment_request_id' => $paymentRequest->id,
-            'type' => 'approved'
-        ])
-        ->whereIn('user_id', $managersId)
-        ->exists()) {
-            $dateApproval = AccountsPayableApprovalFlowLog::where([
+        if (
+            !empty($managersId) && AccountsPayableApprovalFlowLog::where([
                 'payment_request_id' => $paymentRequest->id,
                 'type' => 'approved'
             ])
             ->whereIn('user_id', $managersId)
-            ->orderBy('id', 'asc')->first()->created_at;
+            ->exists()
+        ) {
+            $dateApproval = AccountsPayableApprovalFlowLog::where([
+                'payment_request_id' => $paymentRequest->id,
+                'type' => 'approved'
+            ])
+                ->whereIn('user_id', $managersId)
+                ->orderBy('id', 'asc')->first()->created_at;
             $dateApproval = self::formatDate($dateApproval);
         }
         return $dateApproval;
     }
 
+    public static function observationDisapproval($paymentRequest) /////
+    {
+        $log = AccountsPayableApprovalFlowLog::where('payment_request_id', $paymentRequest->id)
+            ->where('type', 'rejected')
+            ->orderBy('id', 'desc');
+
+        if ($log->exists())
+            return $log->first()->motive . ' ' . $log->first()->description;
+
+        return '';
+    }
 }
