@@ -38,7 +38,7 @@ class ApprovalFlowByUserService
     private $alterOrder = false;
     private $order = null;
 
-    private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency'];
+    private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
 
     public function __construct(User $user, PaymentRequestClean $paymentRequestClean, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, AccountsPayableApprovalFlow $accountsPayableApprovalFlow, ApprovalFlow $approvalFlow)
     {
@@ -76,7 +76,7 @@ class ApprovalFlowByUserService
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
         //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
         $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
-        $paymentRequestMultiple = PaymentRequestClean::withoutGlobalScopes()->findMany($ids);
+        $paymentRequestMultiple = PaymentRequestClean::withoutGlobalScopes()->whereIn('id', $ids);
         $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
         $paymentRequestMultiple->get('id');
         $ids = $paymentRequestMultiple->pluck('id')->toArray();
