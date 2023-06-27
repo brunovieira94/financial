@@ -340,7 +340,7 @@ class InfoController extends Controller
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', $requestInfo['uid'])->where('status', 0)->get('payment_request_id');
         //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
         $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
-        $paymentRequestMultiple = PaymentRequestClean::withoutGlobalScopes()->findMany($ids);
+        $paymentRequestMultiple = PaymentRequestClean::withoutGlobalScopes()->whereIn('id', $ids);
         $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
         $paymentRequestMultiple->get('id');
         $ids = $paymentRequestMultiple->pluck('id')->toArray();
