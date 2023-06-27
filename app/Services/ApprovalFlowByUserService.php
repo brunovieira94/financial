@@ -73,11 +73,11 @@ class ApprovalFlowByUserService
             })->get('payment_request_id');
             $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
         }
-        $paymentRequest = $paymentRequest->whereIn('id', $idsPaymentRequestOrder);
+        $paymentRequest = $paymentRequest->findMany($idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
         //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
         $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
-        $paymentRequestMultiple = PaymentRequest::withoutGlobalScopes()->whereIn('id', $ids);
+        $paymentRequestMultiple = PaymentRequestClean::withoutGlobalScopes()->findMany($ids);
         $paymentRequestMultiple = Utils::baseFilterReportsPaymentRequest($paymentRequestMultiple, $requestInfo);
         $paymentRequestMultiple->get('id');
         $ids = $paymentRequestMultiple->pluck('id')->toArray();
@@ -381,12 +381,12 @@ class ApprovalFlowByUserService
         $this->alterOrder = false;
 
         Redis::del('h', $accountApproval->payment_request_id);
-        $this->notifyUsers($accountApproval, $notify, $maxOrder);
+        //$this->notifyUsers($accountApproval, $notify, $maxOrder);
     }
 
     public function notifyUsers($accountApproval, $notify, $maxOrder)
     {
-       /*
+        /*
        solve problem notification snapshot approval account
         if ($notify) {
             if (NotificationCatalog::where(['type' => 'payment-request-to-approve', 'active' => true, 'schedule' => 0])->exists()) {
