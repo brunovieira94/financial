@@ -501,7 +501,7 @@ class Utils
                 $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalFlowOrder['order'])->with('payment_request');
                 $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalFlowOrder) {
                     $query->where('group_approval_flow_id', $approvalFlowOrder['group_approval_flow_id']);
-                })->get('payment_request_id');
+                })->whereIn('status', [0, 2, 8, 9])->get('payment_request_id');
                 $paymentRequestIDs = array_merge($paymentRequestIDs, $accountApprovalFlow->pluck('payment_request_id')->toArray());
             }
             $paymentRequest = $paymentRequest->whereIn('id', $paymentRequestIDs);
