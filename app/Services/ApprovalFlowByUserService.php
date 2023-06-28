@@ -2,31 +2,19 @@
 
 namespace App\Services;
 
-use App\Http\Resources\ApprovalFlowByUserCollection;
-use App\Http\Resources\ApprovalFlowByUserResource;
-use App\Http\Resources\PaymentRequestCollection;
-use App\Http\Resources\reports\ApprovalFlowByUserResource as ReportsApprovalFlowByUserResource;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
 use App\Http\Resources\RouteApprovalFlowByUserCollection;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\ApprovalFlow;
-use App\Models\NotificationCatalog;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
-use App\Models\PaymentRequestHasInstallments;
 use App\Models\ReasonToReject;
 use App\Models\User;
-use App\Models\UserHasCostCenter;
 use App\Models\UserHasPaymentRequest;
 use Illuminate\Http\Request;
 use Config;
-use CreateUserHasPaymentRequest;
-use Exception;
-use Faker\Provider\ar_EG\Payment;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
-use Response;
 
 class ApprovalFlowByUserService
 {
@@ -55,7 +43,7 @@ class ApprovalFlowByUserService
         $approvalFlowUserOrder = $this->approvalFlow->where('role_id', auth()->user()->role_id)->get(['order', 'group_approval_flow_id']);
 
         if (!$approvalFlowUserOrder)
-            return response([], 404);
+            return RouteApprovalFlowByUserResource::collection(Utils::pagination($this->paymentRequestClean->where('id', -1), $requestInfo));
 
         $paymentRequest = Utils::search($this->paymentRequestClean, $requestInfo, ['order']);
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
@@ -70,7 +58,7 @@ class ApprovalFlowByUserService
             $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])->with('payment_request');
             $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalOrder) {
                 $query->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id']);
-            })->get('payment_request_id');
+            })->whereIn('status', [0, 2, 8, 9])->get('payment_request_id');
             $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
         }
         $paymentRequest = $paymentRequest->whereIn('id', $idsPaymentRequestOrder);
@@ -437,6 +425,30 @@ class ApprovalFlowByUserService
             }
         } else {
             return $objRequest;
+        }
+    }
+
+    public function returnApprovalOrders($approvalOrderUser, $requestInfo)
+    {
+        if (array_key_exists('role', $requestInfo)) {
+            $parFinalDeRolesEOrders = [];
+            if (array_key_exists('role', $requestInfo)) {
+                $approvalRoleRequest = $this->approvalFlow
+                    ->where('role_id', $requestInfo['role'])
+                    ->get(['order', 'group_approval_flow_id']);
+
+                foreach ($approvalRoleRequest as $adr) {
+                    foreach ($approvalOrderUser as $adu) {
+                        if ($adr['order'] == $adu['order'] && $adr['group_approval_flow_id'] == $adu['group_approval_flow_id']) {
+                            $parFinalDeRolesEOrders[] = $adr; // Adicionar a lista final
+                            break;
+                        }
+                    }
+                }
+            }
+            return $parFinalDeRolesEOrders;
+        } else {
+            return $approvalOrderUser->toArray();
         }
     }
 }
