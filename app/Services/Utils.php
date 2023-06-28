@@ -498,13 +498,15 @@ class Utils
                 order by id ASC'
             );*/
             foreach ($approvalFlowOrders as $approvalFlowOrder) {
-                $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalFlowOrder['order'])
-                    ->where('group_approval_flow_id', $approvalFlowOrder['group_approval_flow_id'])
-                    ->get('payment_request_id');
+                $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalFlowOrder['order'])->with('payment_request');
+                $accountApprovalFlow = $accountApprovalFlow->whereHas('payment_request', function ($query) use ($approvalFlowOrder) {
+                    $query->where('group_approval_flow_id', $approvalFlowOrder['group_approval_flow_id']);
+                })->get('payment_request_id');
                 $paymentRequestIDs = array_merge($paymentRequestIDs, $accountApprovalFlow->pluck('payment_request_id')->toArray());
             }
             $paymentRequest = $paymentRequest->whereIn('id', $paymentRequestIDs);
         }
+
         if (array_key_exists('created_at', $requestInfo)) {
             if (array_key_exists('from', $requestInfo['created_at'])) {
                 $paymentRequest->where('created_at', '>=', $requestInfo['created_at']['from']);
