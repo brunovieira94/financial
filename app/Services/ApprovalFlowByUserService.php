@@ -72,7 +72,6 @@ class ApprovalFlowByUserService
             ->get('payment_request_id');
             $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
         }
-        $paymentRequest = $paymentRequest->findMany($idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', auth()->user()->id)->where('status', 0)->get('payment_request_id');
         //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
         $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();

@@ -315,7 +315,7 @@ class InfoController extends Controller
     public function getAllAccountsForApproval(Request $request)
     {
         $requestInfo = $request->all();
-       // auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
+        // auth()->user()->id = auth()->user()->logged_user_id == null ? auth()->user()->id : auth()->user()->logged_user_id;
         $approvalFlowUserOrder = ApprovalFlow::where('role_id', 1)->get(['order', 'group_approval_flow_id']);
 
         if (!$approvalFlowUserOrder)
@@ -332,11 +332,10 @@ class InfoController extends Controller
         $idsPaymentRequestOrder = [];
         foreach ($approvalFlowUserOrder as $approvalOrder) {
             $accountApprovalFlow = AccountsPayableApprovalFlowClean::where('order', $approvalOrder['order'])
-            ->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id'])
-            ->get('payment_request_id');
+                ->where('group_approval_flow_id', $approvalOrder['group_approval_flow_id'])
+                ->get('payment_request_id');
             $idsPaymentRequestOrder = array_merge($idsPaymentRequestOrder, $accountApprovalFlow->pluck('payment_request_id')->toArray());
         }
-        $paymentRequest = $paymentRequest->findMany($idsPaymentRequestOrder);
         $multiplePaymentRequest = UserHasPaymentRequest::where('user_id', $requestInfo['uid'])->where('status', 0)->get('payment_request_id');
         //$paymentRequest = $paymentRequest->orWhere(function ($query) use ($multiplePaymentRequest, $requestInfo) {
         $ids = $multiplePaymentRequest->pluck('payment_request_id')->toArray();
@@ -357,5 +356,4 @@ class InfoController extends Controller
     {
         return User::get();
     }
-
 }
