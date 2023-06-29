@@ -533,35 +533,10 @@ Route::prefix('/auth')->group(function () {
 });
 
 //Route::post('/integration/client', [IntegrationController::class, 'storeClient']);
-Route::get('/payment-request-temporary/{id}', [PaymentRequestController::class, 'show']);
-Route::get('/payment-request-temporary-approval-flow', [PaymentRequestController::class, 'paymentApproval']);
-Route::post('/solve-log', [AuthController::class, 'log']);
-Route::get('/info', [InfoController::class, 'duplicateInformationSystem']);
-Route::get('/delete-tax', [InfoController::class, 'taxDelete']);
-Route::get('/temporary-log-upload-payment-request', [InfoController::class, 'temporaryLogUploadPaymentRequest']);
-Route::post('/upload-archive', [InfoController::class, 'storageUpload']);
-Route::post('/alter-table-log', [InfoController::class, 'alterTableLogs']);
-Route::get('/log-payment-request-old/{id}', [LogsController::class, 'getPaymentRequestLogs']);
-Route::get('/log-payment-request/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
-Route::get('/redis-example', [InfoController::class, 'redisExample']);
-Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
-Route::post('/paid-billing-info/initial-import', [PaidBillingInfoController::class, 'import']);
-Route::post('/work', [PaidBillingInfoController::class, 'work']);
-Route::get('/truncate-paid-billing-info', [PaidBillingInfoController::class, 'truncate']);
-Route::get('/redis-example', [InfoController::class, 'redisExample']);
-Route::post('/approval-manual-payment-request-installment/{id}', [LogsController::class, 'approvalManualPaymentRequest']);
-Route::post('/redis-clean', [InfoController::class, 'redisClean']);
-Route::put('/approved-payment-request-resolve-status', [OtherPaymentsController::class, 'approvedPaymentRequestsResolveStatus']);
-Route::get('/archive-download-log', [InfoController::class, 'archiveDownloadLog']);
-Route::post('/redis-clean', [InfoController::class, 'redisClean']);
 Route::post('/forgot-password', [ResetPasswordController::class, 'forgotPassword']);
 Route::post('/reset-password', [ResetPasswordController::class, 'resetPassword']);
 Route::post('/check-reset', [ResetPasswordController::class, 'checkReset']);
 Route::get('/failed-job', [InfoController::class, 'failedJob']);
 Route::get('/scheduling', [InfoController::class, 'scheduling']);
 Route::get('/send-mail-test', [InfoController::class, 'sendMailTest']);
-Route::get('/last-job', [InfoController::class, 'getLastJob']);
-Route::get('/all-jobs', [InfoController::class, 'getAllJob']);
-Route::get('/approval-flow-by-user', [InfoController::class, 'getAllAccountsForApproval']);
-Route::get('/users', [InfoController::class, 'getUsers']);
 
