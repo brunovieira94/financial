@@ -102,7 +102,7 @@ class ApprovalFlowByUserService
                         Redis::set($value, 'payment-request', 'EX', '10');
                         $accountApproval = $this->accountsPayableApprovalFlowClean->with((['payment_request' => function ($query) {
                             $query->withoutGlobalScopes();
-                        }]))->findOrFail((int)  $value);
+                        }]))->findOrFail($value);
                         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $accountApproval->payment_request->group_approval_flow_id)->max('order');
                         $accountApproval->status = Config::get('constants.status.disapproved');
                         if ($this->paymentRequestAddedUser($accountApproval->payment_request->id)) {
