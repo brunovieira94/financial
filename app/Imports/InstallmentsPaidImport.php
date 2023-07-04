@@ -5,14 +5,10 @@ namespace App\Imports;
 use Config;
 use Throwable;
 
-use Carbon\Carbon;
-
 use App\Helpers\Util;
 use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\BankAccount;
-use App\Models\Bank;
 use App\Services\NotificationService;
-use Exception;
 use Illuminate\Support\Collection;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Redis;
@@ -44,24 +40,29 @@ class InstallmentsPaidImport implements
 {
     use Importable, RegistersEventListeners;
 
+    // 30 minutes expiration time for redis
+    static $DEFAULT_EXPIRATION_TIME = 30 * 60;
+
     private $user;
     private $fileOriginalName;
     private $otherPaymentsService;
     private $rowCounter;
     private $fileStoredName;
-
-    public static $failures = [];
-    public static $errors = [];
+    private $importId;
+    private $importFailuresId;
+    private $importErrorsId;
 
     public function __construct($otherPaymentsService, $user, $fileOriginalName, $fileStoredName)
     {
+        $this->user = $user;
         $this->otherPaymentsService = $otherPaymentsService;
         $this->fileOriginalName = $fileOriginalName;
         $this->fileStoredName = $fileStoredName;
-        self::$failures[$fileStoredName] = [];
-        self::$errors[$fileStoredName] = [];
+
+        $this->importFailuresId = 'import:' . $fileStoredName . ':failures';
+        $this->importErrorsId = 'import:' . $fileStoredName . ':errors';
+
         $this->rowCounter = 2;
-        $this->user = $user;
     }
 
     public function chunkSize(): int
@@ -79,18 +80,13 @@ class InstallmentsPaidImport implements
         $paymentRequests = [];
 
         foreach ($rows as $row) {
+            $installment = PaymentRequestHasInstallmentsClean::where('payment_request_id', $row['conta'])
+                ->where('parcel_number', $row['parcela'])->get()->first();
 
-            $installment = PaymentRequestHasInstallmentsClean::where('payment_request_id', $row['conta'])->where('parcel_number', $row['parcela']);
-            $installment = $installment->get()->first();
             $groupFormPaymentId = Util::getGroupFormPaymentIdByName($row['forma_de_pagamento']);
+
             $bankAccountCompany = $this->getCompanyBankAccount($row);
-            $paymentDate =  preg_replace('/[^0-9 *-\_]/', '', $row['data_do_pagamento']);
-            $paymentDate = explode('/', $paymentDate);
-            if (count($paymentDate) > 2) {
-                $paymentDate = $paymentDate[2] . '-' . $paymentDate[1] . '-' . $paymentDate[0];
-            } else {
-                $paymentDate = null;
-            }
+            $paymentDate = $row['data_do_pagamento'];
 
             if (isset($installment) && isset($groupFormPaymentId) && isset($bankAccountCompany) && isset($paymentDate)) {
                 if (!in_array($row['conta'], $paymentRequests)) {
@@ -113,43 +109,21 @@ class InstallmentsPaidImport implements
 
                 $this->otherPaymentsService->storeImported($this->user->id, $installmentInfo, $this->fileStoredName);
             } else {
-                if (Redis::exists($this->fileStoredName)) {
-                    $data = [
-                        'row' => $row['row'],
-                        'paymentRequest' =>  $row['conta'],
-                        'installment' => $row['parcela'],
-                        'error' => is_null($installment)
-                            ? 'A parcela não foi encontrada'
-                            : (is_null($groupFormPaymentId)
-                                ? 'A Forma de pagamento não foi reconhecida'
-                                : (is_null($paymentDate)
-                                    ? 'A Data de Pagamento não está no formato esperado "dd/mm/YYYY"'
-                                    : 'A Conta bancária não foi encontrada'))
-                    ];
-                    try {
-                        $redisData = Redis::get($this->fileStoredName);
-                        $redisData = json_decode($redisData, true);
-                        $redisData[] = $data;
-                        Redis::set($this->fileStoredName, json_encode($redisData));
-                    } catch (Exception $e) {
-                        Redis::del('h', $this->fileStoredName);
-                    }
-                } else {
-                    Redis::set($this->fileStoredName, json_encode([
-                        [
-                            'row' => $row['row'],
-                            'paymentRequest' =>  $row['conta'],
-                            'installment' => $row['parcela'],
-                            'error' => is_null($installment)
-                                ? 'A parcela não foi encontrada'
-                                : (is_null($groupFormPaymentId)
-                                    ? 'A Forma de pagamento não foi reconhecida'
-                                    : (is_null($paymentDate)
-                                        ? 'A Data de Pagamento não está no formato esperado "dd/mm/YYYY"'
-                                        : 'A Conta bancária não foi encontrada'))
-                        ]
-                    ]));
-                }
+                $failure = [
+                    'row' => $row['row'],
+                    'paymentRequest' =>  $row['conta'],
+                    'installment' => $row['parcela'],
+                    'error' => is_null($installment)
+                        ? 'A parcela não foi encontrada'
+                        : (is_null($groupFormPaymentId)
+                            ? 'A Forma de pagamento não foi reconhecida'
+                            : (is_null($paymentDate)
+                                ? 'A Data de Pagamento não está no formato esperado "dd/mm/YYYY" ou "dd/mm/YY"'
+                                : 'A Conta bancária não foi encontrada'))
+                ];
+
+                Redis::lpush($this->importFailuresId, json_encode($failure));
+                Redis::expire($this->importFailuresId, self::$DEFAULT_EXPIRATION_TIME);
             }
         }
 
@@ -172,18 +146,14 @@ class InstallmentsPaidImport implements
         if (count($accountInfo) == 2)
             $bankAccountCompany = $bankAccountCompany->whereLike('account_check_number', "%{$accountInfo[1]}%");
 
-        if ($bankAccountCompany->exists()) {
-            return $bankAccountCompany->get()->first();
-        } else {
-            return null;
-        }
+        return $bankAccountCompany->exists() ? $bankAccountCompany->get()->first() : null;
     }
 
     public function rules(): array
     {
         return [
             //'forma_de_pagamento' => 'required|in:boleto,pix,ted,débito em conta,debito em conta,chave pix',
-            // 'data_do_pagamento' => 'required|date_format:d/m/Y',
+            'data_do_pagamento' => 'required|date_format:Y-m-d',
             'conta' => 'required|exists:payment_requests,id',
             'parcela' => 'required|integer',
             'codigo_do_banco' => 'required:exits:banks,bank_code',
@@ -209,6 +179,7 @@ class InstallmentsPaidImport implements
 
     public function isEmptyWhen(array $row): bool
     { // When the return value is true, the respective row will be skipped from processing
+        $this->rowCounter += 1;
 
         $formaDePagamento = trim($row['forma_de_pagamento']) !== '' ? 1 : 0;
         $dataDePagamento = trim($row['data_do_pagamento']) !== '' ? 1 : 0;
@@ -224,17 +195,18 @@ class InstallmentsPaidImport implements
             $parcela;
 
         if ($sum > 0 && (!$conta || !$parcela)) {
-            self::$failures[$this->fileStoredName][] = [
+            $failure = json_encode([
                 'row' => $this->rowCounter,
                 'paymentRequest' =>  $row['conta'],
                 'installment' => $row['parcela'],
                 'error' => trim($row['conta']) === ''
                     ? 'Conta não fornecida'
                     : 'Parcela não fornecida',
-            ];
-        }
+            ]);
 
-        $this->rowCounter += 1;
+            Redis::lpush($this->importFailuresId, $failure);
+            Redis::expire($this->importFailuresId, self::$DEFAULT_EXPIRATION_TIME);
+        }
 
         return !$conta || !$parcela;
     }
@@ -248,7 +220,25 @@ class InstallmentsPaidImport implements
         }
 
         if (is_string($data['data_do_pagamento'])) {
-            $data['data_do_pagamento'] = trim($data['data_do_pagamento']);
+            $paymentDate = trim($data['data_do_pagamento']);
+
+            $paymentDate = preg_replace('/[^0-9 *-\_]/', '', $paymentDate);
+            $paymentDate = explode('/', $paymentDate);
+
+
+            if (count($paymentDate) > 2) {
+                $day = $paymentDate[0];
+                $month = $paymentDate[1];
+                $year = $paymentDate[2];
+
+                $year = strlen($year) == 2 ? '20' . $year : $year;
+
+                $paymentDate = $year . '-' . $month . '-' . $day;
+            } else {
+                $paymentDate = null;
+            }
+
+            $data['data_do_pagamento'] = $paymentDate;
         }
 
         return $data;
@@ -283,32 +273,41 @@ class InstallmentsPaidImport implements
         foreach ($failures as $failure) {
             $failure = (object) $failure;
 
-            self::$failures[$this->fileStoredName][] = [
+            $encodedFailure = json_encode([
                 'row' => $failure->row(),
                 'error' => $failure->attribute(),
                 'installment' => $failure->values()['parcela'],
                 'paymentRequest' => $failure->values()['conta'],
-            ];
+            ]);
+
+            Redis::lpush($this->importFailuresId, $encodedFailure);
+            Redis::expire($this->importFailuresId, self::$DEFAULT_EXPIRATION_TIME);
         }
     }
 
     public function onError(Throwable $e)
     {
-        self::$errors[$this->fileStoredName][] = $e->getTraceAsString();
+        Redis::lpush($this->importErrorsId, json_encode([$e->getTraceAsString()]));
+        Redis::expire($this->importErrorsId, self::$DEFAULT_EXPIRATION_TIME);
     }
 
     public static function afterImport(AfterImport $event)
     {
         $import = $event->getConcernable();
+
         $failures = [];
         $errors = [];
 
-        if (array_key_exists($import->fileStoredName, self::$failures)) {
-            $failures = self::$failures[$import->fileStoredName];
+        if (Redis::exists($import->importFailuresId)) {
+            while (($failure = Redis::rpop($import->importFailuresId)) != null) {
+                array_push($failures, json_decode($failure));
+            }
         }
 
-        if (array_key_exists($import->fileStoredName, self::$errors)) {
-            $errors = self::$errors[$import->fileStoredName];
+        if (Redis::exists($import->importErrorsId)) {
+            while (($error = Redis::rpop($import->importErrorsId)) != null) {
+                array_push($errors, json_decode($error));
+            }
         }
 
         NotificationService::generateDataSendImportInstallmentsPaidReport(
@@ -319,16 +318,5 @@ class InstallmentsPaidImport implements
             Redis::exists($import->fileStoredName) == true ? json_decode(Redis::get($import->fileStoredName)) : [],
             $errors
         );
-        Redis::del('h', $import->fileStoredName);
-
-        //nota: se uma job externa vir a ser usada, remova as linhas abaixo
-
-        if (array_key_exists($import->fileStoredName, self::$failures)) {
-            unset(self::$failures[$import->fileStoredName]);
-        }
-
-        if (array_key_exists($import->fileStoredName, self::$errors)) {
-            unset(self::$errors[$import->fileStoredName]);
-        }
     }
 }

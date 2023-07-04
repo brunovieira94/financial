@@ -25,6 +25,7 @@ use App\CNABLayoutsParser\CnabParser\Input\RetornoFile;
 use App\CNABLayoutsParser\CnabParser\Retorno\BancoBrasil;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\PaymentRequestClean;
+use Faker\Core\Uuid;
 use App\Models\PaymentRequestHasInstallmentLinked;
 
 class ItauCNABService
