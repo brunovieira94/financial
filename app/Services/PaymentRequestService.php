@@ -37,6 +37,7 @@ use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 use Aws\S3\ObjectUploader;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 use function PHPUnit\Framework\isNull;
 
@@ -198,6 +199,7 @@ class PaymentRequestService
             DB::commit();
             return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
         } catch (Exception $e) {
+            Log::alert('Erro ao criar solicitação de pagamento: ' . $e->getMessage());
             DB::rollBack();
             return response()->json([
                 'error' => 'Erro ao cadastrar a solicitação de pagamento, tente novamente.',
