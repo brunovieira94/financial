@@ -44,11 +44,8 @@ class OtherPaymentsController extends Controller
             return response()->json(['message' => 'Usuário do pedido de importação não encontrado no sistema!'], 404);
         }
 
-       // $fileStoredName = $this->saveLocalFile($request, 'import_file');
-
-        (new InstallmentsPaidImport($this->otherPaymentsService, $user, $fileOriginalName, $fileOriginalName . uniqid(date('HisYmd'))))->import(request()->file('import_file'));
-
-        //InstallmentImportJob::dispatch($this->otherPaymentsService, $user, $fileStoredName, $fileOriginalName);
+        $installmentPaidImporter = new InstallmentsPaidImport($this->otherPaymentsService, $user, $fileOriginalName, $fileOriginalName . uniqid(date('HisYmd')));
+        $installmentPaidImporter->import(request()->file('import_file'));
 
         return response()->json(['message' => 'O ficheiro está a ser processado!'], 200);
     }

@@ -6,17 +6,20 @@ use App\Models\ApprovalFlowSupply;
 use App\Models\NotificationCatalog;
 use App\Models\NotificationCatalogHasRoles;
 use App\Models\NotificationCatalogHasUsers;
-use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\SupplyApprovalFlow;
+
 use Illuminate\Support\Facades\Redis;
 
 class NotificationService
 {
+    // 24 hours = 1 day expiration time for each notification
+    static $DEFAULT_MESSAGE_EXPIRATION_TIME = 24 * 60 * 60;
 
-    public static function sendEmail($data)
+    public static function sendEmail($data, $expireMessage = true)
     {
         $queueID = uniqid();
+
         Redis::hSet($queueID, 'name', 'message-job');
         Redis::hSet($queueID, 'opts', '{}');
         Redis::hSet($queueID, 'delay', 0);
@@ -24,6 +27,13 @@ class NotificationService
         Redis::hSet($queueID, 'timestamp', 'null');
         Redis::hSet($queueID, 'priority', 0);
         Redis::hSet($queueID, 'data', json_encode($data));
+
+        if ($expireMessage) {
+            // when `$expireMessage` is true this message will only be on the queue
+            // for a time corresponding of `self::$DEFAULT_MESSAGE_EXPIRATION_TIME` secs.
+            Redis::expire($queueID, self::$DEFAULT_MESSAGE_EXPIRATION_TIME);
+        }
+
         Redis::rpush('active', $queueID);
     }
 
@@ -341,7 +351,7 @@ class NotificationService
             'args' => $args,
         ];
 
-        self::sendEmail($data);
+        self::sendEmail($data, true);
     }
 
     public static function generateDataSendRedisAttachment($mails = [], $typeMail, $link, $initialDate, $finalDate)
