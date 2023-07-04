@@ -630,7 +630,7 @@ remessa:
         pos: [21,35]
         picture: '9(15)'
       nome_inscricao_pagador:
-        pos: [36,76]
+        pos: [36,75]
         picture: 'X(40)'
         default: ''
       tipo_inscricao_beneficiario:
