@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PlutoTableState extends Model
 {
     protected $table = 'pluto_table_state';
-    protected $fillable = ['user_id', 'name', 'route'];
+    protected $fillable = ['user_id', 'name', 'route', 'rows_per_page', 'table_size_type'];
 
     public function user()
     {
