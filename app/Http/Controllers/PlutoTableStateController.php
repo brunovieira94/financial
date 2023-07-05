@@ -18,13 +18,23 @@ class PlutoTableStateController extends Controller
 
     public function saveState(PlutoTableStateRequest $request)
     {
-        $request['user_id'] = auth()->user()->id;
-        return $this->plutoTableStateService->saveState($request->all());
+        $requestInfo = $request->all();
+
+        if (!array_key_exists('user_id', $requestInfo)) {
+            $requestInfo['user_id'] = auth()->user()->id;
+        }
+
+        return $this->plutoTableStateService->saveState($requestInfo);
     }
 
     public function getState(PlutoTableStateRequest $request)
     {
-        $request['user_id'] = auth()->user()->id;
-        return $this->plutoTableStateService->getState($request->all());
+        $requestInfo = $request->all();
+
+        if (!array_key_exists('user_id', $requestInfo)) {
+            $requestInfo['user_id'] = auth()->user()->id;
+        }
+
+        return $this->plutoTableStateService->getState($requestInfo);
     }
 }
