@@ -496,6 +496,11 @@ Route::middleware(['auth:api', 'check.permission', 'downtime.user'])->group(func
     });
 
     Route::prefix('pluto-table-state')->group(function () {
+        Route::get('/', [PlutoTableStateController::class, 'getState']);
+        Route::post('/', [PlutoTableStateController::class, 'saveState']);
+        // XXX: these two below are only kept for compatibility reasons,
+        // they should be removed when the merge of the updates on the frontend
+        // is complete.
         Route::put('/get', [PlutoTableStateController::class, 'getState']);
         Route::put('/save', [PlutoTableStateController::class, 'saveState']);
     });

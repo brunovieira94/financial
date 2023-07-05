@@ -43,9 +43,17 @@ class PlutoTableStateService
 
         $table = $this->getOrCreateTable($requestInfo);
 
+        if (array_key_exists('rows_per_page', $requestInfo)) {
+            $table->update(['rows_per_page' => $requestInfo['rows_per_page']]);
+        }
+
+        if (array_key_exists('table_size_type', $requestInfo)) {
+            $table->update(['table_size_type' => $requestInfo['table_size_type']]);
+        }
+
         $this->saveColumnsStates($requestInfo, $table);
 
-        return response()->json(['sucess' => 'Estado salvo com sucesso!'], 200);
+        return response()->json(['success' => 'Estado salvo com sucesso!'], 200);
     }
 
     private function getOrCreateTable($requestInfo)
