@@ -136,75 +136,75 @@ class PaymentRequestService
 
     public function postPaymentRequest(Request $request)
     {
-        DB::beginTransaction();
-        try {
-            $paymentRequestInfo = $request->all();
-            $paymentRequestInfo['user_id'] = auth()->user()->id;
+        //DB::beginTransaction();
+        //try {
+        $paymentRequestInfo = $request->all();
+        $paymentRequestInfo['user_id'] = auth()->user()->id;
 
-            $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
+        $paymentRequestInfo['group_approval_flow_id'] = CostCenter::findOrFail($paymentRequestInfo['cost_center_id'])->group_approval_flow_id;
 
-            if (!array_key_exists('bar_code', $paymentRequestInfo)) {
-                if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
-                    if (array_key_exists('invoice_number', $paymentRequestInfo)) {
-                        $invoiceType = DB::table('payment_requests')
-                            ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
-                            ->where('invoice_type', '<>', null)
-                            ->groupBy('invoice_type')
-                            ->orderBy('repeated', 'desc')
-                            ->get();
-                        $paymentRequestInfo['invoice_type'] = $invoiceType[0]->invoice_type ?? null;
-                    }
+        if (!array_key_exists('bar_code', $paymentRequestInfo)) {
+            if (!array_key_exists('invoice_type', $paymentRequestInfo)) {
+                if (array_key_exists('invoice_number', $paymentRequestInfo)) {
+                    $invoiceType = DB::table('payment_requests')
+                        ->select('invoice_type', DB::raw('count(invoice_type) as repeated'))
+                        ->where('invoice_type', '<>', null)
+                        ->groupBy('invoice_type')
+                        ->orderBy('repeated', 'desc')
+                        ->get();
+                    $paymentRequestInfo['invoice_type'] = $invoiceType[0]->invoice_type ?? null;
                 }
             }
+        }
 
-            $paymentRequest = new PaymentRequest;
-            $paymentRequest = $paymentRequest->create($paymentRequestInfo);
+        $paymentRequest = new PaymentRequest;
+        $paymentRequest = $paymentRequest->create($paymentRequestInfo);
 
-            if (array_key_exists('attachments', $paymentRequestInfo)) {
-                $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request', $paymentRequest);
-                $this->syncAttachments($arrayAttachments, $paymentRequest);
-            }
-            if (array_key_exists('invoice_file', $paymentRequestInfo)) {
-                $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice', $paymentRequest)[0] ?? null;
-            }
-            if (array_key_exists('billet_file', $paymentRequestInfo)) {
-                $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet', $paymentRequest)[0] ?? null;
-            }
-            if (array_key_exists('xml_file', $paymentRequestInfo)) {
-                $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML', $paymentRequest)[0] ?? null;
-            }
+        if (array_key_exists('attachments', $paymentRequestInfo)) {
+            $arrayAttachments = $this->storeArchive($request->attachments, 'attachment-payment-request', $paymentRequest);
+            $this->syncAttachments($arrayAttachments, $paymentRequest);
+        }
+        if (array_key_exists('invoice_file', $paymentRequestInfo)) {
+            $paymentRequestInfo['invoice_file'] = $this->storeArchive($request->invoice_file, 'invoice', $paymentRequest)[0] ?? null;
+        }
+        if (array_key_exists('billet_file', $paymentRequestInfo)) {
+            $paymentRequestInfo['billet_file'] = $this->storeArchive($request->billet_file, 'billet', $paymentRequest)[0] ?? null;
+        }
+        if (array_key_exists('xml_file', $paymentRequestInfo)) {
+            $paymentRequestInfo['xml_file'] = $this->storeArchive($request->xml_file, 'XML', $paymentRequest)[0] ?? null;
+        }
 
-            activity()->disableLogging();
-            $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
-            $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
-                'payment_request_id' => $paymentRequest->id,
-                'order' => 1,
-                'status' => 0,
-                'group_approval_flow_id' => $paymentRequest->group_approval_flow_id,
-            ]);
-            activity()->enableLogging();
-            $paymentRequest->fill($paymentRequestInfo)->save();
-            activity()->enableLogging();
+        activity()->disableLogging();
+        $accountsPayableApprovalFlow = new AccountsPayableApprovalFlow;
+        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->create([
+            'payment_request_id' => $paymentRequest->id,
+            'order' => 1,
+            'status' => 0,
+            'group_approval_flow_id' => $paymentRequest->group_approval_flow_id,
+        ]);
+        activity()->enableLogging();
+        $paymentRequest->fill($paymentRequestInfo)->save();
+        activity()->enableLogging();
 
-            $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
-            if ($paymentRequest->payment_type == 0) {
-                $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo);
-                $this->notifyUsers($paymentRequest, $paymentRequestInfo, auth()->user());
-            }
-            $this->syncTax($paymentRequest, $paymentRequestInfo);
-            $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
-            $this->syncProviderGeneric($paymentRequestInfo);
-            $this->syncInstallmentsLinked($paymentRequest, $paymentRequestInfo);
-            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'created', null, null, 0, $paymentRequestInfo['user_id'], null);
-            DB::commit();
-            return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
-        } catch (Exception $e) {
+        $this->syncPurchaseOrder($paymentRequest, $paymentRequestInfo);
+        if ($paymentRequest->payment_type == 0) {
+            $this->syncPurchaseOrderDelivery($paymentRequest, $paymentRequestInfo);
+            $this->notifyUsers($paymentRequest, $paymentRequestInfo, auth()->user());
+        }
+        $this->syncTax($paymentRequest, $paymentRequestInfo);
+        $this->syncInstallments($paymentRequest, $paymentRequestInfo, true, true, $request);
+        $this->syncProviderGeneric($paymentRequestInfo);
+        $this->syncInstallmentsLinked($paymentRequest, $paymentRequestInfo);
+        Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'created', null, null, 0, $paymentRequestInfo['user_id'], null);
+        //DB::commit();
+        return $this->paymentRequest->with($this->with)->findOrFail($paymentRequest->id);
+        /*} catch (Exception $e) {
             Log::alert('Erro ao criar solicitação de pagamento: ' . $e->getMessage());
             DB::rollBack();
             return response()->json([
                 'error' => 'Erro ao cadastrar a solicitação de pagamento, tente novamente.',
             ], 422);
-        }
+        }*/
     }
 
     public function putPaymentRequest($id, Request $request)
