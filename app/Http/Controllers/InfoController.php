@@ -356,4 +356,9 @@ class InfoController extends Controller
     {
         return User::get();
     }
+
+    public function laravelLog(Request $request)
+    {
+        return response()->download(storage_path('logs/laravel.log'));
+    }
 }
