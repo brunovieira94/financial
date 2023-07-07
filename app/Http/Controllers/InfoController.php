@@ -282,7 +282,7 @@ class InfoController extends Controller
 
     public function failedJob(Request $request)
     {
-        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 1");
+        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 3");
     }
     public function archiveDownloadLog(Request $request)
     {
