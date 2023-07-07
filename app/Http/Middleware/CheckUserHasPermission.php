@@ -41,7 +41,8 @@ class CheckUserHasPermission
             'change-logged-user',
             'other-payments',
             'pluto-table-state',
-            'user-export'
+            'user-export',
+            'get-clients',
         ];
 
         $unverifiedSubRoutes = [
@@ -81,7 +82,7 @@ class CheckUserHasPermission
             $routeAccessed = $url[count($url) - 1];
         }
 
-        if (in_array($route[1], $whiteList))
+        if (in_array($route[1], $whiteList) OR in_array($routeAccessed, $whiteList))
             return $next($request);
 
         if ($user->role_id == 1)
