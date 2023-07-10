@@ -6,5 +6,6 @@ apps:
     instances: 1
     args:
       - queue:work
+      - --timeout=14800
       - --tries=5
       - --sleep=1
