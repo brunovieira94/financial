@@ -282,8 +282,12 @@ class InfoController extends Controller
 
     public function failedJob(Request $request)
     {
-        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT 3");
+        if (array_key_exists('id', $request->all())) {
+            return DB::select("SELECT * FROM failed_jobs WHERE id  = " . $request->id);
+        }
+        return DB::select("SELECT * FROM failed_jobs ORDER BY id DESC LIMIT " . ($request->limit ?? 1));
     }
+
     public function archiveDownloadLog(Request $request)
     {
         return AttachmentLogDownload::orderBy('id', 'desc')->limit(30)->get();
