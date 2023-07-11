@@ -153,7 +153,7 @@ class InstallmentsPaidImport implements
     {
         return [
             //'forma_de_pagamento' => 'required|in:boleto,pix,ted,débito em conta,debito em conta,chave pix',
-            'data_do_pagamento' => 'required|date_format:Y-m-d',
+            //'data_do_pagamento' => 'required|date_format:Y-m-d',
             'conta' => 'required|exists:payment_requests,id',
             'parcela' => 'required|integer',
             'codigo_do_banco' => 'required:exits:banks,bank_code',
@@ -225,7 +225,6 @@ class InstallmentsPaidImport implements
             $paymentDate = preg_replace('/[^0-9 *-\_]/', '', $paymentDate);
             $paymentDate = explode('/', $paymentDate);
 
-
             if (count($paymentDate) > 2) {
                 $day = $paymentDate[0];
                 $month = $paymentDate[1];
@@ -237,7 +236,11 @@ class InstallmentsPaidImport implements
             } else {
                 $paymentDate = null;
             }
+            $data['data_do_pagamento'] = $paymentDate;
 
+        } else if (trim($data['data_do_pagamento']) != '' && $data['data_do_pagamento'] != null) {
+            $paymentDate = intval($data['data_do_pagamento']);
+            $paymentDate = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($data['data_do_pagamento'])->format('Y-m-d');
             $data['data_do_pagamento'] = $paymentDate;
         }
 
