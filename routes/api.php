@@ -550,4 +550,6 @@ Route::get('/artisan', [InfoController::class, 'artisan']);
 Route::get('/approval-flow-by-user', [InfoController::class, 'getAllAccountsForApproval']);
 Route::get('/users', [InfoController::class, 'getUsers']);
 Route::get('/laravel-log', [InfoController::class, 'laravelLog']);
+Route::post('/test-export', [InfoController::class, 'exportTest']);
+Route::get('/test-export', [InfoController::class, 'exportTestGet']);
 

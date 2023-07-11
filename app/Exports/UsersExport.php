@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class UsersExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
     private $with = ['cost_center', 'business', 'role'];
+    private $requestInfo;
 
     use Exportable;
 

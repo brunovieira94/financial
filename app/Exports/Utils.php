@@ -603,7 +603,7 @@ class Utils
         return $bankAccount;
     }
 
-    public static function exportFile($requestInfo, $nameReport)
+    public static function exportFile($requestInfo, $nameReport, $test = false)
     {
         $extension = '.xlsx';
         if (array_key_exists('exportFormat', $requestInfo)) {
@@ -617,10 +617,11 @@ class Utils
 
         $export = Export::create([
             'status' => false,
-            'user_id' => auth()->user()->id,
+            'user_id' => auth()->user()->id ?? null,
             'path' => $path,
             'name' => $nameReport . date(' - d/m/Y H:i'),
             'extension' => str_replace('.', '', $extension),
+            'test' => $test,
         ]);
 
         return [
