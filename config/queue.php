@@ -32,14 +32,14 @@ return [
 
         'sync' => [
             'driver' => 'sync',
-            'timeout' => 14800,
+            'timeout' => 3600,
         ],
 
         'database' => [
             'driver' => 'database',
             'table' => 'jobs',
             'queue' => 'default',
-            'retry_after' => 15000,
+            'retry_after' => 3700,
             'after_commit' => false,
         ],
 
@@ -47,7 +47,7 @@ return [
             'driver' => 'beanstalkd',
             'host' => 'localhost',
             'queue' => 'default',
-            'retry_after' => 15000,
+            'retry_after' => 3700,
             'block_for' => 0,
             'after_commit' => false,
         ],
@@ -67,7 +67,7 @@ return [
             'driver' => 'redis',
             'connection' => 'default',
             'queue' => env('REDIS_QUEUE', 'default'),
-            'retry_after' => 15000,
+            'retry_after' => 3700,
             'block_for' => null,
             'after_commit' => false,
         ],
