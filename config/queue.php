@@ -32,6 +32,7 @@ return [
 
         'sync' => [
             'driver' => 'sync',
+            'timeout' => 14800,
         ],
 
         'database' => [
