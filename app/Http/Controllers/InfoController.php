@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TestExport;
+use App\Exports\Utils as ExportsUtils;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
+use App\Jobs\NotifyUserOfCompletedExport;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
 use App\Models\AttachmentLogDownload;
+use App\Models\Export;
 use App\Models\LogActivity;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
@@ -364,5 +368,25 @@ class InfoController extends Controller
     public function laravelLog(Request $request)
     {
         return response()->download(storage_path('logs/laravel.log'));
+    }
+
+    public function exportTest(Request $request)
+    {
+        $exportFile = ExportsUtils::exportFile($request->all(), 'testExport', true);
+
+        //dd($exportFile);
+
+        (new TestExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        ]);
+
+        return response()->json([
+            'sucess' => $exportFile['export']->id
+        ], 200);
+    }
+
+    public function exportTestGet(Request $request)
+    {
+        return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
     }
 }
