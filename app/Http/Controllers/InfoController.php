@@ -367,6 +367,13 @@ class InfoController extends Controller
 
     public function laravelLog(Request $request)
     {
+        if (array_key_exists('clear', $request->all()) && $request->clear == true) {
+            $logFilePath = storage_path('logs/laravel.log');
+            if (file_exists($logFilePath)) {
+                unlink($logFilePath);
+                return response('log apagado!');
+            }
+        }
         return response()->download(storage_path('logs/laravel.log'));
     }
 
