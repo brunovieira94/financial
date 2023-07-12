@@ -15,6 +15,7 @@ class TestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHea
 {
     use Exportable;
     private $requestInfo;
+    private $timeout = 3600;
 
     public function __construct($requestInfo)
     {
