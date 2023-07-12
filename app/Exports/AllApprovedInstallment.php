@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Exports\Utils as ExportsUtils;
 use App\Models\PaymentRequestHasInstallments;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Services\Utils;
 use Config;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -29,7 +30,7 @@ class AllApprovedInstallment implements FromCollection, ShouldAutoSize, WithMapp
     public function collection()
     {
         $requestInfo = $this->requestInfo;
-        $installment = PaymentRequestHasInstallments::with(['payment_request', 'group_payment', 'bank_account_provider', 'bank_account_company', 'group_payment_received']);
+        $installment = PaymentRequestHasInstallmentsClean::with(ExportsUtils::withModelDefaultExport('payment-request-installments'));
 
         $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query->whereHas('approval', function ($query) use ($requestInfo) {

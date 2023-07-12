@@ -10,6 +10,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use App\Exports\Utils as ExportsUtils;
+use App\Models\AccountsPayableApprovalFlowClean;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
@@ -18,7 +19,8 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
     private $totalTax;
     private $fileName;
 
-    public function __construct($requestInfo, $fileName){
+    public function __construct($requestInfo, $fileName)
+    {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
     }
@@ -28,14 +30,14 @@ class AllPaymentRequestFinishedExport implements FromCollection, ShouldAutoSize,
     public function collection()
     {
         $requestInfo = $this->requestInfo;
-        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request']);
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlowClean::with(ExportsUtils::withModelDefaultExport('accounts-payable-approval-flow'));
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
         return $accountsPayableApprovalFlow
-        ->where('status', 7)
-        ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->get();
+            ->where('status', 7)
+            ->whereRelation('payment_request', 'deleted_at', '=', null)
+            ->get();
     }
 
     public function map($accountsPayableApprovalFlow): array

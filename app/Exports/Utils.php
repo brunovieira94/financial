@@ -703,4 +703,20 @@ class Utils
 
         return '';
     }
+
+    public static function withModelDefaultExport($modelName)
+    {
+        switch ($modelName) {
+            case 'payment-request':
+                return ['company', 'business', 'chart_of_accounts', 'cost_center', 'provider', 'cnab_payment_request.cnab_generated', 'currency', 'currency_old', 'installments', 'user', 'approval', 'tax'];
+                break;
+            case 'payment-request-installments':
+                return ['cnab_generated_installment', 'payment_request.company', 'payment_request.business', 'payment_request.chart_of_accounts', 'payment_request.cost_center', 'payment_request.provider', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.bank_account_provider', 'payment_request.user', 'payment_request.approval', 'bank_account_company', 'group_payment_received', 'bank_account_provider'];
+                break;
+            case 'accounts-payable-approval-flow':
+                return ['payment_request.company', 'payment_request.business', 'payment_request.chart_of_accounts', 'payment_request.cost_center', 'payment_request.provider', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.user', 'payment_request.approval'];
+            default:
+            return [];
+        }
+    }
 }

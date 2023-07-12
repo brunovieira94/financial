@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Exports\Utils as ExportsUtils;
 use App\Models\PaymentRequest;
+use App\Models\PaymentRequestClean;
 use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\Exportable;
@@ -19,7 +20,8 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
     private $totalTax;
     private $fileName;
 
-    public function __construct($requestInfo, $fileName){
+    public function __construct($requestInfo, $fileName)
+    {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
     }
@@ -28,7 +30,7 @@ class AllDuePaymentRequestExport implements FromCollection, ShouldAutoSize, With
 
     public function collection()
     {
-        $result = PaymentRequest::with(['currency_old', 'tax', 'approval', 'installments', 'provider', 'bank_account_provider', 'business', 'cost_center', 'chart_of_accounts', 'currency', 'user']);
+        $result = PaymentRequestClean::with(ExportsUtils::withModelDefaultExport('payment-request'));
         $requestInfo = $this->requestInfo;
         $result = Utils::baseFilterReportsPaymentRequest($result, $requestInfo);
         $result = $result->whereHas('installments', function ($query) use ($requestInfo) {
