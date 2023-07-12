@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use App\Exports\Utils as ExportsUtils;
+use App\Models\AccountsPayableApprovalFlowClean;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
 class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
@@ -35,7 +36,7 @@ class AllDisapprovedPaymentRequestExport implements FromCollection, ShouldAutoSi
         if (!$approvalFlowUserOrder)
             return response([], 404);
         $requestInfo = $this->requestInfo;
-        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request', 'approval_flow', 'reason_to_reject']);
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlowClean::with('accounts-payable-approval-flow');
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });

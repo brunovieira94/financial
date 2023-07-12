@@ -44,7 +44,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         if (!$approvalFlowUserOrder)
             return response([], 404);
 
-        $paymentRequest = PaymentRequest::with(['provider', 'company']);
+        $paymentRequest = PaymentRequestClean::with(['approval']);
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
 
         $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
@@ -72,7 +72,7 @@ class AccountsPayableApprovalFlowExport implements FromCollection, ShouldAutoSiz
         $paymentRequestIDs = $paymentRequest->get('id');
         $paymentRequestIDs = $paymentRequest->pluck('id')->toArray();
         $ids = array_merge($ids, $paymentRequestIDs);
-        $paymentRequest = PaymentRequestClean::withoutGlobalScopes()->whereIn('id', $ids)->with($this->paymentRequestCleanWith);
+        $paymentRequest = PaymentRequestClean::withoutGlobalScopes()->whereIn('id', $ids)->with(ExportsUtils::withModelDefaultExport('payment-request'));
         $requestInfo['orderBy'] = $requestInfo['orderBy'] ?? 'id';
         return $paymentRequest->get();
     }

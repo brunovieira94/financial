@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Exports\Utils as ExportsUtils;
 use App\Models\AccountsPayableApprovalFlow;
+use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\FormPayment;
 use App\Services\Utils;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -31,7 +32,7 @@ class AllApprovedPaymentRequestExport implements FromCollection, ShouldAutoSize,
     public function collection()
     {
         $requestInfo = $this->requestInfo;
-        $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request']);
+        $accountsPayableApprovalFlow = AccountsPayableApprovalFlowClean::with(ExportsUtils::withModelDefaultExport('accounts-payable-approval-flow'));
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->where('status', 1);
         $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
