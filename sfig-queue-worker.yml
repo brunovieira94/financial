@@ -9,3 +9,4 @@ apps:
       - --timeout=3600
       - --tries=5
       - --sleep=1
+      - --memory=512
