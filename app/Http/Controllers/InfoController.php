@@ -381,8 +381,6 @@ class InfoController extends Controller
     {
         $exportFile = ExportsUtils::exportFile($request->all(), 'testExport', true);
 
-        //dd($exportFile);
-
         (new TestExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
             new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
         ]);
