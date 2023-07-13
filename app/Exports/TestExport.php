@@ -8,10 +8,9 @@ use Maatwebsite\Excel\Concerns\Exportable;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Collection;
 
-class TestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class TestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings
 {
     use Exportable;
     private $requestInfo;

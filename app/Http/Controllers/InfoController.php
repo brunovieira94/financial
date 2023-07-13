@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\TestExport;
 use App\Exports\Utils as ExportsUtils;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
+use App\Jobs\ExportJob;
 use App\Jobs\NotifyUserOfCompletedExport;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
@@ -381,9 +382,11 @@ class InfoController extends Controller
     {
         $exportFile = ExportsUtils::exportFile($request->all(), 'testExport', true);
 
-        (new TestExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        //(new TestExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+        //    new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        //]);
+
+        ExportJob::dispatch($request->all(), $exportFile);
 
         return response()->json([
             'sucess' => $exportFile['export']->id

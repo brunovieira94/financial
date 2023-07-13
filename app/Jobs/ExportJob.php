@@ -3,12 +3,15 @@
 namespace App\Jobs;
 
 use App\Exports\TestExport;
+use App\Models\Export;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Http\Request;
+use Storage;
 
 class ExportJob implements ShouldQueue
 {
@@ -27,8 +30,11 @@ class ExportJob implements ShouldQueue
     {
         $request = $this->request;
         $exportFile = $this->exportFile;
-
-        (new TestExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
-        new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']);
+        (new TestExport($request))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        Export::where('id', $exportFile['id'])
+            ->update([
+                'status' => 1,
+                'link' => Storage::disk('s3')->temporaryUrl($exportFile['path'], now()->addDays(2))
+            ]);
     }
 }

@@ -625,10 +625,11 @@ class Utils
         ]);
 
         return [
+            'id' => $export->id,
             'path' => $path,
             'export' => $export,
             'extension' => $extension,
-            'nameFile' => $nameFile
+            'nameFile' => $nameFile,
         ];
     }
 
