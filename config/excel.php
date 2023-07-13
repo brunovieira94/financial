@@ -4,13 +4,13 @@
 
 return [
     'temporary_files' => [
-        'local_path'          => storage_path('app/export'),
+        //'local_path'          => storage_path('app/export'),
         'remote_disk'         => 's3',
         'remote_prefix'       => null,
         'force_resync_remote' => null,
     ],
 
     'exports' => [
-        'chunk_size'          => 1000,
+        'chunk_size'          => 2000,
     ],
 ];
