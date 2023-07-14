@@ -11,6 +11,6 @@ return [
     ],
 
     'exports' => [
-        'chunk_size'          => 150000,
+        'chunk_size'          => 3000,
     ],
 ];
