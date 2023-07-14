@@ -14,7 +14,7 @@ class Export extends Model
 {
     use SoftDeletes;
     protected $table='export';
-    protected $fillable = ['status','link','user_id', 'path', 'name', 'extension', 'test'];
+    protected $fillable = ['status','link','user_id', 'path', 'name', 'extension', 'test', 'error'];
 
     public function user(){
         return $this->hasOne(User::class, 'id', 'user_id');
