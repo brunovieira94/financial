@@ -12,6 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Http\Request;
 use Storage;
+use Throwable;
 
 class ExportJob implements ShouldQueue
 {
@@ -35,6 +36,15 @@ class ExportJob implements ShouldQueue
             ->update([
                 'status' => 1,
                 'link' => Storage::disk('s3')->temporaryUrl($exportFile['path'], now()->addDays(2))
+            ]);
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        Export::where('id', $this->exportFile['id'])
+            ->update([
+                'status' => 5,
+                'error' => $exception->getMessage(),
             ]);
     }
 }
