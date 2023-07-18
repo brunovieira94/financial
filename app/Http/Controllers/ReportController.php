@@ -21,18 +21,28 @@ use App\Exports\Utils as UtilsExport;
 use App\Jobs\NotifyUserOfCompletedExport;
 use App\Models\Export;
 use App\Exports\AllApprovedInstallmentExportForPaidImport;
-
+use App\Exports\PaymentRequestExport;
+use App\Exports\PaymentRequestExportQueue;
+use App\Exports\PaymentRequestHasInstalmentExport;
+use App\Exports\PaymentRequestHasInstalmentExportQueue;
+use App\Models\PaymentRequestClean;
+use App\Models\PaymentRequestHasInstallmentsClean;
+use App\Services\Utils;
 use DB;
 
 class ReportController extends Controller
 {
 
     private $reportService;
+    private $paymentRequest;
+    private $installment;
 
-    public function __construct(ReportService $reportService)
+    public function __construct(ReportService $reportService, PaymentRequestClean $paymentRequest, PaymentRequestHasInstallmentsClean $installment)
     {
         $this->reportService = $reportService;
-        ini_set('memory_limit', '1024M');
+        $this->paymentRequest = $paymentRequest;
+        $this->installment = $installment;
+        ini_set('memory_limit', '2048M');
     }
 
     public function duePaymentRequest(Request $request)
@@ -49,9 +59,27 @@ class ReportController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'contasVencidas');
 
-        (new AllDuePaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        $paymentRequest = $this->paymentRequest::query();
+        $requestInfo = $request->all();
+        $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+        $paymentRequest = $paymentRequest->whereHas('installments', function ($query) use ($requestInfo) {
+            if (array_key_exists('from', $requestInfo)) {
+                $query = $query->where('extension_date', '>=', $requestInfo['from']);
+            }
+            if (array_key_exists('to', $requestInfo)) {
+                $query = $query->where('extension_date', '<=', $requestInfo['to']);
+            }
+            if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
+                $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+            }
+        });
+
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -62,9 +90,28 @@ class ReportController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'parcelasVencidas');
 
-        (new DueInstallmentsExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        $requestInfo = $request->all();
+        $installment = $this->installment::query();
+        $installment = $installment->with(UtilsExport::withModelDefaultExport('payment-request-installments'));
+        $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+            if (array_key_exists('from', $requestInfo)) {
+                $query = $query->where('extension_date', '>=', $requestInfo['from']);
+            }
+            if (array_key_exists('to', $requestInfo)) {
+                $query = $query->where('extension_date', '<=', $requestInfo['to']);
+            }
+            if (!array_key_exists('to', $requestInfo) && !array_key_exists('from', $requestInfo)) {
+                $query = $query->whereBetween('extension_date', [now(), now()->addMonths(1)]);
+            }
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
+        });
+        $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
+
+        if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestHasInstalmentExportQueue($exportFile['nameFile'], $installment->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -87,9 +134,18 @@ class ReportController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'contasAprovadas');
 
-        (new AllApprovedPaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        $paymentRequest = $this->paymentRequest::query();
+        $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+        $paymentRequest = $paymentRequest->whereHas('approval', function ($query) {
+            $query = $query->where('status', 1);
+        });
+
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -104,21 +160,32 @@ class ReportController extends Controller
     public function approvedInstallmentExport(Request $request)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAprovadas');
+        $requestInfo = $request->all();
+        $installment = $this->installment::query();
+        $installment = $installment->with(UtilsExport::withModelDefaultExport('payment-request-installments'));
+        $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query->whereHas('approval', function ($query) use ($requestInfo) {
+                $query->where('status', 1);
+            });
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
+        });
+        $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
 
         if (array_key_exists('isForImportPayment', $request->all()) && $request->all()['isForImportPayment'] == true) {
             (new AllApprovedInstallmentExportForPaidImport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', \Maatwebsite\Excel\Excel::XLSX)->chain([
                 new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
             ]);
         } else {
-            (new AllApprovedInstallment($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-                new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-            ]);
+            if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+                (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            } else {
+                (new PaymentRequestHasInstalmentExportQueue($exportFile['nameFile'], $installment->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            }
         }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
         ], 200);
-
     }
 
     public function approvedInstallmentForImportPaymentExport(Request $request)
@@ -166,9 +233,19 @@ class ReportController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'contasDeletadas');
 
-        (new AllPaymentRequestsDeletedExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        $paymentRequest = $this->paymentRequest::query();
+        $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+        $paymentRequest = $paymentRequest->withTrashed();
+        $paymentRequest = $paymentRequest->whereHas('approval', function ($query) {
+            $query = $query->where('status', 3);
+        });
+
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -202,9 +279,15 @@ class ReportController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'contasAPagar');
 
-        (new BillsToPayExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        $paymentRequest = $this->paymentRequest::query();
+        $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -219,10 +302,19 @@ class ReportController extends Controller
     public function installmentsPayableExport(Request $request)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAPagar');
+        $requestInfo = $request->all();
+        $installment = $this->installment::query();
+        $installment = $installment->with(UtilsExport::withModelDefaultExport('payment-request-installments'));
+        $installment = $installment->whereHas('payment_request', function ($query) use ($requestInfo) {
+            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo, true);
+        });
+        $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
 
-        (new InstallmentsPayableExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestHasInstalmentExportQueue($exportFile['nameFile'], $installment->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -238,9 +330,18 @@ class ReportController extends Controller
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'contasPagas');
 
-        (new AllPaymentRequestPaidExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        $paymentRequest = $this->paymentRequest::query();
+        $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+        $paymentRequest = $paymentRequest->whereHas('approval', function ($query) {
+            $query = $query->where('status', 4);
+        });
+
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -325,5 +426,4 @@ class ReportController extends Controller
     {
         return Export::findOrFail($id);
     }
-
 }
