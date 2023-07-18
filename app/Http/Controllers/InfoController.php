@@ -381,12 +381,9 @@ class InfoController extends Controller
     public function exportTest(Request $request)
     {
         $exportFile = ExportsUtils::exportFile($request->all(), 'testExport', true);
+        $shouldQueue = true;
 
-        //(new TestExport($request->all()))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-        //    new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        //]);
-
-        ExportJob::dispatch($request->all(), $exportFile);
+        (new TestExport($request->all(), $shouldQueue, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
 
         return response()->json([
             'sucess' => $exportFile['export']->id
