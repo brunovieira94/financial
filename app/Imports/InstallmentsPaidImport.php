@@ -67,7 +67,7 @@ class InstallmentsPaidImport implements
 
     public function chunkSize(): int
     {
-        return 1000;
+        return 45;
     }
 
     public function batchSize(): int
