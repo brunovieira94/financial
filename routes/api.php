@@ -552,4 +552,5 @@ Route::get('/users', [InfoController::class, 'getUsers']);
 Route::get('/laravel-log', [InfoController::class, 'laravelLog']);
 Route::post('/test-export', [InfoController::class, 'exportTest']);
 Route::get('/test-export', [InfoController::class, 'exportTestGet']);
+Route::get('/test-provider', [InfoController::class, 'getProvider']);
 

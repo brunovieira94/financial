@@ -17,6 +17,7 @@ use App\Models\LogActivity;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasTax;
+use App\Models\Provider;
 use App\Models\TemporaryLogUploadPaymentRequest;
 use App\Models\TypeOfTax;
 use App\Models\User;
@@ -393,5 +394,12 @@ class InfoController extends Controller
     public function exportTestGet(Request $request)
     {
         return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
+    }
+
+    public function getProvider(Request $request)
+    {
+        $provider = new Provider;
+        $provider = Utils::search($provider, $request->all());
+        return Utils::pagination($provider->with(['bank_account', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city', 'attachments']), $request->all());
     }
 }
