@@ -509,8 +509,15 @@ class BillingService
             $suggestionReason = $suggestionReason . ' | Reserva não emitida no Admin';
         }
         //if($this->billing->where('id', '!=' , $billingId)->where('reserve', $billingInfo['reserve'])->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0,1])->first()){
-        if ($this->billing->where('id', '!=', $billingId)->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0, 1])->first()) {
-            $suggestionReason = $suggestionReason . ' | Reserva cadastrada em duplicidade';
+        $duplicated = $this->billing->where('id', '!=', $billingId)->where('cangooroo_service_id', $billingInfo['cangooroo_service_id'])->whereIn('approval_status', [0, 1])->get();
+        if (!empty($duplicated->toArray())) {
+            $sum = 0;
+            foreach ($duplicated as $dup) {
+                $sum += $dup['supplier_value'];
+            }
+            if ($sum + $billingInfo['supplier_value'] > $cangooroo['selling_price']){
+                $suggestionReason = $suggestionReason . ' | Reserva cadastrada em duplicidade';
+            }
         }
         if ($cangooroo['status'] == 'Cancelled') {
             $cancellationDate = (!$cangooroo['cancellation_date'] || strtotime($cangooroo['cancellation_date']) <= 1) ? $cangooroo['last_update'] : $cangooroo['cancellation_date'];
