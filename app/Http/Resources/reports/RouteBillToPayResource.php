@@ -35,7 +35,7 @@ class RouteBillToPayResource extends JsonResource
             'installment_link' => $this->installment_link,
             'advance' => $this->advance,
             'allow_binding' => $this->allow_binding,
-            'installments' => ReportsInstallmentsResource::collection($this->installments),
+            //'installments' => ReportsInstallmentsResource::collection($this->installments),
         ];
     }
 }

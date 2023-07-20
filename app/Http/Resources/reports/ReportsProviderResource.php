@@ -19,8 +19,8 @@ class ReportsProviderResource extends JsonResource
             'company_name' => $this->company_name,
             'trade_name' => $this->trade_name,
             'alias' => $this->alias,
-            'cnpj' => $this->cnpj,
-            'cpf' => $this->cpf,
+            //'cnpj' => $this->cnpj,
+            //'cpf' => $this->cpf,
         ];
     }
 }
