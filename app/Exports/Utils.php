@@ -605,7 +605,7 @@ class Utils
 
     public static function exportFile($requestInfo, $nameReport, $test = false)
     {
-        $extension = '.csv';
+        $extension = '.xlsx';
         if (array_key_exists('exportFormat', $requestInfo)) {
             if ($requestInfo['exportFormat'] == 'csv') {
                 $extension = '.csv';
