@@ -78,7 +78,14 @@ class ReportController extends Controller
         if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestExportQueue($paymentRequest->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -110,7 +117,14 @@ class ReportController extends Controller
         if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestHasInstalmentExportQueue($exportFile['nameFile'], $installment->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestHasInstalmentExportQueue($installment->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -133,7 +147,6 @@ class ReportController extends Controller
     public function approvedPaymentRequestExport(Request $request)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'contasAprovadas');
-
         $paymentRequest = $this->paymentRequest::query();
         $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
@@ -144,7 +157,14 @@ class ReportController extends Controller
         if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestExportQueue($paymentRequest->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -179,7 +199,14 @@ class ReportController extends Controller
             if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
                 (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
             } else {
-                (new PaymentRequestHasInstalmentExportQueue($exportFile['nameFile'], $installment->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+                UtilsExport::convertExportFormat($exportFile);
+                $exportFileDB = Export::findOrFail($exportFile['id']);
+                (new PaymentRequestHasInstalmentExportQueue($installment->get()))
+                    ->queue($exportFileDB->path, 's3')
+                    ->allOnQueue('default')
+                    ->chain([
+                        new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                    ]);
             }
         }
 
@@ -244,7 +271,14 @@ class ReportController extends Controller
         if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestExportQueue($paymentRequest->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -260,10 +294,14 @@ class ReportController extends Controller
     public function generatedCNABPaymentRequestCNABExport(Request $request)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'CnabGerados');
+        UtilsExport::convertExportFormat($exportFile);
+        $exportFileDB = Export::findOrFail($exportFile['id']);
 
-        (new AllGeneratedCNABPaymentRequestExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        (new AllGeneratedCNABPaymentRequestExport($request->all(), $exportFile['nameFile']))->queue($exportFileDB->path, 's3')
+            ->allOnQueue('default')
+            ->chain([
+                new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+            ]);
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -286,7 +324,14 @@ class ReportController extends Controller
         if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestExportQueue($paymentRequest->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -313,7 +358,14 @@ class ReportController extends Controller
         if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestHasInstalmentExportQueue($exportFile['nameFile'], $installment->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestHasInstalmentExportQueue($installment->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -340,7 +392,14 @@ class ReportController extends Controller
         if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
-            (new PaymentRequestExportQueue($exportFile['nameFile'], $paymentRequest->get(), $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+            UtilsExport::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestExportQueue($paymentRequest->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
         }
 
         return response()->json([
@@ -394,10 +453,14 @@ class ReportController extends Controller
     public function userApprovalsReportExport(Request $request)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'usuarioAprovacoes');
+        UtilsExport::convertExportFormat($exportFile);
+        $exportFileDB = Export::findOrFail($exportFile['id']);
 
-        (new UserApprovalsReportExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        (new UserApprovalsReportExport($request->all(), $exportFile['nameFile']))->queue($exportFileDB->path, 's3')
+            ->allOnQueue('default')
+            ->chain([
+                new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+            ]);
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -407,10 +470,14 @@ class ReportController extends Controller
     public function getCnabGenerateExport(Request $request, $id)
     {
         $exportFile = UtilsExport::exportFile($request->all(), 'cnabGerado');
+        UtilsExport::convertExportFormat($exportFile);
+        $exportFileDB = Export::findOrFail($exportFile['id']);
 
-        (new CnabGeneratedExport($request->all(), $id, $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
+        (new CnabGeneratedExport($request->all(), $id, $exportFile['nameFile']))->queue($exportFileDB->path, 's3')
+            ->allOnQueue('default')
+            ->chain([
+                new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+            ]);
 
         return response()->json([
             'sucess' => $exportFile['export']->id

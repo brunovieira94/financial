@@ -11,6 +11,7 @@ use App\Models\PaymentRequestHasInstallmentsThatHaveOtherPayments;
 use Carbon\Carbon;
 
 use Config;
+use Str;
 
 class Utils
 {
@@ -717,7 +718,19 @@ class Utils
             case 'accounts-payable-approval-flow':
                 return ['payment_request.company', 'payment_request.business', 'payment_request.chart_of_accounts', 'payment_request.cost_center', 'payment_request.provider', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.user', 'payment_request.approval'];
             default:
-            return [];
+                return [];
         }
+    }
+
+    public static function convertExportFormat($exportFile, $to = 'csv', $from = 'xlsx')
+    {
+        $exportFile['path'] = Str::replace('.' . $from, '.' . $to, $exportFile['path']);
+        Export::where('id', $exportFile['id'])
+            ->update(
+                [
+                    'extension' => 'csv',
+                    'path' => $exportFile['path'],
+                ]
+            );
     }
 }

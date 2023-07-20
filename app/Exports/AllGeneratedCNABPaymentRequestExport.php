@@ -4,15 +4,13 @@ namespace App\Exports;
 
 use App\Models\AccountsPayableApprovalFlow;
 use App\Services\Utils;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use Vitorccs\LaravelCsv\Concerns\Exportable;
+use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\WithHeadings;
+use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Config;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AllGeneratedCNABPaymentRequestExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class AllGeneratedCNABPaymentRequestExport implements FromCollection, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $totalTax;

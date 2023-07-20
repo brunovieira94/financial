@@ -4,27 +4,19 @@ namespace App\Exports;
 
 use App\Exports\Utils as ExportsUtils;
 use App\Models\Export;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Events\BeforeExport;
-use Maatwebsite\Excel\Concerns\WithEvents;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Vitorccs\LaravelCsv\Concerns\Exportable;
+use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\WithHeadings;
+use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Storage;
 
-class PaymentRequestExportQueue implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, WithEvents, ShouldQueue
+class PaymentRequestExportQueue implements FromCollection, WithMapping, WithHeadings
 {
-    private $fileName;
     private $paymentRequestClean;
-    private $exportFile;
 
-    public function __construct($fileName, $paymentRequestClean, $exportFile)
+    public function __construct($paymentRequestClean)
     {
-        $this->fileName = $fileName;
         $this->paymentRequestClean = $paymentRequestClean;
-        $this->exportFile = $exportFile;
     }
 
     use Exportable;
@@ -43,21 +35,4 @@ class PaymentRequestExportQueue implements FromCollection, ShouldAutoSize, WithM
     {
         return ExportsUtils::exportPaymentRequestColumn();
     }
-
-    public function registerEvents(): array
-    {
-        return [
-            BeforeExport::class => function (BeforeExport $event) {
-                Export::where('id', $this->exportFile['id'])
-                    ->update([
-                        'status' => 1,
-                        'link' => Storage::disk('s3')->temporaryUrl($this->exportFile['path'], now()->addDays(2))
-                    ]);
-            },
-            BeforeWriting::class => function (BeforeWriting $event) {
-                // Executar ações adicionais antes de escrever no arquivo
-            },
-        ];
-    }
-
 }
