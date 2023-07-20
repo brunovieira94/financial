@@ -28,6 +28,7 @@ class ReportsInstallmentsResource extends JsonResource
             'parcel_number' => $this->bar_code,
             'extension_date' => $this->extension_date,
             'due_date' => $this->due_date,
+            'note' => $this->note,
             'bank_account_provider' => new ReportsInstallmentBankProviderResource($this->bank_account_provider),
         ];
     }
