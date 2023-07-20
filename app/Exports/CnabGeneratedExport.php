@@ -12,16 +12,15 @@ use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\UserHasPaymentRequest;
 use App\Services\Utils;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use Vitorccs\LaravelCsv\Concerns\Exportable;
+use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\WithHeadings;
+use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class CnabGeneratedExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class CnabGeneratedExport implements FromCollection, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $id;

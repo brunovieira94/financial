@@ -6,14 +6,12 @@ use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\PaymentRequestHasInstallments;
 use App\Services\Utils;
 use Config;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Vitorccs\LaravelCsv\Concerns\Exportable;
+use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\WithHeadings;
+use Vitorccs\LaravelCsv\Concerns\WithMapping;
 
-class UserApprovalsReportExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class UserApprovalsReportExport implements FromCollection, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $filterCanceled = false;
