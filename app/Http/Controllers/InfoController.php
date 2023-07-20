@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\TestExport;
 use App\Exports\Utils as ExportsUtils;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
+use App\Http\Resources\reports\RouteBillToPayResource;
 use App\Jobs\ExportJob;
 use App\Jobs\NotifyUserOfCompletedExport;
 use App\Models\AccountsPayableApprovalFlow;
@@ -38,6 +39,14 @@ use Storage;
 class InfoController extends Controller
 {
     private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
+    private $accountsPayableApprovalFlowClean;
+    private $paymentRequestClean;
+
+    public function __construct(AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean)
+    {
+        $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
+        $this->paymentRequestClean = $paymentRequestClean;
+    }
 
     public function duplicateInformationSystem(Request $request)
     {
@@ -406,5 +415,21 @@ class InfoController extends Controller
         $provider = new Provider;
         $provider = Utils::search($provider, $request->all());
         return Utils::pagination($provider->with(['bank_account', 'provider_category', 'user', 'chart_of_account', 'cost_center', 'city', 'attachments']), $request->all());
+    }
+
+    public function approvedPaymentRequest(Request $request)
+    {
+        $requestInfo = $request->all();
+        $paymentRequest = $this->paymentRequestClean->query();
+        $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
+        $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $query = $query->where('status', 1);
+        });
+
+        //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
+        return RouteBillToPayResource::collection(Utils::pagination($paymentRequest, $requestInfo));
+
+
     }
 }
