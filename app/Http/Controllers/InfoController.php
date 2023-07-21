@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BillsToPayExport;
 use App\Exports\PaymentRequestExport;
 use App\Exports\PaymentRequestExportQueue;
 use App\Exports\TestExport;
@@ -394,17 +395,10 @@ class InfoController extends Controller
     public function exportTest(Request $request)
     {
         $exportFile = ExportsUtils::exportFile($request->all(), 'testExport', true);
-
-        $paymentRequest = $this->paymentRequestClean::query();
-        $paymentRequest = $paymentRequest->with(ExportsUtils::withModelDefaultExport('payment-request'));
-        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
-
-        // if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
-        //     (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
-        // } else {
         ExportsUtils::convertExportFormat($exportFile);
         $exportFileDB = Export::findOrFail($exportFile['id']);
-        (new PaymentRequestExportQueue($paymentRequest->get()))
+
+        (new BillsToPayExport($request->all(), $exportFileDB->name))
             ->queue($exportFileDB->path, 's3')
             ->allOnQueue('default')
             ->chain([

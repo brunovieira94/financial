@@ -7,17 +7,15 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
 use App\Services\Utils;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use Vitorccs\LaravelCsv\Concerns\Exportable;
+use Vitorccs\LaravelCsv\Concerns\FromQuery;
+use Vitorccs\LaravelCsv\Concerns\WithHeadings;
+use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class BillsToPayExport implements FromQuery, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $totalTax;
@@ -32,12 +30,12 @@ class BillsToPayExport implements FromCollection, ShouldAutoSize, WithMapping, W
 
     use Exportable;
 
-    public function collection()
+    public function query()
     {
         $requestInfo = $this->requestInfo;
         $query = PaymentRequestClean::query()->with(ExportsUtils::withModelDefaultExport('payment-request'));
         $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
-        return $query->get();
+        return $query;
     }
 
     public function map($paymentRequest): array
