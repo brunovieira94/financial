@@ -49,7 +49,6 @@ class InfoController extends Controller
     {
         $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
         $this->paymentRequestClean = $paymentRequestClean;
-        ini_set('memory_limit', '-1');
     }
 
     public function duplicateInformationSystem(Request $request)
@@ -400,18 +399,18 @@ class InfoController extends Controller
         $paymentRequest = $paymentRequest->with(ExportsUtils::withModelDefaultExport('payment-request'));
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
 
-        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
-            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
-        } else {
-            ExportsUtils::convertExportFormat($exportFile);
-            $exportFileDB = Export::findOrFail($exportFile['id']);
-            (new PaymentRequestExportQueue($paymentRequest->get()))
-                ->queue($exportFileDB->path, 's3')
-                ->allOnQueue('default')
-                ->chain([
-                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
-                ]);
-        }
+        // if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+        //     (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        // } else {
+        ExportsUtils::convertExportFormat($exportFile);
+        $exportFileDB = Export::findOrFail($exportFile['id']);
+        (new PaymentRequestExportQueue($paymentRequest->get()))
+            ->queue($exportFileDB->path, 's3')
+            ->allOnQueue('default')
+            ->chain([
+                new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+            ]);
+        // }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
