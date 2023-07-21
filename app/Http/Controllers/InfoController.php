@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\TestExport;
 use App\Exports\Utils as ExportsUtils;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
+use App\Http\Resources\reports\RouteApprovedPaymentRequest;
 use App\Http\Resources\reports\RouteBillToPayResource;
 use App\Jobs\ExportJob;
 use App\Jobs\NotifyUserOfCompletedExport;
@@ -428,7 +429,7 @@ class InfoController extends Controller
         });
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
-        return RouteBillToPayResource::collection(Utils::pagination($paymentRequest, $requestInfo));
+        return RouteApprovedPaymentRequest::collection(Utils::pagination($paymentRequest, $requestInfo));
 
 
     }

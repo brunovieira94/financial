@@ -4,7 +4,7 @@ namespace App\Http\Resources\reports;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ReportsCnabPaymentRequestResource extends JsonResource
+class ReportsProviderAllResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -15,7 +15,12 @@ class ReportsCnabPaymentRequestResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'cnab_generated' =>  new ReportsCnabGeneratedResource($this->cnab_generated),
+            'id' => $this->id,
+            'company_name' => $this->company_name,
+            'trade_name' => $this->trade_name,
+            'alias' => $this->alias,
+            'cnpj' => $this->cnpj,
+            'cpf' => $this->cpf,
         ];
     }
 }
