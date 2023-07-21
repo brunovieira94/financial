@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PaymentRequestExport;
+use App\Exports\PaymentRequestExportQueue;
 use App\Exports\TestExport;
 use App\Exports\Utils as ExportsUtils;
 use App\Http\Resources\reports\RouteApprovalFlowByUserResource;
@@ -392,14 +394,23 @@ class InfoController extends Controller
     public function exportTest(Request $request)
     {
         $exportFile = ExportsUtils::exportFile($request->all(), 'testExport', true);
-        $shouldQueue = true;
 
-        (new TestExport($request->all(), $exportFile))
-            ->queue($exportFile['path'], 's3')
-            ->allOnQueue('default')
-            ->chain([
-                new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-            ]);
+        $paymentRequest = $this->paymentRequestClean::query();
+        $paymentRequest = $paymentRequest->with(ExportsUtils::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 2500)) {
+            (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
+        } else {
+            ExportsUtils::convertExportFormat($exportFile);
+            $exportFileDB = Export::findOrFail($exportFile['id']);
+            (new PaymentRequestExportQueue($paymentRequest->get()))
+                ->queue($exportFileDB->path, 's3')
+                ->allOnQueue('default')
+                ->chain([
+                    new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+                ]);
+        }
 
         return response()->json([
             'sucess' => $exportFile['export']->id
@@ -430,7 +441,5 @@ class InfoController extends Controller
 
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return RouteApprovedPaymentRequest::collection(Utils::pagination($paymentRequest, $requestInfo));
-
-
     }
 }
