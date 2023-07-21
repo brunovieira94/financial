@@ -7,15 +7,18 @@ use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallments;
 use App\Services\Utils;
-use Vitorccs\LaravelCsv\Concerns\Exportable;
-use Vitorccs\LaravelCsv\Concerns\FromQuery;
-use Vitorccs\LaravelCsv\Concerns\WithHeadings;
-use Vitorccs\LaravelCsv\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithMapping;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Support\Facades\DB;
 
-class BillsToPayExport implements FromQuery, WithMapping, WithHeadings
+class BillsToPayExport implements FromQuery, WithMapping, WithHeadings, ShouldAutoSize, ShouldQueue, WithChunkReading
 {
     private $requestInfo;
     private $totalTax;
@@ -46,5 +49,10 @@ class BillsToPayExport implements FromQuery, WithMapping, WithHeadings
     public function headings(): array
     {
         return ExportsUtils::exportPaymentRequestColumn();
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }
