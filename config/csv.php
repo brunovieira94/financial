@@ -57,7 +57,7 @@ return [
     | Configure the Job settings (timeout, attempts, etc)
     |
     */
-    'job_timeout' => 60 * 10,
+    'job_timeout' => 60 * 60,
     'job_attempts' => 1,
     'job_delay' => 0
 ];
