@@ -49,6 +49,7 @@ class InfoController extends Controller
     {
         $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
         $this->paymentRequestClean = $paymentRequestClean;
+        ini_set('memory_limit', '-1');
     }
 
     public function duplicateInformationSystem(Request $request)
