@@ -436,4 +436,9 @@ class InfoController extends Controller
         //whereDate("due_date", "<=", Carbon::now().subDays($days_late))
         return RouteApprovedPaymentRequest::collection(Utils::pagination($paymentRequest, $requestInfo));
     }
+
+    public function logActivity(Request $request)
+    {
+        return LogActivity::where('subject_id', $request->subject_id)->where('subject_type', $request->subject_type)->get();
+    }
 }
