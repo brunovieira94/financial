@@ -399,8 +399,7 @@ class InfoController extends Controller
         $exportFileDB = Export::findOrFail($exportFile['id']);
 
         (new BillsToPayExport($request->all(), $exportFileDB->name))
-            ->queue($exportFileDB->path, 's3')
-            ->allOnQueue('default')
+            ->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)
             ->chain([
                 new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
             ]);
