@@ -30,10 +30,11 @@ class UserApprovalsReportExport implements FromCollection, WithMapping, WithHead
 
         $logPaymentRequest = AccountsPayableApprovalFlowLog::query();
         $logPaymentRequest = $logPaymentRequest->with($this->logPaymentRequestWith);
-        if (!array_key_exists('user_approval_id', $requestInfo)) {
-            return collect([]);
+
+        if (array_key_exists('user_approval_id', $requestInfo)) {
+            $logPaymentRequest = $logPaymentRequest->whereIn('user_id',  (array)$requestInfo['user_approval_id']);
         }
-        $logPaymentRequest = $logPaymentRequest->whereIn('user_id',  (array)$requestInfo['user_approval_id']);
+
         $logPaymentRequest = $logPaymentRequest->whereHas('payment_request', function ($query) use ($requestInfo) {
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
@@ -98,9 +99,9 @@ class UserApprovalsReportExport implements FromCollection, WithMapping, WithHead
             $logPaymentRequest->payment_request->currency ? $logPaymentRequest->payment_request->currency->title : $logPaymentRequest->payment_request->currency,
             $logPaymentRequest->payment_request->net_value ?? '',
             $logPaymentRequest->payment_request->business ? $logPaymentRequest->payment_request->business->name : $logPaymentRequest->payment_request->business,
-            $logPaymentRequest->payment_request->emission_date,
-            $logPaymentRequest->user->name,
-            $logPaymentRequest->motive,
+            $logPaymentRequest->payment_request->emission_date ?? '',
+            $logPaymentRequest->user->name ?? '',
+            $logPaymentRequest->motive ?? '',
             $logPaymentRequest->created_at,
             $logPaymentRequest->payment_request->approval->approver_stage_first['title'],
             Config::get('constants.statusPt.' . $logPaymentRequest->payment_request->approval->status)
