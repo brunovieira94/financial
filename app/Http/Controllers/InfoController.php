@@ -415,9 +415,9 @@ class InfoController extends Controller
     {
         if (array_key_exists('test_timeout', $request->all())) {
             sleep($request->test_timeout);
-            return 'Ok';
+            return response()->json(['ok' => 'ok'], 200);
         }
-        return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
+        //return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
     }
 
     public function getProvider(Request $request)
