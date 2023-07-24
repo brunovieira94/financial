@@ -414,7 +414,7 @@ class InfoController extends Controller
     public function exportTestGet(Request $request)
     {
         if (array_key_exists('test_timeout', $request->all())) {
-            sleep($request->$request);
+            sleep($request->test_timeout);
             return 'Ok';
         }
         return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
