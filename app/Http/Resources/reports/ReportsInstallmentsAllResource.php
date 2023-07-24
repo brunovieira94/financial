@@ -25,7 +25,7 @@ class ReportsInstallmentsAllResource extends JsonResource
             'percentage_discount' => $this->percentage_discount,
             'billet_number' => $this->billet_number,
             'bar_code' => $this->bar_code,
-            'parcel_number' => $this->bar_code,
+            'parcel_number' => $this->parcel_number,
             'extension_date' => $this->extension_date,
             'due_date' => $this->due_date,
             'note' => $this->note,
