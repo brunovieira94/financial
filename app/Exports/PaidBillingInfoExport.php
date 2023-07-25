@@ -4,7 +4,6 @@ namespace App\Exports;
 
 use App\Models\PaidBillingInfo;
 use Vitorccs\LaravelCsv\Concerns\Exportable;
-use Vitorccs\LaravelCsv\Concerns\ShouldAutoSize;
 use Vitorccs\LaravelCsv\Concerns\WithHeadings;
 use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Config;
@@ -13,7 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use App\Services\Utils;
 use Vitorccs\LaravelCsv\Concerns\FromQuery;
 
-class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class PaidBillingInfoExport implements FromQuery, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;
