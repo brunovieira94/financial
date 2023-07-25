@@ -218,15 +218,7 @@ class PaymentRequestService
         $stageAccount = $approval->order;
 
         activity()->disableLogging();
-        if ($paymentRequest->payment_type != 0) {
-            if (array_key_exists('invoice_number', $paymentRequestInfo)) {
-                if ($approval->status == 4) {
-                    $approval->status = 7;
-                }
-            }
-        }
-
-        if ($approval->status == 1) {
+        if ($approval->status == 1 OR $approval->status == 4) {
             $approval->order = $maxOrder;
         }
 
