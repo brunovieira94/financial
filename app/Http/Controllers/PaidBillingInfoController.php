@@ -111,11 +111,19 @@ class PaidBillingInfoController extends Controller
             'error' => 'O arquivo gerado deve conter no máximo 25000 linhas'
         ], 422);
         $exportFile = UtilsExport::exportFile($request->all(), 'faturamentosPagos');
-        (new PaidBillingInfoExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
-            new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
-        ]);
-        return response()->json([
-            'sucess' => $exportFile['export']->id
-        ], 200);
+        UtilsExport::convertExportFormat($exportFile);
+        $exportFileDB = Export::findOrFail($exportFile['id']);
+        (new PaidBillingInfoExport($request->all(), $exportFile['nameFile']))
+            ->queue($exportFileDB->path, 's3')
+            ->allOnQueue('default')
+            ->chain([
+                new NotifyUserOfCompletedExport($exportFileDB->path, $exportFileDB),
+            ]);
+        // (new PaidBillingInfoExport($request->all(), $exportFile['nameFile']))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV)->chain([
+        //     new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
+        // ]);
+        // return response()->json([
+        //     'sucess' => $exportFile['export']->id
+        // ], 200);
     }
 }
