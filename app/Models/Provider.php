@@ -64,4 +64,15 @@ class Provider extends Model
     {
         return $this->hasMany(ProviderHasAttachments::class, 'provider_id', 'id');
     }
+
+    public function getPhonesAttribute($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $decodedValue = json_decode($value, true);
+
+        return is_array($decodedValue) ? $decodedValue : [$decodedValue];
+    }
 }
