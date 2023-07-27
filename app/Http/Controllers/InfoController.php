@@ -16,6 +16,7 @@ use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
 use App\Models\AccountsPayableApprovalFlowLog;
 use App\Models\ApprovalFlow;
+use App\Models\ApprovalLog;
 use App\Models\AttachmentLogDownload;
 use App\Models\Export;
 use App\Models\LogActivity;
@@ -444,5 +445,27 @@ class InfoController extends Controller
     public function logActivity(Request $request)
     {
         return LogActivity::where('subject_id', $request->subject_id)->where('subject_type', $request->subject_type)->get();
+    }
+
+    public function logApproval(Request $request)
+    {
+        $requestInfo = $request->all();
+        $approvalLog = ApprovalLog::query();
+        if (array_key_exists('date_approval', $requestInfo)) {
+            if (array_key_exists('from', $requestInfo['date_approval'])) {
+                $approvalLog = $approvalLog->where('created_at', '>=', $requestInfo['date_approval']['from']);
+            }
+            if (array_key_exists('to', $requestInfo['date_approval'])) {
+                $approvalLog = $approvalLog->where('created_at', '<=', $requestInfo['date_approval']['to']);
+            }
+        }
+        if (array_key_exists('id', $requestInfo)) {
+            $approvalLog = $approvalLog->where('id', $requestInfo['id']);
+        }
+        if (array_key_exists('user_id', $requestInfo)) {
+            $approvalLog = $approvalLog->where('user_id', $requestInfo['user_id']);
+        }
+
+        return $approvalLog->orderBy('id', 'desc')->limit(5)->with('user')->get();
     }
 }
