@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\reports\RouteApprovalUserResource;
+use App\Http\Resources\reports\RouteApprovedPaymentRequest;
 use App\Http\Resources\reports\RouteBillToPayResource;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Models\AccountsPayableApprovalFlowClean;
@@ -96,11 +97,11 @@ class ReportService
 
     public function getAllApprovedPaymentRequest($requestInfo)
     {
-        $accountsPayableApprovalFlow = Utils::search($this->accountsPayableApprovalFlowClean, $requestInfo);
-        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->with($this->accountsPayableApprovalFlowCleanWith);
-        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->where('status', 1);
-        $accountsPayableApprovalFlow = $accountsPayableApprovalFlow->whereHas('payment_request', function ($query) use ($requestInfo) {
-            $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
+        $paymentRequest = $this->paymentRequestClean->query();
+        $paymentRequest = $paymentRequest->with($this->paymentRequestCleanWith);
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $requestInfo);
+        $paymentRequest = $paymentRequest->whereHas('approval', function ($query) use ($requestInfo) {
+            $query = $query->where('status', 1);
         });
 
         if (!array_key_exists('company', $requestInfo)) {
@@ -114,7 +115,8 @@ class ReportService
                 'total' => 0
             ], 200);
         }
-        return Utils::pagination($accountsPayableApprovalFlow, $requestInfo);
+
+        return RouteApprovedPaymentRequest::collection(Utils::pagination($paymentRequest, $requestInfo));
     }
 
     public function getAllApprovedInstallment($requestInfo)
