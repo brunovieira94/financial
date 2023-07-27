@@ -145,7 +145,10 @@ class ApprovalFlowByUserService
                                 $this->approveOrDisapprove($paymentRequest, true, $maxOrder, $requestInfo);
                                 $this->updatePaymentRequestUserStatus($paymentRequest->id, auth()->user()->id, 1);
                             } else {
-                                $paymentRequest->approval()->update(['action' => 1]);
+                                $paymentRequest->approval()->update([
+                                    'action' => 1,
+                                    'status' => 0,
+                                ]);
                                 $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
                                 Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'approved', null, $description, $paymentRequest->approval->order, auth()->user()->id, null, $paymentRequest->approval->order);
                                 $this->updatePaymentRequestUserStatus($paymentRequest->id, auth()->user()->id, 1);
