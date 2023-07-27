@@ -139,7 +139,7 @@ class ApprovalFlowByUserService
                         Redis::set($value, 'payment-request', 'EX', '10');
                         $paymentRequest = $this->paymentRequestClean->with('approval')->withoutGlobalScopes()->findOrFail($value);
                         $maxOrder = $this->approvalFlow->where('group_approval_flow_id', $paymentRequest->group_approval_flow_id)->max('order');
-                        $paymentRequest->approval()->update(['status' => 0]);
+                        //$paymentRequest->approval()->update(['status' => 0]);
                         if ($this->paymentRequestAddedUser($paymentRequest->id)) {
                             if (!$this->paymentRequestOnlyApprove($paymentRequest->id)) {
                                 $this->approveOrDisapprove($paymentRequest, true, $maxOrder, $requestInfo);
