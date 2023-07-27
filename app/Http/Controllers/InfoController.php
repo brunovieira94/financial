@@ -414,6 +414,11 @@ class InfoController extends Controller
 
     public function exportTestGet(Request $request)
     {
+
+        if (array_key_exists('payment_request_id', $request->all())) {
+            return AccountsPayableApprovalFlowClean::with('payment_request')->where('payment_request_id', $request->payment_request_id)->get();
+        }
+
         if (array_key_exists('test_timeout', $request->all())) {
             sleep($request->test_timeout);
             return response()->json(['ok' => 'ok'], 200);
