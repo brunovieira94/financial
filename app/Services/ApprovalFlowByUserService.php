@@ -343,43 +343,42 @@ class ApprovalFlowByUserService
             unset($requestInfo['order']);
         }
 
-        if ($paymentRequest->approval->status = 1 or $paymentRequest->approval->status = 2) {
-            if ($approve) {
-                $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
-                $oldOrder = $paymentRequest->approval->order;
-                if ($paymentRequest->approval->order >= $maxOrder) {
-                    $paymentRequest->approval()->update([
-                        'status' => Config::get('constants.status.approved'),
-                        'action' => 1,
-                    ]);
-                } else {
-                    $paymentRequest->approval()->update([
-                        'status' => Config::get('constants.status.open'),
-                        'order' => $paymentRequest->approval->order = $this->alterOrder == false ? ($paymentRequest->approval->order + 1) : $this->order,
-                        'action' => 1,
-                    ]);
-                }
-                Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'approved', null, $description, $oldOrder, auth()->user()->id, null, null, $paymentRequest->approval->order);
+        if ($approve) {
+            $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+            $oldOrder = $paymentRequest->approval->order;
+            if ($paymentRequest->approval->order >= $maxOrder) {
+                $paymentRequest->approval()->update([
+                    'status' => Config::get('constants.status.approved'),
+                    'action' => 1,
+                ]);
             } else {
-                $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
-                $reason = isset($requestInfo['reason_to_reject_id']) ? ReasonToReject::findOrFail($requestInfo['reason_to_reject_id'])->title : null;
-                $oldOrder = $paymentRequest->approval->order;
-                if ($paymentRequest->approval->order > $maxOrder) {
-                    $paymentRequest->approval()->update([
-                        'order' => Config::get('constants.status.open'),
-                        'action' => 2,
-                    ]);
-                } else if ($paymentRequest->approval->order != 0) {
-                    $paymentRequest->approval()->update([
-                        'order' => $this->alterOrder == false ? ($paymentRequest->approval->order - 1) : $this->order,
-                        'action' => 2,
-                    ]);
-                }
-                $approvalData = array_intersect_key($requestInfo, array_flip($paymentRequest->approval->getFillable()));
-                $paymentRequest->approval()->update($approvalData);
-                Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'rejected', $reason, $description, $oldOrder, auth()->user()->id, null, null, $paymentRequest->approval->order);
+                $paymentRequest->approval()->update([
+                    'status' => Config::get('constants.status.open'),
+                    'order' => $paymentRequest->approval->order = $this->alterOrder == false ? ($paymentRequest->approval->order + 1) : $this->order,
+                    'action' => 1,
+                ]);
             }
+            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'approved', null, $description, $oldOrder, auth()->user()->id, null, null, $paymentRequest->approval->order);
+        } else {
+            $description = isset($requestInfo['reason']) ? $requestInfo['reason'] : null;
+            $reason = isset($requestInfo['reason_to_reject_id']) ? ReasonToReject::findOrFail($requestInfo['reason_to_reject_id'])->title : null;
+            $oldOrder = $paymentRequest->approval->order;
+            if ($paymentRequest->approval->order > $maxOrder) {
+                $paymentRequest->approval()->update([
+                    'order' => Config::get('constants.status.open'),
+                    'action' => 2,
+                ]);
+            } else if ($paymentRequest->approval->order != 0) {
+                $paymentRequest->approval()->update([
+                    'order' => $this->alterOrder == false ? ($paymentRequest->approval->order - 1) : $this->order,
+                    'action' => 2,
+                ]);
+            }
+            $approvalData = array_intersect_key($requestInfo, array_flip($paymentRequest->approval->getFillable()));
+            $paymentRequest->approval()->update($approvalData);
+            Utils::createLogApprovalFlowLogPaymentRequest($paymentRequest->id, 'rejected', $reason, $description, $oldOrder, auth()->user()->id, null, null, $paymentRequest->approval->order);
         }
+
         $this->alterOrder = false;
         Redis::del('h', $paymentRequest->id);
         //$this->notifyUsers($accountApproval, $notify, $maxOrder);
