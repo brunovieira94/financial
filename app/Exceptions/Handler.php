@@ -53,6 +53,11 @@ class Handler extends ExceptionHandler
             //Log::emergency('error route: ' . $path . ' => ' . $exception->getMessage());
             return response($exception, 500);
         }
+        if(strpos($exception->getFile(), 'CangoorooService') && strpos($exception->getMessage(), 'Maximum execution time of') !== false){
+            return response()->json([
+                'error' => 'A API do Cangooroo parece não estar respondendo',
+            ], 422);
+        }
 
         //Log::error('error route: ' . $path . ' => ' . $exception->getMessage());
         return parent::render($request, $exception);
