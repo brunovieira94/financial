@@ -12,15 +12,15 @@ class CheckDataSendIntegration
     public function handle(Request $request, Closure $next)
     {
         $requestInfo = $request->all();
-        $from = new DateTime('2023-03-01 00:00:00');
-        $to = new DateTime('2023-03-15 23:59:59');
+        $from = new DateTime('2023-06-01 00:00:00');
+        $to = new DateTime('2023-06-30 23:59:59');
 
         if ($this->isValidDateRange($requestInfo, $from, $to)) {
             return $next($request);
         }
 
         return Response::json([
-            'error' => 'É necessário informar o parâmetro de data autorizado, início: 01/03/2023 até 15/03/2023'
+            'error' => 'É necessário informar o parâmetro de data autorizado, início: 01/06/2023 até 30/06/2023'
         ]);
     }
 
