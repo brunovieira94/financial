@@ -525,7 +525,7 @@ class InfoController extends Controller
                 'last-installment-paid' => $lastInstallmentPaid,
             ], 200);
         }
-        //return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
+        return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
     }
 
     public function getProvider(Request $request)
