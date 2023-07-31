@@ -22,20 +22,24 @@ use App\Models\Export;
 use App\Models\LogActivity;
 use App\Models\PaymentRequest;
 use App\Models\PaymentRequestClean;
+use App\Models\PaymentRequestHasInstallmentsClean;
 use App\Models\PaymentRequestHasTax;
 use App\Models\Provider;
 use App\Models\TemporaryLogUploadPaymentRequest;
 use App\Models\TypeOfTax;
 use App\Models\User;
 use App\Models\UserHasPaymentRequest;
+use App\Services\IntegrationService;
 use App\Services\NotificationService;
 use App\Services\Utils;
 use Artisan;
 use Aws\S3\ObjectUploader;
 use Aws\S3\S3Client;
+use Config;
 use DB;
 use Exception;
 use Faker\Provider\ar_EG\Payment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Spatie\Activitylog\Models\Activity;
@@ -46,11 +50,47 @@ class InfoController extends Controller
     private $paymentRequestCleanWith = ['installments', 'company', 'provider', 'cost_center', 'approval.approval_flow', 'currency', 'cnab_payment_request.cnab_generated'];
     private $accountsPayableApprovalFlowClean;
     private $paymentRequestClean;
+    private $paymentRequestHasInstallments;
+    private $withPaidInstallments = [
+        'payment_request',
+        'payment_request.provider',
+        'payment_request.chart_of_accounts',
+        'payment_request.currency',
+        'group_payment',
+        'bank_account_provider',
+        'other_payments',
+        'other_payments.bank_account_company',
+        'other_payments.exchange_rates',
+        'other_payments.exchange_rates.currency',
+        'cnab_generated_installment',
+        'cnab_generated_installment.generated_cnab',
+        'cnab_generated_installment.generated_cnab.company',
+    ];
 
-    public function __construct(AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean)
+    private $withApprovedPaymentRequests = [
+        'approval',
+        'log_approval_flow',
+        'company',
+        'installments',
+        'currency',
+        'chart_of_accounts',
+        'cost_center',
+        'provider',
+        'provider.city',
+        'provider.city.state',
+        'provider.city.state.country',
+        'purchase_order',
+        'purchase_order.purchase_order',
+        'purchase_order.purchase_order.provider',
+        'purchase_order.purchase_order.provider.chart_of_account',
+        'purchase_order.purchase_order.cost_centers',
+    ];
+
+    public function __construct(PaymentRequestHasInstallmentsClean $paymentRequestHasInstallments, AccountsPayableApprovalFlowClean $accountsPayableApprovalFlowClean, PaymentRequestClean $paymentRequestClean)
     {
         $this->accountsPayableApprovalFlowClean = $accountsPayableApprovalFlowClean;
         $this->paymentRequestClean = $paymentRequestClean;
+        $this->paymentRequestHasInstallments = $paymentRequestHasInstallments;
     }
 
     public function duplicateInformationSystem(Request $request)
@@ -414,6 +454,7 @@ class InfoController extends Controller
 
     public function exportTestGet(Request $request)
     {
+        $requestInfo = $request->all();
 
         if (array_key_exists('payment_request_id', $request->all())) {
             return AccountsPayableApprovalFlowClean::with('payment_request')->where('payment_request_id', $request->payment_request_id)->get();
@@ -422,6 +463,62 @@ class InfoController extends Controller
         if (array_key_exists('test_timeout', $request->all())) {
             sleep($request->test_timeout);
             return response()->json(['ok' => 'ok'], 200);
+        }
+
+        if (array_key_exists('records-approval', $request->all())) {
+
+            $bills = $this->paymentRequestClean::with($this->withApprovedPaymentRequests)
+                ->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.approved')));
+            $bills = $this->filterByDateCreated($bills, $request->all());
+            $bills = $bills->get()->filter(function ($bill) use (&$requestInfo) {
+                $lastApproval = $bill->log_approval_flow->where('id', $bill->log_approval_flow->max('id'))->first();
+                if (is_null($lastApproval)) {
+                    return false;
+                }
+                $passes = $lastApproval->type == 'approved';
+                if (array_key_exists('date_from', $requestInfo)) {
+                    $date_from = $requestInfo['date_from'] . ' 00:00:00';
+                    $passes = $passes && $lastApproval->created_at >= $date_from;
+                }
+                if (array_key_exists('date_to', $requestInfo)) {
+                    $date_to = $requestInfo['date_to'] . ' 23:59:59';
+                    $passes = $passes && $lastApproval->created_at <= $date_to;
+                }
+                return $passes;
+            });
+
+            $installments = $this->paymentRequestHasInstallments::with($this->withPaidInstallments)
+                ->whereHas('payment_request', function ($query) use (&$requestInfo) {
+                    $query->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.paid out')));
+                    $query = $this->filterByDateCreated($query, $requestInfo);
+                });
+
+            $installments = $installments
+                ->whereHas('cnab_generated_installment', function ($query) use (&$requestInfo) {
+                    $query->whereHas('generated_cnab', function ($q) use (&$requestInfo) {
+                        if (array_key_exists('date_from', $requestInfo))
+                            $q->where('file_date', '>=', $requestInfo['date_from'] . ' 00:00:00');
+                        if (array_key_exists('date_to', $requestInfo))
+                            $q->where('file_date', '<=', $requestInfo['date_to'] . ' 23:59:59');
+                    });
+                })
+                ->orWhereHas('other_payments', function ($query) use (&$requestInfo) {
+                    if (array_key_exists('date_from', $requestInfo))
+                        $query->where('payment_date', '>=', $requestInfo['date_from']);
+                    if (array_key_exists('date_to', $requestInfo))
+                        $query->where('payment_date', '<=', $requestInfo['date_to']);
+                })
+                ->orWhere(function (Builder $query) use (&$requestInfo) {
+                    if (array_key_exists('date_from', $requestInfo))
+                        $query->where('payment_made_date', '>=', $requestInfo['date_to']);
+                    if (array_key_exists('date_to', $requestInfo))
+                        $query->where('payment_made_date', '<=', $requestInfo['date_to']);
+                });
+
+            return response()->json([
+                'records-approval' => $bills->count(),
+                'installments' => $installments->count()
+            ], 200);
         }
         //return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
     }
@@ -472,5 +569,14 @@ class InfoController extends Controller
         }
 
         return $approvalLog->orderBy('id', 'desc')->limit(5)->with('user')->get();
+    }
+
+    private function filterByDateCreated($query, $requestInfo)
+    {
+        if (array_key_exists('date_created_from', $requestInfo))
+            $query = $query->where('created_at', '>=', $requestInfo['date_created_from']);
+        if (array_key_exists('date_created_to', $requestInfo))
+            $query = $query->where('created_at', '<=', $requestInfo['date_created_to']);
+        return $query;
     }
 }
