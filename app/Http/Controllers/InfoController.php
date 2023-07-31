@@ -439,6 +439,15 @@ class InfoController extends Controller
         ExportsUtils::convertExportFormat($exportFile);
         $exportFileDB = Export::findOrFail($exportFile['id']);
 
+        $paymentRequest = PaymentRequest::query();
+        $paymentRequest = $paymentRequest->with(ExportsUtils::withModelDefaultExport('payment-request'));
+        $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
+        return response()->json([
+            'sucess' => $paymentRequest->count(),
+        ], 200);
+
+
+
         (new BillsToPayExport($request->all(), $exportFileDB->name))
             ->queue($exportFileDB->path, 's3')
             ->allOnQueue('default')
