@@ -498,7 +498,7 @@ class InfoController extends Controller
             $installments = $installments
                 ->where(function (Builder $query) use (&$requestInfo) {
                     if (array_key_exists('date_from', $requestInfo))
-                        $query->where('payment_made_date', '>=', $requestInfo['date_to']);
+                        $query->where('payment_made_date', '>=', $requestInfo['date_from']);
                     if (array_key_exists('date_to', $requestInfo))
                         $query->where('payment_made_date', '<=', $requestInfo['date_to']);
                 })
