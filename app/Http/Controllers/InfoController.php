@@ -493,6 +493,7 @@ class InfoController extends Controller
                     //$query = $this->filterByDateCreated($query, $requestInfo);
                 });
 
+            $lastInstallmentPaid = $installments->orderBy('id', 'desc')->first();
             $totalBillsPaid = $installments->count();
 
             $installments = $installments
@@ -520,7 +521,8 @@ class InfoController extends Controller
             return response()->json([
                 'records-approval' => $bills->count(),
                 'installments' => $installments->count(),
-                'installments-paid' => $totalBillsPaid
+                'installments-paid' => $totalBillsPaid,
+                'last-installment-paid' => $lastInstallmentPaid,
             ], 200);
         }
         //return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
