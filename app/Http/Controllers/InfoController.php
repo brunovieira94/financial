@@ -469,7 +469,7 @@ class InfoController extends Controller
 
             $bills = $this->paymentRequestClean::with($this->withApprovedPaymentRequests)
                 ->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.approved')));
-            $bills = $this->filterByDateCreated($bills, $request->all());
+            //$bills = $this->filterByDateCreated($bills, $request->all());
             $bills = $bills->get()->filter(function ($bill) use (&$requestInfo) {
                 $lastApproval = $bill->log_approval_flow->where('id', $bill->log_approval_flow->max('id'))->first();
                 if (is_null($lastApproval)) {
@@ -490,7 +490,7 @@ class InfoController extends Controller
             $installments = $this->paymentRequestHasInstallments::with($this->withPaidInstallments)
                 ->whereHas('payment_request', function ($query) use (&$requestInfo) {
                     $query->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.paid out')));
-                    $query = $this->filterByDateCreated($query, $requestInfo);
+                    //$query = $this->filterByDateCreated($query, $requestInfo);
                 });
 
             $installments = $installments
