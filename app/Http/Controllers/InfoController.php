@@ -496,7 +496,13 @@ class InfoController extends Controller
             $totalBillsPaid = $installments->count();
 
             $installments = $installments
-                ->whereHas('cnab_generated_installment', function ($query) use (&$requestInfo) {
+                ->where(function (Builder $query) use (&$requestInfo) {
+                    if (array_key_exists('date_from', $requestInfo))
+                        $query->where('payment_made_date', '>=', $requestInfo['date_to']);
+                    if (array_key_exists('date_to', $requestInfo))
+                        $query->where('payment_made_date', '<=', $requestInfo['date_to']);
+                })
+                ->orWhereHas('cnab_generated_installment', function ($query) use (&$requestInfo) {
                     $query->whereHas('generated_cnab', function ($q) use (&$requestInfo) {
                         if (array_key_exists('date_from', $requestInfo))
                             $q->where('file_date', '>=', $requestInfo['date_from'] . ' 00:00:00');
@@ -509,12 +515,6 @@ class InfoController extends Controller
                         $query->where('payment_date', '>=', $requestInfo['date_from']);
                     if (array_key_exists('date_to', $requestInfo))
                         $query->where('payment_date', '<=', $requestInfo['date_to']);
-                })
-                ->orWhere(function (Builder $query) use (&$requestInfo) {
-                    if (array_key_exists('date_from', $requestInfo))
-                        $query->where('payment_made_date', '>=', $requestInfo['date_to']);
-                    if (array_key_exists('date_to', $requestInfo))
-                        $query->where('payment_made_date', '<=', $requestInfo['date_to']);
                 });
 
             return response()->json([
