@@ -493,6 +493,8 @@ class InfoController extends Controller
                     //$query = $this->filterByDateCreated($query, $requestInfo);
                 });
 
+            $totalBillsPaid = $installments->count();
+
             $installments = $installments
                 ->whereHas('cnab_generated_installment', function ($query) use (&$requestInfo) {
                     $query->whereHas('generated_cnab', function ($q) use (&$requestInfo) {
@@ -517,7 +519,8 @@ class InfoController extends Controller
 
             return response()->json([
                 'records-approval' => $bills->count(),
-                'installments' => $installments->count()
+                'installments' => $installments->count(),
+                'installments-paid' => $totalBillsPaid
             ], 200);
         }
         //return Export::where('test', true)->orderBy('id', 'DESC')->limit(20)->get();
