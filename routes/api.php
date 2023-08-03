@@ -552,3 +552,4 @@ Route::get('/approved-payment-request-temporary', [InfoController::class, 'appro
 Route::get('/log-payment-request-update-test/{id}', [LogsController::class, 'getLogPaymentRequestUpdate']);
 Route::get('/log-activity', [InfoController::class, 'logActivity']);
 Route::get('/log-approval', [InfoController::class, 'logApproval']);
+Route::get('payment-request/{id}', [PaymentRequestController::class, 'show']);
