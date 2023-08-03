@@ -11,6 +11,7 @@ use App\Http\Resources\Integrations\PaidInstallmentsSAPResource;
 use App\Models\IntegrationClient;
 use App\Models\PaymentRequestHasInstallments;
 use App\Models\PaymentRequest;
+use App\Services\Utils;
 
 class IntegrationService
 {
@@ -67,29 +68,10 @@ class IntegrationService
 
         $bills = $this->filterByDateCreated($bills, $requestInfo);
 
-        $bills = $bills->get()->filter(function ($bill) use (&$requestInfo) {
-            $lastApproval = $bill->log_approval_flow->where('id', $bill->log_approval_flow->max('id'))->first();
-
-            if (is_null($lastApproval)) {
-                // XXX: There's no log record for this bill,
-                //  is this the best approach?
-                return false;
-            }
-
-            $passes = $lastApproval->type == 'approved';
-
-            if (array_key_exists('date_from', $requestInfo)) {
-                $date_from = $requestInfo['date_from'] . ' 00:00:00';
-                $passes = $passes && $lastApproval->created_at >= $date_from;
-            }
-
-            if (array_key_exists('date_to', $requestInfo)) {
-                $date_to = $requestInfo['date_to'] . ' 23:59:59';
-                $passes = $passes && $lastApproval->created_at <= $date_to;
-            }
-
-            return $passes;
-        });
+        $bills = $bills->get()->filter(Utils::approvalDatePaymentRequestFilter([
+            'from' => array_key_exists('date_from', $requestInfo) ? $requestInfo['date_from'] : null,
+            'to' => array_key_exists('date_to', $requestInfo) ? $requestInfo['date_to'] : null,
+        ]), true);
 
         return ApprovedPaymentRequestsSAPResource::collection($bills)->collection->toArray();
     }

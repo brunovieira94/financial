@@ -21,6 +21,7 @@ use App\Models\HotelLog;
 use App\Models\NotificationCatalog;
 use App\Models\NotificationCatalogHasRoles;
 use App\Models\NotificationCatalogHasUsers;
+use App\Models\PaymentRequestClean;
 use App\Models\PaymentRequestHasInstallmentLinked;
 use App\Models\PaymentRequestHasInstallments;
 use Carbon\Carbon;
@@ -590,7 +591,50 @@ class Utils
                 $query->whereLike('card_identifier', "%{$requestInfo['card_identifier']}%");
             });
         }
+
+        if (array_key_exists('approval_date', $requestInfo)) {
+            $validPaymentRequestsIds = PaymentRequestClean::with(['log_approval_flow', 'approval'])
+                ->whereHas('approval', fn ($q) => $q->where('status', Config::get('constants.status.approved')))
+                ->get()
+                ->filter(self::approvalDatePaymentRequestFilter($requestInfo['approval_date'], true));
+
+            if (isset($validPaymentRequestsIds)) {
+                $paymentRequest = $paymentRequest->whereIn('id', $validPaymentRequestsIds->pluck('id'));
+            }
+        }
         return $paymentRequest;
+    }
+
+    public static function approvalDatePaymentRequestFilter($dateInfo, $appendTimestamp = true)
+    {
+        $from = null;
+        $to = null;
+
+        if (array_key_exists('from', $dateInfo) && isset($dateInfo['from']))
+            $from = $dateInfo['from'] . ($appendTimestamp ? ' 00:00:00' : '');
+
+        if (array_key_exists('to', $dateInfo) && isset($dateInfo['to']))
+            $to = $dateInfo['to'] . ($appendTimestamp ? ' 23:59:59' : '');
+
+        return function ($payment) use ($from, $to) {
+            $lastApproval = $payment->log_approval_flow
+                ->where('id', $payment->log_approval_flow->max('id'))
+                ->first();
+
+            // XXX: is this the best approach in this case?
+            if (is_null($lastApproval))
+                return false;
+
+            $passes = $lastApproval->type == 'approved';
+
+            if (isset($from))
+                $passes = $passes && $lastApproval->created_at >= $from;
+
+            if (isset($to))
+                $passes = $passes && $lastApproval->created_at <= $to;
+
+            return $passes;
+        };
     }
 
     public static function createLogApprovalFlowLogPaymentRequest($paymentRequestID, $type, $motive, $description, $stage, $userID, $recipient, $createdAt = null, $currentOrder = null)
