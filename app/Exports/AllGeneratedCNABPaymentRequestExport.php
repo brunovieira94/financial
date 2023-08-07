@@ -5,25 +5,26 @@ namespace App\Exports;
 use App\Models\AccountsPayableApprovalFlow;
 use App\Services\Utils;
 use Vitorccs\LaravelCsv\Concerns\Exportable;
-use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\FromQuery;
 use Vitorccs\LaravelCsv\Concerns\WithHeadings;
 use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Config;
 
-class AllGeneratedCNABPaymentRequestExport implements FromCollection, WithMapping, WithHeadings
+class AllGeneratedCNABPaymentRequestExport implements FromQuery, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $totalTax;
     private $fileName;
 
-    public function __construct($requestInfo, $fileName){
+    public function __construct($requestInfo, $fileName)
+    {
         $this->requestInfo = $requestInfo;
         $this->fileName = $fileName;
     }
 
     use Exportable;
 
-    public function collection()
+    public function query()
     {
         $requestInfo = $this->requestInfo;
         $accountsPayableApprovalFlow = AccountsPayableApprovalFlow::with(['payment_request', 'approval_flow', 'reason_to_reject']);
@@ -31,9 +32,8 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, WithMappin
             $query = Utils::baseFilterReportsPaymentRequest($query, $requestInfo);
         });
         return $accountsPayableApprovalFlow
-        ->where('status', 6)
-        ->whereRelation('payment_request', 'deleted_at', '=', null)
-        ->get();
+            ->where('status', 6)
+            ->whereRelation('payment_request', 'deleted_at', '=', null);
     }
 
     public function map($accountsPayableApprovalFlow): array
@@ -45,7 +45,7 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, WithMappin
 
         return [
             $accountsPayableApprovalFlow->payment_request->id,
-            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: '.$accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: '. $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
+            $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->cnpj ? 'CNPJ: ' . $accountsPayableApprovalFlow->payment_request->provider->cnpj : 'CPF: ' . $accountsPayableApprovalFlow->payment_request->provider->cpf) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->provider ? ($accountsPayableApprovalFlow->payment_request->provider->company_name ? $accountsPayableApprovalFlow->payment_request->provider->company_name : $accountsPayableApprovalFlow->payment_request->provider->full_name) : $accountsPayableApprovalFlow->payment_request->provider,
             $accountsPayableApprovalFlow->payment_request->emission_date,
             $accountsPayableApprovalFlow->payment_request->pay_date,
@@ -68,7 +68,7 @@ class AllGeneratedCNABPaymentRequestExport implements FromCollection, WithMappin
             $accountsPayableApprovalFlow->payment_request->created_at,
             $accountsPayableApprovalFlow->payment_request->note,
             $accountsPayableApprovalFlow->payment_request->approval->approver_stage_first['title'],
-            Config::get('constants.statusPt.'.$accountsPayableApprovalFlow->payment_request->approval->status)
+            Config::get('constants.statusPt.' . $accountsPayableApprovalFlow->payment_request->approval->status)
         ];
     }
 

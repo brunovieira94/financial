@@ -791,16 +791,4 @@ class Utils
                 return [];
         }
     }
-
-    public static function convertExportFormat($exportFile, $to = 'csv', $from = 'xlsx')
-    {
-        $exportFile['path'] = Str::replace('.' . $from, '.' . $to, $exportFile['path']);
-        Export::where('id', $exportFile['id'])
-            ->update(
-                [
-                    'extension' => 'csv',
-                    'path' => $exportFile['path'],
-                ]
-            );
-    }
 }

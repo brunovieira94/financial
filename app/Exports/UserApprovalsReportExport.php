@@ -7,11 +7,11 @@ use App\Models\PaymentRequestHasInstallments;
 use App\Services\Utils;
 use Config;
 use Vitorccs\LaravelCsv\Concerns\Exportable;
-use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\FromQuery;
 use Vitorccs\LaravelCsv\Concerns\WithHeadings;
 use Vitorccs\LaravelCsv\Concerns\WithMapping;
 
-class UserApprovalsReportExport implements FromCollection, WithMapping, WithHeadings
+class UserApprovalsReportExport implements FromQuery, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $filterCanceled = false;
@@ -24,7 +24,7 @@ class UserApprovalsReportExport implements FromCollection, WithMapping, WithHead
 
     use Exportable;
 
-    public function collection()
+    public function query()
     {
         $requestInfo = $this->requestInfo;
 
@@ -54,7 +54,8 @@ class UserApprovalsReportExport implements FromCollection, WithMapping, WithHead
         if (array_key_exists('status_approval', $requestInfo)) {
             $logPaymentRequest = $logPaymentRequest->where('type',  $requestInfo['status_approval']);
         }
-        return $logPaymentRequest->get();
+
+        return $logPaymentRequest;
     }
 
     public function map($logPaymentRequest): array
