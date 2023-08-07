@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\reports\RouteBillingResource;
 use App\Models\BillingHasAttachments;
+use App\Models\Role;
 
 class BillingService
 {
@@ -394,9 +395,26 @@ class BillingService
         $billing = $this->billing->findOrFail($id);
         $billingOld = $this->billing->with($this->with)->findOrFail($id);
         if ($billing->approval_status == Config::get('constants.billingStatus.approved')) {
-            return response()->json([
-                'error' => 'Pedido previamente aprovado, não é possível editar',
-            ], 422);
+            $hasPermission = false;
+            $userId = auth()->user()->id;
+            $user = User::where('id',$userId)->with('role')->first();
+            if($user->role->id == 1){
+                $hasPermission = true;
+            }
+            else{
+                $userRole = Role::where('id',$user->role->id)->with('modules')->first();
+                $userModules = $userRole->modules;
+                foreach ($userModules as $module) {
+                    if($module->route == 'billing-approved' && $module->permissions->update){
+                        $hasPermission = true;
+                    }
+                }
+            }
+            if(!$hasPermission){
+                return response()->json([
+                    'error' => 'Usuário sem permissão para editar faturamentos aprovados',
+                ], 422);
+            }
         }
         if ($billing->approval_status == Config::get('constants.billingStatus.canceled')) {
             return response()->json([
@@ -409,8 +427,19 @@ class BillingService
                 'error' => array_key_exists('error', $cangooroo) ? $cangooroo['error'] : $cangooroo['invalid_hotel'],
             ], 422);
         }
-        $billingInfo['order'] = 1;
-        $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
+        if ($billing->approval_status != Config::get('constants.billingStatus.approved')){
+            $billingInfo['order'] = 1;
+            $billingInfo['approval_status'] =  Config::get('constants.billingStatus.open');
+        }
+        else
+        {
+            $checkEdit = $this->checkApprovedBillingEdit($billing, $billingInfo);
+            if($checkEdit){
+                return response()->json([
+                    'error' => 'Não é possível editar o campo '.$checkEdit.' quando este faturamento já foi aprovado',
+                ], 422);
+            }
+        }
         $billingPayment = $this->billingPayment->with(['billings'])->find($billing->billing_payment_id);
         if ($billingPayment) {
             if (count($billingPayment->billings) <= 1) $billingPayment->delete();
@@ -779,6 +808,25 @@ class BillingService
             return Utils::getLastUtileDay($dateUsed, $paymentConditionDays, true);
         }
         return Utils::getLastUtileDay($dateUsed, $paymentConditionDays);
+    }
+
+    public function checkApprovedBillingEdit($billing, $billingInfo)
+    {
+        $allowedFields = ['pay_date', 'bank_account', 'preview', 'change_all_payment'];
+        foreach ($billingInfo as $field => $value) {
+            if(!in_array($field, $allowedFields) && $value != [] && $billing[$field] != $value){
+                return $field;
+            }
+            else if ($field == 'bank_account'){
+                $allowedFieldsBank = ['international', 'default_bank'];
+                foreach ($value as $bankField => $bankValue) {
+                    if(!in_array($bankField, $allowedFieldsBank) && $billing[$field][$bankField] != $bankValue){
+                        return $field;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     const translatedField = [
