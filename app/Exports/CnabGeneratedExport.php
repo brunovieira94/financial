@@ -13,14 +13,14 @@ use App\Models\PaymentRequestHasInstallments;
 use App\Models\UserHasPaymentRequest;
 use App\Services\Utils;
 use Vitorccs\LaravelCsv\Concerns\Exportable;
-use Vitorccs\LaravelCsv\Concerns\FromCollection;
+use Vitorccs\LaravelCsv\Concerns\FromQuery;
 use Vitorccs\LaravelCsv\Concerns\WithHeadings;
 use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Carbon\Carbon;
 use Config;
 use Illuminate\Contracts\Queue\ShouldQueue;
 
-class CnabGeneratedExport implements FromCollection, WithMapping, WithHeadings
+class CnabGeneratedExport implements FromQuery, WithMapping, WithHeadings
 {
     private $requestInfo;
     private $id;
@@ -35,7 +35,7 @@ class CnabGeneratedExport implements FromCollection, WithMapping, WithHeadings
 
     use Exportable;
 
-    public function collection()
+    public function query()
     {
         return CnabPaymentRequestsHasInstallments::with(
             [
@@ -46,7 +46,7 @@ class CnabGeneratedExport implements FromCollection, WithMapping, WithHeadings
                 'installment.payment_request',
                 'installment.bank_account_provider',
             ]
-        )->where('cnab_generated_id', $this->id)->get();
+        )->where('cnab_generated_id', $this->id);
     }
 
     public function map($installmentsCnabGenerated): array
