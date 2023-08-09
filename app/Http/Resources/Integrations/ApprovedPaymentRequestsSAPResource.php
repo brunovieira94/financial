@@ -9,6 +9,8 @@ use App\Helpers\Tools;
 
 class ApprovedPaymentRequestsSAPResource extends JsonResource
 {
+    public $preserveKeys = false;
+
     /**
      * Transform the resource into an array.
      *

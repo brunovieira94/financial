@@ -73,7 +73,7 @@ class IntegrationService
             'to' => array_key_exists('date_to', $requestInfo) ? $requestInfo['date_to'] : null,
         ]), true);
 
-        return ApprovedPaymentRequestsSAPResource::collection($bills)->collection->toArray();
+        return array_values(ApprovedPaymentRequestsSAPResource::collection($bills)->collection->toArray());
     }
 
     public function sapInstallmentsPaid($requestInfo)
@@ -106,7 +106,7 @@ class IntegrationService
                     $query->where('payment_made_date', '<=', $requestInfo['date_to']);
             });
 
-        return PaidInstallmentsSAPResource::collection($installments->get())->collection->toArray();
+        return array_values(PaidInstallmentsSAPResource::collection($installments->get())->collection->toArray());
     }
 
 
