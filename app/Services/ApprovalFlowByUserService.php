@@ -352,7 +352,7 @@ class ApprovalFlowByUserService
                 $oldOrder = $paymentRequest->approval->order;
                 if ($paymentRequest->approval->order >= $maxOrder) {
                     $paymentRequest->approval()->update([
-                        'status' => Config::get('constants.status.approved'),
+                        'status' => empty(array_diff($paymentRequest->installments->pluck('status')->toArray(), [Config::get('constants.status.paid out')])) ? Config::get('constants.status.paid out') : Config::get('constants.status.approved'),
                         'action' => 1,
                     ]);
                 } else {
