@@ -3,18 +3,16 @@
 namespace App\Exports;
 
 use App\Models\PaidBillingInfo;
-use Maatwebsite\Excel\Concerns\Exportable;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
+use Vitorccs\LaravelCsv\Concerns\Exportable;
+use Vitorccs\LaravelCsv\Concerns\WithHeadings;
+use Vitorccs\LaravelCsv\Concerns\WithMapping;
 use Config;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use App\Services\Utils;
-use Maatwebsite\Excel\Concerns\FromQuery;
+use Vitorccs\LaravelCsv\Concerns\FromQuery;
 
-class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, WithHeadings, ShouldQueue
+class PaidBillingInfoExport implements FromQuery, WithMapping, WithHeadings, ShouldQueue
 {
 
     use Exportable;
@@ -34,7 +32,7 @@ class PaidBillingInfoExport implements FromQuery, ShouldAutoSize, WithMapping, W
         $this->fileName = $fileName;
         // $this->perPage = $perPage;
         // $this->offset = $offset;
-        $this->queue = 'long-running';
+        // $this->queue = 'long-running';
     }
 
     public function query()
