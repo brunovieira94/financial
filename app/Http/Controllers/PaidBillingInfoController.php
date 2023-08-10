@@ -104,12 +104,12 @@ class PaidBillingInfoController extends Controller
     public function export(Request $request)
     {
         ini_set('memory_limit', '1024M');
-        $paidBillingInfo = PaidBillingInfo::query();
-        $paidBillingInfo = Utils::baseFilterPaidBillingInfo($paidBillingInfo, $request->all());
-        $count = $paidBillingInfo->count();
-        if($count > 25000) return response()->json([
-            'error' => 'O arquivo gerado deve conter no máximo 25000 linhas'
-        ], 422);
+        // $paidBillingInfo = PaidBillingInfo::query();
+        // $paidBillingInfo = Utils::baseFilterPaidBillingInfo($paidBillingInfo, $request->all());
+        // $count = $paidBillingInfo->count();
+        // if($count > 25000) return response()->json([
+        //     'error' => 'O arquivo gerado deve conter no máximo 25000 linhas'
+        // ], 422);
         $exportFile = UtilsExport::exportFile($request->all(), 'faturamentosPagos');
         UtilsExport::convertExportFormat($exportFile);
         $exportFileDB = Export::findOrFail($exportFile['id']);
