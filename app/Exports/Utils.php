@@ -606,10 +606,10 @@ class Utils
 
     public static function exportFile($requestInfo, $nameReport, $test = false)
     {
-        $extension = '.xlsx';
+        $extension = '.csv';
         if (array_key_exists('exportFormat', $requestInfo)) {
-            if ($requestInfo['exportFormat'] == 'csv') {
-                $extension = '.csv';
+            if ($requestInfo['exportFormat'] == 'xlsx') {
+                $extension = '.xlsx';
             }
         }
 
