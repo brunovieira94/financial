@@ -15,6 +15,15 @@ use Str;
 
 class Utils
 {
+    const typeBillet = [
+        "Boleto Bancário",
+        "Boleto de Arrecadação",
+        "Guia de Impostos",
+        "Fatura de Cartão de Crédito",
+        "Boleto Concessionária",
+        "Boleto Jurídico",
+    ];
+
     public static function logFirstApprovalFinancialAnalyst($paymentRequest)
     {
         $namesDate = [];
@@ -86,6 +95,10 @@ class Utils
     public static function installmentsCnabGeneratedPaymentDate($paymentRequestInstallment)
     {
         $date = null;
+
+        if ($paymentRequestInstallment->payment_made_date != null) {
+            return $paymentRequestInstallment->payment_made_date;
+        }
 
         if (isset($paymentRequestInstallment->cnab_generated_installment) && isset($paymentRequestInstallment->cnab_generated_installment->generated_cnab)) {
             $date = $paymentRequestInstallment->cnab_generated_installment->generated_cnab->file_date;
@@ -172,26 +185,6 @@ class Utils
         return $approver;
     }
 
-    public static function translatedInstallmentBilletType($paymentRequestInstallment)
-    {
-        if (is_null($paymentRequestInstallment->type_billet) || is_null($paymentRequestInstallment->billet_number))
-            return '';
-        switch ($paymentRequestInstallment->type_billet) {
-            case 0:
-                return 'Boleto Bancário';
-            case 1:
-                return 'Boleto de Arrecadação';
-            case 2:
-                return 'Guia de Impostos';
-            case 4:
-                return 'Boleto de Concessionária';
-            case 5:
-                return 'Boleto Jurídico';
-            default:
-                return 'Outro';
-        }
-    }
-
     public static function  translatedInstallmentBankAccountType($accountType)
     {
         if (is_null($accountType))
@@ -254,7 +247,7 @@ class Utils
             self::costCenterVPName($paymentRequest),
             self::costCenterManagers($paymentRequest),
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? 'CNPJ: ' . $paymentRequest->provider->cnpj : 'CPF: ' . $paymentRequest->provider->cpf) : $paymentRequest->provider,
-            $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
+            $paymentRequest->provider->trade_name ?? '',
             self::providerAlias($paymentRequest),
             self::formatDate($paymentRequest->created_at),
             self::formatDate($paymentRequest->emission_date),
@@ -479,16 +472,12 @@ class Utils
             self::costCenterVPName($paymentRequest),
             self::costCenterManagers($paymentRequest),
             $paymentRequest->provider ? ($paymentRequest->provider->cnpj ? 'CNPJ: ' . $paymentRequest->provider->cnpj : 'CPF: ' . $paymentRequest->provider->cpf) : $paymentRequest->provider,
-            $paymentRequest->provider ? ($paymentRequest->provider->company_name ? $paymentRequest->provider->company_name : $paymentRequest->provider->full_name) : $paymentRequest->provider,
+            $paymentRequest->provider->trade_name ?? '',
             self::providerAlias($paymentRequest),
             self::formatDate($paymentRequest->created_at),
             self::formatDate($paymentRequest->emission_date),
-            self::formatDate($paymentRequest->pay_date),
-            self::formatDate($paymentRequest->next_extension_date),
-            $paymentRequest->days_late,
             self::formatDate(self::logFirstApprovalFinancialAnalyst($paymentRequest)['created_at']),
             self::logFirstApprovalFinancialAnalyst($paymentRequest)['user_name'],
-            self::formatDate(self::cnabGeneratedPaymentDate($paymentRequest)),
             $paymentRequest->currency ? $paymentRequest->currency->title : $paymentRequest->currency,
             $paymentRequest->currency_old ? $paymentRequest->currency_old->title : $paymentRequest->currency_old,
             $paymentRequest->exchange_rate,
@@ -515,11 +504,11 @@ class Utils
             self::dateApprovalCostCenterVP($paymentRequest),
             self::dateApprovalCostCenterManagers($paymentRequest),
             self::observationDisapproval($paymentRequest),
-            // aqui fim
             self::formatDate($installment->due_date),
             self::formatDate($installment->extension_date),
             self::installmentsDaysLate($installment),
-            self::formatDate(self::installmentsCnabGeneratedPaymentDate($installment)),
+            self::formatDate($installment->payment_made_date),
+            //self::formatDate(self::installmentsCnabGeneratedPaymentDate($installment)),
             $installment->initial_value ?? '',
             $installment->fees,
             $installment->fine,
@@ -527,7 +516,7 @@ class Utils
             self::installmentTotalFinalValue($installment),
             $installment->group_payment->title ?? '',
             $installment->billet_number ?? '',
-            self::translatedInstallmentBilletType($installment),
+            self::returnTypeBillet($installment),
             $installment->bar_code ?? '',
             $installment->bank_account_provider->entity_type ?? '',
             $installment->bank_account_provider->entity_name ?? '',
@@ -538,6 +527,7 @@ class Utils
             self::translatedInstallmentBankAccountType(($installment->bank_account_provider->account_type ?? null)),
             $installment->bank_account_provider->account_number ?? '',
             $installment->bank_account_provider->account_check_number ?? '',
+            $installment->bank_account_provider->bank->bank_code ?? '',
             $installment->note,
             $bankAccountCompany == null ? '' : $bankAccountCompany->bank->title ?? '',
             $bankAccountCompany == null ? '' : $bankAccountCompany->agency_number ?? '',
@@ -545,6 +535,7 @@ class Utils
             self::translatedInstallmentBankAccountType(($bankAccountCompany->account_type ?? null)),
             $bankAccountCompany == null ? '' : $bankAccountCompany->account_number ?? '',
             $bankAccountCompany == null ? '' : $bankAccountCompany->account_check_number ?? '',
+            $bankAccountCompany == null ? '' : $bankAccountCompany->bank->bank_code ?? '',
             $installment->reference_number ?? '',
             $installment->revenue_code ?? '',
             $installment->tax_file_phone_number ?? '',
@@ -575,12 +566,8 @@ class Utils
             'Apelido do Fornecedor',
             'Data de Criação',
             'Data de Emissão',
-            'Data de Vencimento',
-            'Data de Pagamento',
-            'Dias de atraso',
             'Data Aprovação CAP',
             'Analista CAP',
-            'Pagamento Realizado',
             'Moeda',
             'Moeda Inicial',
             'Taxa de Câmbio',
@@ -597,7 +584,7 @@ class Utils
             'Status Atual',
             'Etapa Atual',
             'Aprovador',
-            'Observações',
+            'Observação Conta',
             'OR',
             'HASH',
             'Admin ID',
@@ -608,9 +595,9 @@ class Utils
             'Data Aprovação Gestor',
             'Observação de rejeição',
             'Data de Vencimento',
-            'Data de Pagamento',
+            'Data de Prorrogação',
             'Dias de Atraso',
-            'Pagamento Realizado',
+            'Data de Pagamento',
             'Valor Inicial',
             'Juros',
             'Multa',
@@ -618,7 +605,7 @@ class Utils
             'Valor a Pagar',
             'Forma de Pagamento',
             'Número do Boleto',
-            'Tipo de Boleto',
+            'Tipo do Boleto',
             'Código do Boleto',
             'Tipo de Pessoa',
             'Nome/Razão Social',
@@ -629,12 +616,15 @@ class Utils
             'Tipo de Conta Bancária - Fornecedor',
             'Conta Bancária - Fornecedor',
             'Dígito da Conta Bancária - Fornecedor',
+            'Código Banco - Fornecedor',
+            'Observação Parcela',
             'Banco - Empresa',
             'Agência - Empresa',
             'Dígito da Agência - Empresa',
             'Tipo de Conta Bancária - Empresa',
             'Conta Bancária - Empresa',
             'Dígito da Conta Bancária - Empresa',
+            'Código Banco - Empresa',
             'Número de Referência',
             'Código de Receita',
             'Número de telefone do arquivo fiscal',
@@ -774,12 +764,20 @@ class Utils
                 return ['company', 'business', 'chart_of_accounts', 'cost_center', 'provider', 'cnab_payment_request.cnab_generated', 'currency', 'currency_old', 'installments', 'user', 'approval', 'tax'];
                 break;
             case 'payment-request-installments':
-                return ['cnab_generated_installment', 'payment_request.company', 'payment_request.business', 'payment_request.chart_of_accounts', 'payment_request.cost_center', 'payment_request.provider', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.bank_account_provider', 'payment_request.user', 'payment_request.approval', 'bank_account_company', 'group_payment_received', 'bank_account_provider'];
+                return ['cnab_generated_installment', 'payment_request.company', 'payment_request.business', 'payment_request.chart_of_accounts', 'payment_request.cost_center', 'payment_request.provider', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.bank_account_provider.bank', 'payment_request.user', 'payment_request.approval', 'bank_account_company.bank', 'group_payment_received', 'bank_account_provider.bank'];
                 break;
             case 'accounts-payable-approval-flow':
                 return ['payment_request.company', 'payment_request.business', 'payment_request.chart_of_accounts', 'payment_request.cost_center', 'payment_request.provider', 'payment_request.cnab_payment_request.cnab_generated', 'payment_request.user', 'payment_request.approval'];
             default:
                 return [];
         }
+    }
+
+    public static function returnTypeBillet($installment)
+    {
+        if ($installment->type_billet != null && array_key_exists($installment->type_billet, self::typeBillet))
+            return self::typeBillet[$installment->type_billet];
+
+        return '';
     }
 }
