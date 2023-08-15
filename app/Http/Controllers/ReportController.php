@@ -65,7 +65,7 @@ class ReportController extends Controller
             }
         });
 
-        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'contasVencidas');
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
@@ -106,7 +106,7 @@ class ReportController extends Controller
         }
         $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
 
-        if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'parcelasVencidas');
             (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
@@ -150,7 +150,7 @@ class ReportController extends Controller
             $query = $query->where('status', 1);
         });
 
-        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'contasAprovadas');
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
@@ -196,7 +196,7 @@ class ReportController extends Controller
                 new NotifyUserOfCompletedExport($exportFile['path'], $exportFile['export']),
             ]);
         } else {
-            if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+            if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
                 $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAprovadas');
                 (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
             } else {
@@ -271,7 +271,7 @@ class ReportController extends Controller
             $query = $query->where('status', 3);
         });
 
-        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'contasDeletadas');
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
@@ -330,7 +330,7 @@ class ReportController extends Controller
         $paymentRequest = $paymentRequest->with(UtilsExport::withModelDefaultExport('payment-request'));
         $paymentRequest = Utils::baseFilterReportsPaymentRequest($paymentRequest, $request->all());
 
-        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'contasAPagar');
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
@@ -367,7 +367,7 @@ class ReportController extends Controller
         });
         $installment = Utils::baseFilterReportsInstallment($installment, $requestInfo);
 
-        if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($installment->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'parcelasAPagar');
             (new PaymentRequestHasInstalmentExport($exportFile['nameFile'], $installment, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
@@ -404,7 +404,7 @@ class ReportController extends Controller
             $query = $query->where('status', 4);
         });
 
-        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1000)) {
+        if ($paymentRequest->count() < env('LIMIT_EXPORT_PROCESS', 1500)) {
             $exportFile = UtilsExport::exportFile($request->all(), 'contasPagas');
             (new PaymentRequestExport($exportFile['nameFile'], $paymentRequest, $exportFile))->store($exportFile['path'], 's3', $exportFile['extension'] == '.xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV);
         } else {
