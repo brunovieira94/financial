@@ -554,3 +554,4 @@ Route::get('/log-activity', [InfoController::class, 'logActivity']);
 Route::get('/log-approval', [InfoController::class, 'logApproval']);
 Route::get('payment-request/{id}', [PaymentRequestController::class, 'show']);
 Route::get('/payment-requests-cnab-generated-list', [ReportController::class, 'getAllCnabGenerate']);
+Route::get('pluto-table-state/', [PlutoTableStateController::class, 'getState']);
